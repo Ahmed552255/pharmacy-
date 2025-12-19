@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تفاصيل الروشتة الذكية | عيادات فقيها</title>
+    <style>
+        :root {
+            --main-teal: #4db6ac;
+            --dark-teal: #00796b;
+            --soft-green: #e8f5e9;
+            --accent-orange: #ff9800;
+            --glass-white: rgba(255, 255, 255, 0.9);
+            --shadow: 0 10px 30px rgba(0,0,0,0.08);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+        }
+
+        .prescription-card {
+            background: var(--glass-white);
+            backdrop-filter: blur(10px);
+            width: 100%;
+            max-width: 600px;
+            border-radius: 25px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.3);
+            position: relative;
+        }
+
+        /* عداد المشاهدين المودرن */
+        .live-status {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: rgba(0, 121, 107, 0.1);
+            padding: 6px 12px;
+            border-radius: 50px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid var(--main-teal);
+            z-index: 10;
+        }
+
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #4caf50;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(76, 175, 80, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(76, 175, 80, 0); }
+        }
+
+        /* هيدر البيانات */
+        .header-box {
+            background: var(--main-teal);
+            padding: 40px 25px 25px;
+            color: white;
+            text-align: center;
+        }
+
+        .patient-name-link {
+            color: white;
+            text-decoration: none;
+            font-size: 1.8rem;
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+            transition: 0.3s;
+        }
+
+        .patient-name-link:hover { opacity: 0.8; transform: scale(1.02); }
+
+        .meta-info {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        /* منطقة الأدوية */
+        .meds-container { padding: 25px; }
+
+        .secret-alert {
+            background: #fff3e0;
+            border-right: 6px solid var(--accent-orange);
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            font-size: 0.95rem;
+            color: #e65100;
+        }
+
+        .med-card {
+            background: white;
+            border-radius: 15px;
+            padding: 18px;
+            margin-bottom: 15px;
+            border: 1px solid #f0f0f0;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .med-card:hover { transform: translateX(-5px); border-color: var(--main-teal); }
+
+        .med-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--dark-teal);
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .usage-tag {
+            background: var(--soft-green);
+            color: var(--dark-teal);
+            padding: 8px 12px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            margin-top: 10px;
+            display: block;
+            border-right: 3px solid var(--main-teal);
+        }
+
+        /* الأزرار الذكية */
+        .smart-actions {
+            display: none;
+            margin-top: 15px;
+            gap: 10px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn { from { opacity: 0; transform: translateY(-10px); } }
+
+        .btn-smart {
+            flex: 1;
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            color: white;
+        }
+
+        .btn-google-img { background: #4285f4; }
+        .btn-ai-alt { background: var(--accent-orange); }
+
+        /* الفوتر */
+        .footer-actions {
+            padding: 0 25px 25px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-main {
+            flex: 1;
+            padding: 15px;
+            border-radius: 12px;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .btn-confirm { background: var(--dark-teal); color: white; }
+        .btn-confirm:hover { background: #004d40; }
+    </style>
+</head>
+<body>
+
+    <div class="prescription-card">
+        <div class="live-status">
+            <div class="pulse-dot"></div>
+            <span style="font-size: 0.8rem; color: var(--dark-teal); font-weight: 600;">
+                <span id="viewerCount">3</span> صيادلة يراجعون الآن
+            </span>
+        </div>
+
+        <div class="header-box">
+            <a href="patient_profile.html" class="patient-name-link">ياسين محمد علي</a>
+            <div class="meta-info">
+                <span>🎂 28 عاماً</span>
+                <span>📅 20 ديسمبر 2025</span>
+                <span>🩺 د. إبراهيم فقيها</span>
+            </div>
+        </div>
+
+        <div class="meds-container">
+            <div class="secret-alert">
+                <strong>📝 ملاحظة سرية:</strong> يرجى التأكد من عدم صرف أي دواء يحتوي على "إيبوبروفين" لوجود حساسية سابقة لدى المريض.
+            </div>
+
+            <div class="med-card" onclick="toggleSmartActions('med1')">
+                <div class="med-title">
+                    <span>Augmentin 1gm Tablet</span>
+                    <span style="font-size: 0.8rem; color: #999;">#01</span>
+                </div>
+                <div class="usage-tag">
+                    🕒 قرص واحد بعد الإفطار وبعد العشاء يومياً.
+                </div>
+                <div class="smart-actions" id="med1">
+                    <button class="btn-smart btn-google-img" onclick="search('img', 'Augmentin 1gm')">🔍 صورة</button>
+                    <button class="btn-smart btn-ai-alt" onclick="search('alt', 'Augmentin 1gm')">🤖 بديل (AI)</button>
+                </div>
+            </div>
+
+            <div class="med-card" onclick="toggleSmartActions('med2')">
+                <div class="med-title">
+                    <span>Panadol Extra</span>
+                    <span style="font-size: 0.8rem; color: #999;">#02</span>
+                </div>
+                <div class="usage-tag">
+                    🕒 حبة واحدة عند اللزوم (للصداع).
+                </div>
+                <div class="smart-actions" id="med2">
+                    <button class="btn-smart btn-google-img" onclick="search('img', 'Panadol Extra')">🔍 صورة</button>
+                    <button class="btn-smart btn-ai-alt" onclick="search('alt', 'Panadol Extra')">🤖 بديل (AI)</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer-actions">
+            <button class="btn-main btn-confirm">تم صرف الروشتة</button>
+            <button class="btn-main" style="background: #eee; width: 60px;">🖨️</button>
+        </div>
+    </div>
+
+    <script>
+        function toggleSmartActions(id) {
+            const el = document.getElementById(id);
+            const isOpen = el.style.display === 'flex';
+            document.querySelectorAll('.smart-actions').forEach(a => a.style.display = 'none');
+            el.style.display = isOpen ? 'none' : 'flex';
+            event.stopPropagation();
+        }
+
+        function search(type, med) {
+            if(type === 'img') {
+                window.open(`https://www.google.com/search?tbm=isch&q=${med}+pharmacy+pack`, '_blank');
+            } else {
+                window.open(`https://www.google.com/search?q=best+safe+alternative+for+${med}+interaction+check`, '_blank');
+            }
+        }
+
+        // محاكاة تغيير عداد المشاهدين بشكل عشوائي للجمال
+        setInterval(() => {
+            const count = document.getElementById('viewerCount');
+            let current = parseInt(count.innerText);
+            if(Math.random() > 0.5) count.innerText = Math.max(1, current + 1);
+            else count.innerText = Math.max(1, current - 1);
+        }, 10000);
+    </script>
+</body>
+</html>
