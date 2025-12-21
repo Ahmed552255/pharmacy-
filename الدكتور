@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة تحكم الطبيب | عيادات فقيها</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --baby-green: #d1f2eb;
+            --primary-green: #45b39d;
+            --dark-teal: #16a085;
+            --white: #ffffff;
+            --warning-orange: #f39c12;
+            --danger-red: #e74c3c;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background: #f4fbf9;
+            margin: 0;
+            padding-bottom: 100px;
+        }
+
+        /* الهيدر */
+        .top-nav {
+            background: var(--white);
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            position: sticky; top: 0; z-index: 1000;
+        }
+
+        .count-btn {
+            background: var(--dark-teal);
+            color: white; border: none; padding: 8px 12px;
+            border-radius: 8px; font-size: 13px; cursor: pointer;
+        }
+
+        /* معلومات المريض */
+        .patient-card {
+            background: var(--white);
+            margin: 15px; border-radius: 15px; padding: 15px;
+            display: flex; justify-content: space-between;
+            border-right: 6px solid var(--primary-green);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+        }
+
+        .p-info h3 { margin: 0; color: var(--dark-teal); font-size: 18px; }
+        .p-info small { color: #888; }
+
+        /* الأكورديون (الخانات منفصلة) */
+        .container { padding: 0 15px; }
+        .acc-item {
+            background: white; border-radius: 12px; margin-bottom: 8px;
+            border: 1px solid var(--baby-green); overflow: hidden;
+        }
+        .acc-header {
+            background: var(--baby-green); padding: 15px;
+            cursor: pointer; display: flex; justify-content: space-between;
+            font-weight: bold; color: var(--dark-teal);
+        }
+        .acc-content { padding: 15px; display: none; }
+        .acc-content.active { display: block; }
+
+        textarea {
+            width: 100%; border: 1px solid #eee; border-radius: 8px;
+            padding: 10px; font-size: 16px; box-sizing: border-box; outline: none;
+        }
+
+        /* نظام الأدوية */
+        .med-row { display: grid; grid-template-columns: 2fr 1fr; gap: 8px; margin-bottom: 8px; }
+        .med-input { padding: 10px; border: 1px solid #ddd; border-radius: 8px; }
+
+        /* أزرار التحكم في الروشتة */
+        .med-controls { display: flex; gap: 5px; margin-top: 10px; }
+        .ctrl-btn { flex: 1; padding: 10px; border: none; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: bold; }
+        .btn-clear { background: #fceaea; color: var(--danger-red); }
+        .btn-template { background: #e8f4fd; color: #2980b9; }
+        .btn-save-temp { background: #fff4e5; color: var(--warning-orange); }
+
+        /* الفوتر */
+        .footer-actions {
+            position: fixed; bottom: 0; width: 100%; background: white;
+            padding: 15px; display: grid; grid-template-columns: 1fr 3fr; gap: 10px;
+            box-shadow: 0 -5px 15px rgba(0,0,0,0.05);
+        }
+
+        .btn-finish { background: var(--primary-green); color: white; border: none; border-radius: 12px; font-weight: bold; font-size: 16px; }
+        .btn-history { background: var(--warning-orange); color: white; border: none; border-radius: 12px; height: 50px; width: 50px; }
+    </style>
+</head>
+<body>
+
+    <nav class="top-nav">
+        <button class="count-btn" onclick="alert('باقي 7 حالات بالانتظار')">
+            <i class="fas fa-list-ol"></i> كم واحد بعدي؟
+        </button>
+        <span style="font-weight:bold; color:var(--dark-teal)">د. فقيها</span>
+    </nav>
+
+    <div class="patient-card">
+        <div class="p-info">
+            <h3 id="p-name">محمد أحمد الصاوي</h3>
+            <small id="p-phone">01023456789</small>
+        </div>
+        <div style="text-align:left">
+            <span id="p-age">45 سنة</span>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="acc-item">
+            <div class="acc-header" onclick="toggleAcc(0)"><span>1. الأعراض (الشكوى)</span><i class="fas fa-chevron-down"></i></div>
+            <div class="acc-content active"><textarea id="symptoms" rows="2"></textarea></div>
+        </div>
+
+        <div class="acc-item">
+            <div class="acc-header" onclick="toggleAcc(1)"><span>2. التشخيص الطبي</span><i class="fas fa-chevron-right"></i></div>
+            <div class="acc-content"><textarea id="diagnosis" rows="2"></textarea></div>
+        </div>
+
+        <div class="acc-item">
+            <div class="acc-header" onclick="toggleAcc(2)"><span>3. الروشتة العلاجية</span><i class="fas fa-chevron-right"></i></div>
+            <div class="acc-content">
+                <div id="med-list">
+                    <div class="med-row">
+                        <input type="text" placeholder="اسم الدواء" class="med-name med-input">
+                        <input type="text" placeholder="الجرعة" class="med-dose med-input">
+                    </div>
+                </div>
+                
+                <div class="med-controls">
+                    <button class="ctrl-btn" style="background:var(--baby-green)" onclick="addMedRow()">+ دواء</button>
+                    <button class="ctrl-btn btn-clear" onclick="clearMeds()">حذف الكل</button>
+                    <button class="ctrl-btn btn-template" onclick="useTemplate()">استدعاء نموذج</button>
+                    <button class="ctrl-btn btn-save-temp" onclick="saveAsTemplate()">حفظ كمرجع</button>
+                </div>
+                
+                <button onclick="voiceFullPrescription()" style="width:100%; margin-top:10px; background:#eee; border:none; padding:10px; border-radius:8px; cursor:pointer">
+                    🎤 إملاء روشتة كاملة (نموذج جاهز)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer-actions">
+        <button class="btn-history" onclick="alert('تاريخ المريض...')"><i class="fas fa-file-medical-alt"></i></button>
+        <button class="btn-finish" onclick="alert('تم الإنهاء والتشفير للصيدلية')">إنهاء وحفظ الكشف</button>
+    </div>
+
+    <script>
+        function toggleAcc(idx) {
+            const contents = document.querySelectorAll('.acc-content');
+            contents.forEach((c, i) => {
+                c.classList.toggle('active', i === idx);
+                c.parentElement.querySelector('i').className = i === idx ? 'fas fa-chevron-down' : 'fas fa-chevron-right';
+            });
+        }
+
+        function addMedRow(name = '', dose = '') {
+            const row = document.createElement('div');
+            row.className = 'med-row';
+            row.innerHTML = `
+                <input type="text" value="${name}" placeholder="اسم الدواء" class="med-name med-input">
+                <input type="text" value="${dose}" placeholder="الجرعة" class="med-dose med-input">
+            `;
+            document.getElementById('med-list').appendChild(row);
+        }
+
+        // ميزة حذف كل الأدوية
+        function clearMeds() {
+            if(confirm("هل تريد حذف جميع الأدوية المكتوبة؟")) {
+                document.getElementById('med-list').innerHTML = `
+                    <div class="med-row">
+                        <input type="text" placeholder="اسم الدواء" class="med-name med-input">
+                        <input type="text" placeholder="الجرعة" class="med-dose med-input">
+                    </div>`;
+            }
+        }
+
+        // ميزة حفظ الروشتة كمرجع (Template)
+        function saveAsTemplate() {
+            const key = prompt("أدخل كلمة مفتاحية لهذا النموذج (مثلاً: دور برد، سكر، ضغط):");
+            if(key) alert("تم حفظ الروشتة كمرجع باسم: " + key);
+        }
+
+        // ميزة استدعاء النموذج
+        function useTemplate() {
+            const key = prompt("أدخل الكلمة المفتاحية للنموذج:");
+            if(key === "برد") { // مثال محاكاة
+                document.getElementById('med-list').innerHTML = ''; // مسح الحالي
+                addMedRow('Congestal Tab', 'قرص كل 8 ساعات');
+                addMedRow('Panadol Extra', 'عند اللزوم');
+                addMedRow('C-Retard', 'كوب يومياً');
+            } else {
+                alert("لم يتم العثور على نموذج بهذا الاسم");
+            }
+        }
+
+        // ميزة الإملاء الصوتي لروشتة كاملة
+        function voiceFullPrescription() {
+            alert("اسمي النموذج الآن (مثلاً قل: روشتة السكر الجاهزة)");
+            // هنا يتم الربط مع الـ AI لتحويل الكلمة المفتاحية لروشتة كاملة
+        }
+    </script>
+</body>
+</html>
