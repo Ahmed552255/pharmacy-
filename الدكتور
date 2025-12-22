@@ -7,204 +7,294 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
-            --baby-green: #d1f2eb;
-            --primary-green: #45b39d;
-            --dark-teal: #16a085;
-            --white: #ffffff;
-            --warning-orange: #f39c12;
-            --danger-red: #e74c3c;
+            --baby-green: #d1f2eb; --primary-green: #45b39d; --dark-teal: #16a085;
+            --white: #ffffff; --warning-orange: #f39c12; --danger-red: #e74c3c;
+            --gray-done: #bdc3c7;
         }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, sans-serif;
-            background: #f4fbf9;
-            margin: 0;
-            padding-bottom: 100px;
-        }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f4fbf9; margin: 0; padding-bottom: 120px; transition: 0.3s; }
 
-        /* الهيدر */
         .top-nav {
-            background: var(--white);
-            padding: 10px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            position: sticky; top: 0; z-index: 1000;
+            background: var(--white); padding: 10px 20px; display: flex;
+            justify-content: space-between; align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 1000;
         }
 
         .count-btn {
-            background: var(--dark-teal);
-            color: white; border: none; padding: 8px 12px;
-            border-radius: 8px; font-size: 13px; cursor: pointer;
+            background: var(--dark-teal); color: white; border: none; padding: 8px 12px;
+            border-radius: 8px; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 5px;
         }
 
-        /* معلومات المريض */
+        #queue-modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); z-index: 2000; backdrop-filter: blur(4px);
+        }
+        .modal-content {
+            background: white; margin: 10% auto; width: 90%; max-width: 500px; border-radius: 20px; padding: 20px;
+            max-height: 75vh; overflow-y: auto; box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+
+        #no-patient-view {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            height: 70vh; color: #bdc3c7; text-align: center;
+        }
+
         .patient-card {
-            background: var(--white);
-            margin: 15px; border-radius: 15px; padding: 15px;
-            display: flex; justify-content: space-between;
-            border-right: 6px solid var(--primary-green);
+            background: var(--white); margin: 15px; border-radius: 15px; padding: 15px;
+            display: flex; flex-direction: column; gap: 10px; border-right: 6px solid var(--primary-green);
             box-shadow: 0 4px 6px rgba(0,0,0,0.02);
         }
 
-        .p-info h3 { margin: 0; color: var(--dark-teal); font-size: 18px; }
-        .p-info small { color: #888; }
+        .doctor-note-future {
+            background: #fff9e6; border: 1px dashed var(--warning-orange);
+            padding: 10px; border-radius: 8px; font-size: 14px; width: 100%; box-sizing: border-box;
+        }
 
-        /* الأكورديون (الخانات منفصلة) */
         .container { padding: 0 15px; }
         .acc-item {
-            background: white; border-radius: 12px; margin-bottom: 8px;
-            border: 1px solid var(--baby-green); overflow: hidden;
+            background: white; border-radius: 12px; margin-bottom: 10px;
+            border: 1px solid var(--baby-green); overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.02);
         }
         .acc-header {
-            background: var(--baby-green); padding: 15px;
-            cursor: pointer; display: flex; justify-content: space-between;
-            font-weight: bold; color: var(--dark-teal);
+            background: var(--baby-green); padding: 15px; cursor: pointer;
+            display: flex; justify-content: space-between; font-weight: bold; color: var(--dark-teal);
         }
         .acc-content { padding: 15px; display: none; }
         .acc-content.active { display: block; }
 
+        .input-group { position: relative; }
+        .voice-btn {
+            position: absolute; left: 10px; top: 10px; color: var(--primary-green);
+            cursor: pointer; background: none; border: none; font-size: 18px; z-index: 5;
+        }
+
         textarea {
             width: 100%; border: 1px solid #eee; border-radius: 8px;
-            padding: 10px; font-size: 16px; box-sizing: border-box; outline: none;
+            padding: 12px; padding-left: 45px; font-size: 16px; box-sizing: border-box; outline: none; resize: vertical;
         }
 
-        /* نظام الأدوية */
-        .med-row { display: grid; grid-template-columns: 2fr 1fr; gap: 8px; margin-bottom: 8px; }
-        .med-input { padding: 10px; border: 1px solid #ddd; border-radius: 8px; }
+        .med-row { display: grid; grid-template-columns: 2fr 1fr 40px; gap: 8px; margin-bottom: 10px; }
+        .med-input { padding: 12px; border: 1px solid #ddd; border-radius: 8px; width: 100%; box-sizing: border-box; }
 
-        /* أزرار التحكم في الروشتة */
-        .med-controls { display: flex; gap: 5px; margin-top: 10px; }
-        .ctrl-btn { flex: 1; padding: 10px; border: none; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: bold; }
-        .btn-clear { background: #fceaea; color: var(--danger-red); }
-        .btn-template { background: #e8f4fd; color: #2980b9; }
-        .btn-save-temp { background: #fff4e5; color: var(--warning-orange); }
+        .med-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
+        .btn-action { padding: 10px; border: none; border-radius: 8px; font-size: 12px; cursor: pointer; font-weight: bold; }
 
-        /* الفوتر */
         .footer-actions {
             position: fixed; bottom: 0; width: 100%; background: white;
-            padding: 15px; display: grid; grid-template-columns: 1fr 3fr; gap: 10px;
-            box-shadow: 0 -5px 15px rgba(0,0,0,0.05);
+            padding: 15px; display: grid; grid-template-columns: 1fr 4fr; gap: 15px;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.08); box-sizing: border-box;
         }
 
-        .btn-finish { background: var(--primary-green); color: white; border: none; border-radius: 12px; font-weight: bold; font-size: 16px; }
-        .btn-history { background: var(--warning-orange); color: white; border: none; border-radius: 12px; height: 50px; width: 50px; }
+        .btn-finish { background: var(--primary-green); color: white; border: none; border-radius: 12px; font-weight: bold; font-size: 18px; cursor: pointer; }
+        .btn-history { background: var(--warning-orange); color: white; border: none; border-radius: 12px; height: 55px; width: 55px; cursor: pointer; font-size: 20px; }
+
+        .q-item { padding: 15px; background: #f8f9fa; margin-bottom: 10px; border-radius: 12px; cursor: pointer; border: 1px solid #eee; }
+        .q-item:hover { background: var(--baby-green); transform: scale(1.02); }
+
+        .dark-mode { background: #121212 !important; color: #e0e0e0; }
+        .dark-mode .acc-item, .dark-mode .patient-card, .dark-mode .top-nav, .dark-mode .modal-content, .dark-mode .footer-actions { background: #1e1e1e; border-color: #333; }
+        .dark-mode textarea, .dark-mode .med-input { background: #2d2d2d; color: white; border-color: #444; }
+        
+        .listening { animation: pulse 1.5s infinite; color: var(--danger-red) !important; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
     </style>
 </head>
 <body>
 
     <nav class="top-nav">
-        <button class="count-btn" onclick="alert('باقي 7 حالات بالانتظار')">
-            <i class="fas fa-list-ol"></i> كم واحد بعدي؟
+        <button class="count-btn" onclick="openQueue()">
+            <i class="fas fa-users"></i> <span>الانتظار: <b id="q-count">0</b></span>
         </button>
-        <span style="font-weight:bold; color:var(--dark-teal)">د. فقيها</span>
+        <div style="display:flex; align-items:center; gap:15px">
+            <button onclick="toggleDarkMode()" style="border:none; background:none; color:var(--dark-teal); cursor:pointer;"><i class="fas fa-moon"></i></button>
+            <span style="font-weight:bold; color:var(--dark-teal)">د. فقيها</span>
+        </div>
     </nav>
 
-    <div class="patient-card">
-        <div class="p-info">
-            <h3 id="p-name">محمد أحمد الصاوي</h3>
-            <small id="p-phone">01023456789</small>
-        </div>
-        <div style="text-align:left">
-            <span id="p-age">45 سنة</span>
-        </div>
+    <div id="no-patient-view">
+        <i class="fas fa-user-md fa-5x" style="margin-bottom: 20px; color: var(--baby-green);"></i>
+        <h2>جاهز لاستقبال المرضى</h2>
+        <p>اختر اسماً من قائمة الكشوفات لبدء التشخيص</p>
     </div>
 
-    <div class="container">
-        <div class="acc-item">
-            <div class="acc-header" onclick="toggleAcc(0)"><span>1. الأعراض (الشكوى)</span><i class="fas fa-chevron-down"></i></div>
-            <div class="acc-content active"><textarea id="symptoms" rows="2"></textarea></div>
+    <div id="active-checkup" style="display:none;">
+        <div class="patient-card">
+            <div style="display:flex; justify-content:space-between; align-items: flex-start;">
+                <div>
+                    <h3 id="p-name" style="margin:0; color: var(--dark-teal);">اسم المريض</h3>
+                    <small id="p-age" style="color:#666">00 سنة</small>
+                </div>
+                <div id="p-phone" style="font-size: 13px; background: var(--baby-green); padding: 4px 10px; border-radius: 20px; color: var(--dark-teal);">01xxxxxxxxx</div>
+            </div>
+            <textarea class="doctor-note-future" id="future-note" placeholder="ملاحظة تذكيرية للزيارة القادمة..."></textarea>
         </div>
 
-        <div class="acc-item">
-            <div class="acc-header" onclick="toggleAcc(1)"><span>2. التشخيص الطبي</span><i class="fas fa-chevron-right"></i></div>
-            <div class="acc-content"><textarea id="diagnosis" rows="2"></textarea></div>
-        </div>
-
-        <div class="acc-item">
-            <div class="acc-header" onclick="toggleAcc(2)"><span>3. الروشتة العلاجية</span><i class="fas fa-chevron-right"></i></div>
-            <div class="acc-content">
-                <div id="med-list">
-                    <div class="med-row">
-                        <input type="text" placeholder="اسم الدواء" class="med-name med-input">
-                        <input type="text" placeholder="الجرعة" class="med-dose med-input">
+        <div class="container">
+            <div class="acc-item">
+                <div class="acc-header" onclick="toggleAcc(0)"><span>1. الأعراض والشكوى</span><i class="fas fa-chevron-down"></i></div>
+                <div class="acc-content active">
+                    <div class="input-group">
+                        <textarea id="symptoms" rows="2" placeholder="اكتب الأعراض هنا..."></textarea>
+                        <button class="voice-btn" onclick="listenVoice('symptoms', 'ar-SA')"><i class="fas fa-microphone"></i></button>
                     </div>
                 </div>
-                
-                <div class="med-controls">
-                    <button class="ctrl-btn" style="background:var(--baby-green)" onclick="addMedRow()">+ دواء</button>
-                    <button class="ctrl-btn btn-clear" onclick="clearMeds()">حذف الكل</button>
-                    <button class="ctrl-btn btn-template" onclick="useTemplate()">استدعاء نموذج</button>
-                    <button class="ctrl-btn btn-save-temp" onclick="saveAsTemplate()">حفظ كمرجع</button>
-                </div>
-                
-                <button onclick="voiceFullPrescription()" style="width:100%; margin-top:10px; background:#eee; border:none; padding:10px; border-radius:8px; cursor:pointer">
-                    🎤 إملاء روشتة كاملة (نموذج جاهز)
-                </button>
             </div>
+
+            <div class="acc-item">
+                <div class="acc-header" onclick="toggleAcc(1)"><span>2. التشخيص الطبي</span><i class="fas fa-chevron-right"></i></div>
+                <div class="acc-content">
+                    <div class="input-group">
+                        <textarea id="diagnosis" rows="2" placeholder="اكتب التشخيص النهائي..."></textarea>
+                        <button class="voice-btn" onclick="listenVoice('diagnosis', 'ar-SA')"><i class="fas fa-microphone"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="acc-item">
+                <div class="acc-header" onclick="toggleAcc(2)"><span>3. الروشتة العلاجية</span><i class="fas fa-chevron-right"></i></div>
+                <div class="acc-content">
+                    <div class="med-actions">
+                        <button class="btn-action" style="background:#e8f4fd; color:#2980b9" onclick="saveTemplate()"><i class="fas fa-save"></i> حفظ كنموذج</button>
+                        <button class="btn-action" style="background:#fef9e7; color:#f39c12" onclick="loadTemplate()"><i class="fas fa-folder-open"></i> قوالب</button>
+                        <button class="btn-action" style="background:#fdedec; color:#e74c3c" onclick="clearMeds()"><i class="fas fa-trash"></i> مسح</button>
+                        <button class="btn-action" style="background:#e9f7ef; color:#27ae60" onclick="listenVoice('med-init', 'en-US')"><i class="fas fa-microphone"></i> إملاء الأدوية</button>
+                    </div>
+
+                    <div id="med-list">
+                        <div class="med-row">
+                            <input type="text" placeholder="اسم الدواء" class="med-name med-input" id="med-init">
+                            <input type="text" placeholder="الجرعة" class="med-dose med-input">
+                            <button onclick="listenVoice('med-init', 'en-US')" style="border:none; background:none; color:var(--primary-green)"><i class="fas fa-microphone"></i></button>
+                        </div>
+                    </div>
+                    <button onclick="addMedRow()" style="width:100%; background:var(--baby-green); border:none; padding:12px; border-radius:10px; margin-top:10px; cursor:pointer; font-weight:bold; color:var(--dark-teal)">+ إضافة دواء</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer-actions">
+            <button class="btn-history" id="open-history-btn"><i class="fas fa-history"></i></button>
+            <button class="btn-finish" onclick="finishCheckup()">حفظ وإرسال للصيدلية</button>
         </div>
     </div>
 
-    <div class="footer-actions">
-        <button class="btn-history" onclick="alert('تاريخ المريض...')"><i class="fas fa-file-medical-alt"></i></button>
-        <button class="btn-finish" onclick="alert('تم الإنهاء والتشفير للصيدلية')">إنهاء وحفظ الكشف</button>
+    <div id="queue-modal">
+        <div class="modal-content">
+            <div style="display:flex; justify-content:space-between; margin-bottom:20px">
+                <h3 style="margin:0">قائمة الانتظار</h3>
+                <button onclick="closeQueue()" style="border:none; background:none; font-size:20px;">&times;</button>
+            </div>
+            <div id="patients-container"></div>
+        </div>
     </div>
 
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+        import { getFirestore, collection, query, where, onSnapshot, doc, updateDoc, addDoc, serverTimestamp, getDocs, orderBy } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBy8xPvxQuC6bVLerLpSjzPmvBWyAhuYKo",
+            authDomain: "mogama-49e7f.firebaseapp.com",
+            projectId: "mogama-49e7f",
+            storageBucket: "mogama-49e7f.firebasestorage.app",
+            messagingSenderId: "575066177594",
+            appId: "1:575066177594:web:82137834158b4c353db503"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        let currentPatientId = null;
+        const myDoctorName = "دكتور رأفت فتح الباب";
+
+        // تحديث القائمة لحظياً
+        const q = query(collection(db, "patients"), where("status", "==", "انتظار"), where("doctor", "==", myDoctorName));
+        onSnapshot(q, (snapshot) => {
+            document.getElementById('q-count').innerText = snapshot.size;
+            const container = document.getElementById('patients-container');
+            container.innerHTML = "";
+            snapshot.forEach((doc) => {
+                const p = doc.data();
+                const div = document.createElement('div');
+                div.className = 'q-item';
+                div.onclick = () => startCheckup(doc.id, p.name, p.age, p.phone);
+                div.innerHTML = `<b>${p.name}</b><br><small>${p.age} سنة | ${p.phone}</small>`;
+                container.appendChild(div);
+            });
+        });
+
+        window.startCheckup = async (id, name, age, phone) => {
+            currentPatientId = id;
+            document.getElementById('no-patient-view').style.display = 'none';
+            document.getElementById('active-checkup').style.display = 'block';
+            document.getElementById('p-name').innerText = name;
+            document.getElementById('p-age').innerText = age + " سنة";
+            document.getElementById('p-phone').innerText = phone;
+            await updateDoc(doc(db, "patients", id), { status: "كشف" });
+            closeQueue();
+        };
+
+        window.finishCheckup = async () => {
+            if(!confirm("إنهاء الكشف؟")) return;
+            const meds = [];
+            document.querySelectorAll('.med-row').forEach(row => {
+                const name = row.querySelector('.med-name').value;
+                const dose = row.querySelector('.med-dose').value;
+                if(name) meds.push({ name, dose });
+            });
+            await addDoc(collection(db, "patient_history"), {
+                patientId: currentPatientId, name: document.getElementById('p-name').innerText,
+                phone: document.getElementById('p-phone').innerText, symptoms: document.getElementById('symptoms').value,
+                diagnosis: document.getElementById('diagnosis').value, prescription: meds,
+                doctor: myDoctorName, timestamp: serverTimestamp()
+            });
+            await updateDoc(doc(db, "patients", currentPatientId), { status: "منتهي" });
+            location.reload();
+        };
+    </script>
+
     <script>
+        // دالة السمع الذكية
+        function listenVoice(targetId, lang) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) return alert("متصفحك لا يدعم خاصية الصوت");
+
+            const recognition = new SpeechRecognition();
+            recognition.lang = lang; 
+            const btn = event.currentTarget;
+            
+            recognition.onstart = () => btn.classList.add('listening');
+            recognition.onend = () => btn.classList.remove('listening');
+            
+            recognition.onresult = (event) => {
+                const text = event.results[0][0].transcript;
+                document.getElementById(targetId).value = text;
+            };
+            
+            recognition.start();
+        }
+
         function toggleAcc(idx) {
-            const contents = document.querySelectorAll('.acc-content');
-            contents.forEach((c, i) => {
+            document.querySelectorAll('.acc-content').forEach((c, i) => {
                 c.classList.toggle('active', i === idx);
                 c.parentElement.querySelector('i').className = i === idx ? 'fas fa-chevron-down' : 'fas fa-chevron-right';
             });
         }
 
-        function addMedRow(name = '', dose = '') {
+        function addMedRow() {
+            const id = 'v-' + Date.now();
             const row = document.createElement('div');
             row.className = 'med-row';
             row.innerHTML = `
-                <input type="text" value="${name}" placeholder="اسم الدواء" class="med-name med-input">
-                <input type="text" value="${dose}" placeholder="الجرعة" class="med-dose med-input">
+                <input type="text" placeholder="اسم الدواء" class="med-name med-input" id="${id}">
+                <input type="text" placeholder="الجرعة" class="med-dose med-input">
+                <button onclick="listenVoice('${id}', 'en-US')" style="border:none; background:none; color:var(--primary-green)"><i class="fas fa-microphone"></i></button>
             `;
             document.getElementById('med-list').appendChild(row);
         }
 
-        // ميزة حذف كل الأدوية
-        function clearMeds() {
-            if(confirm("هل تريد حذف جميع الأدوية المكتوبة؟")) {
-                document.getElementById('med-list').innerHTML = `
-                    <div class="med-row">
-                        <input type="text" placeholder="اسم الدواء" class="med-name med-input">
-                        <input type="text" placeholder="الجرعة" class="med-dose med-input">
-                    </div>`;
-            }
-        }
-
-        // ميزة حفظ الروشتة كمرجع (Template)
-        function saveAsTemplate() {
-            const key = prompt("أدخل كلمة مفتاحية لهذا النموذج (مثلاً: دور برد، سكر، ضغط):");
-            if(key) alert("تم حفظ الروشتة كمرجع باسم: " + key);
-        }
-
-        // ميزة استدعاء النموذج
-        function useTemplate() {
-            const key = prompt("أدخل الكلمة المفتاحية للنموذج:");
-            if(key === "برد") { // مثال محاكاة
-                document.getElementById('med-list').innerHTML = ''; // مسح الحالي
-                addMedRow('Congestal Tab', 'قرص كل 8 ساعات');
-                addMedRow('Panadol Extra', 'عند اللزوم');
-                addMedRow('C-Retard', 'كوب يومياً');
-            } else {
-                alert("لم يتم العثور على نموذج بهذا الاسم");
-            }
-        }
-
-        // ميزة الإملاء الصوتي لروشتة كاملة
-        function voiceFullPrescription() {
-            alert("اسمي النموذج الآن (مثلاً قل: روشتة السكر الجاهزة)");
-            // هنا يتم الربط مع الـ AI لتحويل الكلمة المفتاحية لروشتة كاملة
-        }
+        function openQueue() { document.getElementById('queue-modal').style.display = 'block'; }
+        function closeQueue() { document.getElementById('queue-modal').style.display = 'none'; }
+        function toggleDarkMode() { document.body.classList.toggle('dark-mode'); }
     </script>
 </body>
 </html>
