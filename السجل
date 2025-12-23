@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>السجل الطبي للمريض | عيادات فقيها</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-green: #45b39d;
+            --dark-teal: #16a085;
+            --light-bg: #f4fbf9;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background-color: var(--light-bg);
+            margin: 0; padding: 20px;
+        }
+
+        .header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 25px; border-bottom: 2px solid var(--primary-green);
+            padding-bottom: 10px;
+        }
+
+        .patient-info-bar {
+            background: white; padding: 15px; border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 20px;
+            display: flex; gap: 20px; color: var(--dark-teal);
+        }
+
+        .visit-card {
+            background: white; border-radius: 15px; padding: 20px;
+            margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            border-right: 8px solid var(--primary-green);
+            position: relative;
+        }
+
+        .visit-date {
+            position: absolute; left: 20px; top: 20px;
+            background: var(--light-bg); padding: 5px 10px;
+            border-radius: 8px; font-size: 13px; font-weight: bold;
+        }
+
+        .section-title {
+            color: var(--primary-green); font-weight: bold;
+            margin-top: 10px; display: flex; align-items: center; gap: 8px;
+        }
+
+        .data-text { background: #fdfdfd; padding: 10px; border-radius: 8px; margin: 5px 0; border: 1px solid #eee; }
+
+        .med-item {
+            display: inline-block; background: #e8f4fd; color: #2980b9;
+            padding: 5px 12px; border-radius: 20px; margin: 3px; font-size: 14px;
+        }
+
+        #loading { text-align: center; padding: 50px; color: #999; }
+        .back-btn { background: var(--dark-teal); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h2 style="margin:0; color: var(--dark-teal);"> <i class="fas fa-file-medical"></i> السجل الطبي التاريخي</h2>
+        <button class="back-btn" onclick="history.back()">عودة للكشف</button>
+    </div>
+
+    <div class="patient-info-bar" id="patient-meta">
+        <div><i class="fas fa-user"></i> <b id="meta-name">جاري التحميل...</b></div>
+        <div><i class="fas fa-phone"></i> <span id="meta-phone">-</span></div>
+    </div>
+
+    <div id="loading"> <i class="fas fa-spinner fa-spin fa-3x"></i> <p>جاري سحب الملفات...</p> </div>
+    
+    <div id="history-list"></div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+        import { getFirestore, collection, query, where, getDocs, orderBy } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBy8xPvxQuC6bVLerLpSjzPmvBWyAhuYKo",
+            authDomain: "mogama-49e7f.firebaseapp.com",
+            projectId: "mogama-49e7f",
+            storageBucket: "mogama-49e7f.firebasestorage.app",
+            messagingSenderId: "575066177594",
+            appId: "1:575066177594:web:82137834158b4c353db503"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // الحصول على رقم التليفون من الرابط
+        const urlParams = new URLSearchParams(window.location.search);
+        const phone = urlParams.get('phone');
+
+        if (phone) {
+            loadPatientHistory(phone);
+        } else {
+            document.body.innerHTML = "<h1>خطأ: لم يتم تحديد مريض</h1>";
+        }
+
+        async function loadPatientHistory(phoneNum) {
+            const container = document.getElementById('history-list');
+            const loading = document.getElementById('loading');
+            
+            try {
+                const q = query(
+                    collection(db, "patient_history"), 
+                    where("phone", "==", phoneNum),
+                    orderBy("timestamp", "desc")
+                );
+
+                const querySnapshot = await getDocs(q);
+                loading.style.display = 'none';
+
+                if (querySnapshot.empty) {
+                    container.innerHTML = "<p style='text-align:center'>لا يوجد سجلات سابقة لهذا المريض</p>";
+                    return;
+                }
+
+                // تحديث بيانات المريض في البار العلوي
+                const firstDoc = querySnapshot.docs[0].data();
+                document.getElementById('meta-name').innerText = firstDoc.name;
+                document.getElementById('meta-phone').innerText = firstDoc.phone;
+
+                querySnapshot.forEach((doc) => {
+                    const visit = doc.data();
+                    const dateStr = visit.timestamp ? new Date(visit.timestamp.seconds * 1000).toLocaleDateString('ar-EG') : visit.date;
+
+                    const card = document.createElement('div');
+                    card.className = 'visit-card';
+                    card.innerHTML = `
+                        <div class="visit-date">${dateStr}</div>
+                        <div style="margin-top:20px">
+                            <div class="section-title"><i class="fas fa-stethoscope"></i> الشكوى والأعراض:</div>
+                            <div class="data-text">${visit.symptoms || 'لا يوجد'}</div>
+
+                            <div class="section-title"><i class="fas fa-notes-medical"></i> التشخيص:</div>
+                            <div class="data-text"><b>${visit.diagnosis || 'لم يحدد'}</b></div>
+
+                            <div class="section-title"><i class="fas fa-pills"></i> الروشتة المصروفة:</div>
+                            <div class="data-text">
+                                ${visit.prescription && visit.prescription.length > 0 
+                                    ? visit.prescription.map(m => `<span class="med-item">${m.name} (${m.dose})</span>`).join('')
+                                    : 'لم يتم وصف أدوية'}
+                            </div>
+
+                            ${visit.futureNote ? `
+                                <div class="section-title" style="color:var(--warning-orange)"><i class="fas fa-exclamation-circle"></i> ملحوظة للمتابعة:</div>
+                                <div class="data-text" style="background:#fff9e6">${visit.futureNote}</div>
+                            ` : ''}
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+
+            } catch (error) {
+                console.error(error);
+                container.innerHTML = "<p>حدث خطأ أثناء تحميل البيانات</p>";
+            }
+        }
+    </script>
+</body>
+</html>
