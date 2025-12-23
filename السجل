@@ -3,81 +3,99 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>السجل الطبي للمريض | عيادات فقيها</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <title>السجل الطبي التاريخي | عيادات فقيها</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            --primary-green: #45b39d;
-            --dark-teal: #16a085;
-            --light-bg: #f4fbf9;
+            --primary: #45b39d; --dark: #16a085; --bg: #f4fbf9;
+            --white: #ffffff; --warning: #f39c12; --blue: #2980b9;
         }
 
         body {
             font-family: 'Segoe UI', Tahoma, sans-serif;
-            background-color: var(--light-bg);
-            margin: 0; padding: 20px;
+            background-color: var(--bg); margin: 0; padding: 20px; color: #333;
         }
 
         .header {
             display: flex; align-items: center; justify-content: space-between;
-            margin-bottom: 25px; border-bottom: 2px solid var(--primary-green);
-            padding-bottom: 10px;
+            margin-bottom: 25px; border-bottom: 3px solid var(--primary);
+            padding-bottom: 15px;
         }
 
         .patient-info-bar {
-            background: white; padding: 15px; border-radius: 12px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 20px;
-            display: flex; gap: 20px; color: var(--dark-teal);
+            background: white; padding: 20px; border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 25px;
+            display: flex; gap: 30px; color: var(--dark); font-size: 18px;
         }
 
         .visit-card {
-            background: white; border-radius: 15px; padding: 20px;
-            margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.02);
-            border-right: 8px solid var(--primary-green);
-            position: relative;
+            background: white; border-radius: 20px; padding: 25px;
+            margin-bottom: 20px; box-shadow: 0 6px 15px rgba(0,0,0,0.03);
+            border-right: 10px solid var(--primary); position: relative;
+            animation: fadeIn 0.5s ease;
         }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         .visit-date {
             position: absolute; left: 20px; top: 20px;
-            background: var(--light-bg); padding: 5px 10px;
-            border-radius: 8px; font-size: 13px; font-weight: bold;
+            background: var(--bg); padding: 8px 15px;
+            border-radius: 10px; font-size: 14px; font-weight: bold; color: var(--dark);
+            border: 1px solid var(--primary);
         }
 
         .section-title {
-            color: var(--primary-green); font-weight: bold;
-            margin-top: 10px; display: flex; align-items: center; gap: 8px;
+            color: var(--primary); font-weight: bold; font-size: 17px;
+            margin-top: 20px; display: flex; align-items: center; gap: 10px;
         }
 
-        .data-text { background: #fdfdfd; padding: 10px; border-radius: 8px; margin: 5px 0; border: 1px solid #eee; }
-
-        .med-item {
-            display: inline-block; background: #e8f4fd; color: #2980b9;
-            padding: 5px 12px; border-radius: 20px; margin: 3px; font-size: 14px;
+        .data-content { 
+            background: #fafafa; padding: 15px; border-radius: 12px; 
+            margin: 8px 0; border: 1px solid #eee; line-height: 1.6;
         }
 
-        #loading { text-align: center; padding: 50px; color: #999; }
-        .back-btn { background: var(--dark-teal); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; }
+        .med-tag {
+            display: inline-block; background: #eef7ff; color: var(--blue);
+            padding: 6px 14px; border-radius: 25px; margin: 4px; 
+            font-size: 14px; border: 1px solid #d0e8ff;
+        }
+
+        .drawing-img {
+            max-width: 100%; border-radius: 12px; border: 2px dashed #ccc;
+            margin-top: 10px; background: white;
+        }
+
+        #loading-screen { text-align: center; padding: 100px; color: var(--primary); }
+        .back-btn { 
+            background: var(--dark); color: white; border: none; 
+            padding: 12px 25px; border-radius: 10px; cursor: pointer; 
+            font-weight: bold; transition: 0.3s;
+        }
+        .back-btn:hover { background: #12876f; transform: scale(1.05); }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <h2 style="margin:0; color: var(--dark-teal);"> <i class="fas fa-file-medical"></i> السجل الطبي التاريخي</h2>
-        <button class="back-btn" onclick="history.back()">عودة للكشف</button>
+        <h2 style="margin:0; color: var(--dark);"> <i class="fas fa-history"></i> الأرشيف الطبي للمريض</h2>
+        <button class="back-btn" onclick="window.close()"> <i class="fas fa-times"></i> إغلاق السجل</button>
     </div>
 
     <div class="patient-info-bar" id="patient-meta">
-        <div><i class="fas fa-user"></i> <b id="meta-name">جاري التحميل...</b></div>
-        <div><i class="fas fa-phone"></i> <span id="meta-phone">-</span></div>
+        <div><i class="fas fa-user-circle"></i> <b id="meta-name">جاري البحث...</b></div>
+        <div><i class="fas fa-phone-alt"></i> <span id="meta-phone">-</span></div>
     </div>
 
-    <div id="loading"> <i class="fas fa-spinner fa-spin fa-3x"></i> <p>جاري سحب الملفات...</p> </div>
+    <div id="loading-screen"> 
+        <i class="fas fa-circle-notch fa-spin fa-4x"></i> 
+        <p style="margin-top:15px; font-weight:bold;">جاري استرجاع البيانات من السحابة...</p> 
+    </div>
     
-    <div id="history-list"></div>
+    <div id="history-container"></div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
-        import { getFirestore, collection, query, where, getDocs, orderBy } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+        import { getFirestore, collection, query, where, getDocs, orderBy } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBy8xPvxQuC6bVLerLpSjzPmvBWyAhuYKo",
@@ -91,74 +109,96 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // الحصول على رقم التليفون من الرابط
-        const urlParams = new URLSearchParams(window.location.search);
-        const phone = urlParams.get('phone');
+        // التقاط رقم الهاتف من الرابط (URL)
+        const params = new URLSearchParams(window.location.search);
+        const patientPhone = params.get('phone');
 
-        if (phone) {
-            loadPatientHistory(phone);
+        if (patientPhone) {
+            fetchFullHistory(patientPhone);
         } else {
-            document.body.innerHTML = "<h1>خطأ: لم يتم تحديد مريض</h1>";
+            document.getElementById('loading-screen').innerHTML = "<h3>⚠️ عذراً، لم يتم العثور على رقم مريض</h3>";
         }
 
-        async function loadPatientHistory(phoneNum) {
-            const container = document.getElementById('history-list');
-            const loading = document.getElementById('loading');
+        async function fetchFullHistory(phone) {
+            const container = document.getElementById('history-container');
+            const loader = document.getElementById('loading-screen');
             
             try {
+                // استعلام يجلب كل الروشتات والسجلات المرتبطة برقم الهاتف
                 const q = query(
-                    collection(db, "patient_history"), 
-                    where("phone", "==", phoneNum),
+                    collection(db, "prescriptions"), 
+                    where("patientPhone", "==", phone),
                     orderBy("timestamp", "desc")
                 );
 
-                const querySnapshot = await getDocs(q);
-                loading.style.display = 'none';
+                const snapshot = await getDocs(q);
+                loader.style.display = 'none';
 
-                if (querySnapshot.empty) {
-                    container.innerHTML = "<p style='text-align:center'>لا يوجد سجلات سابقة لهذا المريض</p>";
+                if (snapshot.empty) {
+                    container.innerHTML = "<div style='text-align:center; padding:50px;'><h3>لا توجد سجلات سابقة لهذا المريض حتى الآن.</h3></div>";
                     return;
                 }
 
-                // تحديث بيانات المريض في البار العلوي
-                const firstDoc = querySnapshot.docs[0].data();
-                document.getElementById('meta-name').innerText = firstDoc.name;
-                document.getElementById('meta-phone').innerText = firstDoc.phone;
+                // تحديث بيانات المريض في الأعلى من أول سجل متاح
+                const firstRecord = snapshot.docs[0].data();
+                document.getElementById('meta-name').innerText = firstRecord.patientName;
+                document.getElementById('meta-phone').innerText = firstRecord.patientPhone;
 
-                querySnapshot.forEach((doc) => {
+                snapshot.forEach((doc) => {
                     const visit = doc.data();
-                    const dateStr = visit.timestamp ? new Date(visit.timestamp.seconds * 1000).toLocaleDateString('ar-EG') : visit.date;
+                    
+                    // تنسيق التاريخ
+                    let formattedDate = "تاريخ غير مسجل";
+                    if (visit.timestamp) {
+                        formattedDate = new Date(visit.timestamp.seconds * 1000).toLocaleDateString('ar-EG', {
+                            day: 'numeric', month: 'long', year: 'numeric'
+                        });
+                    }
 
                     const card = document.createElement('div');
                     card.className = 'visit-card';
                     card.innerHTML = `
-                        <div class="visit-date">${dateStr}</div>
-                        <div style="margin-top:20px">
-                            <div class="section-title"><i class="fas fa-stethoscope"></i> الشكوى والأعراض:</div>
-                            <div class="data-text">${visit.symptoms || 'لا يوجد'}</div>
+                        <div class="visit-date">${formattedDate}</div>
+                        
+                        <div style="margin-top:25px">
+                            <div class="section-title"><i class="fas fa-diagnoses"></i> الأعراض والشكوى:</div>
+                            <div class="data-content">${visit.symptoms || 'لم يتم تسجيل أعراض'}</div>
 
-                            <div class="section-title"><i class="fas fa-notes-medical"></i> التشخيص:</div>
-                            <div class="data-text"><b>${visit.diagnosis || 'لم يحدد'}</b></div>
-
-                            <div class="section-title"><i class="fas fa-pills"></i> الروشتة المصروفة:</div>
-                            <div class="data-text">
-                                ${visit.prescription && visit.prescription.length > 0 
-                                    ? visit.prescription.map(m => `<span class="med-item">${m.name} (${m.dose})</span>`).join('')
-                                    : 'لم يتم وصف أدوية'}
+                            <div class="section-title"><i class="fas fa-file-prescription"></i> الروشتة والعلاج:</div>
+                            <div class="data-content">
+                                ${formatPrescription(visit.prescription)}
                             </div>
 
-                            ${visit.futureNote ? `
-                                <div class="section-title" style="color:var(--warning-orange)"><i class="fas fa-exclamation-circle"></i> ملحوظة للمتابعة:</div>
-                                <div class="data-text" style="background:#fff9e6">${visit.futureNote}</div>
+                            ${visit.drawing && visit.drawing.length > 100 ? `
+                                <div class="section-title"><i class="fas fa-draw-polygon"></i> المخطط التوضيحي (الرسم):</div>
+                                <div style="text-align:center;">
+                                    <img src="${visit.drawing}" class="drawing-img" alt="رسم توضيحي طبي">
+                                </div>
                             ` : ''}
+
+                            <div style="margin-top:15px; font-size:12px; color:#999; text-align:left;">
+                                الطبيب المعالج: ${visit.doctor || 'غير محدد'}
+                            </div>
                         </div>
                     `;
                     container.appendChild(card);
                 });
 
-            } catch (error) {
-                console.error(error);
-                container.innerHTML = "<p>حدث خطأ أثناء تحميل البيانات</p>";
+            } catch (err) {
+                console.error(err);
+                container.innerHTML = "<div class='data-content' style='color:red'>حدث خطأ أثناء الاتصال بقاعدة البيانات. تأكد من إعدادات الـ Index في Firestore.</div>";
+            }
+        }
+
+        // دالة ذكية لتنسيق الروشتة سواء كانت Array أو String
+        function formatPrescription(data) {
+            if (!data) return "لا يوجد علاج مسجل";
+            
+            if (Array.isArray(data)) {
+                return data.map(m => `<span class="med-tag">${m.name} - ${m.dose}</span>`).join('');
+            } else {
+                // إذا كان نصاً طويلاً، نحافظ على المسافات والأسطر
+                return `<div style="white-space: pre-line;">${data}</div>`;
             }
         }
     </script>
