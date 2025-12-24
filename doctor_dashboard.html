@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة الطبيب الذكية | نظام إدارة العيادات</title>
+    <title>لوحة الطبيب الذكية | نظام العيادات</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
@@ -11,7 +11,7 @@
             --white: #ffffff; --accent: #f39c12; --danger: #e74c3c;
         }
 
-        body { font-family: 'Segoe UI', sans-serif; background: var(--light); margin: 0; padding-bottom: 80px; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--light); margin: 0; padding-bottom: 80px; overflow-x: hidden; }
         
         .doctor-nav {
             background: var(--white); padding: 10px 20px; display: flex;
@@ -22,104 +22,119 @@
         .canvas-container {
             background: #fff; border: 2px dashed var(--primary);
             border-radius: 15px; margin: 10px 0; position: relative;
-            touch-action: none;
+            touch-action: none; overflow: hidden;
         }
-        canvas { width: 100%; height: 250px; cursor: crosshair; }
+        canvas { width: 100%; height: 300px; cursor: crosshair; display: block; }
         .canvas-tools { position: absolute; bottom: 10px; left: 10px; display: flex; gap: 5px; }
 
         .section-card {
-            background: white; margin: 15px; border-radius: 12px;
+            background: white; margin: 12px; border-radius: 12px;
             overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
         .section-header {
             background: var(--primary); color: white; padding: 15px;
-            display: flex; justify-content: space-between; cursor: pointer;
+            display: flex; justify-content: space-between; cursor: pointer; transition: 0.3s;
         }
-        .section-body { padding: 15px; display: none; }
-        .section-body.active { display: block; }
+        .section-header:hover { background: var(--dark); }
+        .section-body { padding: 15px; display: none; border: 1px solid #eee; border-top: 0; }
+        .section-body.active { display: block; animation: fadeIn 0.4s; }
+
+        @keyframes fadeIn { from {opacity: 0; transform: translateY(-10px);} to {opacity: 1; transform: translateY(0);} }
 
         textarea {
             width: 100%; border: 1px solid #ddd; border-radius: 8px;
-            padding: 10px; font-size: 16px; resize: none; box-sizing: border-box;
+            padding: 12px; font-size: 16px; resize: none; box-sizing: border-box; outline: none;
         }
+        textarea:focus { border-color: var(--primary); }
 
-        .templates-bar { display: flex; gap: 10px; overflow-x: auto; padding: 10px 0; }
+        .templates-bar { display: flex; gap: 10px; overflow-x: auto; padding: 10px 0; scrollbar-width: none; }
         .template-chip {
             background: var(--light); border: 1px solid var(--primary);
-            padding: 5px 15px; border-radius: 20px; white-space: nowrap;
-            cursor: pointer; font-size: 13px;
+            padding: 6px 18px; border-radius: 20px; white-space: nowrap;
+            cursor: pointer; font-size: 13px; font-weight: 500; transition: 0.2s;
         }
+        .template-chip:hover { background: var(--primary); color: white; }
 
         .dock-footer {
             position: fixed; bottom: 0; width: 100%; background: white;
-            padding: 15px; display: grid; grid-template-columns: 1fr 3fr; gap: 10px;
-            box-shadow: 0 -4px 15px rgba(0,0,0,0.1); box-sizing: border-box;
+            padding: 12px 20px; display: grid; grid-template-columns: 1fr 3fr; gap: 12px;
+            box-shadow: 0 -4px 15px rgba(0,0,0,0.1); box-sizing: border-box; z-index: 1000;
         }
 
-        .btn { border: none; border-radius: 10px; cursor: pointer; font-weight: bold; }
+        .btn { border: none; border-radius: 10px; cursor: pointer; font-weight: bold; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .btn-main { background: var(--primary); color: white; font-size: 18px; }
+        .btn-main:hover { background: var(--dark); transform: translateY(-2px); }
         .btn-sec { background: var(--accent); color: white; }
 
-        .listening { animation: pulse 1.5s infinite; color: red !important; }
-        @keyframes pulse { 0% {opacity: 1} 50% {opacity: 0.5} 100% {opacity: 1} }
+        .listening { animation: pulse 1.5s infinite; color: var(--danger) !important; }
+        @keyframes pulse { 0% {transform: scale(1)} 50% {transform: scale(1.2)} 100% {transform: scale(1)} }
+
+        #q-list .q-item {
+            padding: 15px; border-bottom: 1px solid #f0f0f0; cursor: pointer; transition: 0.2s;
+        }
+        #q-list .q-item:hover { background: var(--light); }
     </style>
 </head>
 <body>
 
 <nav class="doctor-nav">
     <div onclick="location.reload()" style="cursor:pointer">
-        <h3 style="margin:0; color:var(--dark)">لوحة الطبيب</h3>
-        <small id="doc-display-name">جاري التحميل...</small>
+        <h3 style="margin:0; color:var(--dark)"><i class="fas fa-user-md"></i> لوحة الطبيب</h3>
+        <small id="doc-display-name">جاري التعرف على الهوية...</small>
     </div>
     <div style="display: flex; gap: 10px; align-items: center;">
-        <button class="btn" style="background:var(--light); padding:10px;" onclick="toggleQueue()">
+        <button class="btn" style="background:var(--light); padding:8px 15px; color: var(--dark);" onclick="toggleQueue()">
             <i class="fas fa-users"></i> <span id="q-count">0</span>
         </button>
-        <button class="btn" style="color: var(--danger); background: #fdedec; padding: 10px; border-radius: 50%; width: 40px; height: 40px;" onclick="logout()" title="تسجيل الخروج">
+        <button class="btn" style="color: var(--danger); background: #fdedec; width: 40px; height: 40px; border-radius: 50%;" onclick="logout()" title="خروج">
             <i class="fas fa-sign-out-alt"></i>
         </button>
     </div>
 </nav>
 
-<div id="patient-welcome" style="text-align:center; padding:50px;">
-    <i class="fas fa-stethoscope fa-4x" style="color:var(--primary)"></i>
+<div id="patient-welcome" style="text-align:center; padding:80px 20px;">
+    <i class="fas fa-hospital-user fa-5x" style="color:var(--primary); margin-bottom: 20px;"></i>
     <h2 id="welcome-msg">مرحباً دكتور</h2>
-    <p>برجاء اختيار مريض من قائمة الانتظار للبدء</p>
+    <p style="color: #666;">في انتظار اختيار مريض من قائمة الانتظار للبدء..</p>
+    <button class="btn btn-main" style="margin: 20px auto; padding: 10px 25px; font-size: 16px;" onclick="toggleQueue()">فتح قائمة المرضى</button>
 </div>
 
 <div id="main-work-area" style="display:none;">
-    <div class="section-card">
-        <div style="padding:15px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items: center;">
-            <h4 id="active-p-name" style="margin:0">اسم المريض</h4>
-            <button class="btn btn-sec" style="padding:8px 12px" onclick="openPatientFile()">
-                <i class="fas fa-history"></i> السجلات السابقة
+    <div class="section-card" style="border-right: 5px solid var(--accent);">
+        <div style="padding:15px; display:flex; justify-content:space-between; align-items: center;">
+            <div>
+                <small style="color: #888;">المريض الحالي:</small>
+                <h3 id="active-p-name" style="margin:5px 0 0 0; color: var(--dark);">---</h3>
+            </div>
+            <button class="btn btn-sec" style="padding:10px 15px; font-size: 14px;" onclick="openPatientFile()">
+                <i class="fas fa-folder-open"></i> التاريخ المرضي
             </button>
         </div>
     </div>
 
     <div class="section-card">
         <div class="section-header" onclick="toggleSec(0)">
-            <span><i class="fas fa-comment-medical"></i> التشخيص والأعراض</span>
+            <span><i class="fas fa-notes-medical"></i> التشخيص السريري</span>
             <i class="fas fa-chevron-down"></i>
         </div>
         <div class="section-body active">
             <div style="position:relative">
-                <textarea id="symptoms-text" rows="3" placeholder="اكتب التشخيص هنا..."></textarea>
-                <i class="fas fa-microphone voice-btn" style="position:absolute; left:10px; bottom:10px; color: var(--primary); cursor:pointer" onclick="runVoice('symptoms-text', 'ar-SA')"></i>
+                <textarea id="symptoms-text" rows="4" placeholder="سجل الأعراض والتشخيص هنا..."></textarea>
+                <i class="fas fa-microphone voice-btn" style="position:absolute; left:15px; bottom:15px; color: var(--primary); cursor:pointer; font-size: 20px;" onclick="runVoice('symptoms-text', 'ar-SA')"></i>
             </div>
         </div>
     </div>
 
     <div class="section-card">
         <div class="section-header" onclick="toggleSec(1)">
-            <span><i class="fas fa-pen-nib"></i> المخطط الطبي (رسم يدي)</span>
+            <span><i class="fas fa-palette"></i> مخطط توضيحي (رسم)</span>
             <i class="fas fa-chevron-right"></i>
         </div>
         <div class="section-body">
             <div class="canvas-container">
                 <canvas id="medicalCanvas"></canvas>
                 <div class="canvas-tools">
-                    <button onclick="clearCanvas()" class="btn" style="padding:5px 10px; background: #eee;"><i class="fas fa-eraser"></i> مسح</button>
+                    <button onclick="clearCanvas()" class="btn" style="padding:8px 15px; background: #eee; font-size: 13px;"><i class="fas fa-eraser"></i> مسح اللوحة</button>
                 </div>
             </div>
         </div>
@@ -127,29 +142,40 @@
 
     <div class="section-card">
         <div class="section-header" onclick="toggleSec(2)">
-            <span><i class="fas fa-file-prescription"></i> الروشتة الإلكترونية</span>
+            <span><i class="fas fa-prescription-bottle-medical"></i> الروشتة العلاجية</span>
             <i class="fas fa-chevron-right"></i>
         </div>
         <div class="section-body">
             <div class="templates-bar" id="templates-list"></div>
-            <textarea id="prescription-text" rows="5" placeholder="اكتب العلاج والجرعات..."></textarea>
-            <button class="btn" style="margin-top:10px; background:var(--light); color:var(--dark); width:100%; padding:12px;" onclick="saveAsTemplate()">
-                <i class="fas fa-plus-circle"></i> حفظ كقالب روشتة سريعة
-            </button>
+            <textarea id="prescription-text" rows="6" placeholder="الأدوية، الجرعات، والتعليمات..."></textarea>
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <button class="btn" style="flex:1; background:var(--light); color:var(--dark); padding:10px;" onclick="saveAsTemplate()">
+                    <i class="fas fa-star"></i> حفظ كقالب
+                </button>
+            </div>
         </div>
     </div>
 </div>
 
 <div class="dock-footer">
-    <button class="btn btn-sec" onclick="location.reload()" title="إلغاء"><i class="fas fa-times"></i></button>
-    <button class="btn btn-main" onclick="finishSession()">إنهاء وإرسال للصيدلية <i class="fas fa-paper-plane"></i></button>
+    <button class="btn btn-sec" onclick="cancelSession()" title="إلغاء">
+        <i class="fas fa-times"></i>
+    </button>
+    <button class="btn btn-main" onclick="finishSession()">
+        <i class="fas fa-check-circle"></i> إنهاء وإرسال للصيدلية
+    </button>
 </div>
 
-<div id="queue-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:2000; align-items:center; justify-content:center;">
-    <div style="background:white; width:90%; max-width:400px; border-radius:20px; padding:20px;">
-        <h3 style="margin-top:0; color: var(--primary); border-bottom: 2px solid var(--light); padding-bottom: 10px;">المرضى في الانتظار</h3>
-        <div id="q-list" style="max-height: 300px; overflow-y: auto;"></div>
-        <button class="btn" style="width:100%; margin-top:15px; padding:12px; background: #eee;" onclick="toggleQueue()">إغلاق</button>
+<div id="queue-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:2000; align-items:center; justify-content:center; backdrop-filter: blur(5px);">
+    <div style="background:white; width:95%; max-width:450px; border-radius:20px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.3);">
+        <div style="background: var(--primary); color: white; padding: 20px; display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="margin:0;"><i class="fas fa-list-ol"></i> قائمة الانتظار</h3>
+            <span id="modal-q-count" style="background: rgba(255,255,255,0.2); padding: 5px 12px; border-radius: 15px; font-size: 14px;">0 مرضى</span>
+        </div>
+        <div id="q-list" style="max-height: 400px; overflow-y: auto; background: white;"></div>
+        <div style="padding: 15px; background: #f9f9f9;">
+            <button class="btn" style="width:100%; padding:12px; background: #ddd; color: #333;" onclick="toggleQueue()">إغلاق القائمة</button>
+        </div>
     </div>
 </div>
 
@@ -169,31 +195,38 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    const loggedInDoctor = localStorage.getItem('doctorName') || "طبيب زائر";
-    document.getElementById('doc-display-name').innerText = "د. " + loggedInDoctor;
-    document.getElementById('welcome-msg').innerText = `مرحباً د. ${loggedInDoctor}`;
+    // التحقق من الجلسة
+    const doctorName = localStorage.getItem('doctorName') || "طبيب";
+    document.getElementById('doc-display-name').innerHTML = `<i class="fas fa-circle" style="color: #2ecc71; font-size: 10px;"></i> د. ${doctorName}`;
+    document.getElementById('welcome-msg').innerText = `مرحباً د. ${doctorName}`;
 
     let currentP = null;
 
-    const appointmentsQuery = query(
+    // الاستماع لقائمة الانتظار (Live)
+    const q = query(
         collection(db, "appointments"), 
         where("status", "==", "انتظار"), 
-        where("doctor", "==", "د. " + loggedInDoctor)
+        where("doctor", "==", doctorName)
     );
 
-    onSnapshot(appointmentsQuery, (snap) => {
-        document.getElementById('q-count').innerText = snap.size;
+    onSnapshot(q, (snap) => {
+        const count = snap.size;
+        document.getElementById('q-count').innerText = count;
+        document.getElementById('modal-q-count').innerText = `${count} مريض`;
+        
         const list = document.getElementById('q-list');
-        list.innerHTML = snap.empty ? "<p style='text-align:center; color:#999;'>لا يوجد مرضى حالياً</p>" : "";
+        list.innerHTML = snap.empty ? 
+            `<div style="padding:40px; text-align:center; color:#999;"><i class="fas fa-coffee fa-2x"></i><p>لا يوجد مرضى في الانتظار حالياً</p></div>` : "";
         
         snap.forEach(d => {
             const data = d.data();
             list.innerHTML += `
-            <div style="padding:15px; border-bottom:1px solid #eee; cursor:pointer; transition:0.3s" 
-                 onclick="selectPatient('${d.id}', '${data.name}', '${data.phone}')"
-                 onmouseover="this.style.background='#f0fbf9'" onmouseout="this.style.background='transparent'">
-                <b style="color:var(--dark)">${data.name}</b> <br> 
-                <small style="color:#666"><i class="far fa-clock"></i> ${data.time}</small>
+            <div class="q-item" onclick="selectPatient('${d.id}', '${data.name}', '${data.phone}')">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <b style="color:var(--dark); font-size: 16px;">${data.name}</b>
+                    <span style="font-size: 12px; color: #888;"><i class="far fa-clock"></i> ${data.time}</span>
+                </div>
+                <small style="color:#666">${data.phone}</small>
             </div>`;
         });
     });
@@ -204,40 +237,58 @@
         document.getElementById('main-work-area').style.display = 'block';
         document.getElementById('active-p-name').innerText = name;
         toggleQueue();
-        initCanvas();
+        setTimeout(initCanvas, 100); // تأخير بسيط لضمان رندر الكانفاس
     };
 
     window.finishSession = async () => {
-        if(!currentP) return alert("برجاء اختيار مريض أولاً من القائمة");
+        if(!currentP) return alert("برجاء اختيار مريض أولاً");
+        
         const canvas = document.getElementById('medicalCanvas');
         const drawingData = canvas.toDataURL(); 
-        const docData = {
-            patientId: currentP.id, patientName: currentP.name, patientPhone: currentP.phone,
+
+        const prescriptionData = {
+            patientId: currentP.id,
+            patientName: currentP.name,
+            patientPhone: currentP.phone,
             symptoms: document.getElementById('symptoms-text').value,
             prescription: document.getElementById('prescription-text').value,
-            drawing: drawingData, doctor: "د. " + loggedInDoctor,
-            timestamp: serverTimestamp(), isDispensed: false 
+            drawing: drawingData,
+            doctor: doctorName,
+            timestamp: serverTimestamp(),
+            status: "جاهز" // للصيدلية
         };
-        try {
-            await addDoc(collection(db, "prescriptions"), docData);
-            await updateDoc(doc(db, "appointments", currentP.id), { status: "منتهي" });
-            alert("تم إرسال الروشتة للصيدلية بنجاح");
-            location.reload();
-        } catch (e) { alert("حدث خطأ في الاتصال"); }
-    };
 
-    // وظيفة تسجيل الخروج المحدثة
-    window.logout = () => {
-        if(confirm("هل أنت متأكد من تسجيل الخروج؟")) {
-            localStorage.clear(); // مسح كل البيانات المخزنة
-            window.location.href = "index.html"; 
+        try {
+            // 1. إرسال الروشتة للصيدلية
+            await addDoc(collection(db, "prescriptions"), prescriptionData);
+            // 2. تحديث حالة المريض عند الممرض فوراً
+            await updateDoc(doc(db, "appointments", currentP.id), { status: "منتهي" });
+            
+            alert("تم إرسال الروشتة وحفظ الكشف بنجاح.");
+            location.reload();
+        } catch (e) {
+            alert("فشل الاتصال بفايربيز: " + e.message);
         }
     };
 
+    window.cancelSession = () => {
+        if(confirm("هل تريد إلغاء الجلسة الحالية؟ لن يتم حفظ البيانات.")) {
+            location.reload();
+        }
+    };
+
+    window.logout = () => {
+        if(confirm("تسجيل خروج من النظام؟")) {
+            localStorage.clear();
+            window.location.href = "index.html";
+        }
+    };
+
+    // القوالب
     window.saveAsTemplate = () => {
         const text = document.getElementById('prescription-text').value;
-        if(!text) return;
-        const name = prompt("ادخل اسماً لهذا القالب:");
+        if(!text) return alert("اكتب العلاج أولاً لحفظه كقالب");
+        const name = prompt("اسم القالب (مثلاً: روشتة ضغط):");
         if(name) {
             let temps = JSON.parse(localStorage.getItem('doc_templates') || '[]');
             temps.push({ name, text });
@@ -256,35 +307,51 @@
         document.getElementById('prescription-text').value = decodeURIComponent(escape(atob(base64)));
     };
 
-    window.openPatientFile = () => {
-        if(currentP) window.open(`patient_history.html?phone=${currentP.phone}`, '_blank');
-    };
-
     loadTemplates();
 </script>
 
 <script>
-    // Canvas & UI Logic
+    // نظام الرسم (Canvas) المحسن
     let ctx, drawing = false;
     function initCanvas() {
         const canvas = document.getElementById('medicalCanvas');
         ctx = canvas.getContext('2d');
-        canvas.width = canvas.offsetWidth;
-        canvas.height = 250;
-        ctx.strokeStyle = "#16a085"; ctx.lineWidth = 3; ctx.lineCap = "round";
+        canvas.width = canvas.parentElement.clientWidth;
+        canvas.height = 300;
+        
+        ctx.strokeStyle = "#16a085"; 
+        ctx.lineWidth = 3; 
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+
         const getPos = (e) => {
             const rect = canvas.getBoundingClientRect();
-            return { x: (e.clientX || e.touches[0].clientX) - rect.left, y: (e.clientY || e.touches[0].clientY) - rect.top };
+            const clientX = e.clientX || (e.touches ? e.touches[0].clientX : 0);
+            const clientY = e.clientY || (e.touches ? e.touches[0].clientY : 0);
+            return { x: clientX - rect.left, y: clientY - rect.top };
         };
+
         const start = (e) => { drawing = true; ctx.beginPath(); const pos = getPos(e); ctx.moveTo(pos.x, pos.y); };
-        const draw = (e) => { if(!drawing) return; const pos = getPos(e); ctx.lineTo(pos.x, pos.y); ctx.stroke(); };
+        const draw = (e) => { 
+            if(!drawing) return; 
+            e.preventDefault();
+            const pos = getPos(e); 
+            ctx.lineTo(pos.x, pos.y); 
+            ctx.stroke(); 
+        };
         const end = () => { drawing = false; };
-        canvas.addEventListener('mousedown', start); canvas.addEventListener('mousemove', draw); canvas.addEventListener('mouseup', end);
-        canvas.addEventListener('touchstart', (e) => { e.preventDefault(); start(e); });
-        canvas.addEventListener('touchmove', (e) => { e.preventDefault(); draw(e); });
+
+        canvas.addEventListener('mousedown', start);
+        canvas.addEventListener('mousemove', draw);
+        window.addEventListener('mouseup', end);
+        
+        canvas.addEventListener('touchstart', start, {passive: false});
+        canvas.addEventListener('touchmove', draw, {passive: false});
         canvas.addEventListener('touchend', end);
     }
-    function clearCanvas() { ctx.clearRect(0, 0, 2000, 2000); }
+
+    function clearCanvas() { if(confirm("مسح الرسم؟")) ctx.clearRect(0, 0, 1000, 1000); }
+
     function toggleSec(idx) {
         document.querySelectorAll('.section-body').forEach((b, i) => {
             b.classList.toggle('active', i === idx);
@@ -292,16 +359,18 @@
             icon.className = i === idx ? 'fas fa-chevron-down' : 'fas fa-chevron-right';
         });
     }
+
     function toggleQueue() {
         const m = document.getElementById('queue-modal');
         m.style.display = m.style.display === 'none' ? 'flex' : 'none';
     }
+
     function runVoice(id, lang) {
         const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
         recognition.lang = lang;
         recognition.onstart = () => document.querySelector('.voice-btn').classList.add('listening');
         recognition.onend = () => document.querySelector('.voice-btn').classList.remove('listening');
-        recognition.onresult = (e) => document.getElementById(id).value += e.results[0][0].transcript;
+        recognition.onresult = (e) => document.getElementById(id).value += " " + e.results[0][0].transcript;
         recognition.start();
     }
 </script>
