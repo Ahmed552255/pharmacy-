@@ -13,14 +13,12 @@
 
         body { font-family: 'Segoe UI', sans-serif; background: var(--light); margin: 0; padding-bottom: 80px; }
         
-        /* Navigation */
         .doctor-nav {
             background: var(--white); padding: 10px 20px; display: flex;
             justify-content: space-between; align-items: center;
             box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 1000;
         }
 
-        /* Canvas Area */
         .canvas-container {
             background: #fff; border: 2px dashed var(--primary);
             border-radius: 15px; margin: 10px 0; position: relative;
@@ -29,7 +27,6 @@
         canvas { width: 100%; height: 250px; cursor: crosshair; }
         .canvas-tools { position: absolute; bottom: 10px; left: 10px; display: flex; gap: 5px; }
 
-        /* Sections */
         .section-card {
             background: white; margin: 15px; border-radius: 12px;
             overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
@@ -78,7 +75,7 @@
         <button class="btn" style="background:var(--light); padding:10px;" onclick="toggleQueue()">
             <i class="fas fa-users"></i> <span id="q-count">0</span>
         </button>
-        <button class="btn" style="color: var(--danger); background: none;" onclick="logout()">
+        <button class="btn" style="color: var(--danger); background: #fdedec; padding: 10px; border-radius: 50%; width: 40px; height: 40px;" onclick="logout()" title="تسجيل الخروج">
             <i class="fas fa-sign-out-alt"></i>
         </button>
     </div>
@@ -172,14 +169,12 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // التحقق من اسم الدكتور المسجل
     const loggedInDoctor = localStorage.getItem('doctorName') || "طبيب زائر";
     document.getElementById('doc-display-name').innerText = "د. " + loggedInDoctor;
     document.getElementById('welcome-msg').innerText = `مرحباً د. ${loggedInDoctor}`;
 
     let currentP = null;
 
-    // 1. إدارة قائمة الانتظار (تصفية حسب الدكتور المسجل فقط)
     const appointmentsQuery = query(
         collection(db, "appointments"), 
         where("status", "==", "انتظار"), 
@@ -212,45 +207,37 @@
         initCanvas();
     };
 
-    // 2. إنهاء الكشف
     window.finishSession = async () => {
         if(!currentP) return alert("برجاء اختيار مريض أولاً من القائمة");
-        
         const canvas = document.getElementById('medicalCanvas');
         const drawingData = canvas.toDataURL(); 
-
         const docData = {
-            patientId: currentP.id,
-            patientName: currentP.name,
-            patientPhone: currentP.phone,
+            patientId: currentP.id, patientName: currentP.name, patientPhone: currentP.phone,
             symptoms: document.getElementById('symptoms-text').value,
             prescription: document.getElementById('prescription-text').value,
-            drawing: drawingData,
-            doctor: "د. " + loggedInDoctor,
-            timestamp: serverTimestamp(),
-            isDispensed: false 
+            drawing: drawingData, doctor: "د. " + loggedInDoctor,
+            timestamp: serverTimestamp(), isDispensed: false 
         };
-
         try {
             await addDoc(collection(db, "prescriptions"), docData);
             await updateDoc(doc(db, "appointments", currentP.id), { status: "منتهي" });
             alert("تم إرسال الروشتة للصيدلية بنجاح");
             location.reload();
-        } catch (e) {
-            alert("حدث خطأ في الاتصال");
+        } catch (e) { alert("حدث خطأ في الاتصال"); }
+    };
+
+    // وظيفة تسجيل الخروج المحدثة
+    window.logout = () => {
+        if(confirm("هل أنت متأكد من تسجيل الخروج؟")) {
+            localStorage.clear(); // مسح كل البيانات المخزنة
+            window.location.href = "index.html"; 
         }
     };
 
-    window.logout = () => {
-        localStorage.removeItem('doctorName');
-        window.location.href = "login.html"; // افترضنا أن اسم صفحة الدخول login.html
-    };
-
-    // ميزات الروشتة والقوالب
     window.saveAsTemplate = () => {
         const text = document.getElementById('prescription-text').value;
         if(!text) return;
-        const name = prompt("ادخل اسماً لهذا القالب (مثل: علاج نزلات برد):");
+        const name = prompt("ادخل اسماً لهذا القالب:");
         if(name) {
             let temps = JSON.parse(localStorage.getItem('doc_templates') || '[]');
             temps.push({ name, text });
@@ -277,39 +264,27 @@
 </script>
 
 <script>
-    // Canvas Logic
+    // Canvas & UI Logic
     let ctx, drawing = false;
     function initCanvas() {
         const canvas = document.getElementById('medicalCanvas');
         ctx = canvas.getContext('2d');
         canvas.width = canvas.offsetWidth;
         canvas.height = 250;
-        ctx.strokeStyle = "#16a085";
-        ctx.lineWidth = 3;
-        ctx.lineCap = "round";
-
+        ctx.strokeStyle = "#16a085"; ctx.lineWidth = 3; ctx.lineCap = "round";
         const getPos = (e) => {
             const rect = canvas.getBoundingClientRect();
-            return {
-                x: (e.clientX || e.touches[0].clientX) - rect.left,
-                y: (e.clientY || e.touches[0].clientY) - rect.top
-            };
+            return { x: (e.clientX || e.touches[0].clientX) - rect.left, y: (e.clientY || e.touches[0].clientY) - rect.top };
         };
-
         const start = (e) => { drawing = true; ctx.beginPath(); const pos = getPos(e); ctx.moveTo(pos.x, pos.y); };
         const draw = (e) => { if(!drawing) return; const pos = getPos(e); ctx.lineTo(pos.x, pos.y); ctx.stroke(); };
         const end = () => { drawing = false; };
-
-        canvas.addEventListener('mousedown', start);
-        canvas.addEventListener('mousemove', draw);
-        canvas.addEventListener('mouseup', end);
+        canvas.addEventListener('mousedown', start); canvas.addEventListener('mousemove', draw); canvas.addEventListener('mouseup', end);
         canvas.addEventListener('touchstart', (e) => { e.preventDefault(); start(e); });
         canvas.addEventListener('touchmove', (e) => { e.preventDefault(); draw(e); });
         canvas.addEventListener('touchend', end);
     }
-
     function clearCanvas() { ctx.clearRect(0, 0, 2000, 2000); }
-
     function toggleSec(idx) {
         document.querySelectorAll('.section-body').forEach((b, i) => {
             b.classList.toggle('active', i === idx);
@@ -317,12 +292,10 @@
             icon.className = i === idx ? 'fas fa-chevron-down' : 'fas fa-chevron-right';
         });
     }
-
     function toggleQueue() {
         const m = document.getElementById('queue-modal');
         m.style.display = m.style.display === 'none' ? 'flex' : 'none';
     }
-
     function runVoice(id, lang) {
         const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
         recognition.lang = lang;
