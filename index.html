@@ -21,7 +21,7 @@
 
         .login-container {
             background: var(--white); padding: 40px; border-radius: 25px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.2); width: 100%; max-width: 400px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2); width: 100%; max-width: 420px;
             text-align: center; position: relative;
         }
 
@@ -32,11 +32,11 @@
             color: var(--primary); font-size: 35px; box-shadow: 0 5px 15px rgba(0,0,0,0.1);
         }
 
-        h2 { color: #333; margin-bottom: 10px; }
-        p { color: #777; font-size: 14px; margin-bottom: 30px; }
+        h2 { color: #333; margin-bottom: 5px; }
+        p { color: #777; font-size: 14px; margin-bottom: 25px; }
 
-        .input-group { position: relative; margin-bottom: 20px; text-align: right; }
-        .input-group i, .select-group i { position: absolute; right: 15px; top: 42px; color: var(--primary); z-index: 1; }
+        .input-group { position: relative; margin-bottom: 15px; text-align: right; }
+        .input-group i { position: absolute; right: 15px; top: 42px; color: var(--primary); z-index: 1; }
 
         label { display: block; margin-bottom: 8px; font-weight: bold; color: #555; font-size: 14px; }
 
@@ -56,13 +56,10 @@
 
         .login-btn:hover { background: var(--dark-teal); transform: translateY(-2px); }
         
-        #doctor-link-group {
-            background: #f0fbf9; padding: 15px; border-radius: 12px;
-            margin-bottom: 20px; display: none; border: 1px dashed var(--primary);
-        }
+        #doctor-link-group, #name-group { display: none; } /* مخفيين في البداية */
 
         .footer-text { margin-top: 25px; font-size: 12px; color: #999; }
-        .toggle-link { display: block; margin-top: 15px; color: var(--primary); cursor: pointer; font-size: 14px; }
+        .toggle-link { display: block; margin-top: 15px; color: var(--primary); cursor: pointer; font-size: 14px; text-decoration: underline; }
     </style>
 </head>
 <body>
@@ -73,9 +70,15 @@
         </div>
         
         <h2 id="form-title">تسجيل الدخول</h2>
-        <p id="form-subtitle">يرجى تسجيل الدخول للوصول إلى لوحة التحكم</p>
+        <p id="form-subtitle">أهلاً بك مجدداً في نظامك الذكي</p>
 
         <form id="authForm">
+            <div class="input-group" id="name-group">
+                <label>الاسم الكامل</label>
+                <i class="fas fa-user"></i>
+                <input type="text" id="fullname" placeholder="الاسم ثلاثي...">
+            </div>
+
             <div class="input-group">
                 <label>البريد الإلكتروني</label>
                 <i class="fas fa-envelope"></i>
@@ -99,7 +102,7 @@
                 </select>
             </div>
 
-            <div id="doctor-link-group" class="input-group">
+            <div id="doctor-link-group" class="input-group" style="display: none; background: #f0fbf9; padding: 10px; border-radius: 12px; border: 1px dashed var(--primary);">
                 <label>ربط مع طبيب مختص</label>
                 <i class="fas fa-user-md"></i>
                 <select id="linked-doctor">
@@ -113,13 +116,13 @@
 
         <div class="footer-text">
             © 2025 نظام العيادات الذكي <br>
-            بواسطة فريق الإدارة التقنية
+            دقة . سرعة . أمان
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
         
         const firebaseConfig = {
@@ -135,23 +138,23 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // وظيفة جلب الأطباء من Firestore
+        // جلب قائمة الأطباء من Firestore لربط الممرض
         async function fetchDoctors() {
             const doctorSelect = document.getElementById('linked-doctor');
             try {
-                const querySnapshot = await getDocs(collection(db, "doctors"));
+                const querySnapshot = await getDocs(collection(db, "users")); // نبحث في المستخدمين
                 doctorSelect.innerHTML = '<option value="">اختر الطبيب...</option>';
                 querySnapshot.forEach((doc) => {
                     const data = doc.data();
-                    const name = data.name.startsWith('د. ') ? data.name : "د. " + data.name;
-                    doctorSelect.innerHTML += `<option value="${name}">${name}</option>`;
+                    if(data.role === 'doctor') {
+                        doctorSelect.innerHTML += `<option value="${data.name}">${data.name}</option>`;
+                    }
                 });
             } catch (e) {
-                doctorSelect.innerHTML = '<option value="د. رأفت">د. رأفت</option>';
+                doctorSelect.innerHTML = '<option value="">خطأ في التحميل</option>';
             }
         }
 
-        // إظهار/إخفاء خانة الدكتور للممرض
         window.handleRoleChange = (role) => {
             const linkGroup = document.getElementById('doctor-link-group');
             if(role === 'attendant') {
@@ -168,20 +171,21 @@
             'pharmacist': 'pharmacy_main.html'
         };
 
-        // تبديل بين دخول وتسجيل
         let isRegistering = false;
         const toggleLink = document.getElementById('toggle-auth');
+        
         toggleLink.addEventListener('click', () => {
             isRegistering = !isRegistering;
             document.getElementById('form-title').textContent = isRegistering ? 'تسجيل حساب جديد' : 'تسجيل الدخول';
+            document.getElementById('name-group').style.display = isRegistering ? 'block' : 'none';
             document.getElementById('role-group').style.display = isRegistering ? 'block' : 'none';
             document.getElementById('auth-button').textContent = isRegistering ? 'إنشاء حساب' : 'دخول للنظام';
-            if(!isRegistering) document.getElementById('doctor-link-group').style.display = 'none';
+            toggleLink.textContent = isRegistering ? 'لديك حساب بالفعل؟ سجل دخول' : 'ليس لديك حساب؟ سجل الآن';
         });
 
-        // تنفيذ الدخول/التسجيل
         document.getElementById('authForm').addEventListener('submit', async (e) => {
             e.preventDefault();
+            const name = document.getElementById('fullname').value;
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             const role = document.getElementById('role').value;
@@ -189,26 +193,42 @@
 
             try {
                 if (isRegistering) {
-                    if (!role) return alert('اختر مهنتك أولاً');
-                    if (role === 'attendant' && !linkedDoc) return alert('يجب ربط الممرض بطبيب');
-
+                    if (!name || !role) return alert('يرجى إكمال جميع الخانات');
+                    
                     const userCred = await createUserWithEmailAndPassword(auth, email, password);
+                    
+                    // حفظ بيانات المستخدم في Firestore
                     await setDoc(doc(db, "users", userCred.user.uid), {
-                        email, role, linkedDoctor: linkedDoc || null
+                        name: name,
+                        email: email,
+                        role: role,
+                        linkedDoctor: linkedDoc || null
                     });
                     
+                    // تخزين محلي للوصول السريع
+                    localStorage.setItem('userName', name);
                     localStorage.setItem('userRole', role);
                     if(linkedDoc) localStorage.setItem('doctorName', linkedDoc);
+                    if(role === 'doctor') localStorage.setItem('doctorName', name);
+
+                    alert('تم إنشاء الحساب بنجاح!');
                     window.location.href = REDIRECT_MAP[role];
+
                 } else {
                     const userCred = await signInWithEmailAndPassword(auth, email, password);
                     const userDoc = await getDoc(doc(db, "users", userCred.user.uid));
+                    
                     if (userDoc.exists()) {
                         const data = userDoc.data();
+                        localStorage.setItem('userName', data.name);
                         localStorage.setItem('userRole', data.role);
-                        if(data.linkedDoctor) localStorage.setItem('doctorName', data.linkedDoctor);
-                        // إذا كان طبيب، نخزن اسمه هو كدكتور
-                        if(data.role === 'doctor') localStorage.setItem('doctorName', email.split('@')[0]); 
+                        
+                        if(data.role === 'doctor') {
+                            localStorage.setItem('doctorName', data.name);
+                        } else if(data.linkedDoctor) {
+                            localStorage.setItem('doctorName', data.linkedDoctor);
+                        }
+                        
                         window.location.href = REDIRECT_MAP[data.role];
                     }
                 }
