@@ -44,7 +44,6 @@
             width: 90%; max-width: 500px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
         }
         
-        /* نافذة الإحصائيات المنبثقة */
         .stats-modal-content {
             display: flex; flex-direction: column; gap: 15px;
             padding: 20px;
@@ -117,7 +116,6 @@
         </table>
     </div>
 
-    <!-- نافذة الحجز الجديد -->
     <div id="bookingModal" class="modal">
         <div class="modal-content">
             <h3 style="margin-top:0; color:var(--primary);">تسجيل حجز جديد</h3>
@@ -131,23 +129,13 @@
         </div>
     </div>
 
-    <!-- نافذة الإحصائيات المنبثقة -->
     <div id="statsModal" class="modal" onclick="closeStatsModal(event)">
         <div class="modal-content">
             <h3 style="margin-top:0; color:var(--primary); text-align:center;">إحصائيات اليوم لعيادة د. <span id="stats-doctor-name"></span></h3>
             <div class="stats-modal-content">
-                <div class="stat-card">
-                    <i class="fas fa-users"></i>
-                    <div class="info"><h3 id="stat-total">0</h3><p>إجمالي الحجوزات</p></div>
-                </div>
-                <div class="stat-card" style="border-left-color: var(--warning);">
-                    <i class="fas fa-hourglass-half" style="color: var(--warning);"></i>
-                    <div class="info"><h3 id="stat-waiting">0</h3><p>في الانتظار حالياً</p></div>
-                </div>
-                <div class="stat-card" style="border-left-color: var(--dark);">
-                    <i class="fas fa-wallet" style="color: var(--dark);"></i>
-                    <div class="info"><h3 id="stat-revenue">0 ج.م</h3><p>الإيرادات المكتملة</p></div>
-                </div>
+                <div class="stat-card"><i class="fas fa-users"></i><div class="info"><h3 id="stat-total">0</h3><p>إجمالي الحجوزات</p></div></div>
+                <div class="stat-card" style="border-left-color: var(--warning);"><i class="fas fa-hourglass-half" style="color: var(--warning);"></i><div class="info"><h3 id="stat-waiting">0</h3><p>في الانتظار حالياً</p></div></div>
+                <div class="stat-card" style="border-left-color: var(--dark);"><i class="fas fa-wallet" style="color: var(--dark);"></i><div class="info"><h3 id="stat-revenue">0 ج.م</h3><p>الإيرادات المكتملة</p></div></div>
             </div>
             <button onclick="closeStatsModal({target: document.getElementById('statsModal')})" class="btn btn-light" style="width:100%; margin-top:10px;">إغلاق</button>
         </div>
@@ -183,8 +171,6 @@
 
         const getTodayDate = () => new Date().toISOString().split('T')[0];
         
-        // --- الحل النهائي لمشكلة التحديث ---
-        // الاستعلام الآن يجلب كل حجوزات اليوم للطبيب المحدد بغض النظر عن الحالة
         const q = query(
             collection(db, "appointments"), 
             where("date", "==", getTodayDate()), 
@@ -194,33 +180,35 @@
 
         onSnapshot(q, (snapshot) => {
             const tbody = document.getElementById('patientsTableBody');
-            tbody.innerHTML = '';
-            
+            let tableRowsHTML = ''; // متغير لتجميع صفوف الجدول
             let totalCount = 0, waitingCount = 0, totalRevenue = 0;
 
+            snapshot.forEach((doc) => {
+                const p = doc.data();
+                totalCount++;
+                if (p.status === 'انتظار') waitingCount++;
+                else if (p.status === 'منتهي') totalRevenue += parseFloat(p.price || 0);
+
+                // *** هنا كان الخطأ، الآن نقوم بتجميع الصفوف في متغير واحد ***
+                tableRowsHTML += `
+                    <tr>
+                        <td><strong>${p.name}</strong></td>
+                        <td>${p.age}</td>
+                        <td>${p.phone}</td>
+                        <td>${p.time}</td>
+                        <td>${p.price || 0} ج.م</td>
+                        <td><span class="status-badge ${p.status === 'انتظار' ? 'status-waiting' : 'status-done'}">${p.status}</span></td>
+                    </tr>
+                `;
+            });
+
+            // *** بعد انتهاء التجميع، نتحقق إذا كان فارغاً أم لا ***
             if (snapshot.empty) {
                 tbody.innerHTML = `<tr><td colspan="6" style="padding: 30px; color: #888;">لا توجد حجوزات لهذا الطبيب اليوم.</td></tr>`;
             } else {
-                snapshot.forEach((doc) => {
-                    const p = doc.data();
-                    totalCount++;
-                    if (p.status === 'انتظار') waitingCount++;
-                    else if (p.status === 'منتهي') totalRevenue += parseFloat(p.price || 0);
-
-                    tbody.innerHTML += `
-                        <tr>
-                            <td><strong>${p.name}</strong></td>
-                            <td>${p.age}</td>
-                            <td>${p.phone}</td>
-                            <td>${p.time}</td>
-                            <td>${p.price || 0} ج.م</td>
-                            <td><span class="status-badge ${p.status === 'انتظار' ? 'status-waiting' : 'status-done'}">${p.status}</span></td>
-                        </tr>
-                    `;
-                });
+                tbody.innerHTML = tableRowsHTML; // نضع كل الصفوف في الجدول دفعة واحدة
             }
 
-            // تحديث الإحصائيات في النافذة المنبثقة
             document.getElementById('stat-total').innerText = totalCount;
             document.getElementById('stat-waiting').innerText = waitingCount;
             document.getElementById('stat-revenue').innerText = `${totalRevenue} ج.م`;
@@ -253,7 +241,6 @@
             }
         };
 
-        // --- دوال التحكم في النوافذ المنبثقة ---
         const bookingModal = document.getElementById('bookingModal');
         const statsModal = document.getElementById('statsModal');
 
@@ -262,7 +249,6 @@
         
         window.showStatsModal = () => statsModal.style.display = 'flex';
         window.closeStatsModal = (event) => {
-            // الإغلاق عند الضغط على الخلفية الرمادية فقط
             if (event.target === statsModal) {
                 statsModal.style.display = 'none';
             }
