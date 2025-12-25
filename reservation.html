@@ -42,9 +42,9 @@
         .modal-content { 
             background: white; padding: 30px; border-radius: 20px; 
             width: 90%; max-width: 500px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            max-height: 80vh; overflow-y: auto;
         }
         
-        /* نافذة الإحصائيات المنبثقة */
         .stats-modal-content {
             display: flex; flex-direction: column; gap: 15px;
             padding: 20px;
@@ -58,9 +58,49 @@
         .stat-card .info h3 { margin: 0 0 5px 0; font-size: 22px; }
         .stat-card .info p { margin: 0; color: var(--text-light); }
 
+        .doctor-stats-section {
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 2px solid #eee;
+        }
+        .doctor-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+        .doctor-card h4 {
+            margin: 0 0 15px 0;
+            font-size: 18px;
+            border-bottom: 2px solid rgba(255,255,255,0.3);
+            padding-bottom: 10px;
+        }
+        .doctor-stats {
+            display: flex;
+            justify-content: space-around;
+            gap: 10px;
+        }
+        .doctor-stat-item {
+            text-align: center;
+        }
+        .doctor-stat-item .number {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .doctor-stat-item .label {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
         .form-group { margin-bottom: 15px; }
         .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
-        .form-group input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
+        .form-group input, .form-group select { 
+            width: 100%; padding: 10px; border: 1px solid #ccc; 
+            border-radius: 8px; box-sizing: border-box; 
+        }
         
         .btn {
             border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;
@@ -89,6 +129,9 @@
             <div id="staffInfo" style="color: var(--dark); font-weight: bold; margin-top: 5px;"></div>
         </div>
         <div class="actions-group">
+            <button onclick="showAllDoctorsStats()" class="btn btn-light">
+                <i class="fas fa-chart-line"></i> إحصائيات جميع الأطباء
+            </button>
             <button onclick="showStatsModal()" class="btn btn-light">
                 <i class="fas fa-chart-bar"></i> عرض الإحصائيات
             </button>
@@ -121,11 +164,14 @@
     <div id="bookingModal" class="modal">
         <div class="modal-content">
             <h3 style="margin-top:0; color:var(--primary);">تسجيل حجز جديد</h3>
+            <div class="form-group">
+                <label>اختر الدكتور</label>
+                <select id="pDoctor" required></select>
+            </div>
             <div class="form-group"><label>اسم المريض</label><input type="text" id="pName" required></div>
             <div class="form-group"><label>عمر المريض</label><input type="number" id="pAge" required></div>
             <div class="form-group"><label>رقم الموبايل</label><input type="tel" id="pPhone" required></div>
             <div class="form-group"><label>قيمة الكشف (ج.م)</label><input type="number" id="pPrice" value="250" required></div>
-            <div class="form-group" style="display:none;"><select id="pDoctor"></select></div>
             <button class="btn btn-primary" style="width:100%; padding: 15px;" onclick="saveNewBooking()">تأكيد الحجز</button>
             <button onclick="closeBookingModal()" style="background:none; border:none; color:gray; width:100%; margin-top:10px; cursor:pointer;">إلغاء</button>
         </div>
@@ -153,9 +199,20 @@
         </div>
     </div>
 
+    <!-- نافذة إحصائيات جميع الأطباء -->
+    <div id="allDoctorsStatsModal" class="modal" onclick="closeAllDoctorsStatsModal(event)">
+        <div class="modal-content">
+            <h3 style="margin-top:0; color:var(--primary); text-align:center;">
+                <i class="fas fa-chart-line"></i> إحصائيات جميع الأطباء اليوم
+            </h3>
+            <div id="allDoctorsStatsContent"></div>
+            <button onclick="closeAllDoctorsStatsModal({target: document.getElementById('allDoctorsStatsModal')})" class="btn btn-light" style="width:100%; margin-top:20px;">إغلاق</button>
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, where, orderBy } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, where, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBTM1aa1cF0gyeLoKLlJPuYgystJ_Q3b_Q",
@@ -178,13 +235,30 @@
         }
         
         document.getElementById('staffInfo').innerText = `الموظف: ${userName} | عيادة د. ${assignedDoctorName}`;
-        document.getElementById('pDoctor').innerHTML = `<option value="${assignedDoctorName}">${assignedDoctorName}</option>`;
         document.getElementById('stats-doctor-name').innerText = assignedDoctorName;
+
+        // تحميل قائمة الأطباء في قائمة الاختيار
+        const loadDoctors = async () => {
+            const doctorsQuery = query(collection(db, "doctors"));
+            const doctorsSnapshot = await getDocs(doctorsQuery);
+            const doctorSelect = document.getElementById('pDoctor');
+            doctorSelect.innerHTML = '';
+            
+            doctorsSnapshot.forEach((doc) => {
+                const doctorData = doc.data();
+                const option = document.createElement('option');
+                option.value = doctorData.name;
+                option.textContent = `د. ${doctorData.name}`;
+                if (doctorData.name === assignedDoctorName) {
+                    option.selected = true;
+                }
+                doctorSelect.appendChild(option);
+            });
+        };
+        loadDoctors();
 
         const getTodayDate = () => new Date().toISOString().split('T')[0];
         
-        // --- الحل النهائي لمشكلة التحديث ---
-        // الاستعلام الآن يجلب كل حجوزات اليوم للطبيب المحدد بغض النظر عن الحالة
         const q = query(
             collection(db, "appointments"), 
             where("date", "==", getTodayDate()), 
@@ -220,18 +294,19 @@
                 });
             }
 
-            // تحديث الإحصائيات في النافذة المنبثقة
             document.getElementById('stat-total').innerText = totalCount;
             document.getElementById('stat-waiting').innerText = waitingCount;
             document.getElementById('stat-revenue').innerText = `${totalRevenue} ج.م`;
         });
 
         window.saveNewBooking = async () => {
-            const name = document.getElementById('pName').value, age = document.getElementById('pAge').value,
-                  phone = document.getElementById('pPhone').value, price = document.getElementById('pPrice').value,
+            const name = document.getElementById('pName').value, 
+                  age = document.getElementById('pAge').value,
+                  phone = document.getElementById('pPhone').value, 
+                  price = document.getElementById('pPrice').value,
                   doctor = document.getElementById('pDoctor').value;
 
-            if(!name || !phone || !age || !price) return alert('الرجاء إكمال كافة بيانات الحجز.');
+            if(!name || !phone || !age || !price || !doctor) return alert('الرجاء إكمال كافة بيانات الحجز.');
 
             try {
                 await addDoc(collection(db, "appointments"), {
@@ -241,9 +316,15 @@
                     timestamp: new Date().getTime()
                 });
                 closeBookingModal();
-                document.getElementById('pName').value = ''; document.getElementById('pAge').value = '';
-                document.getElementById('pPhone').value = ''; document.getElementById('pPrice').value = '250';
-            } catch (e) { alert("حدث خطأ أثناء حفظ الحجز."); }
+                document.getElementById('pName').value = ''; 
+                document.getElementById('pAge').value = '';
+                document.getElementById('pPhone').value = ''; 
+                document.getElementById('pPrice').value = '250';
+                alert('تم تسجيل الحجز بنجاح!');
+            } catch (e) { 
+                console.error(e);
+                alert("حدث خطأ أثناء حفظ الحجز."); 
+            }
         };
         
         window.logout = () => {
@@ -253,18 +334,104 @@
             }
         };
 
-        // --- دوال التحكم في النوافذ المنبثقة ---
         const bookingModal = document.getElementById('bookingModal');
         const statsModal = document.getElementById('statsModal');
+        const allDoctorsStatsModal = document.getElementById('allDoctorsStatsModal');
 
         window.openBookingModal = () => bookingModal.style.display = 'flex';
         window.closeBookingModal = () => bookingModal.style.display = 'none';
         
         window.showStatsModal = () => statsModal.style.display = 'flex';
         window.closeStatsModal = (event) => {
-            // الإغلاق عند الضغط على الخلفية الرمادية فقط
             if (event.target === statsModal) {
                 statsModal.style.display = 'none';
+            }
+        };
+
+        window.showAllDoctorsStats = async () => {
+            const contentDiv = document.getElementById('allDoctorsStatsContent');
+            contentDiv.innerHTML = '<p style="text-align:center; color:#888;">جاري تحميل البيانات...</p>';
+            allDoctorsStatsModal.style.display = 'flex';
+
+            try {
+                const doctorsQuery = query(collection(db, "doctors"));
+                const doctorsSnapshot = await getDocs(doctorsQuery);
+                
+                const allAppointmentsQuery = query(
+                    collection(db, "appointments"),
+                    where("date", "==", getTodayDate())
+                );
+                const allAppointmentsSnapshot = await getDocs(allAppointmentsQuery);
+
+                const doctorStats = {};
+                
+                doctorsSnapshot.forEach((doc) => {
+                    const doctorName = doc.data().name;
+                    doctorStats[doctorName] = {
+                        total: 0,
+                        waiting: 0,
+                        completed: 0,
+                        revenue: 0
+                    };
+                });
+
+                allAppointmentsSnapshot.forEach((doc) => {
+                    const appointment = doc.data();
+                    const doctorName = appointment.doctor;
+                    
+                    if (doctorStats[doctorName]) {
+                        doctorStats[doctorName].total++;
+                        if (appointment.status === 'انتظار') {
+                            doctorStats[doctorName].waiting++;
+                        } else if (appointment.status === 'منتهي') {
+                            doctorStats[doctorName].completed++;
+                            doctorStats[doctorName].revenue += parseFloat(appointment.price || 0);
+                        }
+                    }
+                });
+
+                let html = '';
+                for (const [doctorName, stats] of Object.entries(doctorStats)) {
+                    html += `
+                        <div class="doctor-card">
+                            <h4><i class="fas fa-user-md"></i> د. ${doctorName}</h4>
+                            <div class="doctor-stats">
+                                <div class="doctor-stat-item">
+                                    <div class="number">${stats.total}</div>
+                                    <div class="label">إجمالي الحجوزات</div>
+                                </div>
+                                <div class="doctor-stat-item">
+                                    <div class="number">${stats.waiting}</div>
+                                    <div class="label">في الانتظار</div>
+                                </div>
+                                <div class="doctor-stat-item">
+                                    <div class="number">${stats.completed}</div>
+                                    <div class="label">مكتملة</div>
+                                </div>
+                                <div class="doctor-stat-item">
+                                    <div class="number">${stats.revenue}</div>
+                                    <div class="label">الإيرادات (ج.م)</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                if (html === '') {
+                    html = '<p style="text-align:center; color:#888;">لا توجد بيانات متاحة اليوم.</p>';
+                }
+
+                contentDiv.innerHTML = html;
+
+            } catch (error) {
+                console.error("خطأ في تحميل الإحصائيات:", error);
+                contentDiv.innerHTML = '<p style="text-align:center; color:red;">حدث خطأ في تحميل البيانات</p>';
+            }
+        };
+
+        window.closeAllDoctorsStatsModal = (event) => {
+            if (event.target === allDoctorsStatsModal) {
+                allDoctorsStatsModal.style.display = 'none';
             }
         };
     </script>
