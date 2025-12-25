@@ -69,7 +69,7 @@
         </div>
         
         <h2 id="form-title">تسجيل الدخول</h2>
-        <p id="form-subtitle">أهلاً بك في نظام العيادات الذكي</p>
+        <p id="form-subtitle">أهلاً بك في نظام عيادات فقيها</p>
 
         <form id="authForm">
             <div class="input-group" id="name-group" style="display: none;">
@@ -120,28 +120,31 @@
     </div>
 
     <script type="module">
+        // استيراد Firebase باستخدام الإصدار المتوافق
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
         
+        // إعدادات Firebase الجديدة الخاصة بك (slave-table)
         const firebaseConfig = {
-            apiKey: "AIzaSyBy8xPvxQuC6bVLerLpSjzPmvBWyAhuYKo",
-            authDomain: "mogama-49e7f.firebaseapp.com",
-            projectId: "mogama-49e7f",
-            storageBucket: "mogama-49e7f.firebasestorage.app",
-            messagingSenderId: "575066177594",
-            appId: "1:575066177594:web:82137834158b4c353db503"
+            apiKey: "AIzaSyBTM1aa1cF0gyeLoKLlJPuYgystJ_Q3b_Q",
+            authDomain: "slave-table.firebaseapp.com",
+            projectId: "slave-table",
+            storageBucket: "slave-table.firebasestorage.app",
+            messagingSenderId: "827430776658",
+            appId: "1:827430776658:web:b8301d16116f641359548b"
         };
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // وظيفة جلب الأطباء المسجلين فعلياً
+        // وظيفة جلب الأطباء المسجلين فعلياً من قاعدة البيانات
         async function fetchDoctors() {
             const doctorSelect = document.getElementById('linked-doctor');
             doctorSelect.innerHTML = '<option value="">جاري التحميل...</option>';
             try {
+                // استعلام لجلب المستخدمين الذين دورهم "doctor" فقط
                 const q = query(collection(db, "users"), where("role", "==", "doctor"));
                 const querySnapshot = await getDocs(q);
                 
@@ -153,13 +156,17 @@
                 doctorSelect.innerHTML = '<option value="" disabled selected>اختر الطبيب المسؤول</option>';
                 querySnapshot.forEach((doc) => {
                     const data = doc.data();
-                    doctorSelect.innerHTML += `<option value="${data.name}">${data.name}</option>`;
+                    if(data.name) {
+                        doctorSelect.innerHTML += `<option value="${data.name}">${data.name}</option>`;
+                    }
                 });
             } catch (e) {
+                console.error("Error fetching doctors:", e);
                 doctorSelect.innerHTML = '<option value="">خطأ في جلب البيانات</option>';
             }
         }
 
+        // إظهار قائمة الدكاترة فقط عند اختيار ممرض/استقبال
         window.handleRoleChange = (role) => {
             const linkGroup = document.getElementById('doctor-link-group');
             if(role === 'attendant') {
@@ -170,6 +177,7 @@
             }
         };
 
+        // التبديل بين واجهة الدخول وإنشاء الحساب
         let isRegistering = false;
         const toggleLink = document.getElementById('toggle-auth');
         
@@ -180,8 +188,10 @@
             document.getElementById('role-group').style.display = isRegistering ? 'block' : 'none';
             document.getElementById('auth-button').textContent = isRegistering ? 'إنشاء حساب' : 'دخول للنظام';
             toggleLink.textContent = isRegistering ? 'لديك حساب بالفعل؟ سجل دخول' : 'ليس لديك حساب؟ سجل الآن';
+            if(!isRegistering) document.getElementById('doctor-link-group').style.display = 'none';
         });
 
+        // معالجة إرسال النموذج (دخول أو تسجيل)
         document.getElementById('authForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('auth-button');
@@ -199,15 +209,26 @@
                     if (!name || !role) throw new Error("يرجى إدخال الاسم واختيار المهنة");
                     if (role === 'attendant' && !linkedDoc) throw new Error("يجب ربط الممرض بطبيب");
 
+                    // إنشاء حساب جديد في Firebase Auth
                     const userCred = await createUserWithEmailAndPassword(auth, email, password);
+                    
+                    // حفظ البيانات الإضافية في Firestore
                     await setDoc(doc(db, "users", userCred.user.uid), {
-                        name, email, role, linkedDoctor: linkedDoc || null
+                        name: name,
+                        email: email,
+                        role: role,
+                        linkedDoctor: linkedDoc || null,
+                        createdAt: new Date()
                     });
                     
+                    // تخزين محلي لاستخدامه في الصفحات التالية
                     localStorage.setItem('userName', name);
                     localStorage.setItem('userRole', role);
                     localStorage.setItem('doctorName', role === 'doctor' ? name : linkedDoc);
+                    
+                    alert("تم إنشاء الحساب بنجاح!");
                 } else {
+                    // تسجيل الدخول لحساب موجود
                     const userCred = await signInWithEmailAndPassword(auth, email, password);
                     const userDoc = await getDoc(doc(db, "users", userCred.user.uid));
                     
@@ -216,15 +237,23 @@
                         localStorage.setItem('userName', data.name);
                         localStorage.setItem('userRole', data.role);
                         localStorage.setItem('doctorName', data.role === 'doctor' ? data.name : data.linkedDoctor);
+                    } else {
+                        throw new Error("بيانات المستخدم غير موجودة في قاعدة البيانات.");
                     }
                 }
 
-                // التوجيه النهائي
+                // التوجيه إلى الصفحة المناسبة بناءً على الدور
                 const roleRedirect = localStorage.getItem('userRole');
-                const REDIRECTS = { 'attendant': 'index.html', 'doctor': 'doctor.html', 'pharmacist': 'pharmacy_main.html' };
+                const REDIRECTS = { 
+                    'attendant': 'index.html', 
+                    'doctor': 'doctor.html', 
+                    'pharmacist': 'pharmacy_main.html' 
+                };
+                
                 window.location.href = REDIRECTS[roleRedirect] || 'index.html';
 
             } catch (error) {
+                console.error("Auth Error:", error);
                 alert("خطأ: " + error.message);
                 btn.disabled = false;
                 btn.innerText = isRegistering ? "إنشاء حساب" : "دخول للنظام";
