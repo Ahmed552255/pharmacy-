@@ -112,7 +112,8 @@
                     <th>الحالة</th>
                 </tr>
             </thead>
-            <tbody id="patientsTableBody"></tbody>
+            <tbody id="patientsTableBody">
+                </tbody>
         </table>
     </div>
 
@@ -137,7 +138,7 @@
                 <div class="stat-card" style="border-left-color: var(--warning);"><i class="fas fa-hourglass-half" style="color: var(--warning);"></i><div class="info"><h3 id="stat-waiting">0</h3><p>في الانتظار حالياً</p></div></div>
                 <div class="stat-card" style="border-left-color: var(--dark);"><i class="fas fa-wallet" style="color: var(--dark);"></i><div class="info"><h3 id="stat-revenue">0 ج.م</h3><p>الإيرادات المكتملة</p></div></div>
             </div>
-            <button onclick="closeStatsModal({target: document.getElementById('statsModal')})" class="btn btn-light" style="width:100%; margin-top:10px;">إغلاق</button>
+            <button onclick="closeStatsModalDirect()" class="btn btn-light" style="width:100%; margin-top:10px;">إغلاق</button>
         </div>
     </div>
 
@@ -145,6 +146,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
         import { getFirestore, collection, addDoc, onSnapshot, query, where, orderBy } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
+        // إعدادات Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyBTM1aa1cF0gyeLoKLlJPuYgystJ_Q3b_Q",
             authDomain: "slave-table.firebaseapp.com",
@@ -160,8 +162,8 @@
         const assignedDoctorName = localStorage.getItem('doctorName');
         const userName = localStorage.getItem('userName');
 
+        // التحقق من تسجيل الدخول
         if (!assignedDoctorName || !userName) {
-            alert("بيانات الجلسة غير كاملة! سيتم إعادتك لصفحة تسجيل الدخول.");
             window.location.href = 'index.html';
         }
         
@@ -170,7 +172,8 @@
         document.getElementById('stats-doctor-name').innerText = assignedDoctorName;
 
         const getTodayDate = () => new Date().toISOString().split('T')[0];
-        
+
+        // الاستعلام الأساسي (Real-time Query)
         const q = query(
             collection(db, "appointments"), 
             where("date", "==", getTodayDate()), 
@@ -178,20 +181,16 @@
             orderBy("timestamp", "desc")
         );
 
-        //  =============== بداية الكود المعدل ===============
-        let allPatients = []; // مصفوفة لتخزين بيانات المرضى
-
-        const renderTableAndStats = () => {
+        // وظيفة تحديث الواجهة (الجدول + الإحصائيات)
+        const updateUI = (data) => {
             const tbody = document.getElementById('patientsTableBody');
             
-            // فرز البيانات دائماً قبل العرض لضمان الترتيب الصحيح
-            allPatients.sort((a, b) => b.timestamp - a.timestamp);
-
-            if (allPatients.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" style="padding: 30px; color: #888;">لا توجد حجوزات لهذا الطبيب اليوم.</td></tr>`;
+            // 1. تحديث الجدول
+            if (data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="padding: 30px; color: #888;">لا توجد حجوزات لهذا اليوم.</td></tr>`;
             } else {
-                tbody.innerHTML = allPatients.map(p => `
-                    <tr id="patient-${p.id}">
+                tbody.innerHTML = data.map(p => `
+                    <tr>
                         <td><strong>${p.name}</strong></td>
                         <td>${p.age}</td>
                         <td>${p.phone}</td>
@@ -202,10 +201,10 @@
                 `).join('');
             }
 
-            // تحديث الإحصائيات
-            const totalCount = allPatients.length;
-            const waitingCount = allPatients.filter(p => p.status === 'انتظار').length;
-            const totalRevenue = allPatients
+            // 2. تحديث الإحصائيات فوراً
+            const totalCount = data.length;
+            const waitingCount = data.filter(p => p.status === 'انتظار').length;
+            const totalRevenue = data
                 .filter(p => p.status === 'منتهي')
                 .reduce((sum, p) => sum + parseFloat(p.price || 0), 0);
 
@@ -214,57 +213,50 @@
             document.getElementById('stat-revenue').innerText = `${totalRevenue} ج.م`;
         };
 
+        // الاستماع للتغييرات في قاعدة البيانات (الإضافة، الحذف، التعديل)
         onSnapshot(q, (snapshot) => {
-            snapshot.docChanges().forEach((change) => {
-                const docData = { id: change.doc.id, ...change.doc.data() };
-                
-                if (change.type === "added") {
-                    // إضافة مريض جديد للمصفوفة إذا لم يكن موجوداً
-                    if (!allPatients.some(p => p.id === docData.id)) {
-                        allPatients.push(docData);
-                    }
-                }
-                if (change.type === "modified") {
-                    // تحديث بيانات المريض الموجود
-                    const index = allPatients.findIndex(p => p.id === docData.id);
-                    if (index > -1) {
-                        allPatients[index] = docData;
-                    }
-                }
-                if (change.type === "removed") {
-                    // إزالة المريض من المصفوفة
-                    allPatients = allPatients.filter(p => p.id !== docData.id);
-                }
+            const appointments = [];
+            snapshot.forEach((doc) => {
+                appointments.push({ id: doc.id, ...doc.data() });
             });
-            
-            // إعادة رسم الجدول والإحصائيات بعد كل تغيير
-            renderTableAndStats();
+            updateUI(appointments); // تحديث الشاشة بالبيانات الجديدة كاملة
+        }, (error) => {
+            console.error("Firebase Error:", error);
         });
-        // =============== نهاية الكود المعدل ===============
 
-
+        // وظيفة حفظ الحجز الجديد
         window.saveNewBooking = async () => {
-            const name = document.getElementById('pName').value, age = document.getElementById('pAge').value,
-                  phone = document.getElementById('pPhone').value, price = document.getElementById('pPrice').value,
-                  doctor = document.getElementById('pDoctor').value;
+            const name = document.getElementById('pName').value;
+            const age = document.getElementById('pAge').value;
+            const phone = document.getElementById('pPhone').value;
+            const price = document.getElementById('pPrice').value;
+            const doctor = document.getElementById('pDoctor').value;
 
-            if(!name || !phone || !age || !price) return alert('الرجاء إكمال كافة بيانات الحجز.');
+            if(!name || !phone || !age || !price) return alert('الرجاء إكمال كافة البيانات.');
 
             try {
                 await addDoc(collection(db, "appointments"), {
                     name, age, phone, doctor, price,
-                    status: 'انتظار', date: getTodayDate(),
+                    status: 'انتظار', 
+                    date: getTodayDate(),
                     time: new Date().toLocaleTimeString('ar-EG', {hour:'2-digit', minute:'2-digit'}),
                     timestamp: new Date().getTime()
                 });
+                
+                // تنظيف الفورم وقفل المودال
+                document.getElementById('pName').value = ''; 
+                document.getElementById('pAge').value = '';
+                document.getElementById('pPhone').value = ''; 
+                document.getElementById('pPrice').value = '250';
                 closeBookingModal();
-                document.getElementById('pName').value = ''; document.getElementById('pAge').value = '';
-                document.getElementById('pPhone').value = ''; document.getElementById('pPrice').value = '250';
-            } catch (e) { alert("حدث خطأ أثناء حفظ الحجز."); }
+            } catch (e) { 
+                alert("حدث خطأ أثناء الحفظ."); 
+            }
         };
-        
+
+        // التحكم في المودال والخروج
         window.logout = () => {
-            if (confirm('هل أنت متأكد أنك تريد تسجيل الخروج؟')) {
+            if (confirm('هل أنت متأكد من تسجيل الخروج؟')) {
                 localStorage.clear();
                 window.location.href = 'index.html';
             }
@@ -275,13 +267,13 @@
 
         window.openBookingModal = () => bookingModal.style.display = 'flex';
         window.closeBookingModal = () => bookingModal.style.display = 'none';
-        
         window.showStatsModal = () => statsModal.style.display = 'flex';
+        
         window.closeStatsModal = (event) => {
-            if (event.target === statsModal) {
-                statsModal.style.display = 'none';
-            }
+            if (event.target === statsModal) statsModal.style.display = 'none';
         };
+        window.closeStatsModalDirect = () => statsModal.style.display = 'none';
+
     </script>
 </body>
 </html>
