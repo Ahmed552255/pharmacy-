@@ -6,10 +6,7 @@
     <title>لوحة الطبيب الذكية</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root {
-            --primary: #45b39d; --dark: #16a085; --light: #f4fbf9;
-            --white: #ffffff; --accent: #f39c12; --danger: #e74c3c;
-        }
+        :root { --primary: #45b39d; --dark: #16a085; --light: #f4fbf9; --white: #ffffff; --accent: #f39c12; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--light); margin: 0; padding-bottom: 80px; overflow-x: hidden; }
         .doctor-nav { background: var(--white); padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 1000; }
         .section-card { background: white; margin: 12px; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
@@ -81,7 +78,6 @@
 </div>
 
 <script type="module">
-    // *** توحيد إعدادات Firebase ***
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
     import { getFirestore, collection, query, where, onSnapshot, doc, updateDoc, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
@@ -89,20 +85,20 @@
         apiKey: "AIzaSyBTM1aa1cF0gyeLoKLlJPuYgystJ_Q3b_Q",
         authDomain: "slave-table.firebaseapp.com",
         projectId: "slave-table",
-        storageBucket: "slave-table.appspot.com", // Corrected domain
+        storageBucket: "slave-table.firebasestorage.app",
         messagingSenderId: "827430776658",
-        appId: "1:827430776658:web:b8301d16116f641359548b",
-        measurementId: "G-T4G68J8F20"
+        appId: "1:827430776658:web:b8301d16116f641359548b"
     };
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // التحقق من هوية الطبيب
+    // *** التعديل الوحيد المطلوب هنا ***
     const doctorName = localStorage.getItem('doctorName');
+
     if (!doctorName) {
-        alert("لم يتم تحديد الطبيب! سيتم إعادتك لصفحة تسجيل الدخول.");
-        window.location.href = 'index.html'; // أو اسم صفحة الدخول
+        alert("بيانات الطبيب غير موجودة! سيتم إعادتك لصفحة تسجيل الدخول.");
+        window.location.href = 'index.html';
     }
 
     document.getElementById('doc-display-name').innerHTML = `<i class="fas fa-circle" style="color: #2ecc71;"></i> د. ${doctorName}`;
@@ -110,11 +106,10 @@
 
     let currentP = null;
 
-    // الاستماع لقائمة الانتظار الخاصة بهذا الطبيب فقط
     const q = query(
         collection(db, "appointments"), 
         where("status", "==", "انتظار"), 
-        where("doctor", "==", doctorName) // فلترة حسب الطبيب
+        where("doctor", "==", doctorName)
     );
 
     onSnapshot(q, (snap) => {
