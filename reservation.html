@@ -12,72 +12,55 @@
             --text-dark: #333; --text-light: #666;
         }
         
-        /* --- تصميم متجاوب وأساسي --- */
         body { 
-            font-family: 'Segoe UI', Tahoma, sans-serif; 
-            background-color: var(--bg); 
-            margin: 0; 
-            padding: 15px; 
-            color: var(--text-dark);
+            font-family: 'Segoe UI', Tahoma, sans-serif; background-color: var(--bg); 
+            margin: 0; padding: 15px; color: var(--text-dark);
         }
         
         .top-bar { 
-            display: flex; 
-            flex-wrap: wrap; /* للسماح بالالتفاف في الشاشات الصغيرة */
-            justify-content: space-between; 
-            align-items: center; 
-            gap: 15px;
-            background: var(--white); 
-            padding: 20px; 
-            border-radius: 15px; 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05); 
+            display: flex; flex-wrap: wrap; justify-content: space-between; 
+            align-items: center; gap: 15px; background: var(--white); 
+            padding: 20px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); 
             margin-bottom: 20px; 
         }
         .top-bar .title-group { flex-grow: 1; }
         .top-bar .actions-group { display: flex; flex-wrap: wrap; gap: 10px; }
 
-        .stats-cards { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); 
-            gap: 15px; 
-            margin-bottom: 20px;
-            transition: all 0.3s ease-in-out;
-        }
-        .stat-card { 
-            background: var(--white); 
-            padding: 20px; 
-            border-radius: 12px; 
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05); 
-            border-left: 5px solid var(--primary);
-            display: flex; 
-            align-items: center; 
-            gap: 15px;
-        }
-        .stat-card i { font-size: 28px; color: var(--primary); }
-        .stat-card .info h3 { margin: 0 0 5px 0; font-size: 24px; }
-        .stat-card .info p { margin: 0; color: var(--text-light); }
-
         .table-wrapper { 
-            background: var(--white); 
-            border-radius: 15px; 
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-            overflow-x: auto; /* لإضافة شريط تمرير أفقي عند الحاجة في الشاشات الصغيرة جداً */
+            background: var(--white); border-radius: 15px; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05); overflow-x: auto;
         }
-        table { 
-            width: 100%; 
-            border-collapse: collapse; 
-            text-align: center; 
-            min-width: 600px; /* لضمان عدم تكسر الجدول بشكل سيء */
-        }
+        table { width: 100%; border-collapse: collapse; text-align: center; min-width: 600px; }
         th { background: var(--primary); color: white; padding: 15px; font-size: 14px; }
         td { padding: 12px; border-bottom: 1px solid #eee; vertical-align: middle; }
         
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(4px); }
-        .modal-content { background: white; padding: 30px; border-radius: 20px; width: 90%; max-width: 500px; }
+        .modal { 
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); 
+            align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(4px);
+            animation: fadeIn 0.3s;
+        }
+        .modal-content { 
+            background: white; padding: 30px; border-radius: 20px; 
+            width: 90%; max-width: 500px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
         
+        /* نافذة الإحصائيات المنبثقة */
+        .stats-modal-content {
+            display: flex; flex-direction: column; gap: 15px;
+            padding: 20px;
+        }
+        .stat-card { 
+            background: var(--bg); padding: 15px; border-radius: 12px; 
+            border-left: 5px solid var(--primary); display: flex; 
+            align-items: center; gap: 15px;
+        }
+        .stat-card i { font-size: 24px; color: var(--primary); }
+        .stat-card .info h3 { margin: 0 0 5px 0; font-size: 22px; }
+        .stat-card .info p { margin: 0; color: var(--text-light); }
+
         .form-group { margin-bottom: 15px; }
         .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
-        .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
+        .form-group input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
         
         .btn {
             border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;
@@ -94,6 +77,8 @@
         .status-badge { padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; color: white; }
         .status-waiting { background: var(--warning); }
         .status-done { background: var(--dark); }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
@@ -104,39 +89,15 @@
             <div id="staffInfo" style="color: var(--dark); font-weight: bold; margin-top: 5px;"></div>
         </div>
         <div class="actions-group">
-            <button onclick="toggleStats()" class="btn btn-light">
-                <i class="fas fa-chart-bar"></i> <span id="toggle-stats-text">إخفاء الإحصائيات</span>
+            <button onclick="showStatsModal()" class="btn btn-light">
+                <i class="fas fa-chart-bar"></i> عرض الإحصائيات
             </button>
             <button onclick="logout()" class="btn btn-secondary">
                 <i class="fas fa-sign-out-alt"></i> خروج
             </button>
-            <button onclick="openModal()" class="btn btn-primary">
+            <button onclick="openBookingModal()" class="btn btn-primary">
                 <i class="fas fa-plus"></i> حجز جديد
             </button>
-        </div>
-    </div>
-
-    <div id="stats-container" class="stats-cards">
-        <div class="stat-card">
-            <i class="fas fa-users"></i>
-            <div class="info">
-                <h3 id="stat-total">0</h3>
-                <p>إجمالي الحجوزات اليوم</p>
-            </div>
-        </div>
-        <div class="stat-card" style="border-left-color: var(--warning);">
-            <i class="fas fa-hourglass-half" style="color: var(--warning);"></i>
-            <div class="info">
-                <h3 id="stat-waiting">0</h3>
-                <p>في الانتظار حالياً</p>
-            </div>
-        </div>
-        <div class="stat-card" style="border-left-color: var(--dark);">
-            <i class="fas fa-wallet" style="color: var(--dark);"></i>
-            <div class="info">
-                <h3 id="stat-revenue">0 ج.م</h3>
-                <p>الإيرادات المكتملة</p>
-            </div>
         </div>
     </div>
 
@@ -156,6 +117,7 @@
         </table>
     </div>
 
+    <!-- نافذة الحجز الجديد -->
     <div id="bookingModal" class="modal">
         <div class="modal-content">
             <h3 style="margin-top:0; color:var(--primary);">تسجيل حجز جديد</h3>
@@ -163,9 +125,31 @@
             <div class="form-group"><label>عمر المريض</label><input type="number" id="pAge" required></div>
             <div class="form-group"><label>رقم الموبايل</label><input type="tel" id="pPhone" required></div>
             <div class="form-group"><label>قيمة الكشف (ج.م)</label><input type="number" id="pPrice" value="250" required></div>
-            <div class="form-group" style="display:none;"><label>الطبيب المعالج</label><select id="pDoctor"></select></div>
+            <div class="form-group" style="display:none;"><select id="pDoctor"></select></div>
             <button class="btn btn-primary" style="width:100%; padding: 15px;" onclick="saveNewBooking()">تأكيد الحجز</button>
-            <button onclick="closeModal()" style="background:none; border:none; color:gray; width:100%; margin-top:10px; cursor:pointer;">إلغاء</button>
+            <button onclick="closeBookingModal()" style="background:none; border:none; color:gray; width:100%; margin-top:10px; cursor:pointer;">إلغاء</button>
+        </div>
+    </div>
+
+    <!-- نافذة الإحصائيات المنبثقة -->
+    <div id="statsModal" class="modal" onclick="closeStatsModal(event)">
+        <div class="modal-content">
+            <h3 style="margin-top:0; color:var(--primary); text-align:center;">إحصائيات اليوم لعيادة د. <span id="stats-doctor-name"></span></h3>
+            <div class="stats-modal-content">
+                <div class="stat-card">
+                    <i class="fas fa-users"></i>
+                    <div class="info"><h3 id="stat-total">0</h3><p>إجمالي الحجوزات</p></div>
+                </div>
+                <div class="stat-card" style="border-left-color: var(--warning);">
+                    <i class="fas fa-hourglass-half" style="color: var(--warning);"></i>
+                    <div class="info"><h3 id="stat-waiting">0</h3><p>في الانتظار حالياً</p></div>
+                </div>
+                <div class="stat-card" style="border-left-color: var(--dark);">
+                    <i class="fas fa-wallet" style="color: var(--dark);"></i>
+                    <div class="info"><h3 id="stat-revenue">0 ج.م</h3><p>الإيرادات المكتملة</p></div>
+                </div>
+            </div>
+            <button onclick="closeStatsModal({target: document.getElementById('statsModal')})" class="btn btn-light" style="width:100%; margin-top:10px;">إغلاق</button>
         </div>
     </div>
 
@@ -195,9 +179,12 @@
         
         document.getElementById('staffInfo').innerText = `الموظف: ${userName} | عيادة د. ${assignedDoctorName}`;
         document.getElementById('pDoctor').innerHTML = `<option value="${assignedDoctorName}">${assignedDoctorName}</option>`;
+        document.getElementById('stats-doctor-name').innerText = assignedDoctorName;
 
         const getTodayDate = () => new Date().toISOString().split('T')[0];
         
+        // --- الحل النهائي لمشكلة التحديث ---
+        // الاستعلام الآن يجلب كل حجوزات اليوم للطبيب المحدد بغض النظر عن الحالة
         const q = query(
             collection(db, "appointments"), 
             where("date", "==", getTodayDate()), 
@@ -205,7 +192,6 @@
             orderBy("timestamp", "desc")
         );
 
-        // --- الحل لمشكلة التحديث اللحظي ---
         onSnapshot(q, (snapshot) => {
             const tbody = document.getElementById('patientsTableBody');
             tbody.innerHTML = '';
@@ -234,6 +220,7 @@
                 });
             }
 
+            // تحديث الإحصائيات في النافذة المنبثقة
             document.getElementById('stat-total').innerText = totalCount;
             document.getElementById('stat-waiting').innerText = waitingCount;
             document.getElementById('stat-revenue').innerText = `${totalRevenue} ج.م`;
@@ -253,7 +240,7 @@
                     time: new Date().toLocaleTimeString('ar-EG', {hour:'2-digit', minute:'2-digit'}),
                     timestamp: new Date().getTime()
                 });
-                closeModal();
+                closeBookingModal();
                 document.getElementById('pName').value = ''; document.getElementById('pAge').value = '';
                 document.getElementById('pPhone').value = ''; document.getElementById('pPrice').value = '250';
             } catch (e) { alert("حدث خطأ أثناء حفظ الحجز."); }
@@ -266,23 +253,20 @@
             }
         };
 
-        // --- دوال التحكم في الواجهة ---
-        let statsVisible = true;
-        window.toggleStats = () => {
-            statsVisible = !statsVisible;
-            const container = document.getElementById('stats-container');
-            const btnText = document.getElementById('toggle-stats-text');
-            if (statsVisible) {
-                container.style.display = 'grid';
-                btnText.innerText = 'إخفاء الإحصائيات';
-            } else {
-                container.style.display = 'none';
-                btnText.innerText = 'عرض الإحصائيات';
+        // --- دوال التحكم في النوافذ المنبثقة ---
+        const bookingModal = document.getElementById('bookingModal');
+        const statsModal = document.getElementById('statsModal');
+
+        window.openBookingModal = () => bookingModal.style.display = 'flex';
+        window.closeBookingModal = () => bookingModal.style.display = 'none';
+        
+        window.showStatsModal = () => statsModal.style.display = 'flex';
+        window.closeStatsModal = (event) => {
+            // الإغلاق عند الضغط على الخلفية الرمادية فقط
+            if (event.target === statsModal) {
+                statsModal.style.display = 'none';
             }
         };
-
-        window.openModal = () => document.getElementById('bookingModal').style.display = 'flex';
-        window.closeModal = () => document.getElementById('bookingModal').style.display = 'none';
     </script>
 </body>
 </html>
