@@ -86,16 +86,22 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // جلب الأطباء من Firestore
+        // جلب الأطباء من Firestore من جدول doctors
         async function fetchDoctors() {
             const select = document.getElementById('linked-doctor');
             select.innerHTML = '<option>جاري التحميل...</option>';
             try {
-                const q = query(collection(db, "users"), where("role", "==", "doctor"));
-                const snap = await getDocs(q);
+                const doctorsQuery = query(collection(db, "doctors"));
+                const snap = await getDocs(doctorsQuery);
                 select.innerHTML = '<option value="" disabled selected>اختر الطبيب المسؤول</option>';
-                snap.forEach(doc => select.innerHTML += `<option value="${doc.data().name}">${doc.data().name}</option>`);
-            } catch (e) { select.innerHTML = '<option>خطأ في التحميل</option>'; }
+                snap.forEach(doc => {
+                    const doctorData = doc.data();
+                    select.innerHTML += `<option value="${doctorData.name}">${doctorData.name}</option>`;
+                });
+            } catch (e) { 
+                console.error("خطأ في جلب الأطباء:", e);
+                select.innerHTML = '<option>خطأ في التحميل</option>'; 
+            }
         }
 
         document.getElementById('role').onchange = (e) => {
@@ -116,7 +122,8 @@
         document.getElementById('authForm').onsubmit = async (e) => {
             e.preventDefault();
             const btn = document.getElementById('auth-button');
-            btn.disabled = true; btn.innerText = "جاري المعالجة...";
+            btn.disabled = true; 
+            btn.innerText = "جاري المعالجة...";
             
             const email = document.getElementById('email').value;
             const pass = document.getElementById('password').value;
@@ -125,39 +132,71 @@
             const linked = document.getElementById('linked-doctor').value;
 
             try {
-                let userRole, userName, docName;
+                let userRole, userName, docName, userId;
+                
                 if (isRegistering) {
                     if (!name || !role) throw new Error("أكمل بيانات الاسم والمهنة");
+                    if (role === 'attendant' && !linked) throw new Error("يجب اختيار الطبيب المسؤول");
+                    
                     const cred = await createUserWithEmailAndPassword(auth, email, pass);
-                    await setDoc(doc(db, "users", cred.user.uid), { name, email, role, linkedDoctor: linked || null });
-                    userRole = role; userName = name; docName = (role === 'doctor') ? name : linked;
+                    userId = cred.user.uid;
+                    
+                    // حفظ البيانات في users
+                    await setDoc(doc(db, "users", userId), { 
+                        name, 
+                        email, 
+                        role, 
+                        linkedDoctor: linked || null 
+                    });
+                    
+                    // إذا كان تمرجي، نحفظه أيضاً في جدول staff
+                    if (role === 'attendant') {
+                        await setDoc(doc(db, "staff", userId), {
+                            name,
+                            username: email,
+                            assignedDoctor: linked,
+                            createdAt: new Date().toISOString()
+                        });
+                    }
+                    
+                    userRole = role; 
+                    userName = name; 
+                    docName = (role === 'doctor') ? name : linked;
+                    
                 } else {
                     const cred = await signInWithEmailAndPassword(auth, email, pass);
-                    const snap = await getDoc(doc(db, "users", cred.user.uid));
-                    if (!snap.exists()) throw new Error("بياناتك غير مسجلة في Firestore");
+                    userId = cred.user.uid;
+                    
+                    const snap = await getDoc(doc(db, "users", userId));
+                    if (!snap.exists()) throw new Error("بياناتك غير مسجلة في النظام");
+                    
                     const data = snap.data();
-                    userRole = data.role; userName = data.name; docName = (data.role === 'doctor') ? data.name : data.linkedDoctor;
+                    userRole = data.role; 
+                    userName = data.name; 
+                    docName = (data.role === 'doctor') ? data.name : data.linkedDoctor;
                 }
 
-                // حفظ البيانات محلياً
+                // حفظ البيانات في localStorage
+                localStorage.setItem('userId', userId);
+                localStorage.setItem('staffId', userId);
                 localStorage.setItem('userName', userName);
                 localStorage.setItem('userRole', userRole);
                 localStorage.setItem('doctorName', docName);
 
-                // --- خريطة التوجيه بعد التعديل ---
+                // التوجيه حسب نوع المستخدم
                 const REDIRECTS = { 
-                    'attendant': 'reservation.html', // صفحة التمرجي
+                    'attendant': 'reservation.html',
                     'doctor': 'doctor.html', 
                     'pharmacist': 'pharmacy_main.html' 
                 };
 
                 const target = REDIRECTS[userRole];
-                console.log("التحويل إلى: " + target);
+                if (!target) throw new Error("نوع المستخدم غير معروف");
                 
-                // الانتقال الفوري
                 window.location.replace(target);
 
             } catch (err) { 
+                console.error("خطأ في تسجيل الدخول:", err);
                 alert("خطأ: " + err.message); 
                 btn.disabled = false; 
                 btn.innerText = isRegistering ? "إنشاء حساب" : "دخول"; 
