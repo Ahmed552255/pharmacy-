@@ -178,20 +178,20 @@
             orderBy("timestamp", "desc")
         );
 
-        onSnapshot(q, (snapshot) => {
+        //  =============== بداية الكود المعدل ===============
+        let allPatients = []; // مصفوفة لتخزين بيانات المرضى
+
+        const renderTableAndStats = () => {
             const tbody = document.getElementById('patientsTableBody');
-            let tableRowsHTML = ''; // متغير لتجميع صفوف الجدول
-            let totalCount = 0, waitingCount = 0, totalRevenue = 0;
+            
+            // فرز البيانات دائماً قبل العرض لضمان الترتيب الصحيح
+            allPatients.sort((a, b) => b.timestamp - a.timestamp);
 
-            snapshot.forEach((doc) => {
-                const p = doc.data();
-                totalCount++;
-                if (p.status === 'انتظار') waitingCount++;
-                else if (p.status === 'منتهي') totalRevenue += parseFloat(p.price || 0);
-
-                // *** هنا كان الخطأ، الآن نقوم بتجميع الصفوف في متغير واحد ***
-                tableRowsHTML += `
-                    <tr>
+            if (allPatients.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="padding: 30px; color: #888;">لا توجد حجوزات لهذا الطبيب اليوم.</td></tr>`;
+            } else {
+                tbody.innerHTML = allPatients.map(p => `
+                    <tr id="patient-${p.id}">
                         <td><strong>${p.name}</strong></td>
                         <td>${p.age}</td>
                         <td>${p.phone}</td>
@@ -199,20 +199,49 @@
                         <td>${p.price || 0} ج.م</td>
                         <td><span class="status-badge ${p.status === 'انتظار' ? 'status-waiting' : 'status-done'}">${p.status}</span></td>
                     </tr>
-                `;
-            });
-
-            // *** بعد انتهاء التجميع، نتحقق إذا كان فارغاً أم لا ***
-            if (snapshot.empty) {
-                tbody.innerHTML = `<tr><td colspan="6" style="padding: 30px; color: #888;">لا توجد حجوزات لهذا الطبيب اليوم.</td></tr>`;
-            } else {
-                tbody.innerHTML = tableRowsHTML; // نضع كل الصفوف في الجدول دفعة واحدة
+                `).join('');
             }
+
+            // تحديث الإحصائيات
+            const totalCount = allPatients.length;
+            const waitingCount = allPatients.filter(p => p.status === 'انتظار').length;
+            const totalRevenue = allPatients
+                .filter(p => p.status === 'منتهي')
+                .reduce((sum, p) => sum + parseFloat(p.price || 0), 0);
 
             document.getElementById('stat-total').innerText = totalCount;
             document.getElementById('stat-waiting').innerText = waitingCount;
             document.getElementById('stat-revenue').innerText = `${totalRevenue} ج.م`;
+        };
+
+        onSnapshot(q, (snapshot) => {
+            snapshot.docChanges().forEach((change) => {
+                const docData = { id: change.doc.id, ...change.doc.data() };
+                
+                if (change.type === "added") {
+                    // إضافة مريض جديد للمصفوفة إذا لم يكن موجوداً
+                    if (!allPatients.some(p => p.id === docData.id)) {
+                        allPatients.push(docData);
+                    }
+                }
+                if (change.type === "modified") {
+                    // تحديث بيانات المريض الموجود
+                    const index = allPatients.findIndex(p => p.id === docData.id);
+                    if (index > -1) {
+                        allPatients[index] = docData;
+                    }
+                }
+                if (change.type === "removed") {
+                    // إزالة المريض من المصفوفة
+                    allPatients = allPatients.filter(p => p.id !== docData.id);
+                }
+            });
+            
+            // إعادة رسم الجدول والإحصائيات بعد كل تغيير
+            renderTableAndStats();
         });
+        // =============== نهاية الكود المعدل ===============
+
 
         window.saveNewBooking = async () => {
             const name = document.getElementById('pName').value, age = document.getElementById('pAge').value,
