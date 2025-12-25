@@ -3,184 +3,170 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة الطبيب | المزامنة الفورية</title>
+    <title>لوحة الطبيب | فحص المواعيد</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root {
-            --primary: #45b39d; --dark: #16a085; --light: #f4fbf9;
-            --white: #ffffff; --accent: #f39c12; --danger: #e74c3c;
-        }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--light); margin: 0; padding-bottom: 90px; }
+        :root { --primary: #45b39d; --dark: #16a085; --bg: #f8fafb; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); margin: 0; padding: 15px; text-align: right; }
         
-        /* الهيدر */
-        .doctor-nav {
-            background: var(--white); padding: 15px 20px; display: flex;
-            justify-content: space-between; align-items: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 1000;
-        }
+        .header { background: white; padding: 15px; border-radius: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .doctor-info h2 { margin: 0; color: var(--dark); font-size: 20px; }
+        .doctor-info span { color: var(--primary); font-weight: bold; }
 
-        /* قائمة الانتظار */
-        .q-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
-        .q-container { background: white; width: 90%; max-width: 450px; border-radius: 20px; overflow: hidden; }
-        .q-header { background: var(--primary); color: white; padding: 20px; text-align: center; }
-        .q-item { padding: 15px; border-bottom: 1px solid #eee; cursor: pointer; transition: 0.3s; text-align: right; }
-        .q-item:hover { background: var(--light); border-right: 5px solid var(--primary); }
+        .queue-section { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .queue-title { border-bottom: 2px solid var(--bg); padding-bottom: 10px; margin-bottom: 15px; display: flex; justify-content: space-between; }
 
-        /* منطقة العمل */
-        .work-area { padding: 15px; display: none; }
-        .patient-info-card { background: white; padding: 20px; border-radius: 15px; border-right: 5px solid var(--accent); margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); text-align: right; }
+        .patient-card { background: #fff; border: 1px solid #eee; border-right: 5px solid var(--primary); padding: 15px; border-radius: 10px; margin-bottom: 10px; cursor: pointer; transition: 0.3s; }
+        .patient-card:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .patient-card h4 { margin: 0 0 5px 0; color: #333; }
+        .patient-card p { margin: 0; font-size: 13px; color: #666; }
+
+        #work-area { display: none; background: white; padding: 20px; border-radius: 15px; margin-top: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; margin-top: 10px; font-size: 16px; resize: none; box-sizing: border-box; }
+        .btn-finish { background: var(--primary); color: white; border: none; width: 100%; padding: 15px; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 20px; }
         
-        .input-group { background: white; padding: 15px; border-radius: 15px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); text-align: right; }
-        label { display: block; margin-bottom: 10px; font-weight: bold; color: var(--dark); }
-        textarea { width: 100%; border: 1px solid #ddd; border-radius: 10px; padding: 12px; font-size: 16px; box-sizing: border-box; resize: none; outline: none; text-align: right; }
-
-        /* الفوتر */
-        .footer-bar { position: fixed; bottom: 0; width: 100%; background: white; padding: 15px 20px; display: none; grid-template-columns: 1fr 2fr; gap: 10px; box-shadow: 0 -5px 15px rgba(0,0,0,0.1); box-sizing: border-box; }
-        .btn { border: none; border-radius: 12px; cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .btn-main { background: var(--primary); color: white; }
+        .badge { background: #e8fcf0; color: #27ae60; padding: 4px 10px; border-radius: 8px; font-size: 12px; }
     </style>
 </head>
 <body>
 
-<nav class="doctor-nav">
-    <div>
-        <h3 style="margin:0; color:var(--dark)"><i class="fas fa-user-md"></i> لوحة الطبيب</h3>
-        <small id="doc-name-display" style="color:var(--primary); font-weight:bold;">جاري التحقق...</small>
+    <div class="header">
+        <div class="doctor-info">
+            <h2>لوحة الطبيب الذكية</h2>
+            <span id="docName">جاري التعرف...</span>
+        </div>
+        <button onclick="logout()" style="border:none; background:none; color:#e74c3c; cursor:pointer;"><i class="fas fa-sign-out-alt fa-lg"></i></button>
     </div>
-    <div style="display:flex; gap:10px;">
-        <button class="btn" style="background:var(--primary); color:white; padding:8px 15px;" onclick="openQueue()">
-            <i class="fas fa-users"></i> (<span id="q-count">0</span>)
-        </button>
-        <button onclick="logout()" style="border:none; background:none; color:var(--danger); font-size:20px;"><i class="fas fa-sign-out-alt"></i></button>
-    </div>
-</nav>
 
-<div id="welcome-screen" style="text-align:center; padding:100px 20px; color:#7f8c8d;">
-    <i class="fas fa-user-clock fa-5x" style="color:#eee; margin-bottom:20px;"></i>
-    <h2>في انتظار مريض..</h2>
-    <p>افتح قائمة الانتظار لاختيار المريض التالي</p>
-    <button class="btn btn-main" style="margin:20px auto; padding:12px 30px;" onclick="openQueue()">فتح القائمة</button>
-</div>
-
-<div id="work-area" class="work-area">
-    <div class="patient-info-card">
-        <small>المريض الحالي:</small>
-        <h2 id="active-p-name" style="margin:5px 0;">---</h2>
-        <small id="active-p-phone"></small>
-    </div>
-    <div class="input-group">
-        <label>التشخيص والشكوى</label>
-        <textarea id="symptoms" rows="3"></textarea>
-    </div>
-    <div class="input-group">
-        <label>الروشتة العلاجية</label>
-        <textarea id="prescription" rows="6"></textarea>
-    </div>
-</div>
-
-<div id="footer-bar" class="footer-bar">
-    <button class="btn" style="background:#fdedec; color:var(--danger)" onclick="location.reload()">إلغاء</button>
-    <button class="btn btn-main" onclick="saveAndFinish()">إنهاء وإرسال</button>
-</div>
-
-<div id="queue-modal" class="q-modal">
-    <div class="q-container">
-        <div class="q-header"><h3>قائمة الانتظار الحالية</h3></div>
-        <div id="q-list"></div>
-        <button onclick="closeQueue()" style="width:100%; padding:15px; border:none; background:#f9f9f9; cursor:pointer;">إغلاق</button>
-    </div>
-</div>
-
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-    import { getFirestore, collection, query, where, onSnapshot, doc, updateDoc, addDoc, serverTimestamp, orderBy } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
-
-    const firebaseConfig = {
-        apiKey: "AIzaSyBy8xPvxQuC6bVLerLpSjzPmvBWyAhuYKo",
-        authDomain: "mogama-49e7f.firebaseapp.com",
-        projectId: "mogama-49e7f",
-        storageBucket: "mogama-49e7f.firebasestorage.app",
-        messagingSenderId: "575066177594",
-        appId: "1:575066177594:web:82137834158b4c353db503"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-
-    // 1. تنظيف اسم الدكتور تماماً للبحث
-    const docRaw = localStorage.getItem('doctorName') || "";
-    const doctorName = docRaw.trim();
-    document.getElementById('doc-name-display').innerText = "د. " + doctorName;
-
-    if(!doctorName) window.location.href = "index.html";
-
-    const getToday = () => new Date().toISOString().split('T')[0];
-    let currentP = null;
-
-    // 2. استدعاء الحالات التي تخص هذا الدكتور فقط
-    const q = query(
-        collection(db, "appointments"),
-        where("doctor", "==", doctorName), // الربط بالاسم
-        where("status", "==", "انتظار"),   // الربط بالحالة
-        where("date", "==", getToday()),    // الربط بالتاريخ
-        orderBy("timestamp", "asc")
-    );
-
-    onSnapshot(q, (snap) => {
-        document.getElementById('q-count').innerText = snap.size;
-        const list = document.getElementById('q-list');
-        list.innerHTML = "";
-
-        if(snap.empty) {
-            list.innerHTML = `<p style="padding:20px; text-align:center; color:#999;">لا يوجد مرضى بانتظارك حالياً</p>`;
-        }
-
-        snap.forEach(d => {
-            const p = d.data();
-            list.innerHTML += `
-                <div class="q-item" onclick="selectPatient('${d.id}', '${p.name}', '${p.phone}')">
-                    <b>${p.name}</b> <small style="float:left">${p.time}</small><br>
-                    <small style="color:gray">${p.phone}</small>
+    <div id="welcome-area">
+        <div class="queue-section">
+            <div class="queue-title">
+                <span><i class="fas fa-users"></i> قائمة انتظار اليوم</span>
+                <span id="q-count" class="badge">0 مريض</span>
+            </div>
+            <div id="patient-list">
                 </div>
-            `;
-        });
-    });
+        </div>
+    </div>
 
-    window.selectPatient = (id, name, phone) => {
-        currentP = { id, name, phone };
-        document.getElementById('welcome-screen').style.display = 'none';
-        document.getElementById('work-area').style.display = 'block';
-        document.getElementById('footer-bar').style.display = 'grid';
-        document.getElementById('active-p-name').innerText = name;
-        document.getElementById('active-p-phone').innerText = phone;
-        closeQueue();
-    };
+    <div id="work-area">
+        <button onclick="closeWorkArea()" style="float:left; border:none; background:none; color:gray;">إغلاق <i class="fas fa-times"></i></button>
+        <h3 id="current-p-name">اسم المريض</h3>
+        <p id="current-p-info" style="color:var(--primary); font-weight:bold;"></p>
+        <hr>
+        <label>التشخيص الطبي:</label>
+        <textarea id="diag" rows="3" placeholder="سجل الأعراض والتشخيص..."></textarea>
+        <label>الروشتة العلاجية:</label>
+        <textarea id="meds" rows="5" placeholder="اكتب الأدوية والجرعات..."></textarea>
+        <button class="btn-finish" onclick="finishPatient()">إنهاء الكشف وحفظ الروشتة</button>
+    </div>
 
-    window.saveAndFinish = async () => {
-        if(!currentP) return;
-        const symp = document.getElementById('symptoms').value;
-        const presc = document.getElementById('prescription').value;
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+        import { getFirestore, collection, query, where, onSnapshot, doc, updateDoc, addDoc, serverTimestamp, orderBy } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
-        try {
-            // إضافة للروشتات
-            await addDoc(collection(db, "prescriptions"), {
-                patientName: currentP.name,
-                doctor: doctorName,
-                symptoms: symp,
-                prescription: presc,
-                timestamp: serverTimestamp()
+        const firebaseConfig = {
+            apiKey: "AIzaSyBy8xPvxQuC6bVLerLpSjzPmvBWyAhuYKo",
+            authDomain: "mogama-49e7f.firebaseapp.com",
+            projectId: "mogama-49e7f",
+            storageBucket: "mogama-49e7f.firebasestorage.app",
+            messagingSenderId: "575066177594",
+            appId: "1:575066177594:web:82137834158b4c353db503"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // 1. استرجاع اسم الدكتور المسجل (مثلاً: زين سعد)
+        const loggedInDoctor = localStorage.getItem('doctorName');
+        if(!loggedInDoctor) window.location.href = "index.html";
+        document.getElementById('docName').innerText = "د. " + loggedInDoctor;
+
+        // دالة تاريخ اليوم بنفس تنسيق صفحة الاستقبال
+        const getToday = () => {
+            const d = new Date();
+            return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        };
+
+        let activePatientId = null;
+
+        // 2. البحث الذكي (باسم الدكتور + تاريخ اليوم + حالة الانتظار)
+        const q = query(
+            collection(db, "appointments"),
+            where("assigned_doctor", "==", loggedInDoctor),
+            where("booking_date", "==", getToday()),
+            where("status", "==", "انتظار"),
+            orderBy("created_at", "asc")
+        );
+
+        // 3. الاستماع اللحظي للتغييرات
+        onSnapshot(q, (snapshot) => {
+            document.getElementById('q-count').innerText = snapshot.size + " مريض";
+            const listDiv = document.getElementById('patient-list');
+            listDiv.innerHTML = "";
+
+            if(snapshot.empty) {
+                listDiv.innerHTML = "<p style='text-align:center; color:#aaa; padding:20px;'>لا يوجد مرضى في الانتظار حالياً</p>";
+                return;
+            }
+
+            snapshot.forEach(d => {
+                const p = d.data();
+                listDiv.innerHTML += `
+                    <div class="patient-card" onclick="openPatient('${d.id}', '${p.patient_name}', '${p.patient_age}', '${p.patient_phone}')">
+                        <h4>${p.patient_name}</h4>
+                        <p><i class="fas fa-clock"></i> السن: ${p.patient_age} سنة | الهاتف: ${p.patient_phone}</p>
+                    </div>
+                `;
             });
-            // تحديث الموعد لمنتهي ليختفي من القائمة
-            await updateDoc(doc(db, "appointments", currentP.id), { status: "منتهي" });
-            
-            alert("تم الإنهاء بنجاح");
-            location.reload();
-        } catch(e) { alert("خطأ في الحفظ"); }
-    };
+        });
 
-    window.openQueue = () => document.getElementById('queue-modal').style.display = 'flex';
-    window.closeQueue = () => document.getElementById('queue-modal').style.display = 'none';
-    window.logout = () => { localStorage.clear(); window.location.href="index.html"; };
-</script>
+        // فتح ملف المريض للكشف
+        window.openPatient = (id, name, age, phone) => {
+            activePatientId = id;
+            document.getElementById('welcome-area').style.display = 'none';
+            document.getElementById('work-area').style.display = 'block';
+            document.getElementById('current-p-name').innerText = name;
+            document.getElementById('current-p-info').innerText = `السن: ${age} | الموبايل: ${phone}`;
+            document.getElementById('diag').value = "";
+            document.getElementById('meds').value = "";
+        };
+
+        // إنهاء الكشف
+        window.finishPatient = async () => {
+            if(!activePatientId) return;
+            const diag = document.getElementById('diag').value;
+            const meds = document.getElementById('meds').value;
+
+            if(!meds) return alert("برجاء كتابة الروشتة");
+
+            try {
+                // حفظ الروشتة في جدول منفصل للصيدلية
+                await addDoc(collection(db, "prescriptions"), {
+                    patient_name: document.getElementById('current-p-name').innerText,
+                    doctor_name: loggedInDoctor,
+                    diagnosis: diag,
+                    medications: meds,
+                    date: getToday(),
+                    timestamp: serverTimestamp()
+                });
+
+                // تحديث حالة المريض في جدول المواعيد ليختفي من قائمة الانتظار
+                await updateDoc(doc(db, "appointments", activePatientId), {
+                    status: "منتهي"
+                });
+
+                alert("تم إنهاء الكشف وإرسال البيانات");
+                closeWorkArea();
+            } catch (e) { alert("حدث خطأ في الحفظ"); }
+        };
+
+        window.closeWorkArea = () => {
+            document.getElementById('welcome-area').style.display = 'block';
+            document.getElementById('work-area').style.display = 'none';
+        };
+
+        window.logout = () => { localStorage.clear(); window.location.href="index.html"; };
+    </script>
 </body>
 </html>
