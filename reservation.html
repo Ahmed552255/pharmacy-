@@ -166,7 +166,9 @@
             <h3 style="margin-top:0; color:var(--primary);">تسجيل حجز جديد</h3>
             <div class="form-group">
                 <label>اختر الدكتور</label>
-                <select id="pDoctor" required></select>
+                <select id="pDoctor" required>
+                    <option value="">-- اختر الدكتور --</option>
+                </select>
             </div>
             <div class="form-group"><label>اسم المريض</label><input type="text" id="pName" required></div>
             <div class="form-group"><label>عمر المريض</label><input type="number" id="pAge" required></div>
@@ -226,34 +228,58 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
+        const staffId = localStorage.getItem('staffId');
         const assignedDoctorName = localStorage.getItem('doctorName');
-        const userName = localStorage.getItem('userName');
 
-        if (!assignedDoctorName || !userName) {
+        if (!staffId || !assignedDoctorName) {
             alert("بيانات الجلسة غير كاملة! سيتم إعادتك لصفحة تسجيل الدخول.");
             window.location.href = 'index.html';
         }
-        
-        document.getElementById('staffInfo').innerText = `الموظف: ${userName} | عيادة د. ${assignedDoctorName}`;
+
+        // جلب اسم الموظف من قاعدة البيانات
+        const loadStaffInfo = async () => {
+            try {
+                const staffQuery = query(collection(db, "staff"), where("__name__", "==", staffId));
+                const staffSnapshot = await getDocs(staffQuery);
+                
+                if (!staffSnapshot.empty) {
+                    const staffData = staffSnapshot.docs[0].data();
+                    const staffName = staffData.name || staffData.username || "غير معروف";
+                    document.getElementById('staffInfo').innerText = `الموظف: ${staffName} | عيادة د. ${assignedDoctorName}`;
+                } else {
+                    document.getElementById('staffInfo').innerText = `الموظف: غير معروف | عيادة د. ${assignedDoctorName}`;
+                }
+            } catch (error) {
+                console.error("خطأ في جلب بيانات الموظف:", error);
+                document.getElementById('staffInfo').innerText = `الموظف: غير معروف | عيادة د. ${assignedDoctorName}`;
+            }
+        };
+        loadStaffInfo();
+
         document.getElementById('stats-doctor-name').innerText = assignedDoctorName;
 
-        // تحميل قائمة الأطباء في قائمة الاختيار
+        // تحميل قائمة الأطباء من قاعدة البيانات
         const loadDoctors = async () => {
-            const doctorsQuery = query(collection(db, "doctors"));
-            const doctorsSnapshot = await getDocs(doctorsQuery);
-            const doctorSelect = document.getElementById('pDoctor');
-            doctorSelect.innerHTML = '';
-            
-            doctorsSnapshot.forEach((doc) => {
-                const doctorData = doc.data();
-                const option = document.createElement('option');
-                option.value = doctorData.name;
-                option.textContent = `د. ${doctorData.name}`;
-                if (doctorData.name === assignedDoctorName) {
-                    option.selected = true;
-                }
-                doctorSelect.appendChild(option);
-            });
+            try {
+                const doctorsQuery = query(collection(db, "doctors"));
+                const doctorsSnapshot = await getDocs(doctorsQuery);
+                const doctorSelect = document.getElementById('pDoctor');
+                doctorSelect.innerHTML = '<option value="">-- اختر الدكتور --</option>';
+                
+                doctorsSnapshot.forEach((doc) => {
+                    const doctorData = doc.data();
+                    const option = document.createElement('option');
+                    option.value = doctorData.name;
+                    option.textContent = `د. ${doctorData.name}`;
+                    if (doctorData.name === assignedDoctorName) {
+                        option.selected = true;
+                    }
+                    doctorSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error("خطأ في جلب قائمة الأطباء:", error);
+                alert("حدث خطأ في تحميل قائمة الأطباء");
+            }
         };
         loadDoctors();
 
