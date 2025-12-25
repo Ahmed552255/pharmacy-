@@ -3,145 +3,117 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام الاستقبال | الربط المباشر</title>
+    <title>تسجيل المرضى | نظام الاستقبال</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { --primary: #45b39d; --dark: #16a085; --bg: #f8fafb; --danger: #e74c3c; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: var(--bg); margin: 0; padding: 20px; text-align: right; }
-        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        .btn { border: none; border-radius: 10px; padding: 12px 20px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 8px; color: white; transition: 0.3s; }
-        .btn-add { background: var(--primary); width: 100%; justify-content: center; font-size: 18px; }
-        .btn-logout { background: #95a5a6; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; border-radius: 10px; overflow: hidden; }
-        th { background: var(--primary); color: white; padding: 15px; }
-        td { padding: 12px; border-bottom: 1px solid #eee; text-align: center; }
-        .header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; text-align: right; }
+        .form-card { background: white; max-width: 500px; margin: auto; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        h2 { color: #45b39d; text-align: center; }
+        .input-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; color: #333; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+        .btn-send { background: #45b39d; color: white; border: none; width: 100%; padding: 15px; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 10px; }
+        .btn-send:hover { background: #16a085; }
+        .status-msg { text-align: center; margin-top: 15px; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <div class="header-flex">
-        <div>
-            <h2 style="margin:0; color:var(--dark)">لوحة الاستقبال</h2>
-            <small id="currentDoctor" style="font-weight:bold; color:var(--primary)"></small>
-        </div>
-        <button class="btn btn-logout" onclick="logout()"><i class="fas fa-sign-out-alt"></i> خروج</button>
+<div class="form-card">
+    <h2><i class="fas fa-user-plus"></i> تسجيل مريض جديد</h2>
+    <hr>
+    
+    <div class="input-group">
+        <label>اسم المريض</label>
+        <input type="text" id="pName" placeholder="الاسم ثلاثي">
     </div>
 
-    <div class="card">
-        <h3><i class="fas fa-user-plus"></i> تسجيل كشف جديد</h3>
-        <input type="text" id="pName" placeholder="اسم المريض بالكامل">
-        <input type="tel" id="pPhone" placeholder="رقم الموبايل (11 رقم)">
-        <input type="number" id="pPrice" value="200" placeholder="سعر الكشف">
-        <button class="btn btn-add" id="saveBtn" onclick="saveNewBooking()">
-            <i class="fas fa-check-circle"></i> تأكيد الحجز وإرسال للطبيب
-        </button>
+    <div class="input-group">
+        <label>عمر المريض</label>
+        <input type="number" id="pAge" placeholder="العمر بالسنين">
     </div>
 
-    <div style="overflow-x:auto">
-        <table>
-            <thead>
-                <tr>
-                    <th>المريض</th>
-                    <th>الطبيب</th>
-                    <th>الحالة</th>
-                    <th>حذف</th>
-                </tr>
-            </thead>
-            <tbody id="tableBody"></tbody>
-        </table>
+    <div class="input-group">
+        <label>رقم الموبايل</label>
+        <input type="tel" id="pPhone" placeholder="01xxxxxxxxx">
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, where, orderBy, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+    <div class="input-group">
+        <label>اختيار الدكتور</label>
+        <select id="pDoctor">
+            <option value="">-- اختر الطبيب --</option>
+            <option value="زين سعد">د. زين سعد</option>
+            <option value="أحمد علي">د. أحمد علي</option>
+        </select>
+    </div>
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyBy8xPvxQuC6bVLerLpSjzPmvBWyAhuYKo",
-            authDomain: "mogama-49e7f.firebaseapp.com",
-            projectId: "mogama-49e7f",
-            storageBucket: "mogama-49e7f.firebasestorage.app",
-            messagingSenderId: "575066177594",
-            appId: "1:575066177594:web:82137834158b4c353db503"
-        };
+    <button class="btn-send" onclick="submitToCloud()">تأكيد الحجز وإرسال</button>
+    <div id="msg" class="status-msg"></div>
+</div>
 
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
-        // 1. استخراج اسم الطبيب وتنظيفه تماماً من أي مسافات زائدة
-        const doctorRaw = localStorage.getItem('doctorName') || "";
-        const doctorName = doctorRaw.trim();
-        document.getElementById('currentDoctor').innerText = "العيادة الحالية: " + doctorName;
+    const firebaseConfig = {
+        apiKey: "AIzaSyBy8xPvxQuC6bVLerLpSjzPmvBWyAhuYKo",
+        authDomain: "mogama-49e7f.firebaseapp.com",
+        projectId: "mogama-49e7f",
+        storageBucket: "mogama-49e7f.firebasestorage.app",
+        messagingSenderId: "575066177594",
+        appId: "1:575066177594:web:82137834158b4c353db503"
+    };
 
-        if(!doctorName) window.location.href = "index.html";
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-        // دالة توحيد التاريخ لضمان المزامنة
-        const getToday = () => new Date().toISOString().split('T')[0];
+    // دالة توحيد التاريخ (YYYY-MM-DD) لضمان دقة البحث
+    const getTodayDate = () => {
+        const d = new Date();
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    };
 
-        // 2. إرسال البيانات (الربط الثلاثي: مريض + هاتف + دكتور)
-        window.saveNewBooking = async () => {
-            const name = document.getElementById('pName').value.trim();
-            const phone = document.getElementById('pPhone').value.trim();
-            const price = document.getElementById('pPrice').value;
-            const btn = document.getElementById('saveBtn');
+    window.submitToCloud = async () => {
+        const name = document.getElementById('pName').value.trim();
+        const age = document.getElementById('pAge').value.trim();
+        const phone = document.getElementById('pPhone').value.trim();
+        const doctor = document.getElementById('pDoctor').value;
+        const msgDiv = document.getElementById('msg');
 
-            if(!name || !phone) return alert("أكمل بيانات المريض أولاً");
+        if (!name || !age || !phone || !doctor) {
+            alert("برجاء ملء كافة البيانات");
+            return;
+        }
 
-            btn.disabled = true;
-            btn.innerText = "جاري الحجز...";
+        msgDiv.style.color = "blue";
+        msgDiv.innerText = "جاري الحجز...";
 
-            try {
-                // الحفظ في كولكشن appointments
-                await addDoc(collection(db, "appointments"), {
-                    name: name,
-                    phone: phone,
-                    doctor: doctorName, // حفظ اسم الدكتور المرتبط بالحساب الحالي
-                    price: price,
-                    status: "انتظار",
-                    date: getToday(),
-                    time: new Date().toLocaleTimeString('ar-EG', {hour:'2-digit', minute:'2-digit'}),
-                    timestamp: new Date().getTime()
-                });
-
-                document.getElementById('pName').value = "";
-                document.getElementById('pPhone').value = "";
-                alert("تم إرسال المريض " + name + " لعيادة د." + doctorName);
-            } catch (e) {
-                alert("خطأ في الشبكة: " + e.message);
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-check-circle"></i> تأكيد الحجز وإرسال للطبيب';
-            }
-        };
-
-        // 3. عرض القائمة للتأكد من المزامنة
-        const q = query(
-            collection(db, "appointments"),
-            where("doctor", "==", doctorName),
-            where("date", "==", getToday()),
-            orderBy("timestamp", "desc")
-        );
-
-        onSnapshot(q, (snap) => {
-            const tbody = document.getElementById('tableBody');
-            tbody.innerHTML = "";
-            snap.forEach(d => {
-                const p = d.data();
-                tbody.innerHTML += `
-                    <tr>
-                        <td><b>${p.name}</b><br><small>${p.phone}</small></td>
-                        <td>${p.doctor}</td>
-                        <td style="color:${p.status === 'انتظار' ? '#f39c12' : '#27ae60'}">${p.status}</td>
-                        <td><button onclick="deleteMe('${d.id}')" style="border:none; color:red; background:none; cursor:pointer"><i class="fas fa-trash"></i></button></td>
-                    </tr>
-                `;
+        try {
+            await addDoc(collection(db, "appointments"), {
+                patient_name: name,
+                patient_age: age,
+                patient_phone: phone,
+                assigned_doctor: doctor, // اسم الدكتور للبحث عنه
+                booking_date: getTodayDate(), // تاريخ اليوم الموحد
+                status: "انتظار",
+                created_at: serverTimestamp() // للترتيب الزمني
             });
-        });
 
-        window.deleteMe = async (id) => { if(confirm("حذف الكشف؟")) await deleteDoc(doc(db, "appointments", id)); };
-        window.logout = () => { localStorage.clear(); window.location.href="index.html"; };
-
-    </script>
+            msgDiv.style.color = "green";
+            msgDiv.innerText = "تم الحجز بنجاح وإرساله للدكتور";
+            
+            // تصفير الفورم
+            document.getElementById('pName').value = "";
+            document.getElementById('pAge').value = "";
+            document.getElementById('pPhone').value = "";
+        } catch (e) {
+            msgDiv.style.color = "red";
+            msgDiv.innerText = "فشل الاتصال: " + e.message;
+        }
+    };
+</script>
 </body>
 </html>
