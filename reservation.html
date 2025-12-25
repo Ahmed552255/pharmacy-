@@ -3,93 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام الاستقبال - المزامنة الذكية</title>
+    <title>نظام الاستقبال | الربط المباشر</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { 
-            --primary: #45b39d; --dark: #16a085; --bg: #f8fafb;
-            --white: #ffffff; --danger: #e74c3c; --gray: #95a5a6;
-        }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: var(--bg); margin: 0; padding: 15px; color: #333; }
-        
-        /* تصميم البطاقات العلوية */
-        .top-section { background: var(--white); padding: 20px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; text-align: center; }
-        .clinic-name { color: var(--primary); margin: 0; font-size: 24px; }
-        .staff-status { color: var(--gray); font-weight: bold; margin-top: 5px; display: block; }
-
-        .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
-        
-        .btn { border: none; border-radius: 12px; padding: 15px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; color: white; transition: 0.3s; font-size: 16px; }
-        .btn-add { background: var(--primary); grid-column: span 2; }
-        .btn-logout { background: var(--gray); }
-        .btn-end { background: var(--danger); }
-        .btn:active { transform: scale(0.95); }
-
-        /* الإحصائيات */
-        .stats-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
-        .stat-box { background: white; padding: 15px; border-radius: 12px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .stat-box h3 { margin: 0; color: var(--dark); font-size: 20px; }
-        .stat-box p { margin: 5px 0 0 0; font-size: 12px; color: #7f8c8d; }
-
-        /* الجدول */
-        .table-card { background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-        table { width: 100%; border-collapse: collapse; }
-        th { background: var(--primary); color: white; padding: 12px; font-size: 14px; }
-        td { padding: 12px; text-align: center; border-bottom: 1px solid #eee; font-size: 14px; }
-        .status-wait { color: #f39c12; font-weight: bold; background: #fff9e6; padding: 4px 8px; border-radius: 6px; }
-
-        /* المودال */
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
-        .modal-content { background: white; width: 100%; max-width: 400px; padding: 25px; border-radius: 20px; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        :root { --primary: #45b39d; --dark: #16a085; --bg: #f8fafb; --danger: #e74c3c; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: var(--bg); margin: 0; padding: 20px; text-align: right; }
+        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .btn { border: none; border-radius: 10px; padding: 12px 20px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 8px; color: white; transition: 0.3s; }
+        .btn-add { background: var(--primary); width: 100%; justify-content: center; font-size: 18px; }
+        .btn-logout { background: #95a5a6; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; border-radius: 10px; overflow: hidden; }
+        th { background: var(--primary); color: white; padding: 15px; }
+        td { padding: 12px; border-bottom: 1px solid #eee; text-align: center; }
+        .header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
     </style>
 </head>
 <body>
 
-    <div class="top-section">
-        <h2 class="clinic-name"><i class="fas fa-hospital"></i> نظام الاستقبال</h2>
-        <span id="staffInfo" class="staff-status">جاري التحميل...</span>
-    </div>
-
-    <div class="action-grid">
-        <button class="btn btn-add" onclick="openModal()"><i class="fas fa-plus"></i> حجز مريض جديد</button>
+    <div class="header-flex">
+        <div>
+            <h2 style="margin:0; color:var(--dark)">لوحة الاستقبال</h2>
+            <small id="currentDoctor" style="font-weight:bold; color:var(--primary)"></small>
+        </div>
         <button class="btn btn-logout" onclick="logout()"><i class="fas fa-sign-out-alt"></i> خروج</button>
-        <button class="btn btn-end" onclick="endDay()"><i class="fas fa-archive"></i> إنهاء اليوم</button>
     </div>
 
-    <div class="stats-container">
-        <div class="stat-box"><h3 id="statTotal">0</h3><p>الحالات</p></div>
-        <div class="stat-box"><h3 id="statWaiting">0</h3><p>انتظار</p></div>
-        <div class="stat-box"><h3 id="statRevenue">0</h3><p>الإيراد</p></div>
+    <div class="card">
+        <h3><i class="fas fa-user-plus"></i> تسجيل كشف جديد</h3>
+        <input type="text" id="pName" placeholder="اسم المريض بالكامل">
+        <input type="tel" id="pPhone" placeholder="رقم الموبايل (11 رقم)">
+        <input type="number" id="pPrice" value="200" placeholder="سعر الكشف">
+        <button class="btn btn-add" id="saveBtn" onclick="saveNewBooking()">
+            <i class="fas fa-check-circle"></i> تأكيد الحجز وإرسال للطبيب
+        </button>
     </div>
 
-    <div class="table-card">
+    <div style="overflow-x:auto">
         <table>
             <thead>
                 <tr>
                     <th>المريض</th>
-                    <th>الوقت</th>
-                    <th>الإجراء</th>
+                    <th>الطبيب</th>
+                    <th>الحالة</th>
+                    <th>حذف</th>
                 </tr>
             </thead>
-            <tbody id="patientsTableBody"></tbody>
+            <tbody id="tableBody"></tbody>
         </table>
-    </div>
-
-    <div id="bookingModal" class="modal">
-        <div class="modal-content">
-            <h3 style="margin:0; color:var(--primary);">حجز جديد</h3>
-            <input type="text" id="pName" placeholder="اسم المريض ثنائي">
-            <input type="tel" id="pPhone" placeholder="رقم الموبايل">
-            <input type="number" id="pPrice" value="200" placeholder="قيمة الكشف">
-            <button class="btn btn-add" onclick="saveNewBooking()">تأكيد الحجز الآن</button>
-            <button onclick="closeModal()" style="width:100%; background:none; border:none; color:gray; margin-top:10px; cursor:pointer;">إلغاء</button>
-        </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, where, orderBy, doc, deleteDoc, getDocs, writeBatch } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, where, orderBy, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBy8xPvxQuC6bVLerLpSjzPmvBWyAhuYKo",
@@ -103,104 +69,79 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // --- التأكد من اسم الطبيب (تنظيف المسافات) ---
-        const rawDoctorName = localStorage.getItem('doctorName');
-        const assignedDoctorName = rawDoctorName ? rawDoctorName.trim() : null;
+        // 1. استخراج اسم الطبيب وتنظيفه تماماً من أي مسافات زائدة
+        const doctorRaw = localStorage.getItem('doctorName') || "";
+        const doctorName = doctorRaw.trim();
+        document.getElementById('currentDoctor').innerText = "العيادة الحالية: " + doctorName;
 
-        if(!assignedDoctorName) {
-            window.location.href = "index.html";
-        }
+        if(!doctorName) window.location.href = "index.html";
 
-        document.getElementById('staffInfo').innerText = `عيادة: ${assignedDoctorName}`;
+        // دالة توحيد التاريخ لضمان المزامنة
+        const getToday = () => new Date().toISOString().split('T')[0];
 
-        // دالة الحصول على تاريخ اليوم بتنسيق ثابت (YYYY-MM-DD)
-        const getTodayDate = () => {
-            const d = new Date();
-            return `${d.getFullYear()}-${(d.getMonth()+1).toString().padStart(2,'0')}-${d.getDate().toString().padStart(2,'0')}`;
-        };
-
-        // --- الاستماع اللحظي ---
-        const q = query(
-            collection(db, "appointments"), 
-            where("date", "==", getTodayDate()), 
-            where("doctor", "==", assignedDoctorName),
-            orderBy("timestamp", "asc")
-        );
-
-        onSnapshot(q, (snapshot) => {
-            const tbody = document.getElementById('patientsTableBody');
-            tbody.innerHTML = '';
-            let total = 0, waiting = 0, revenue = 0;
-
-            snapshot.forEach((doc) => {
-                const p = doc.data();
-                if(p.status === 'مؤرشف') return;
-
-                total++;
-                if(p.status === 'انتظار') waiting++;
-                if(p.status === 'منتهي') revenue += parseFloat(p.price || 0);
-
-                tbody.innerHTML += `
-                    <tr>
-                        <td style="text-align:right"><b>${p.name}</b><br><small>${p.phone}</small></td>
-                        <td>${p.time}</td>
-                        <td>
-                            <button onclick="deleteApp('${doc.id}')" style="color:var(--danger); border:none; background:none;"><i class="fas fa-trash"></i></button>
-                        </td>
-                    </tr>
-                `;
-            });
-            document.getElementById('statTotal').innerText = total;
-            document.getElementById('statWaiting').innerText = waiting;
-            document.getElementById('statRevenue').innerText = revenue + " ج.م";
-        });
-
-        // --- إضافة حجز جديد مع التأكد من الربط ---
+        // 2. إرسال البيانات (الربط الثلاثي: مريض + هاتف + دكتور)
         window.saveNewBooking = async () => {
             const name = document.getElementById('pName').value.trim();
             const phone = document.getElementById('pPhone').value.trim();
             const price = document.getElementById('pPrice').value;
+            const btn = document.getElementById('saveBtn');
 
-            if(!name || !phone) return alert('برجاء إدخال البيانات');
+            if(!name || !phone) return alert("أكمل بيانات المريض أولاً");
+
+            btn.disabled = true;
+            btn.innerText = "جاري الحجز...";
 
             try {
+                // الحفظ في كولكشن appointments
                 await addDoc(collection(db, "appointments"), {
                     name: name,
                     phone: phone,
-                    doctor: assignedDoctorName, // الاسم النظيف
+                    doctor: doctorName, // حفظ اسم الدكتور المرتبط بالحساب الحالي
                     price: price,
-                    status: 'انتظار',
-                    date: getTodayDate(), // تاريخ موحد
+                    status: "انتظار",
+                    date: getToday(),
                     time: new Date().toLocaleTimeString('ar-EG', {hour:'2-digit', minute:'2-digit'}),
                     timestamp: new Date().getTime()
                 });
-                closeModal();
-                document.getElementById('pName').value = '';
-                document.getElementById('pPhone').value = '';
+
+                document.getElementById('pName').value = "";
+                document.getElementById('pPhone').value = "";
+                alert("تم إرسال المريض " + name + " لعيادة د." + doctorName);
             } catch (e) {
-                alert("خطأ في الاتصال بقاعدة البيانات");
+                alert("خطأ في الشبكة: " + e.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-check-circle"></i> تأكيد الحجز وإرسال للطبيب';
             }
         };
 
-        window.deleteApp = async (id) => {
-            if(confirm('حذف المريض؟')) await deleteDoc(doc(db, "appointments", id));
-        };
+        // 3. عرض القائمة للتأكد من المزامنة
+        const q = query(
+            collection(db, "appointments"),
+            where("doctor", "==", doctorName),
+            where("date", "==", getToday()),
+            orderBy("timestamp", "desc")
+        );
 
+        onSnapshot(q, (snap) => {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = "";
+            snap.forEach(d => {
+                const p = d.data();
+                tbody.innerHTML += `
+                    <tr>
+                        <td><b>${p.name}</b><br><small>${p.phone}</small></td>
+                        <td>${p.doctor}</td>
+                        <td style="color:${p.status === 'انتظار' ? '#f39c12' : '#27ae60'}">${p.status}</td>
+                        <td><button onclick="deleteMe('${d.id}')" style="border:none; color:red; background:none; cursor:pointer"><i class="fas fa-trash"></i></button></td>
+                    </tr>
+                `;
+            });
+        });
+
+        window.deleteMe = async (id) => { if(confirm("حذف الكشف؟")) await deleteDoc(doc(db, "appointments", id)); };
         window.logout = () => { localStorage.clear(); window.location.href="index.html"; };
 
-        window.endDay = async () => {
-            if(!confirm("هل تريد أرشفة حالات اليوم؟")) return;
-            const batch = writeBatch(db);
-            const querySnapshot = await getDocs(q);
-            querySnapshot.forEach((d) => {
-                batch.update(doc(db, "appointments", d.id), { status: "مؤرشف" });
-            });
-            await batch.commit();
-            alert("تم إنهاء اليوم.");
-        };
-
-        window.openModal = () => document.getElementById('bookingModal').style.display = 'flex';
-        window.closeModal = () => document.getElementById('bookingModal').style.display = 'none';
     </script>
 </body>
 </html>
