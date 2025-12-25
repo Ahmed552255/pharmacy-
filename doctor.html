@@ -3,55 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة الطبيب الذكية | نظام العيادات</title>
+    <title>لوحة الطبيب | المزامنة الفورية</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
             --primary: #45b39d; --dark: #16a085; --light: #f4fbf9;
             --white: #ffffff; --accent: #f39c12; --danger: #e74c3c;
         }
-
-        body { font-family: 'Segoe UI', sans-serif; background: var(--light); margin: 0; padding-bottom: 100px; overflow-x: hidden; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--light); margin: 0; padding-bottom: 90px; }
         
+        /* الهيدر */
         .doctor-nav {
-            background: var(--white); padding: 10px 20px; display: flex;
+            background: var(--white); padding: 15px 20px; display: flex;
             justify-content: space-between; align-items: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05); sticky; top: 0; z-index: 1000;
         }
 
-        .section-card {
-            background: white; margin: 12px; border-radius: 12px;
-            overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        }
-        .section-header {
-            background: var(--primary); color: white; padding: 15px;
-            display: flex; justify-content: space-between; cursor: pointer;
-        }
-        .section-body { padding: 15px; display: none; }
-        .section-body.active { display: block; }
+        /* قائمة الانتظار */
+        .q-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+        .q-container { background: white; width: 90%; max-width: 450px; border-radius: 20px; overflow: hidden; }
+        .q-header { background: var(--primary); color: white; padding: 20px; text-align: center; }
+        .q-item { padding: 15px; border-bottom: 1px solid #eee; cursor: pointer; transition: 0.3s; }
+        .q-item:hover { background: var(--light); border-right: 5px solid var(--primary); }
 
-        textarea {
-            width: 100%; border: 1px solid #ddd; border-radius: 8px;
-            padding: 12px; font-size: 16px; resize: none; box-sizing: border-box; outline: none;
-        }
+        /* منطقة العمل */
+        .work-area { padding: 15px; display: none; }
+        .patient-info-card { background: white; padding: 20px; border-radius: 15px; border-right: 5px solid var(--accent); margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        
+        .input-group { background: white; padding: 15px; border-radius: 15px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        label { display: block; margin-bottom: 10px; font-weight: bold; color: var(--dark); }
+        textarea { width: 100%; border: 1px solid #ddd; border-radius: 10px; padding: 12px; font-size: 16px; box-sizing: border-box; resize: none; outline: none; }
+        textarea:focus { border-color: var(--primary); }
 
-        .dock-footer {
-            position: fixed; bottom: 0; width: 100%; background: white;
-            padding: 15px 20px; display: none; grid-template-columns: 1fr 3fr; gap: 12px;
-            box-shadow: 0 -4px 15px rgba(0,0,0,0.1); box-sizing: border-box; z-index: 1000;
-        }
-
-        .btn { border: none; border-radius: 10px; cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .btn-main { background: var(--primary); color: white; font-size: 18px; }
-        .btn-sec { background: var(--accent); color: white; }
-
-        #q-list .q-item {
-            padding: 15px; border-bottom: 1px solid #f0f0f0; cursor: pointer; transition: 0.2s;
-        }
-        #q-list .q-item:hover { background: var(--light); border-right: 5px solid var(--primary); }
-
-        .canvas-container { background: #fff; border: 1px solid #eee; border-radius: 10px; margin-top: 10px; }
-        canvas { width: 100%; height: 250px; touch-action: none; }
+        /* الفوتر */
+        .footer-bar { position: fixed; bottom: 0; width: 100%; background: white; padding: 15px 20px; display: none; grid-template-columns: 1fr 2fr; gap: 10px; box-shadow: 0 -5px 15px rgba(0,0,0,0.1); box-sizing: border-box; }
+        
+        .btn { border: none; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 16px; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-main { background: var(--primary); color: white; padding: 15px; }
+        .btn-cancel { background: #fdedec; color: var(--danger); }
+        
+        .empty-state { text-align: center; padding: 100px 20px; color: #7f8c8d; }
     </style>
 </head>
 <body>
@@ -59,79 +50,55 @@
 <nav class="doctor-nav">
     <div>
         <h3 style="margin:0; color:var(--dark)"><i class="fas fa-user-md"></i> لوحة الطبيب</h3>
-        <small id="doc-display-name">جاري التحميل...</small>
+        <small id="doc-name-display" style="color:var(--primary); font-weight:bold;">جاري التحميل...</small>
     </div>
-    <div style="display: flex; gap: 10px;">
-        <button class="btn" style="background:var(--primary); color:white; padding:8px 15px;" onclick="toggleQueue()">
+    <div style="display:flex; gap:10px;">
+        <button class="btn" style="background:var(--primary); color:white; padding:8px 15px;" onclick="openQueue()">
             <i class="fas fa-users"></i> الانتظار (<span id="q-count">0</span>)
         </button>
-        <button class="btn" style="color: var(--danger); background: #fdedec; width: 40px;" onclick="logout()">
+        <button class="btn" style="background:#fdedec; color:var(--danger); width:40px; height:40px; border-radius:50%;" onclick="logout()">
             <i class="fas fa-sign-out-alt"></i>
         </button>
     </div>
 </nav>
 
-<div id="patient-welcome" style="text-align:center; padding:100px 20px;">
-    <i class="fas fa-user-clock fa-5x" style="color:var(--primary); margin-bottom: 20px;"></i>
-    <h2 id="welcome-msg">أهلاً بك دكتور</h2>
-    <p style="color: #666;">اضغط على زر "الانتظار" بالأعلى لاختيار المريض وبدء الكشف</p>
+<div id="welcome-screen" class="empty-state">
+    <i class="fas fa-clinic-medical fa-5x" style="color:#ddd; margin-bottom:20px;"></i>
+    <h2>أهلاً بك دكتور</h2>
+    <p>برجاء اختيار مريض من قائمة الانتظار للبدء</p>
+    <button class="btn btn-main" style="margin:20px auto; padding:10px 30px;" onclick="openQueue()">فتح قائمة الانتظار</button>
 </div>
 
-<div id="main-work-area" style="display:none; padding-top: 10px;">
-    <div class="section-card" style="border-right: 5px solid var(--accent); background: #fffdf9;">
-        <div style="padding:15px;">
-            <small style="color: #888;">يتم الكشف الآن على:</small>
-            <h2 id="active-p-name" style="margin:5px 0; color: var(--dark);">اسم المريض</h2>
-            <small id="active-p-phone" style="color: #666;"></small>
-        </div>
+<div id="work-area" class="work-area">
+    <div class="patient-info-card">
+        <small>المريض الحالي:</small>
+        <h2 id="active-p-name" style="margin:5px 0 0 0;">---</h2>
+        <small id="active-p-phone" style="color:var(--gray)"></small>
     </div>
 
-    <div class="section-card">
-        <div class="section-header" onclick="toggleSec(0)">
-            <span><i class="fas fa-notes-medical"></i> التشخيص السريري</span>
-            <i class="fas fa-chevron-down"></i>
-        </div>
-        <div class="section-body active">
-            <textarea id="symptoms-text" rows="3" placeholder="اكتب الأعراض والتشخيص هنا..."></textarea>
-        </div>
+    <div class="input-group">
+        <label><i class="fas fa-diagnoses"></i> التشخيص السريري</label>
+        <textarea id="symptoms" rows="3" placeholder="سجل ملاحظاتك هنا..."></textarea>
     </div>
 
-    <div class="section-card">
-        <div class="section-header" onclick="toggleSec(1)">
-            <span><i class="fas fa-prescription-bottle-medical"></i> الروشتة العلاجية</span>
-            <i class="fas fa-chevron-down"></i>
-        </div>
-        <div class="section-body active">
-            <textarea id="prescription-text" rows="6" placeholder="سجل العلاج والجرعات..."></textarea>
-        </div>
-    </div>
-
-    <div class="section-card">
-        <div class="section-header" onclick="toggleSec(2)">
-            <span><i class="fas fa-pen-nib"></i> ملاحظات مرسومة</span>
-            <i class="fas fa-chevron-right"></i>
-        </div>
-        <div class="section-body">
-            <div class="canvas-container">
-                <canvas id="medicalCanvas"></canvas>
-            </div>
-            <button onclick="clearCanvas()" style="margin-top:10px; background:none; border:1px solid red; color:red; padding:5px; border-radius:5px; cursor:pointer;">مسح الرسم</button>
-        </div>
+    <div class="input-group">
+        <label><i class="fas fa-pills"></i> الروشتة العلاجية</label>
+        <textarea id="prescription" rows="6" placeholder="اكتب العلاج والجرعات..."></textarea>
     </div>
 </div>
 
-<div class="dock-footer" id="main-footer">
-    <button class="btn btn-sec" onclick="cancelSession()">إلغاء</button>
-    <button class="btn btn-main" onclick="finishSession()">إنهاء وإرسال للصيدلية</button>
+<div id="footer-bar" class="footer-bar">
+    <button class="btn btn-cancel" onclick="resetPage()">إلغاء</button>
+    <button class="btn btn-main" onclick="savePrescription()">إنهاء وإرسال للصيدلية</button>
 </div>
 
-<div id="queue-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:2000; align-items:center; justify-content:center;">
-    <div style="background:white; width:90%; max-width:400px; border-radius:15px; overflow: hidden;">
-        <div style="background: var(--primary); color: white; padding: 15px; font-weight: bold; display: flex; justify-content: space-between;">
-            <span>المرضى بالخارج</span>
-            <i class="fas fa-times" onclick="toggleQueue()" style="cursor:pointer"></i>
+<div id="queue-modal" class="q-modal">
+    <div class="q-container">
+        <div class="q-header">
+            <h3 style="margin:0">قائمة المرضى (بالخارج)</h3>
         </div>
-        <div id="q-list" style="max-height: 400px; overflow-y: auto;"></div>
+        <div id="q-list" style="max-height:400px; overflow-y:auto;"></div>
+        <button onclick="closeQueue()" style="width:100%; padding:15px; border:none; background:#eee; cursor:pointer;">إغلاق</button>
     </div>
 </div>
 
@@ -151,119 +118,104 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    const doctorName = localStorage.getItem('doctorName') || "طبيب";
-    document.getElementById('doc-display-name').innerText = `د. ${doctorName}`;
+    // التحقق من اسم الدكتور وتنظيفه
+    const doctorName = (localStorage.getItem('doctorName') || "").trim();
+    if(!doctorName) window.location.href = "index.html";
+    document.getElementById('doc-name-display').innerText = `د. ${doctorName}`;
 
-    let currentP = null;
+    let currentPatient = null;
 
-    // تحديث قائمة الانتظار لحظياً
+    // الحصول على تاريخ اليوم بنفس تنسيق صفحة الاستقبال
+    const getTodayDate = () => {
+        const d = new Date();
+        return `${d.getFullYear()}-${(d.getMonth()+1).toString().padStart(2,'0')}-${d.getDate().toString().padStart(2,'0')}`;
+    };
+
+    // --- الاستماع اللحظي لقائمة الانتظار ---
     const q = query(
-        collection(db, "appointments"), 
-        where("status", "==", "انتظار"), 
-        where("doctor", "==", doctorName)
+        collection(db, "appointments"),
+        where("doctor", "==", doctorName),
+        where("status", "==", "انتظار"),
+        where("date", "==", getTodayDate())
     );
 
     onSnapshot(q, (snap) => {
         document.getElementById('q-count').innerText = snap.size;
         const list = document.getElementById('q-list');
-        list.innerHTML = snap.empty ? `<p style="padding:20px; text-align:center;">لا يوجد مرضى</p>` : "";
-        
+        list.innerHTML = "";
+
+        if(snap.empty) {
+            list.innerHTML = `<p style="padding:30px; text-align:center; color:#999;">لا يوجد مرضى بانتظارك</p>`;
+        }
+
         snap.forEach(d => {
             const data = d.data();
             list.innerHTML += `
-            <div class="q-item" onclick="selectPatient('${d.id}', '${data.name}', '${data.phone}')">
-                <b>${data.name}</b><br>
-                <small>${data.time}</small>
-            </div>`;
+                <div class="q-item" onclick="startCheckup('${d.id}', '${data.name}', '${data.phone}')">
+                    <div style="display:flex; justify-content:space-between">
+                        <b>${data.name}</b>
+                        <small style="color:var(--primary)">${data.time}</small>
+                    </div>
+                    <small style="color:#888">${data.phone}</small>
+                </div>
+            `;
         });
     });
 
-    // عند الضغط على مريض من القائمة
-    window.selectPatient = (id, name, phone) => {
-        currentP = { id, name, phone };
-        
-        // إخفاء الترحيب وإظهار منطقة العمل
-        document.getElementById('patient-welcome').style.display = 'none';
-        document.getElementById('main-work-area').style.display = 'block';
-        document.getElementById('main-footer').style.display = 'grid';
-        
-        // عرض اسم المريض
+    // --- بدء الكشف ---
+    window.startCheckup = (id, name, phone) => {
+        currentPatient = { id, name, phone };
+        document.getElementById('welcome-screen').style.display = 'none';
+        document.getElementById('work-area').style.display = 'block';
+        document.getElementById('footer-bar').style.display = 'grid';
         document.getElementById('active-p-name').innerText = name;
         document.getElementById('active-p-phone').innerText = phone;
         
-        // تفريغ الخانات القديمة
-        document.getElementById('symptoms-text').value = '';
-        document.getElementById('prescription-text').value = '';
+        // مسح الخانات السابقة
+        document.getElementById('symptoms').value = "";
+        document.getElementById('prescription').value = "";
         
-        toggleQueue(); // إغلاق القائمة
-        initCanvas(); // تشغيل لوحة الرسم
+        closeQueue();
     };
 
-    window.finishSession = async () => {
-        if(!currentP) return;
+    // --- إنهاء الكشف وإرسال الروشتة ---
+    window.savePrescription = async () => {
+        if(!currentPatient) return;
         
-        const drawingData = document.getElementById('medicalCanvas').toDataURL();
+        const symptoms = document.getElementById('symptoms').value;
+        const prescription = document.getElementById('prescription').value;
 
-        const pData = {
-            patientId: currentP.id,
-            patientName: currentP.name,
-            symptoms: document.getElementById('symptoms-text').value,
-            prescription: document.getElementById('prescription-text').value,
-            drawing: drawingData,
-            doctor: doctorName,
-            status: "جاهز",
-            timestamp: serverTimestamp()
-        };
+        if(!prescription) return alert("برجاء كتابة الروشتة أولاً");
 
         try {
-            await addDoc(collection(db, "prescriptions"), pData);
-            await updateDoc(doc(db, "appointments", currentP.id), { status: "منتهي" });
-            alert("تم إرسال الروشتة بنجاح");
-            location.reload();
-        } catch (e) { alert("خطأ في الحفظ"); }
+            // 1. حفظ الروشتة في جدول الصيدلية
+            await addDoc(collection(db, "prescriptions"), {
+                patientName: currentPatient.name,
+                patientPhone: currentPatient.phone,
+                doctor: doctorName,
+                symptoms: symptoms,
+                prescription: prescription,
+                status: "جاهز",
+                timestamp: serverTimestamp()
+            });
+
+            // 2. تحديث حالة المريض في جدول المواعيد إلى "منتهي"
+            await updateDoc(doc(db, "appointments", currentPatient.id), {
+                status: "منتهي"
+            });
+
+            alert("تم إرسال الروشتة بنجاح!");
+            resetPage();
+        } catch (e) {
+            alert("حدث خطأ أثناء الحفظ، حاول مرة أخرى.");
+        }
     };
 
-    window.toggleQueue = () => {
-        const m = document.getElementById('queue-modal');
-        m.style.display = m.style.display === 'none' ? 'flex' : 'none';
-    };
-
-    window.cancelSession = () => { if(confirm("إلغاء الكشف؟")) location.reload(); };
+    window.resetPage = () => { location.reload(); };
     window.logout = () => { localStorage.clear(); window.location.href="index.html"; };
-</script>
+    window.openQueue = () => { document.getElementById('queue-modal').style.display = 'flex'; };
+    window.closeQueue = () => { document.getElementById('queue-modal').style.display = 'none'; };
 
-<script>
-    // نظام الرسم
-    let ctx, drawing = false;
-    function initCanvas() {
-        const canvas = document.getElementById('medicalCanvas');
-        ctx = canvas.getContext('2d');
-        canvas.width = canvas.offsetWidth;
-        ctx.strokeStyle = "#45b39d";
-        ctx.lineWidth = 2;
-
-        const start = (e) => { drawing = true; ctx.beginPath(); };
-        const draw = (e) => {
-            if(!drawing) return;
-            const rect = canvas.getBoundingClientRect();
-            const x = (e.clientX || e.touches[0].clientX) - rect.left;
-            const y = (e.clientY || e.touches[0].clientY) - rect.top;
-            ctx.lineTo(x, y);
-            ctx.stroke();
-        };
-        const end = () => drawing = false;
-
-        canvas.addEventListener('mousedown', start);
-        canvas.addEventListener('mousemove', draw);
-        window.addEventListener('mouseup', end);
-        canvas.addEventListener('touchstart', start);
-        canvas.addEventListener('touchmove', draw);
-    }
-    function clearCanvas() { ctx.clearRect(0,0,1000,1000); }
-    function toggleSec(idx) {
-        const bodies = document.querySelectorAll('.section-body');
-        bodies[idx].classList.toggle('active');
-    }
 </script>
 </body>
 </html>
