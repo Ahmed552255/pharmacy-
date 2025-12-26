@@ -1,159 +1,247 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>تسجيل الدخول / إنشاء حساب</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #e0f7e9; / بيبى جرين فاتح /
-      margin: 0;
-      padding: 0;
-    }
-    .container {
-      max-width: 400px;
-      margin: auto;
-      padding: 20px;
-      background-color: #ffffff; / أبيض /
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      margin-top: 50px;
-    }
-    h2 {
-      text-align: center;
-      color: #4caf50;
-    }
-    label {
-      display: block;
-      margin: 10px 0 5px;
-      color: #333;
-    }
-    input, select, button {
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 15px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-    }
-    button {
-      background-color: #4caf50;
-      color: #fff;
-      border: none;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: #45a049;
-    }
-    @media (max-width: 600px) {
-      .container {
-        width: 90%;
-      }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منصة الإدارة الطبية المتكاملة</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --baby-green: #88d8b0;
+            --dark-green: #45b39d;
+            --white: #ffffff;
+            --bg-gradient: linear-gradient(135deg, #e0f2f1 0%, #88d8b0 100%);
+        }
+
+        * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+
+        body {
+            background: var(--bg-gradient);
+            min-height: 100vh; margin: 0; display: flex; align-items: center; justify-content: center;
+            padding: 20px;
+        }
+
+        .auth-card {
+            background: var(--white);
+            padding: 30px; border-radius: 25px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            width: 100%; max-width: 480px;
+            max-height: 95vh; overflow-y: auto;
+        }
+
+        .header-box { text-align: center; margin-bottom: 25px; }
+        .header-box i { font-size: 50px; color: var(--dark-green); }
+
+        .form-group { margin-bottom: 18px; text-align: right; }
+        label { display: block; margin-bottom: 7px; font-weight: 600; color: #333; font-size: 14px; }
+        
+        input, select {
+            width: 100%; padding: 12px; border: 2px solid #eef2f1;
+            border-radius: 12px; outline: none; transition: 0.3s;
+            text-align: right; font-size: 15px; background: #fdfdfd;
+        }
+
+        input:focus, select:focus { border-color: var(--dark-green); background: #fff; box-shadow: 0 0 8px rgba(136, 216, 176, 0.4); }
+
+        .extra-section {
+            background: #f9fffb; padding: 15px; border-radius: 15px;
+            border: 1px solid #d1e7dd; margin-top: 10px; display: none;
+            animation: slideIn 0.4s ease-out;
+        }
+
+        @keyframes slideIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .btn-submit {
+            width: 100%; padding: 15px; background: var(--dark-green);
+            color: white; border: none; border-radius: 12px;
+            font-size: 18px; font-weight: bold; cursor: pointer;
+            transition: 0.3s; margin-top: 20px;
+        }
+
+        .btn-submit:hover { background: #389684; transform: scale(1.02); }
+
+        .toggle-mode {
+            text-align: center; margin-top: 20px; color: #666; cursor: pointer;
+        }
+        .toggle-mode b { color: var(--dark-green); text-decoration: underline; }
+
+        /* ميزة شريط القوة */
+        .pwd-strength { height: 5px; background: #eee; margin-top: 5px; border-radius: 3px; }
+        .pwd-bar { height: 100%; width: 0; transition: 0.4s; border-radius: 3px; }
+    </style>
 </head>
 <body>
-  <div class="container" id="login-container">
-    <h2>تسجيل الدخول</h2>
-    <form id="loginForm">
-      <label for="email">البريد الإلكتروني</label>
-      <input type="email" id="email" required>
-      <label for="password">كلمة المرور</label>
-      <input type="password" id="password" required>
-      <button type="submit">تسجيل الدخول</button>
-    </form>
-    <p style="text-align:center;">ليس لديك حساب؟ <a href="#" onclick="showRegister()">إنشاء حساب جديد</a></p>
-  </div>
 
-  <div class="container" id="register-container" style="display:none;">
-    <h2>إنشاء حساب جديد</h2>
-    <form id="registerForm">
-      <label for="name">الاسم</label>
-      <input type="text" id="name" required>
-      <label for="regEmail">البريد الإلكتروني</label>
-      <input type="email" id="regEmail" required>
-      <label for="regPassword">كلمة المرور</label>
-      <input type="password" id="regPassword" required>
-      <label for="role">اختر التخصص</label>
-      <select id="role" required onchange="handleRoleChange(this.value)">
-        <option value="">-- اختر --</option>
-        <option value="doctor">دكتور</option>
-        <option value="pharmacist">صيدلي</option>
-        <option value="assistant">تمرجى</option>
-      </select>
+    <div class="auth-card">
+        <div class="header-box">
+            <i class="fas fa-notes-medical"></i>
+            <h2 id="formTitle">تسجيل الدخول</h2>
+            <p id="formSub" style="color:#888;">نظام المجمع الطبي الذكي</p>
+        </div>
 
-      <div id="doctor-specialty" style="display:none;">
-        <label for="specialty">تخصص الدكتور</label>
-        <select id="specialty">
-          <option value="باطنة">باطنة</option>
-          <option value="جراحة">جراحة</option>
-          <option value="أطفال">أطفال</option>
-        </select>
-      </div>
+        <form id="mainAuthForm">
+            <div id="regOnlyFields" style="display: none;">
+                <div class="form-group">
+                    <label>الاسم بالكامل</label>
+                    <input type="text" id="uName" placeholder="الاسم كما هو مسجل في النقابة">
+                </div>
+            </div>
 
-      <div id="assistant-doctors" style="display:none;">
-        <label for="doctors">الدكاترة الذين يعمل معهم</label>
-        <select id="doctors" multiple>
-          <!-- يتم جلب أسماء الدكاترة من قاعدة البيانات -->
-        </select>
-      </div>
+            <div class="form-group">
+                <label>البريد الإلكتروني</label>
+                <input type="email" id="uEmail" required placeholder="example@mail.com">
+            </div>
 
-      <button type="submit">إنشاء الحساب</button>
-    </form>
-    <p style="text-align:center;">لديك حساب بالفعل؟ <a href="#" onclick="showLogin()">تسجيل الدخول</a></p>
-  </div>
+            <div class="form-group">
+                <label>كلمة السر</label>
+                <input type="password" id="uPassword" required placeholder="********">
+                <div class="pwd-strength" id="pwdStrengthBox" style="display:none;"><div class="pwd-bar" id="pwdBar"></div></div>
+            </div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+            <div id="roleFields" style="display: none;">
+                <div class="form-group">
+                    <label>الوظيفة</label>
+                    <select id="uRole" onchange="handleRoleLogic(this.value)">
+                        <option value="" selected disabled>حدد طبيعة العمل...</option>
+                        <option value="doctor">طبيب (Doctor)</option>
+                        <option value="pharmacist">صيدلي (Pharmacist)</option>
+                        <option value="attendant">تمرجي / استقبال (Attendant)</option>
+                    </select>
+                </div>
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyDYgPFDWqtaHm9wzKyRtUqJKS2mQrOiJVk",
-      authDomain: "oooooo-ee246.firebaseapp.com",
-      projectId: "oooooo-ee246",
-      storageBucket: "oooooo-ee246.firebasestorage.app",
-      messagingSenderId: "484234388806",
-      appId: "1:484234388806:web:bafc624785ef1cad10b147",
-      measurementId: "G-V8PMYBC290"
-    };
+                <div id="doctorSpecBox" class="extra-section">
+                    <label>التخصص الطبي المختص</label>
+                    <select id="uSpec">
+                        <option value="باطنة">باطنة عامة</option>
+                        <option value="أطفال">طب الأطفال وحديثي الولادة</option>
+                        <option value="نساء وتوليد">نساء وتوليد</option>
+                        <option value="جراحة">جراحة عامة</option>
+                        <option value="عظام">جراحة العظام</option>
+                        <option value="قلب">أمراض القلب والأوعية</option>
+                        <option value="مخ وأعصاب">مخ وأعصاب</option>
+                        <option value="جلدية">جلدية وتجميل</option>
+                        <option value="أسنان">طب وجراحة الأسنان</option>
+                        <option value="رمد">طب وجراحة العيون</option>
+                        <option value="أنف وأذن">أنف وأذن وحنجرة</option>
+                        <option value="نفسية">نفسية وعصبية</option>
+                        <option value="علاج طبيعي">علاج طبيعي</option>
+                        <option value="مسالك">مسالك بولية</option>
+                    </select>
+                </div>
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+                <div id="attendantLinkBox" class="extra-section">
+                    <label>اختر الطبيب الذي تعمل معه</label>
+                    <select id="uLinkedDoc">
+                        <option value="">جاري جلب قائمة الأطباء...</option>
+                    </select>
+                </div>
+            </div>
 
-    function showRegister() {
-      document.getElementById("login-container").style.display = "none";
-      document.getElementById("register-container").style.display = "block";
-    }
+            <button type="submit" class="btn-submit" id="mainBtn">دخول</button>
+            <div class="toggle-mode" id="btnToggle">ليس لديك حساب؟ <b>سجل الآن</b></div>
+        </form>
+    </div>
 
-    function showLogin() {
-      document.getElementById("register-container").style.display = "none";
-      document.getElementById("login-container").style.display = "block";
-    }
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
-    function handleRoleChange(role) {
-      document.getElementById("doctor-specialty").style.display = role === "doctor" ? "block" : "none";
-      document.getElementById("assistant-doctors").style.display = role === "assistant" ? "block" : "none";
-      if (role === "assistant") {
-        loadDoctors();
-      }
-    }
+        const firebaseConfig = {
+            apiKey: "AIzaSyDYgPFDWqtaHm9wzKyRtUqJKS2mQrOiJVk",
+            authDomain: "oooooo-ee246.firebaseapp.com",
+            projectId: "oooooo-ee246",
+            storageBucket: "oooooo-ee246.firebasestorage.app",
+            messagingSenderId: "484234388806",
+            appId: "1:484234388806:web:bafc624785ef1cad10b147"
+        };
 
-    async function loadDoctors() {
-      const doctorsSelect = document.getElementById("doctors");
-      doctorsSelect.innerHTML = "";
-      const querySnapshot = await getDocs(collection(db, "doctors"));
-      querySnapshot.forEach((doc) => {
-        const option = document.createElement("option");
-        option.value = doc.id;
-        option.textContent = doc.data().name;
-        doctorsSelect.appendChild(option);
-      });
-    }
-  </script>
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
 
-  <!-- استدعاء ملفات منفصلة لكل تخصص -->
-  <script src="doctor.js"></script>
-  <script src="pharmacist.js"></script>
-  <script src="assistant.js"></script>
+        let mode = "login";
+
+        // تبديل الواجهة
+        document.getElementById('btnToggle').onclick = () => {
+            mode = (mode === "login") ? "reg" : "login";
+            document.getElementById('formTitle').innerText = mode === "reg" ? "حساب جديد" : "تسجيل الدخول";
+            document.getElementById('regOnlyFields').style.display = mode === "reg" ? "block" : "none";
+            document.getElementById('roleFields').style.display = mode === "reg" ? "block" : "none";
+            document.getElementById('mainBtn').innerText = mode === "reg" ? "إنشاء الحساب" : "دخول";
+            document.getElementById('btnToggle').innerHTML = mode === "reg" ? "لديك حساب؟ <b>سجل دخول</b>" : "ليس لديك حساب؟ <b>سجل الآن</b>";
+            document.getElementById('pwdStrengthBox').style.display = mode === "reg" ? "block" : "none";
+        };
+
+        // منطق التخصصات وجلب الدكاترة
+        window.handleRoleLogic = async (role) => {
+            document.getElementById('doctorSpecBox').style.display = (role === 'doctor') ? 'block' : 'none';
+            document.getElementById('attendantLinkBox').style.display = (role === 'attendant') ? 'block' : 'none';
+
+            if(role === 'attendant') {
+                const list = document.getElementById('uLinkedDoc');
+                list.innerHTML = '<option>جاري تحميل الأطباء...</option>';
+                const snapshot = await getDocs(collection(db, "users"));
+                list.innerHTML = '<option value="">-- اختر الطبيب --</option>';
+                snapshot.forEach(d => {
+                    if(d.data().role === 'doctor') {
+                        list.innerHTML += `<option value="${d.data().name}">د. ${d.data().name} (${d.data().specialization})</option>`;
+                    }
+                });
+            }
+        };
+
+        // قوة كلمة المرور
+        document.getElementById('uPassword').oninput = (e) => {
+            if(mode !== "reg") return;
+            let val = e.target.value;
+            let bar = document.getElementById('pwdBar');
+            let strength = (val.length * 10);
+            if(/[A-Z]/.test(val)) strength += 20;
+            if(/[0-9]/.test(val)) strength += 20;
+            bar.style.width = Math.min(strength, 100) + "%";
+            bar.style.backgroundColor = strength < 40 ? "red" : strength < 70 ? "orange" : "green";
+        };
+
+        // إرسال البيانات
+        document.getElementById('mainAuthForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('uEmail').value;
+            const pass = document.getElementById('uPassword').value;
+
+            try {
+                if(mode === "reg") {
+                    const role = document.getElementById('uRole').value;
+                    const name = document.getElementById('uName').value;
+                    const spec = document.getElementById('uSpec').value;
+                    const linked = document.getElementById('uLinkedDoc').value;
+
+                    if(!role || !name) throw new Error("يرجى ملء كافة البيانات");
+
+                    const res = await createUserWithEmailAndPassword(auth, email, pass);
+                    await setDoc(doc(db, "users", res.user.uid), {
+                        name, email, role,
+                        specialization: role === 'doctor' ? spec : null,
+                        linkedDoctor: role === 'attendant' ? linked : null
+                    });
+                    alert("تم التسجيل بنجاح!");
+                    redirect(role);
+                } else {
+                    const res = await signInWithEmailAndPassword(auth, email, pass);
+                    const userDoc = await getDoc(doc(db, "users", res.user.uid));
+                    if(userDoc.exists()) redirect(userDoc.data().role);
+                }
+            } catch (err) { alert(err.message); }
+        };
+
+        function redirect(role) {
+            const map = {
+                'doctor': 'doctor.html',
+                'pharmacist': 'pharmacy_main.html',
+                'attendant': 'index.html'
+            };
+            window.location.href = map[role] || 'index.html';
+        }
+    </script>
 </body>
 </html>
