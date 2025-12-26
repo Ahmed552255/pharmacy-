@@ -1,221 +1,159 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تسجيل الدخول | نظام الإدارة الطبية</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        :root {
-            --primary: #45b39d;
-            --dark-teal: #00796b;
-            --soft-bg: #f0f4f8;
-            --white: #ffffff;
-        }
-
-        body {
-            font-family: 'Segoe UI', sans-serif;
-            background: linear-gradient(135deg, var(--primary) 0%, var(--dark-teal) 100%);
-            height: 100vh; margin: 0; display: flex; align-items: center; justify-content: center;
-        }
-
-        .login-container {
-            background: var(--white); padding: 40px; border-radius: 25px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.2); width: 100%; max-width: 400px;
-            text-align: center; position: relative;
-        }
-
-        .logo-circle {
-            width: 80px; height: 80px; background: var(--soft-bg);
-            border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            margin: -80px auto 20px auto; border: 5px solid var(--white);
-            color: var(--primary); font-size: 35px; box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-
-        h2 { color: #333; margin-bottom: 10px; }
-        p { color: #777; font-size: 14px; margin-bottom: 30px; }
-
-        .input-group { position: relative; margin-bottom: 20px; text-align: right; }
-        .input-group i, .select-group i { position: absolute; right: 15px; top: 42px; color: var(--primary); z-index: 1; }
-
-        label { display: block; margin-bottom: 8px; font-weight: bold; color: #555; font-size: 14px; }
-
-        input, select {
-            width: 100%; padding: 12px 40px 12px 15px; border-radius: 12px;
-            border: 1.5px solid #eee; box-sizing: border-box; font-size: 16px;
-            outline: none; transition: 0.3s;
-        }
-
-        input:focus, select:focus { border-color: var(--primary); background: #f9fffb; }
-
-        .login-btn {
-            width: 100%; padding: 15px; background: var(--primary); color: white;
-            border: none; border-radius: 12px; font-size: 18px; font-weight: bold;
-            cursor: pointer; transition: 0.3s; margin-top: 10px;
-        }
-
-        .login-btn:hover { background: var(--dark-teal); transform: translateY(-2px); }
-        
-        #doctor-link-group {
-            background: #f0fbf9; padding: 15px; border-radius: 12px;
-            margin-bottom: 20px; display: none; border: 1px dashed var(--primary);
-        }
-
-        .footer-text { margin-top: 25px; font-size: 12px; color: #999; }
-        .toggle-link { display: block; margin-top: 15px; color: var(--primary); cursor: pointer; font-size: 14px; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تسجيل الدخول / إنشاء حساب</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #e0f7e9; / بيبى جرين فاتح /
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 400px;
+      margin: auto;
+      padding: 20px;
+      background-color: #ffffff; / أبيض /
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      margin-top: 50px;
+    }
+    h2 {
+      text-align: center;
+      color: #4caf50;
+    }
+    label {
+      display: block;
+      margin: 10px 0 5px;
+      color: #333;
+    }
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    button {
+      background-color: #4caf50;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    @media (max-width: 600px) {
+      .container {
+        width: 90%;
+      }
+    }
+  </style>
 </head>
 <body>
+  <div class="container" id="login-container">
+    <h2>تسجيل الدخول</h2>
+    <form id="loginForm">
+      <label for="email">البريد الإلكتروني</label>
+      <input type="email" id="email" required>
+      <label for="password">كلمة المرور</label>
+      <input type="password" id="password" required>
+      <button type="submit">تسجيل الدخول</button>
+    </form>
+    <p style="text-align:center;">ليس لديك حساب؟ <a href="#" onclick="showRegister()">إنشاء حساب جديد</a></p>
+  </div>
 
-    <div class="login-container">
-        <div class="logo-circle">
-            <i class="fas fa-hand-holding-medical"></i>
-        </div>
-        
-        <h2 id="form-title">تسجيل الدخول</h2>
-        <p id="form-subtitle">يرجى تسجيل الدخول للوصول إلى لوحة التحكم</p>
+  <div class="container" id="register-container" style="display:none;">
+    <h2>إنشاء حساب جديد</h2>
+    <form id="registerForm">
+      <label for="name">الاسم</label>
+      <input type="text" id="name" required>
+      <label for="regEmail">البريد الإلكتروني</label>
+      <input type="email" id="regEmail" required>
+      <label for="regPassword">كلمة المرور</label>
+      <input type="password" id="regPassword" required>
+      <label for="role">اختر التخصص</label>
+      <select id="role" required onchange="handleRoleChange(this.value)">
+        <option value="">-- اختر --</option>
+        <option value="doctor">دكتور</option>
+        <option value="pharmacist">صيدلي</option>
+        <option value="assistant">تمرجى</option>
+      </select>
 
-        <form id="authForm">
-            <div class="input-group">
-                <label>البريد الإلكتروني</label>
-                <i class="fas fa-envelope"></i>
-                <input type="email" id="email" placeholder="example@domain.com" required>
-            </div>
+      <div id="doctor-specialty" style="display:none;">
+        <label for="specialty">تخصص الدكتور</label>
+        <select id="specialty">
+          <option value="باطنة">باطنة</option>
+          <option value="جراحة">جراحة</option>
+          <option value="أطفال">أطفال</option>
+        </select>
+      </div>
 
-            <div class="input-group">
-                <label>كلمة السر</label>
-                <i class="fas fa-lock"></i>
-                <input type="password" id="password" placeholder="••••••••" required>
-            </div>
-            
-            <div class="input-group" id="role-group" style="display: none;">
-                <label>أنا</label>
-                <i class="fas fa-user-tag"></i>
-                <select id="role" onchange="handleRoleChange(this.value)">
-                    <option value="" disabled selected>اختر مهنتك</option>
-                    <option value="attendant">تمرجي / استقبال</option>
-                    <option value="doctor">طبيب</option>
-                    <option value="pharmacist">صيدلي</option>
-                </select>
-            </div>
+      <div id="assistant-doctors" style="display:none;">
+        <label for="doctors">الدكاترة الذين يعمل معهم</label>
+        <select id="doctors" multiple>
+          <!-- يتم جلب أسماء الدكاترة من قاعدة البيانات -->
+        </select>
+      </div>
 
-            <div id="doctor-link-group" class="input-group">
-                <label>ربط مع طبيب مختص</label>
-                <i class="fas fa-user-md"></i>
-                <select id="linked-doctor">
-                    <option value="">جاري تحميل الأطباء...</option>
-                </select>
-            </div>
+      <button type="submit">إنشاء الحساب</button>
+    </form>
+    <p style="text-align:center;">لديك حساب بالفعل؟ <a href="#" onclick="showLogin()">تسجيل الدخول</a></p>
+  </div>
 
-            <button type="submit" class="login-btn" id="auth-button">دخول للنظام</button>
-            <a class="toggle-link" id="toggle-auth">ليس لديك حساب؟ سجل الآن</a>
-        </form>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
-        <div class="footer-text">
-            © 2025 نظام العيادات الذكي <br>
-            بواسطة فريق الإدارة التقنية
-        </div>
-    </div>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDYgPFDWqtaHm9wzKyRtUqJKS2mQrOiJVk",
+      authDomain: "oooooo-ee246.firebaseapp.com",
+      projectId: "oooooo-ee246",
+      storageBucket: "oooooo-ee246.firebasestorage.app",
+      messagingSenderId: "484234388806",
+      appId: "1:484234388806:web:bafc624785ef1cad10b147",
+      measurementId: "G-V8PMYBC290"
+    };
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
-        
-        const firebaseConfig = {
-            apiKey: "AIzaSyBy8xPvxQuC6bVLerLpSjzPmvBWyAhuYKo",
-            authDomain: "mogama-49e7f.firebaseapp.com",
-            projectId: "mogama-49e7f",
-            storageBucket: "mogama-49e7f.firebasestorage.app",
-            messagingSenderId: "575066177594",
-            appId: "1:575066177594:web:82137834158b4c353db503"
-        };
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
+    function showRegister() {
+      document.getElementById("login-container").style.display = "none";
+      document.getElementById("register-container").style.display = "block";
+    }
 
-        // وظيفة جلب الأطباء من Firestore
-        async function fetchDoctors() {
-            const doctorSelect = document.getElementById('linked-doctor');
-            try {
-                const querySnapshot = await getDocs(collection(db, "doctors"));
-                doctorSelect.innerHTML = '<option value="">اختر الطبيب...</option>';
-                querySnapshot.forEach((doc) => {
-                    const data = doc.data();
-                    const name = data.name.startsWith('د. ') ? data.name : "د. " + data.name;
-                    doctorSelect.innerHTML += `<option value="${name}">${name}</option>`;
-                });
-            } catch (e) {
-                doctorSelect.innerHTML = '<option value="د. رأفت">د. رأفت</option>';
-            }
-        }
+    function showLogin() {
+      document.getElementById("register-container").style.display = "none";
+      document.getElementById("login-container").style.display = "block";
+    }
 
-        // إظهار/إخفاء خانة الدكتور للممرض
-        window.handleRoleChange = (role) => {
-            const linkGroup = document.getElementById('doctor-link-group');
-            if(role === 'attendant') {
-                linkGroup.style.display = 'block';
-                fetchDoctors();
-            } else {
-                linkGroup.style.display = 'none';
-            }
-        };
+    function handleRoleChange(role) {
+      document.getElementById("doctor-specialty").style.display = role === "doctor" ? "block" : "none";
+      document.getElementById("assistant-doctors").style.display = role === "assistant" ? "block" : "none";
+      if (role === "assistant") {
+        loadDoctors();
+      }
+    }
 
-        const REDIRECT_MAP = {
-            'attendant': 'index.html',
-            'doctor': 'doctor.html',
-            'pharmacist': 'pharmacy_main.html'
-        };
+    async function loadDoctors() {
+      const doctorsSelect = document.getElementById("doctors");
+      doctorsSelect.innerHTML = "";
+      const querySnapshot = await getDocs(collection(db, "doctors"));
+      querySnapshot.forEach((doc) => {
+        const option = document.createElement("option");
+        option.value = doc.id;
+        option.textContent = doc.data().name;
+        doctorsSelect.appendChild(option);
+      });
+    }
+  </script>
 
-        // تبديل بين دخول وتسجيل
-        let isRegistering = false;
-        const toggleLink = document.getElementById('toggle-auth');
-        toggleLink.addEventListener('click', () => {
-            isRegistering = !isRegistering;
-            document.getElementById('form-title').textContent = isRegistering ? 'تسجيل حساب جديد' : 'تسجيل الدخول';
-            document.getElementById('role-group').style.display = isRegistering ? 'block' : 'none';
-            document.getElementById('auth-button').textContent = isRegistering ? 'إنشاء حساب' : 'دخول للنظام';
-            if(!isRegistering) document.getElementById('doctor-link-group').style.display = 'none';
-        });
-
-        // تنفيذ الدخول/التسجيل
-        document.getElementById('authForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const role = document.getElementById('role').value;
-            const linkedDoc = document.getElementById('linked-doctor').value;
-
-            try {
-                if (isRegistering) {
-                    if (!role) return alert('اختر مهنتك أولاً');
-                    if (role === 'attendant' && !linkedDoc) return alert('يجب ربط الممرض بطبيب');
-
-                    const userCred = await createUserWithEmailAndPassword(auth, email, password);
-                    await setDoc(doc(db, "users", userCred.user.uid), {
-                        email, role, linkedDoctor: linkedDoc || null
-                    });
-                    
-                    localStorage.setItem('userRole', role);
-                    if(linkedDoc) localStorage.setItem('doctorName', linkedDoc);
-                    window.location.href = REDIRECT_MAP[role];
-                } else {
-                    const userCred = await signInWithEmailAndPassword(auth, email, password);
-                    const userDoc = await getDoc(doc(db, "users", userCred.user.uid));
-                    if (userDoc.exists()) {
-                        const data = userDoc.data();
-                        localStorage.setItem('userRole', data.role);
-                        if(data.linkedDoctor) localStorage.setItem('doctorName', data.linkedDoctor);
-                        // إذا كان طبيب، نخزن اسمه هو كدكتور
-                        if(data.role === 'doctor') localStorage.setItem('doctorName', email.split('@')[0]); 
-                        window.location.href = REDIRECT_MAP[data.role];
-                    }
-                }
-            } catch (error) {
-                alert('خطأ: ' + error.message);
-            }
-        });
-    </script>
+  <!-- استدعاء ملفات منفصلة لكل تخصص -->
+  <script src="doctor.js"></script>
+  <script src="pharmacist.js"></script>
+  <script src="assistant.js"></script>
 </body>
 </html>
