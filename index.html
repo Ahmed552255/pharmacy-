@@ -37,9 +37,6 @@
 
         .input-group { position: relative; margin-bottom: 20px; text-align: right; }
         .input-group i, .select-group i { position: absolute; right: 15px; top: 42px; color: var(--primary); z-index: 1; }
-        
-        /* أيقونة العين لكلمة السر */
-        .password-toggle { left: 15px; right: auto; cursor: pointer; }
 
         label { display: block; margin-bottom: 8px; font-weight: bold; color: #555; font-size: 14px; }
 
@@ -59,7 +56,7 @@
 
         .login-btn:hover { background: var(--dark-teal); transform: translateY(-2px); }
         
-        #doctor-details-group, #doctor-link-group {
+        #doctor-link-group {
             background: #f0fbf9; padding: 15px; border-radius: 12px;
             margin-bottom: 20px; display: none; border: 1px dashed var(--primary);
         }
@@ -89,7 +86,6 @@
                 <label>كلمة السر</label>
                 <i class="fas fa-lock"></i>
                 <input type="password" id="password" placeholder="••••••••" required>
-                <i class="fas fa-eye password-toggle" id="password-toggle-icon"></i>
             </div>
             
             <div class="input-group" id="role-group" style="display: none;">
@@ -101,20 +97,6 @@
                     <option value="doctor">طبيب</option>
                     <option value="pharmacist">صيدلي</option>
                 </select>
-            </div>
-
-            <!-- خانات اسم وتخصص الدكتور -->
-            <div id="doctor-details-group">
-                <div class="input-group">
-                    <label>اسم الدكتور الكامل</label>
-                    <i class="fas fa-user-doctor"></i>
-                    <input type="text" id="doctor-name" placeholder="مثال: محمد عبدالله">
-                </div>
-                <div class="input-group">
-                    <label>تخصص الدكتور</label>
-                    <i class="fas fa-stethoscope"></i>
-                    <input type="text" id="doctor-specialty" placeholder="مثال: باطنة">
-                </div>
             </div>
 
             <div id="doctor-link-group" class="input-group">
@@ -138,7 +120,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
         
         const firebaseConfig = {
             apiKey: "AIzaSyBy8xPvxQuC6bVLerLpSjzPmvBWyAhuYKo",
@@ -157,48 +139,28 @@
         async function fetchDoctors() {
             const doctorSelect = document.getElementById('linked-doctor');
             try {
-                const q = query(collection(db, "users"), where("role", "==", "doctor"));
-                const querySnapshot = await getDocs(q);
+                const querySnapshot = await getDocs(collection(db, "doctors"));
                 doctorSelect.innerHTML = '<option value="">اختر الطبيب...</option>';
                 querySnapshot.forEach((doc) => {
                     const data = doc.data();
-                    const name = data.name;
-                    if (name) {
-                        doctorSelect.innerHTML += `<option value="${name}">${name}</option>`;
-                    }
+                    const name = data.name.startsWith('د. ') ? data.name : "د. " + data.name;
+                    doctorSelect.innerHTML += `<option value="${name}">${name}</option>`;
                 });
             } catch (e) {
-                console.error("Error fetching doctors: ", e);
-                doctorSelect.innerHTML = '<option value="">خطأ في تحميل الأطباء</option>';
+                doctorSelect.innerHTML = '<option value="د. رأفت">د. رأفت</option>';
             }
         }
 
-        // إظهار/إخفاء الخانات حسب الدور
+        // إظهار/إخفاء خانة الدكتور للممرض
         window.handleRoleChange = (role) => {
             const linkGroup = document.getElementById('doctor-link-group');
-            const detailsGroup = document.getElementById('doctor-details-group');
-            if (role === 'attendant') {
+            if(role === 'attendant') {
                 linkGroup.style.display = 'block';
-                detailsGroup.style.display = 'none';
                 fetchDoctors();
-            } else if (role === 'doctor') {
-                detailsGroup.style.display = 'block';
-                linkGroup.style.display = 'none';
             } else {
                 linkGroup.style.display = 'none';
-                detailsGroup.style.display = 'none';
             }
         };
-
-        // إظهار/إخفاء كلمة السر
-        const passwordInput = document.getElementById('password');
-        const toggleIcon = document.getElementById('password-toggle-icon');
-        toggleIcon.addEventListener('click', () => {
-            const isPassword = passwordInput.type === 'password';
-            passwordInput.type = isPassword ? 'text' : 'password';
-            toggleIcon.classList.toggle('fa-eye');
-            toggleIcon.classList.toggle('fa-eye-slash');
-        });
 
         const REDIRECT_MAP = {
             'attendant': 'index.html',
@@ -214,10 +176,7 @@
             document.getElementById('form-title').textContent = isRegistering ? 'تسجيل حساب جديد' : 'تسجيل الدخول';
             document.getElementById('role-group').style.display = isRegistering ? 'block' : 'none';
             document.getElementById('auth-button').textContent = isRegistering ? 'إنشاء حساب' : 'دخول للنظام';
-            if (!isRegistering) {
-                document.getElementById('doctor-link-group').style.display = 'none';
-                document.getElementById('doctor-details-group').style.display = 'none';
-            }
+            if(!isRegistering) document.getElementById('doctor-link-group').style.display = 'none';
         });
 
         // تنفيذ الدخول/التسجيل
@@ -226,46 +185,31 @@
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             const role = document.getElementById('role').value;
-            
+            const linkedDoc = document.getElementById('linked-doctor').value;
+
             try {
                 if (isRegistering) {
                     if (!role) return alert('اختر مهنتك أولاً');
-                    
+                    if (role === 'attendant' && !linkedDoc) return alert('يجب ربط الممرض بطبيب');
+
                     const userCred = await createUserWithEmailAndPassword(auth, email, password);
-                    const userData = { email, role };
-
-                    if (role === 'attendant') {
-                        const linkedDoc = document.getElementById('linked-doctor').value;
-                        if (!linkedDoc) return alert('يجب ربط الممرض بطبيب');
-                        userData.linkedDoctor = linkedDoc;
-                    } else if (role === 'doctor') {
-                        const doctorName = document.getElementById('doctor-name').value;
-                        const doctorSpecialty = document.getElementById('doctor-specialty').value;
-                        if (!doctorName || !doctorSpecialty) return alert('يرجى إدخال اسم وتخصص الدكتور');
-                        userData.name = doctorName;
-                        userData.specialty = doctorSpecialty;
-                    }
-
-                    await setDoc(doc(db, "users", userCred.user.uid), userData);
+                    await setDoc(doc(db, "users", userCred.user.uid), {
+                        email, role, linkedDoctor: linkedDoc || null
+                    });
                     
                     localStorage.setItem('userRole', role);
-                    if(userData.linkedDoctor) localStorage.setItem('doctorName', userData.linkedDoctor);
-                    if(userData.name) localStorage.setItem('doctorName', userData.name);
-                    
+                    if(linkedDoc) localStorage.setItem('doctorName', linkedDoc);
                     window.location.href = REDIRECT_MAP[role];
-
-                } else { // تسجيل الدخول
+                } else {
                     const userCred = await signInWithEmailAndPassword(auth, email, password);
                     const userDoc = await getDoc(doc(db, "users", userCred.user.uid));
                     if (userDoc.exists()) {
                         const data = userDoc.data();
                         localStorage.setItem('userRole', data.role);
                         if(data.linkedDoctor) localStorage.setItem('doctorName', data.linkedDoctor);
-                        if(data.role === 'doctor') localStorage.setItem('doctorName', data.name || email.split('@')[0]); 
-                        
+                        // إذا كان طبيب، نخزن اسمه هو كدكتور
+                        if(data.role === 'doctor') localStorage.setItem('doctorName', email.split('@')[0]); 
                         window.location.href = REDIRECT_MAP[data.role];
-                    } else {
-                        alert("لم يتم العثور على بيانات المستخدم.");
                     }
                 }
             } catch (error) {
