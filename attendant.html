@@ -77,78 +77,38 @@
         }
 
         .stats-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            display: flex;
             gap: 15px;
             margin-top: 15px;
+            flex-wrap: wrap;
         }
 
         .stat-box {
             background: var(--light);
-            padding: 18px;
+            padding: 15px 20px;
             border-radius: 15px;
             border: 2px solid var(--primary);
             text-align: center;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .stat-box::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, var(--primary), var(--secondary));
-        }
-
-        .stat-box:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 20px var(--shadow);
+            min-width: 120px;
         }
 
         .stat-number {
-            font-size: 36px;
+            font-size: 32px;
             font-weight: bold;
             color: var(--dark);
             display: block;
-            animation: countUp 0.5s ease;
-        }
-
-        @keyframes countUp {
-            from {
-                opacity: 0;
-                transform: scale(0.5);
-            }
-            to {
-                opacity: 1;
-                transform: scale(1);
-            }
         }
 
         .stat-label {
-            font-size: 13px;
+            font-size: 12px;
             color: #666;
-            margin-top: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 5px;
-        }
-
-        .stat-icon {
-            font-size: 24px;
-            color: var(--secondary);
-            margin-bottom: 8px;
+            margin-top: 5px;
         }
 
         .header-right {
             display: flex;
             gap: 10px;
             align-items: center;
-            flex-wrap: wrap;
         }
 
         .btn {
@@ -185,11 +145,6 @@
             color: var(--white);
         }
 
-        .btn-refresh {
-            background: var(--info);
-            color: var(--white);
-        }
-
         .table-container {
             background: var(--white);
             border-radius: 20px;
@@ -204,37 +159,12 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            flex-wrap: wrap;
-            gap: 10px;
         }
 
         .table-header h3 {
             display: flex;
             align-items: center;
             gap: 10px;
-        }
-
-        .filter-buttons {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .filter-btn {
-            padding: 8px 15px;
-            background: rgba(255,255,255,0.2);
-            border: 2px solid var(--white);
-            color: var(--white);
-            border-radius: 20px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 14px;
-        }
-
-        .filter-btn.active,
-        .filter-btn:hover {
-            background: var(--white);
-            color: var(--dark);
         }
 
         table {
@@ -248,54 +178,23 @@
         }
 
         th {
-            padding: 15px 10px;
+            padding: 15px;
             text-align: center;
             font-weight: 600;
-            font-size: 14px;
         }
 
         td {
-            padding: 15px 10px;
+            padding: 15px;
             text-align: center;
             border-bottom: 1px solid #f0f0f0;
-            font-size: 14px;
         }
 
         tbody tr {
-            transition: all 0.3s ease;
-            animation: fadeIn 0.5s ease;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateX(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
+            transition: background 0.3s ease;
         }
 
         tbody tr:hover {
             background: var(--light);
-            transform: scale(1.01);
-        }
-
-        .patient-info {
-            text-align: right;
-        }
-
-        .patient-name {
-            font-weight: bold;
-            color: var(--dark);
-            display: block;
-            margin-bottom: 3px;
-        }
-
-        .patient-phone {
-            color: #666;
-            font-size: 12px;
         }
 
         .status-badge {
@@ -303,15 +202,7 @@
             border-radius: 20px;
             font-size: 13px;
             font-weight: bold;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
+            display: inline-block;
         }
 
         .waiting {
@@ -326,12 +217,6 @@
             border: 1px solid var(--success);
         }
 
-        .cancelled {
-            background: #fee;
-            color: var(--danger);
-            border: 1px solid var(--danger);
-        }
-
         .btn-delete {
             background: var(--danger);
             color: var(--white);
@@ -341,9 +226,6 @@
             cursor: pointer;
             font-size: 14px;
             transition: all 0.3s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
         }
 
         .btn-delete:hover {
@@ -365,16 +247,6 @@
 
         .modal.active {
             display: flex;
-            animation: modalFadeIn 0.3s ease;
-        }
-
-        @keyframes modalFadeIn {
-            from {
-                opacity: 0;
-            }
-            to {
-                opacity: 1;
-            }
         }
 
         .modal-content {
@@ -423,17 +295,10 @@
             color: #999;
             cursor: pointer;
             transition: color 0.3s;
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
         }
 
         .close-btn:hover {
             color: var(--danger);
-            background: #fee;
         }
 
         .form-group {
@@ -450,8 +315,7 @@
         }
 
         .form-group input,
-        .form-group select,
-        .form-group textarea {
+        .form-group select {
             width: 100%;
             padding: 14px 45px 14px 15px;
             border: 2px solid #e0e0e0;
@@ -459,17 +323,10 @@
             font-size: 15px;
             transition: all 0.3s ease;
             background: var(--light);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        .form-group textarea {
-            resize: vertical;
-            min-height: 80px;
         }
 
         .form-group input:focus,
-        .form-group select:focus,
-        .form-group textarea:focus {
+        .form-group select:focus {
             outline: none;
             border-color: var(--secondary);
             background: var(--white);
@@ -535,57 +392,6 @@
             color: #ddd;
         }
 
-        .toast {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            background: var(--white);
-            padding: 20px 25px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            display: none;
-            align-items: center;
-            gap: 15px;
-            z-index: 3000;
-            animation: slideUp 0.3s ease;
-            border-left: 5px solid var(--success);
-        }
-
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .toast.show {
-            display: flex;
-        }
-
-        .toast-icon {
-            font-size: 24px;
-            color: var(--success);
-        }
-
-        .toast-content {
-            flex: 1;
-        }
-
-        .toast-title {
-            font-weight: bold;
-            color: var(--dark);
-            margin-bottom: 3px;
-        }
-
-        .toast-message {
-            font-size: 14px;
-            color: #666;
-        }
-
         @media (max-width: 768px) {
             .header {
                 flex-direction: column;
@@ -597,30 +403,19 @@
             }
 
             .stats-container {
-                grid-template-columns: repeat(2, 1fr);
+                justify-content: center;
             }
 
             table {
-                font-size: 12px;
+                font-size: 13px;
             }
 
             th, td {
-                padding: 8px 5px;
+                padding: 10px 5px;
             }
 
             .modal-content {
                 padding: 25px 20px;
-            }
-
-            .btn {
-                padding: 10px 15px;
-                font-size: 14px;
-            }
-
-            .toast {
-                right: 20px;
-                left: 20px;
-                bottom: 20px;
             }
         }
 
@@ -648,39 +443,13 @@
         .notification-sound {
             display: none;
         }
-
-        .badge-new {
-            background: var(--danger);
-            color: white;
-            font-size: 10px;
-            padding: 2px 6px;
-            border-radius: 10px;
-            margin-right: 5px;
-            animation: blink 1s infinite;
-        }
-
-        @keyframes blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
     </style>
 </head>
 <body>
     <!-- صوت التنبيه -->
-    <audio id="notificationSound" class="notification-sound" preload="auto">
-        <source src="https://cdn.freesound.org/previews/341/341695_5121236-lq.mp3" type="audio/mpeg">
+    <audio id="notificationSound" class="notification-sound">
+        <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFAtPouPuvmwhBCSD0fPTgjMGHm7A7+OZRA0PVqnp7qxXFApNo+PwwW4jBSiF0vPZ" type="audio/wav">
     </audio>
-
-    <!-- Toast Notification -->
-    <div id="toast" class="toast">
-        <div class="toast-icon">
-            <i class="fas fa-check-circle"></i>
-        </div>
-        <div class="toast-content">
-            <div class="toast-title">تم بنجاح!</div>
-            <div class="toast-message" id="toastMessage">تمت العملية بنجاح</div>
-        </div>
-    </div>
 
     <div class="header">
         <div class="header-left">
@@ -700,44 +469,12 @@
             </div>
             <div class="stats-container">
                 <div class="stat-box">
-                    <div class="stat-icon">
-                        <i class="fas fa-calendar-day"></i>
-                    </div>
                     <span class="stat-number" id="todayCount">0</span>
-                    <span class="stat-label">
-                        <i class="fas fa-stethoscope"></i>
-                        كشوفات اليوم
-                    </span>
+                    <span class="stat-label">كشوفات اليوم</span>
                 </div>
                 <div class="stat-box">
-                    <div class="stat-icon">
-                        <i class="fas fa-clock"></i>
-                    </div>
                     <span class="stat-number" id="waitingCount">0</span>
-                    <span class="stat-label">
-                        <i class="fas fa-hourglass-half"></i>
-                        في الانتظار
-                    </span>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-icon">
-                        <i class="fas fa-check-double"></i>
-                    </div>
-                    <span class="stat-number" id="doneCount">0</span>
-                    <span class="stat-label">
-                        <i class="fas fa-clipboard-check"></i>
-                        تم الكشف
-                    </span>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-icon">
-                        <i class="fas fa-users"></i>
-                    </div>
-                    <span class="stat-number" id="totalPatients">0</span>
-                    <span class="stat-label">
-                        <i class="fas fa-database"></i>
-                        إجمالي المرضى
-                    </span>
+                    <span class="stat-label">في الانتظار</span>
                 </div>
             </div>
         </div>
@@ -745,10 +482,6 @@
             <button class="btn btn-primary" onclick="openModal()">
                 <i class="fas fa-plus-circle"></i>
                 حجز جديد
-            </button>
-            <button class="btn btn-refresh" onclick="refreshData()">
-                <i class="fas fa-sync-alt"></i>
-                تحديث
             </button>
             <button class="btn btn-secondary" onclick="logout()">
                 <i class="fas fa-sign-out-alt"></i>
@@ -762,19 +495,8 @@
             <h3>
                 <i class="fas fa-calendar-check"></i>
                 حجوزات اليوم
-                <span id="currentDate"></span>
             </h3>
-            <div class="filter-buttons">
-                <button class="filter-btn active" onclick="filterAppointments('all')">
-                    <i class="fas fa-list"></i> الكل
-                </button>
-                <button class="filter-btn" onclick="filterAppointments('waiting')">
-                    <i class="fas fa-clock"></i> في الانتظار
-                </button>
-                <button class="filter-btn" onclick="filterAppointments('done')">
-                    <i class="fas fa-check"></i> تم الكشف
-                </button>
-            </div>
+            <span id="currentDate"></span>
         </div>
         <div id="tableContent">
             <div class="loading">
@@ -808,27 +530,21 @@
             <hr class="divider">
 
             <div class="form-group">
-                <label>اسم المريض <span style="color: red;">*</span></label>
+                <label>اسم المريض</label>
                 <input type="text" id="pName" placeholder="أدخل اسم المريض" required>
                 <i class="input-icon fas fa-user"></i>
             </div>
 
             <div class="form-group">
-                <label>عمر المريض <span style="color: red;">*</span></label>
-                <input type="number" id="pAge" placeholder="أدخل العمر" required min="1" max="120">
+                <label>عمر المريض</label>
+                <input type="number" id="pAge" placeholder="أدخل العمر" required>
                 <i class="input-icon fas fa-birthday-cake"></i>
             </div>
 
             <div class="form-group">
-                <label>رقم الهاتف <span style="color: red;">*</span></label>
-                <input type="tel" id="pPhone" placeholder="01xxxxxxxxx" required maxlength="11">
+                <label>رقم الهاتف</label>
+                <input type="tel" id="pPhone" placeholder="01xxxxxxxxx" required>
                 <i class="input-icon fas fa-phone"></i>
-            </div>
-
-            <div class="form-group">
-                <label>ملاحظات (اختياري)</label>
-                <textarea id="pNotes" placeholder="أضف أي ملاحظات خاصة بالمريض..."></textarea>
-                <i class="input-icon fas fa-sticky-note"></i>
             </div>
 
             <div class="form-group">
@@ -846,7 +562,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, where, orderBy, getDocs, doc, deleteDoc, getDoc, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, where, orderBy, getDocs, doc, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDYgPFDWqtaHm9wzKyRtUqJKS2mQrOiJVk",
@@ -874,8 +590,6 @@
         let linkedDoctorId = '';
         let linkedDoctorName = '';
         let lastAppointmentCount = 0;
-        let allAppointments = [];
-        let currentFilter = 'all';
 
         // جلب بيانات الممرض والطبيب المرتبط
         async function loadUserData() {
@@ -904,13 +618,8 @@
                         }
                     }
                 }
-
-                // تحديث عدد المرضى الإجمالي
-                const patientsSnap = await getDocs(collection(db, "patients"));
-                document.getElementById('totalPatients').textContent = patientsSnap.size;
             } catch (error) {
                 console.error('Error loading user data:', error);
-                showToast('خطأ في تحميل البيانات', 'error');
             }
         }
 
@@ -918,7 +627,7 @@
 
         // عرض التاريخ الحالي
         const today = new Date();
-        document.getElementById('currentDate').textContent = ' - ' + today.toLocaleDateString('ar-EG', {
+        document.getElementById('currentDate').textContent = today.toLocaleDateString('ar-EG', {
             weekday: 'long',
             year: 'numeric',
             month: 'long',
@@ -930,96 +639,42 @@
         // تشغيل صوت التنبيه
         function playNotificationSound() {
             const audio = document.getElementById('notificationSound');
-            audio.currentTime = 0;
             audio.play().catch(e => console.log('Audio play failed:', e));
         }
 
-        // Show Toast Notification
-        function showToast(message, type = 'success') {
-            const toast = document.getElementById('toast');
-            const toastMessage = document.getElementById('toastMessage');
-            const toastIcon = toast.querySelector('.toast-icon i');
-            
-            toastMessage.textContent = message;
-            
-            if (type === 'success') {
-                toastIcon.className = 'fas fa-check-circle';
-                toast.style.borderLeftColor = 'var(--success)';
-                toast.querySelector('.toast-icon').style.color = 'var(--success)';
-            } else if (type === 'error') {
-                toastIcon.className = 'fas fa-exclamation-circle';
-                toast.style.borderLeftColor = 'var(--danger)';
-                toast.querySelector('.toast-icon').style.color = 'var(--danger)';
-            }
-            
-            toast.classList.add('show');
-            
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, 3000);
-        }
-
-        // عرض الحجوزات مع الاستماع للتحديثات الفورية
+        // عرض الحجوزات مع الاستماع للتحديثات
         const q = query(
             collection(db, "appointments"),
             where("date", "==", getTodayDate()),
             where("doctorId", "==", linkedDoctorId)
         );
 
-        onSnapshot(onSnapshot(q, (snapshot) => {
-            allAppointments = [];
+        onSnapshot(q, (snapshot) => {
+            const docs = [];
             snapshot.forEach(d => {
-                allAppointments.push({ id: d.id, ...d.data() });
+                docs.push({ id: d.id, ...d.data() });
             });
 
-            // ترتيب حسب الوقت
-            allAppointments.sort((a, b) => a.timestamp - b.timestamp);
+            docs.sort((a, b) => a.timestamp - b.timestamp);
 
-            // تحديث الإحصائيات
-            updateStats();
-
-            // رسم الجدول
-            renderTable();
-
-            // تشغيل صوت عند إضافة حجز جديد
-            if (allAppointments.length > lastAppointmentCount) {
-                playNotificationSound();
-                showToast('تم إضافة حجز جديد!', 'success');
-            }
-            lastAppointmentCount = allAppointments.length;
-        }, (error) => {
-            console.error('Error loading appointments:', error);
-            showToast('خطأ في تحميل الحجوزات', 'error');
-        });
-
-        // تحديث الإحصائيات
-        function updateStats() {
-            const todayCount = allAppointments.length;
-            const waitingCount = allAppointments.filter(d => d.status === 'انتظار').length;
-            const doneCount = allAppointments.filter(d => d.status === 'تم الكشف').length;
+            const tableContent = document.getElementById('tableContent');
+            const todayCount = docs.length;
+            const waitingCount = docs.filter(d => d.status === 'انتظار').length;
 
             document.getElementById('todayCount').textContent = todayCount;
             document.getElementById('waitingCount').textContent = waitingCount;
-            document.getElementById('doneCount').textContent = doneCount;
-        }
 
-        // رسم الجدول
-        function renderTable() {
-            const tableContent = document.getElementById('tableContent');
-            
-            // تطبيق الفلتر
-            let filteredAppointments = allAppointments;
-            if (currentFilter === 'waiting') {
-                filteredAppointments = allAppointments.filter(a => a.status === 'انتظار');
-            } else if (currentFilter === 'done') {
-                filteredAppointments = allAppointments.filter(a => a.status === 'تم الكشف');
+            // تشغيل صوت عند إضافة حجز جديد
+            if (todayCount > lastAppointmentCount) {
+                playNotificationSound();
             }
+            lastAppointmentCount = todayCount;
 
-            if (filteredAppointments.length === 0) {
+            if (docs.length === 0) {
                 tableContent.innerHTML = `
                     <div class="empty-state">
                         <i class="fas fa-calendar-times"></i>
-                        <p>لا توجد حجوزات ${currentFilter === 'all' ? 'لهذا اليوم' : currentFilter === 'waiting' ? 'في الانتظار' : 'مكتملة'}</p>
+                        <p>لا توجد حجوزات لهذا اليوم</p>
                     </div>
                 `;
                 return;
@@ -1029,43 +684,31 @@
                 <table>
                     <thead>
                         <tr>
-                            <th>#</th>
                             <th>المريض</th>
                             <th>العمر</th>
                             <th>الهاتف</th>
                             <th>الطبيب</th>
                             <th>الوقت</th>
                             <th>الحالة</th>
-                            <th>ملاحظات</th>
                             <th>الإجراءات</th>
                         </tr>
                     </thead>
                     <tbody>
             `;
 
-            filteredAppointments.forEach((p, index) => {
-                const isNew = (Date.now() - p.timestamp) < 10000; // جديد إذا مر أقل من 10 ثواني
+            docs.forEach((p) => {
                 tableHTML += `
                     <tr>
-                        <td><strong>${index + 1}</strong></td>
-                        <td class="patient-info">
-                            <span class="patient-name">
-                                ${isNew ? '<span class="badge-new">جديد</span>' : ''}
-                                ${p.name}
-                            </span>
-                            <span class="patient-phone">${p.phone}</span>
-                        </td>
+                        <td><strong>${p.name}</strong></td>
                         <td>${p.age} سنة</td>
                         <td>${p.phone}</td>
                         <td>${p.doctor}</td>
                         <td>${p.time}</td>
                         <td>
                             <span class="status-badge ${p.status === 'انتظار' ? 'waiting' : 'done'}">
-                                <i class="fas ${p.status === 'انتظار' ? 'fa-clock' : 'fa-check'}"></i>
                                 ${p.status}
                             </span>
                         </td>
-                        <td>${p.notes || '-'}</td>
                         <td>
                             <button class="btn-delete" onclick="deleteAppointment('${p.id}', '${p.name}')">
                                 <i class="fas fa-trash"></i>
@@ -1082,20 +725,7 @@
             `;
 
             tableContent.innerHTML = tableHTML;
-        }
-
-        // فلترة الحجوزات
-        window.filterAppointments = function(filter) {
-            currentFilter = filter;
-            
-            // تحديث أزرار الفلتر
-            document.querySelectorAll('.filter-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            event.target.classList.add('active');
-            
-            renderTable();
-        };
+        });
 
         // البحث عن المرضى
         window.searchPatients = async (val) => {
@@ -1109,32 +739,29 @@
                 const qP = query(collection(db, "patients"));
                 const snap = await getDocs(qP);
                 let html = '';
-                let found = false;
 
                 snap.forEach(doc => {
                     const data = doc.data();
                     const searchLower = val.toLowerCase();
                     if (data.name.toLowerCase().includes(searchLower) || data.phone.includes(val)) {
-                        found = true;
                         html += `
-                            <div class="search-item" onclick="selectPatient('${data.name}', '${data.age}', '${data.phone}', '${data.notes || ''}')">
-                                <i class="fas fa-user-circle" style="font-size: 24px; color: var(--primary);"></i>
-                                <div style="flex: 1;">
+                            <div class="search-item" onclick="selectPatient('${data.name}', '${data.age}', '${data.phone}')">
+                                <i class="fas fa-user-circle"></i>
+                                <div>
                                     <strong>${data.name}</strong><br>
-                                    <small style="color: #666;">${data.phone} - ${data.age} سنة</small>
+                                    <small style="color: #666;">${data.phone}</small>
                                 </div>
-                                <i class="fas fa-arrow-left" style="color: var(--secondary);"></i>
                             </div>
                         `;
                     }
                 });
 
-                if (found) {
+                if (html) {
                     resDiv.innerHTML = html;
                     resDiv.style.display = 'block';
                 } else {
                     resDiv.innerHTML = `
-                        <div class="search-item" style="color: #999; cursor: default; justify-content: center;">
+                        <div class="search-item" style="color: #999; cursor: default;">
                             <i class="fas fa-info-circle"></i>
                             لا توجد نتائج
                         </div>
@@ -1143,15 +770,13 @@
                 }
             } catch (error) {
                 console.error('Search error:', error);
-                showToast('خطأ في البحث', 'error');
             }
         };
 
-        window.selectPatient = (name, age, phone, notes) => {
+        window.selectPatient = (name, age, phone) => {
             document.getElementById('pName').value = name;
             document.getElementById('pAge').value = age;
             document.getElementById('pPhone').value = phone;
-            document.getElementById('pNotes').value = notes;
             document.getElementById('searchResults').style.display = 'none';
             document.getElementById('pSearch').value = '';
         };
@@ -1161,136 +786,57 @@
             const name = document.getElementById('pName').value.trim();
             const age = document.getElementById('pAge').value;
             const phone = document.getElementById('pPhone').value.trim();
-            const notes = document.getElementById('pNotes').value.trim();
             const doctor = document.getElementById('pDoctor').value;
 
-            // التحقق من البيانات
-            if (!name) {
-                showToast('الرجاء إدخال اسم المريض', 'error');
-                document.getElementById('pName').focus();
+            if (!name || !age || !phone) {
+                alert('الرجاء إدخال جميع البيانات المطلوبة');
                 return;
             }
 
-            if (!age || age < 1 || age > 120) {
-                showToast('الرجاء إدخال عمر صحيح', 'error');
-                document.getElementById('pAge').focus();
+            if (phone.length < 11) {
+                alert('رقم الهاتف غير صحيح');
                 return;
             }
-
-            if (!phone) {
-                showToast('الرجاء إدخال رقم الهاتف', 'error');
-                document.getElementById('pPhone').focus();
-                return;
-            }
-
-            if (phone.length !== 11 || !phone.startsWith('01')) {
-                showToast('رقم الهاتف غير صحيح (يجب أن يبدأ بـ 01 ويتكون من 11 رقم)', 'error');
-                document.getElementById('pPhone').focus();
-                return;
-            }
-
-            // تعطيل زر الحفظ أثناء العملية
-            const submitBtn = event.target;
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
 
             try {
-                const appointmentData = {
+                await addDoc(collection(db, "appointments"), {
                     name,
-                    age: parseInt(age),
+                    age,
                     phone,
-                    notes: notes || '',
                     doctor,
                     doctorId: linkedDoctorId,
                     attendantName,
-                    attendantId: userId,
                     status: 'انتظار',
                     date: getTodayDate(),
                     time: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
-                    timestamp: Date.now(),
-                    createdAt: new Date().toISOString()
-                };
+                    timestamp: Date.now()
+                });
 
-                // إضافة الموعد
-                await addDoc(collection(db, "appointments"), appointmentData);
-
-                // حفظ/تحديث بيانات المريض في قاعدة البيانات
                 const qExist = query(collection(db, "patients"), where("phone", "==", phone));
                 const existSnap = await getDocs(qExist);
-                
                 if (existSnap.empty) {
-                    // مريض جديد
-                    await addDoc(collection(db, "patients"), {
-                        name,
-                        age: parseInt(age),
-                        phone,
-                        notes: notes || '',
-                        createdAt: new Date().toISOString(),
-                        lastVisit: getTodayDate(),
-                        visitCount: 1
-                    });
-                    
-                    // تحديث عداد المرضى
-                    const currentTotal = parseInt(document.getElementById('totalPatients').textContent);
-                    document.getElementById('totalPatients').textContent = currentTotal + 1;
-                } else {
-                    // تحديث بيانات المريض القديم
-                    const patientDoc = existSnap.docs[0];
-                    const patientData = patientDoc.data();
-                    await updateDoc(doc(db, "patients", patientDoc.id), {
-                        name, // تحديث الاسم في حالة تغييره
-                        age: parseInt(age),
-                        notes: notes || patientData.notes || '',
-                        lastVisit: getTodayDate(),
-                        visitCount: (patientData.visitCount || 0) + 1,
-                        updatedAt: new Date().toISOString()
-                    });
+                    await addDoc(collection(db, "patients"), { name, age, phone });
                 }
 
-                showToast(`✓ تم حجز موعد للمريض: ${name}`, 'success');
+                alert('✓ تم الحجز بنجاح');
                 closeModal();
                 clearForm();
-                
             } catch (e) {
-                console.error('Error saving booking:', e);
-                showToast("خطأ في حفظ الحجز: " + e.message, 'error');
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = '<i class="fas fa-check-circle"></i> تأكيد الحجز';
+                alert("خطأ في الحجز: " + e.message);
             }
         };
 
         // حذف الحجز
         window.deleteAppointment = async (id, name) => {
-            if (!confirm(`هل أنت متأكد من حذف حجز المريض: ${name}؟`)) {
+            if (!confirm(`هل أنت متأكد من حذف حجز ${name}؟`)) {
                 return;
             }
 
             try {
                 await deleteDoc(doc(db, "appointments", id));
-                showToast(`تم حذف حجز المريض: ${name}`, 'success');
+                alert('✓ تم حذف الحجز بنجاح');
             } catch (error) {
-                console.error('Error deleting appointment:', error);
-                showToast('خطأ في حذف الحجز: ' + error.message, 'error');
-            }
-        };
-
-        // تحديث البيانات
-        window.refreshData = async () => {
-            const btn = event.target;
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحديث...';
-            
-            try {
-                await loadUserData();
-                showToast('تم تحديث البيانات', 'success');
-            } catch (error) {
-                showToast('خطأ في التحديث', 'error');
-            } finally {
-                setTimeout(() => {
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="fas fa-sync-alt"></i> تحديث';
-                }, 1000);
+                alert('خطأ في الحذف: ' + error.message);
             }
         };
 
@@ -1298,19 +844,16 @@
             document.getElementById('pName').value = '';
             document.getElementById('pAge').value = '';
             document.getElementById('pPhone').value = '';
-            document.getElementById('pNotes').value = '';
             document.getElementById('pSearch').value = '';
         }
 
         window.openModal = () => {
             document.getElementById('bookingModal').classList.add('active');
-            document.getElementById('pName').focus();
         };
 
         window.closeModal = () => {
             document.getElementById('bookingModal').classList.remove('active');
             document.getElementById('searchResults').style.display = 'none';
-            clearForm();
         };
 
         window.logout = () => {
@@ -1326,39 +869,6 @@
                 closeModal();
             }
         });
-
-        // التحقق من صلاحية رقم الهاتف أثناء الكتابة
-        document.getElementById('pPhone').addEventListener('input', (e) => {
-            let value = e.target.value.replace(/[^0-9]/g, '');
-            if (value.length > 11) {
-                value = value.substring(0, 11);
-            }
-            e.target.value = value;
-        });
-
-        // منع إدخال أرقام سالبة في العمر
-        document.getElementById('pAge').addEventListener('input', (e) => {
-            if (e.target.value < 0) {
-                e.target.value = 0;
-            }
-            if (e.target.value > 120) {
-                e.target.value = 120;
-            }
-        });
-
-        // Keyboard shortcuts
-        document.addEventListener('keydown', (e) => {
-            // Ctrl/Cmd + N لفتح نافذة حجز جديد
-            if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
-                e.preventDefault();
-                openModal();
-            }
-            
-            // ESC لإغلاق النافذة
-            if (e.key === 'Escape') {
-                closeModal();
-            }
-        });
     </script>
 </body>
-    </html>
+</html>
