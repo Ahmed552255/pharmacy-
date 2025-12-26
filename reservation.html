@@ -3,50 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة الاستقبال</title>
+    <title>لوحة الاستقبال الذكية</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { --primary: #45b39d; --dark: #16a085; --bg: #f8fafb; --white: #ffffff; --warning: #f39c12; --danger: #e74c3c;}
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: var(--bg); margin: 0; padding: 15px; }
-        .top-bar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 15px; background: var(--white); padding: 20px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        .table-wrapper { background: var(--white); border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; text-align: center; min-width: 600px; }
+        :root { --primary: #45b39d; --dark: #16a085; --bg: #f8fafb; --white: #ffffff; --danger: #e74c3c; --info: #3498db; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: var(--bg); margin: 0; padding: 20px; color: #333; }
+        .top-bar { display: flex; justify-content: space-between; align-items: center; background: var(--white); padding: 20px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 25px; }
+        .table-container { background: var(--white); border-radius: 15px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        table { width: 100%; border-collapse: collapse; text-align: center; }
         th { background: var(--primary); color: white; padding: 15px; }
         td { padding: 12px; border-bottom: 1px solid #eee; }
-        tbody tr:nth-child(even) { background-color: #f9f9f9; }
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(4px); }
-        .modal-content { background: white; padding: 30px; border-radius: 20px; width: 90%; max-width: 400px; }
-        .btn { border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; display: inline-flex; align-items: center; gap: 8px; color: white; }
-        .btn-primary { background: var(--primary); }
-        .btn-danger { background: var(--danger); }
-        .status-badge { padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; color: white; }
-        .status-waiting { background: var(--warning); }
-        .status-done { background: var(--dark); }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(4px); }
+        .modal-content { background: white; padding: 30px; border-radius: 20px; width: 90%; max-width: 500px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
+        .submit-btn { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 10px; font-size: 18px; cursor: pointer; }
+        .status-badge { padding: 5px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; }
+        .waiting { background: #fff9e6; color: #f39c12; }
+        .done { background: #e8fcf0; color: #27ae60; }
+        .btn-action { background: var(--danger); color: white; padding: 10px 20px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 8px; }
+        .btn-logout { background: var(--info); }
+        .btn-logout:hover { background: #2980b9; }
     </style>
 </head>
 <body>
+
     <div class="top-bar">
         <div>
-            <h2 style="margin:0; color:var(--primary);"><i class="fas fa-desktop"></i> لوحة الاستقبال</h2>
+            <h2 style="margin:0; color:var(--primary);"><i class="fas fa-clinic-medical"></i> نظام الاستقبال</h2>
             <div id="staffInfo" style="color: var(--dark); font-weight: bold; margin-top: 5px;"></div>
         </div>
-        <div>
-            <button onclick="openBookingModal()" class="btn btn-primary"><i class="fas fa-plus"></i> حجز جديد</button>
-            <button onclick="logout()" class="btn btn-danger"><i class="fas fa-sign-out-alt"></i> خروج</button>
+        <div style="display: flex; gap: 10px;">
+            <button onclick="logout()" class="btn-action btn-logout">
+                <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
+            </button>
+            <button onclick="openModal()" class="submit-btn" style="width: auto; padding: 10px 25px;">
+                <i class="fas fa-plus"></i> حجز جديد
+            </button>
         </div>
     </div>
-    <div class="table-wrapper">
+
+    <div class="table-container">
         <table>
-            <thead><tr><th>المريض</th><th>وقت الحجز</th><th>الحالة</th></tr></thead>
+            <thead>
+                <tr>
+                    <th>المريض</th>
+                    <th>العمر</th>
+                    <th>الطبيب</th>
+                    <th>الوقت</th>
+                    <th>الحالة</th>
+                </tr>
+            </thead>
             <tbody id="patientsTableBody"></tbody>
         </table>
     </div>
+
     <div id="bookingModal" class="modal">
         <div class="modal-content">
             <h3 style="margin-top:0; color:var(--primary);">تسجيل حجز جديد</h3>
-            <input type="text" id="pName" placeholder="اسم المريض..." style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; margin-bottom: 15px;">
-            <button onclick="saveNewBooking()" class="btn btn-primary" style="width:100%;">تأكيد الحجز</button>
-            <button onclick="closeBookingModal()" style="background:none; border:none; color:gray; width:100%; margin-top:10px;">إلغاء</button>
+            <div class="form-group">
+                <label>اسم المريض</label>
+                <input type="text" id="pName" required>
+            </div>
+             <div class="form-group">
+                <label>عمر المريض</label>
+                <input type="number" id="pAge" required>
+            </div>
+            <div class="form-group">
+                <label>رقم الموبايل</label>
+                <input type="tel" id="pPhone" required>
+            </div>
+            <div class="form-group">
+                <label>الطبيب المعالج</label>
+                <select id="pDoctor"></select>
+            </div>
+            <button class="submit-btn" onclick="saveNewBooking()">تأكيد الحجز</button>
+            <button onclick="closeModal()" style="background:none; border:none; color:gray; width:100%; margin-top:10px; cursor:pointer;">إلغاء</button>
         </div>
     </div>
 
@@ -66,66 +99,81 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        const doctorName = localStorage.getItem('doctorName');
-        if (!doctorName) {
-            alert("لم يتم تحديد الطبيب! سيتم إعادتك لصفحة تسجيل الدخول.");
+        // *** التعديل الوحيد المطلوب هنا ***
+        // جلب اسم الطبيب واسم المستخدم من الذاكرة
+        const assignedDoctorName = localStorage.getItem('doctorName');
+        const userName = localStorage.getItem('userName');
+
+        if (!assignedDoctorName || !userName) {
+            alert("بيانات الجلسة غير كاملة! سيتم إعادتك لصفحة تسجيل الدخول.");
             window.location.href = 'index.html';
         }
         
-        document.getElementById('staffInfo').innerText = `عيادة د. ${doctorName}`;
+        document.getElementById('staffInfo').innerText = `الموظف: ${userName} | عيادة د. ${assignedDoctorName}`;
+
+        const docSelect = document.getElementById('pDoctor');
+        docSelect.innerHTML = `<option value="${assignedDoctorName}">${assignedDoctorName}</option>`;
 
         const getTodayDate = () => new Date().toISOString().split('T')[0];
-        
         const q = query(
             collection(db, "appointments"), 
             where("date", "==", getTodayDate()), 
-            where("doctor", "==", doctorName),
-            orderBy("timestamp", "desc")
+            where("doctor", "==", assignedDoctorName),
+            orderBy("timestamp", "asc")
         );
 
         onSnapshot(q, (snapshot) => {
             const tbody = document.getElementById('patientsTableBody');
-            let tableRowsHTML = '';
+            tbody.innerHTML = '';
             snapshot.forEach((doc) => {
                 const p = doc.data();
-                tableRowsHTML += `
+                tbody.innerHTML += `
                     <tr>
-                        <td><strong>${p.name}</strong></td>
+                        <td><strong>${p.name}</strong><br><small>${p.phone}</small></td>
+                        <td>${p.age}</td>
+                        <td>${p.doctor}</td>
                         <td>${p.time}</td>
-                        <td><span class="status-badge ${p.status === 'انتظار' ? 'status-waiting' : 'status-done'}">${p.status}</span></td>
+                        <td><span class="status-badge ${p.status === 'انتظار' ? 'waiting' : 'done'}">${p.status}</span></td>
                     </tr>
                 `;
             });
-            tbody.innerHTML = snapshot.empty ? `<tr><td colspan="3" style="padding: 30px; color: #888;">لا توجد حجوزات لهذا الطبيب اليوم.</td></tr>` : tableRowsHTML;
         });
 
         window.saveNewBooking = async () => {
             const name = document.getElementById('pName').value;
-            if(!name) return alert('الرجاء إدخال اسم المريض.');
+            const age = document.getElementById('pAge').value;
+            const phone = document.getElementById('pPhone').value;
+            const doctor = document.getElementById('pDoctor').value;
+
+            if(!name || !phone || !age) return alert('الرجاء إكمال كافة بيانات المريض.');
+
             try {
                 await addDoc(collection(db, "appointments"), {
-                    name: name,
-                    doctor: doctorName,
+                    name, age, phone, doctor,
                     status: 'انتظار',
                     date: getTodayDate(),
                     time: new Date().toLocaleTimeString('ar-EG', {hour:'2-digit', minute:'2-digit'}),
                     timestamp: new Date().getTime()
                 });
-                closeBookingModal();
-            } catch (e) { alert("حدث خطأ: " + e.message); }
+                closeModal();
+                document.getElementById('pName').value = '';
+                document.getElementById('pAge').value = '';
+                document.getElementById('pPhone').value = '';
+            } catch (e) {
+                console.error("Error adding document: ", e);
+                alert("حدث خطأ أثناء الحفظ.");
+            }
         };
         
         window.logout = () => {
-            localStorage.clear();
-            window.location.href = 'index.html';
+            if (confirm('هل تريد تسجيل الخروج؟')) {
+                localStorage.clear(); // مسح كل بيانات الجلسة
+                window.location.href = 'index.html';
+            }
         };
 
-        const bookingModal = document.getElementById('bookingModal');
-        window.openBookingModal = () => {
-            document.getElementById('pName').value = '';
-            bookingModal.style.display = 'flex';
-        }
-        window.closeBookingModal = () => bookingModal.style.display = 'none';
+        window.openModal = () => document.getElementById('bookingModal').style.display = 'flex';
+        window.closeModal = () => document.getElementById('bookingModal').style.display = 'none';
     </script>
 </body>
 </html>
