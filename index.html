@@ -3,136 +3,148 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تسجيل الدخول | نظام عيادات فقيها</title>
+    <title>تسجيل الدخول | نظام الإدارة الطبية</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        :root { --primary: #45b39d; --dark-teal: #00796b; --soft-bg: #f0f4f8; --white: #ffffff; --shadow: rgba(0, 0, 0, 0.1); }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, var(--primary) 0%, var(--dark-teal) 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
-        .login-wrapper { width: 100%; max-width: 450px; animation: slideIn 0.5s ease-out; }
-        @keyframes slideIn { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
-        .login-container { background: var(--white); padding: 40px 30px; border-radius: 25px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3); position: relative; }
-        .logo-circle { width: 90px; height: 90px; background: linear-gradient(135deg, var(--primary), var(--dark-teal)); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: -75px auto 25px; border: 6px solid var(--white); color: var(--white); font-size: 40px; box-shadow: 0 8px 20px var(--shadow); }
-        h2 { color: #2c3e50; margin-bottom: 8px; font-size: 26px; text-align: center; font-weight: 600; }
-        .subtitle { color: #7f8c8d; font-size: 14px; text-align: center; margin-bottom: 30px; }
-        .input-group { position: relative; margin-bottom: 20px; }
-        label { display: block; margin-bottom: 8px; font-weight: 600; color: #34495e; font-size: 14px; }
-        .input-wrapper { position: relative; }
-        .input-wrapper i { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: var(--primary); z-index: 1; font-size: 16px; }
-        input, select { width: 100%; padding: 14px 45px 14px 15px; border-radius: 12px; border: 2px solid #e0e0e0; font-size: 15px; outline: none; transition: all 0.3s; background: #fafafa; }
-        input:focus, select:focus { border-color: var(--primary); background: #ffffff; box-shadow: 0 0 0 3px rgba(69, 179, 157, 0.1); }
-        input::placeholder { color: #bdc3c7; }
-        .hidden { display: none !important; }
-        #doctor-link-group { background: #e8f8f5; padding: 15px; border-radius: 12px; border: 2px dashed var(--primary); margin-top: 10px; }
-        .btn { width: 100%; padding: 16px; border: none; border-radius: 12px; font-size: 17px; font-weight: 600; cursor: pointer; transition: all 0.3s; margin-top: 10px; }
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-primary:hover { background: var(--dark-teal); transform: translateY(-2px); box-shadow: 0 5px 15px rgba(69, 179, 157, 0.4); }
-        .btn-primary:disabled { background: #95a5a6; cursor: not-allowed; transform: none; }
-        .toggle-link { display: block; text-align: center; margin-top: 20px; color: var(--primary); cursor: pointer; font-size: 14px; font-weight: 500; transition: color 0.3s; }
-        .toggle-link:hover { color: var(--dark-teal); text-decoration: underline; }
-        .footer-text { margin-top: 30px; text-align: center; font-size: 12px; color: #95a5a6; line-height: 1.6; }
-        .alert { padding: 12px 15px; border-radius: 10px; margin-bottom: 20px; font-size: 14px; animation: shake 0.5s; }
-        .alert-error { background: #fee; color: #c33; border: 1px solid #fcc; }
-        .alert-success { background: #efe; color: #3c3; border: 1px solid #cfc; }
-        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }
-        .loading-spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: white; animation: spin 0.8s linear infinite; margin-left: 8px; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        @media (max-width: 480px) { body { padding: 15px; } .login-container { padding: 35px 20px; } .logo-circle { width: 75px; height: 75px; font-size: 35px; margin-top: -65px; } h2 { font-size: 22px; } input, select { padding: 12px 40px 12px 12px; font-size: 14px; } .btn { padding: 14px; font-size: 16px; } }
-        @media (max-width: 360px) { .login-container { padding: 30px 15px; } h2 { font-size: 20px; } .logo-circle { width: 65px; height: 65px; font-size: 30px; } }
+        :root {
+            --primary: #45b39d;
+            --dark-teal: #00796b;
+            --soft-bg: #f0f4f8;
+            --white: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--dark-teal) 100%);
+            height: 100vh; margin: 0; display: flex; align-items: center; justify-content: center;
+        }
+
+        .login-container {
+            background: var(--white); padding: 40px; border-radius: 25px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2); width: 100%; max-width: 400px;
+            text-align: center; position: relative;
+        }
+
+        .logo-circle {
+            width: 80px; height: 80px; background: var(--soft-bg);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            margin: -80px auto 20px auto; border: 5px solid var(--white);
+            color: var(--primary); font-size: 35px; box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        h2 { color: #333; margin-bottom: 10px; }
+        p { color: #777; font-size: 14px; margin-bottom: 30px; }
+
+        .input-group { position: relative; margin-bottom: 20px; text-align: right; }
+        .input-group i, .select-group i { position: absolute; right: 15px; top: 42px; color: var(--primary); z-index: 1; }
+        
+        /* أيقونة العين لكلمة السر */
+        .password-toggle { left: 15px; right: auto; cursor: pointer; }
+
+        label { display: block; margin-bottom: 8px; font-weight: bold; color: #555; font-size: 14px; }
+
+        input, select {
+            width: 100%; padding: 12px 40px 12px 15px; border-radius: 12px;
+            border: 1.5px solid #eee; box-sizing: border-box; font-size: 16px;
+            outline: none; transition: 0.3s;
+        }
+
+        input:focus, select:focus { border-color: var(--primary); background: #f9fffb; }
+
+        .login-btn {
+            width: 100%; padding: 15px; background: var(--primary); color: white;
+            border: none; border-radius: 12px; font-size: 18px; font-weight: bold;
+            cursor: pointer; transition: 0.3s; margin-top: 10px;
+        }
+
+        .login-btn:hover { background: var(--dark-teal); transform: translateY(-2px); }
+        
+        #doctor-details-group, #doctor-link-group {
+            background: #f0fbf9; padding: 15px; border-radius: 12px;
+            margin-bottom: 20px; display: none; border: 1px dashed var(--primary);
+        }
+
+        .footer-text { margin-top: 25px; font-size: 12px; color: #999; }
+        .toggle-link { display: block; margin-top: 15px; color: var(--primary); cursor: pointer; font-size: 14px; }
     </style>
 </head>
 <body>
 
-    <div class="login-wrapper">
-        <div class="login-container">
-            <div class="logo-circle"><i class="fas fa-hand-holding-medical"></i></div>
-            <h2 id="form-title">تسجيل الدخول</h2>
-            <p class="subtitle" id="form-subtitle">يرجى تسجيل الدخول للوصول إلى لوحة التحكم</p>
-            <div id="alert-container"></div>
-            <form id="authForm">
-                <div class="input-group">
-                    <label>البريد الإلكتروني</label>
-                    <div class="input-wrapper">
-                        <i class="fas fa-envelope"></i>
-                        <input type="email" id="email" placeholder="example@clinic.com" required autocomplete="email">
-                    </div>
-                </div>
-                <div class="input-group">
-                    <label>كلمة المرور</label>
-                    <div class="input-wrapper">
-                        <i class="fas fa-lock"></i>
-                        <input type="password" id="password" placeholder="••••••••" required autocomplete="current-password">
-                    </div>
-                </div>
-                <div class="input-group hidden" id="name-group">
-                    <label>الاسم الكامل</label>
-                    <div class="input-wrapper">
-                        <i class="fas fa-user"></i>
-                        <input type="text" id="fullname" placeholder="مثال: د. أحمد محمود">
-                    </div>
-                </div>
-                <div class="input-group hidden" id="role-group">
-                    <label>المسمى الوظيفي</label>
-                    <div class="input-wrapper">
-                        <i class="fas fa-user-tag"></i>
-                        <select id="role">
-                            <option value="" disabled selected>اختر مهنتك</option>
-                            <option value="attendant">تمرجي / استقبال</option>
-                            <option value="doctor">طبيب</option>
-                            <option value="pharmacist">صيدلي</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="input-group hidden" id="specialty-group">
-                    <label>التخصص الطبي</label>
-                    <div class="input-wrapper">
-                        <i class="fas fa-stethoscope"></i>
-                        <select id="specialty">
-                            <option value="">اختر التخصص</option>
-                            <option value="باطنة">باطنة</option>
-                            <option value="أطفال">أطفال</option>
-                            <option value="عظام">عظام</option>
-                            <option value="قلب وأوعية">قلب وأوعية</option>
-                            <option value="جراحة">جراحة</option>
-                            <option value="نساء وتوليد">نساء وتوليد</option>
-                            <option value="أنف وأذن">أنف وأذن وحنجرة</option>
-                            <option value="جلدية">جلدية</option>
-                            <option value="عيون">عيون</option>
-                            <option value="أسنان">أسنان</option>
-                        </select>
-                    </div>
-                </div>
-                <div id="doctor-link-group" class="hidden">
-                    <label>ربط مع طبيب مختص</label>
-                    <div class="input-wrapper">
-                        <i class="fas fa-user-md"></i>
-                        <select id="linked-doctor">
-                            <option value="">اختر الطبيب المسؤول...</option>
-                        </select>
-                    </div>
-                </div>
-                <button type="submit" class="btn btn-primary" id="auth-button">
-                    <span id="btn-text">دخول للنظام</span>
-                </button>
-                <a class="toggle-link" id="toggle-auth">ليس لديك حساب؟ سجّل الآن</a>
-            </form>
-            <div class="footer-text">
-                © 2025 نظام عيادات فقيها<br>
-                جميع الحقوق محفوظة
+    <div class="login-container">
+        <div class="logo-circle">
+            <i class="fas fa-hand-holding-medical"></i>
+        </div>
+        
+        <h2 id="form-title">تسجيل الدخول</h2>
+        <p id="form-subtitle">يرجى تسجيل الدخول للوصول إلى لوحة التحكم</p>
+
+        <form id="authForm">
+            <div class="input-group">
+                <label>البريد الإلكتروني</label>
+                <i class="fas fa-envelope"></i>
+                <input type="email" id="email" placeholder="example@domain.com" required>
             </div>
+
+            <div class="input-group">
+                <label>كلمة السر</label>
+                <i class="fas fa-lock"></i>
+                <input type="password" id="password" placeholder="••••••••" required>
+                <i class="fas fa-eye password-toggle" id="password-toggle-icon"></i>
+            </div>
+            
+            <div class="input-group" id="role-group" style="display: none;">
+                <label>أنا</label>
+                <i class="fas fa-user-tag"></i>
+                <select id="role" onchange="handleRoleChange(this.value)">
+                    <option value="" disabled selected>اختر مهنتك</option>
+                    <option value="attendant">تمرجي / استقبال</option>
+                    <option value="doctor">طبيب</option>
+                    <option value="pharmacist">صيدلي</option>
+                </select>
+            </div>
+
+            <!-- خانات اسم وتخصص الدكتور -->
+            <div id="doctor-details-group">
+                <div class="input-group">
+                    <label>اسم الدكتور الكامل</label>
+                    <i class="fas fa-user-doctor"></i>
+                    <input type="text" id="doctor-name" placeholder="مثال: محمد عبدالله">
+                </div>
+                <div class="input-group">
+                    <label>تخصص الدكتور</label>
+                    <i class="fas fa-stethoscope"></i>
+                    <input type="text" id="doctor-specialty" placeholder="مثال: باطنة">
+                </div>
+            </div>
+
+            <div id="doctor-link-group" class="input-group">
+                <label>ربط مع طبيب مختص</label>
+                <i class="fas fa-user-md"></i>
+                <select id="linked-doctor">
+                    <option value="">جاري تحميل الأطباء...</option>
+                </select>
+            </div>
+
+            <button type="submit" class="login-btn" id="auth-button">دخول للنظام</button>
+            <a class="toggle-link" id="toggle-auth">ليس لديك حساب؟ سجل الآن</a>
+        </form>
+
+        <div class="footer-text">
+            © 2025 نظام العيادات الذكي <br>
+            بواسطة فريق الإدارة التقنية
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
         
         const firebaseConfig = {
             apiKey: "AIzaSyBy8xPvxQuC6bVLerLpSjzPmvBWyAhuYKo",
             authDomain: "mogama-49e7f.firebaseapp.com",
             projectId: "mogama-49e7f",
-            storageBucket: "mogama-49e7f.appspot.com",
+            storageBucket: "mogama-49e7f.firebasestorage.app",
             messagingSenderId: "575066177594",
             appId: "1:575066177594:web:82137834158b4c353db503"
         };
@@ -141,230 +153,123 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
+        // وظيفة جلب الأطباء من Firestore
+        async function fetchDoctors() {
+            const doctorSelect = document.getElementById('linked-doctor');
+            try {
+                const q = query(collection(db, "users"), where("role", "==", "doctor"));
+                const querySnapshot = await getDocs(q);
+                doctorSelect.innerHTML = '<option value="">اختر الطبيب...</option>';
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const name = data.name;
+                    if (name) {
+                        doctorSelect.innerHTML += `<option value="${name}">${name}</option>`;
+                    }
+                });
+            } catch (e) {
+                console.error("Error fetching doctors: ", e);
+                doctorSelect.innerHTML = '<option value="">خطأ في تحميل الأطباء</option>';
+            }
+        }
+
+        // إظهار/إخفاء الخانات حسب الدور
+        window.handleRoleChange = (role) => {
+            const linkGroup = document.getElementById('doctor-link-group');
+            const detailsGroup = document.getElementById('doctor-details-group');
+            if (role === 'attendant') {
+                linkGroup.style.display = 'block';
+                detailsGroup.style.display = 'none';
+                fetchDoctors();
+            } else if (role === 'doctor') {
+                detailsGroup.style.display = 'block';
+                linkGroup.style.display = 'none';
+            } else {
+                linkGroup.style.display = 'none';
+                detailsGroup.style.display = 'none';
+            }
+        };
+
+        // إظهار/إخفاء كلمة السر
+        const passwordInput = document.getElementById('password');
+        const toggleIcon = document.getElementById('password-toggle-icon');
+        toggleIcon.addEventListener('click', () => {
+            const isPassword = passwordInput.type === 'password';
+            passwordInput.type = isPassword ? 'text' : 'password';
+            toggleIcon.classList.toggle('fa-eye');
+            toggleIcon.classList.toggle('fa-eye-slash');
+        });
+
         const REDIRECT_MAP = {
             'attendant': 'index.html',
             'doctor': 'doctor.html',
             'pharmacist': 'pharmacy_main.html'
         };
 
+        // تبديل بين دخول وتسجيل
         let isRegistering = false;
-
-        const elements = {
-            form: document.getElementById('authForm'),
-            email: document.getElementById('email'),
-            password: document.getElementById('password'),
-            fullname: document.getElementById('fullname'),
-            role: document.getElementById('role'),
-            specialty: document.getElementById('specialty'),
-            linkedDoctor: document.getElementById('linked-doctor'),
-            authButton: document.getElementById('auth-button'),
-            btnText: document.getElementById('btn-text'),
-            toggleAuth: document.getElementById('toggle-auth'),
-            formTitle: document.getElementById('form-title'),
-            formSubtitle: document.getElementById('form-subtitle'),
-            alertContainer: document.getElementById('alert-container'),
-            nameGroup: document.getElementById('name-group'),
-            roleGroup: document.getElementById('role-group'),
-            specialtyGroup: document.getElementById('specialty-group'),
-            doctorLinkGroup: document.getElementById('doctor-link-group')
-        };
-
-        function showAlert(message, type = 'error') {
-            const icon = type === 'error' ? 'exclamation-circle' : 'check-circle';
-            elements.alertContainer.innerHTML = `<div class="alert alert-${type}"><i class="fas fa-${icon}"></i> ${message}</div>`;
-            setTimeout(() => elements.alertContainer.innerHTML = '', 4000);
-        }
-
-        function setLoading(loading) {
-            elements.authButton.disabled = loading;
-            elements.btnText.innerHTML = loading 
-                ? `جاري التحميل... <span class="loading-spinner"></span>`
-                : (isRegistering ? 'إنشاء الحساب' : 'دخول للنظام');
-        }
-
-        async function fetchDoctors() {
-            try {
-                const q = query(collection(db, "users"), where("role", "==", "doctor"));
-                const querySnapshot = await getDocs(q);
-                
-                elements.linkedDoctor.innerHTML = '<option value="">اختر الطبيب المسؤول...</option>';
-                
-                if (querySnapshot.empty) {
-                    elements.linkedDoctor.innerHTML += '<option value="" disabled>لا يوجد أطباء مسجلين</option>';
-                    return;
-                }
-
-                querySnapshot.forEach((docSnap) => {
-                    const data = docSnap.data();
-                    const name = data.name || data.email.split('@')[0];
-                    const specialty = data.specialty ? ` - ${data.specialty}` : '';
-                    elements.linkedDoctor.innerHTML += `<option value="${docSnap.id}">${name}${specialty}</option>`;
-                });
-            } catch (error) {
-                console.error('خطأ في جلب الأطباء:', error);
-                showAlert('فشل في تحميل قائمة الأطباء.', 'error');
-                elements.linkedDoctor.innerHTML = '<option value="" disabled>خطأ في التحميل</option>';
-            }
-        }
-
-        elements.role.addEventListener('change', async (e) => {
-            const role = e.target.value;
-            elements.specialtyGroup.classList.add('hidden');
-            elements.doctorLinkGroup.classList.add('hidden');
-
-            if (role === 'attendant') {
-                elements.doctorLinkGroup.classList.remove('hidden');
-                await fetchDoctors();
-            } else if (role === 'doctor') {
-                elements.specialtyGroup.classList.remove('hidden');
-            }
-        });
-
-        elements.toggleAuth.addEventListener('click', () => {
+        const toggleLink = document.getElementById('toggle-auth');
+        toggleLink.addEventListener('click', () => {
             isRegistering = !isRegistering;
-            
-            elements.formTitle.textContent = isRegistering ? 'تسجيل حساب جديد' : 'تسجيل الدخول';
-            elements.formSubtitle.textContent = isRegistering ? 'أنشئ حساباً جديداً للانضمام للنظام' : 'يرجى تسجيل الدخول للوصول إلى لوحة التحكم';
-            elements.btnText.textContent = isRegistering ? 'إنشاء الحساب' : 'دخول للنظام';
-            elements.toggleAuth.textContent = isRegistering ? 'لديك حساب؟ سجّل دخولك' : 'ليس لديك حساب؟ سجّل الآن';
-
-            elements.nameGroup.classList.toggle('hidden', !isRegistering);
-            elements.roleGroup.classList.toggle('hidden', !isRegistering);
-            elements.specialtyGroup.classList.add('hidden');
-            elements.doctorLinkGroup.classList.add('hidden');
-
-            elements.alertContainer.innerHTML = '';
-            elements.form.reset();
+            document.getElementById('form-title').textContent = isRegistering ? 'تسجيل حساب جديد' : 'تسجيل الدخول';
+            document.getElementById('role-group').style.display = isRegistering ? 'block' : 'none';
+            document.getElementById('auth-button').textContent = isRegistering ? 'إنشاء حساب' : 'دخول للنظام';
+            if (!isRegistering) {
+                document.getElementById('doctor-link-group').style.display = 'none';
+                document.getElementById('doctor-details-group').style.display = 'none';
+            }
         });
 
-        function validateForm(isRegister) {
-            const email = elements.email.value.trim();
-            const password = elements.password.value;
-
-            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-                showAlert('البريد الإلكتروني غير صحيح'); return false;
-            }
-            if (password.length < 6) {
-                showAlert('كلمة المرور يجب أن تكون 6 أحرف على الأقل'); return false;
-            }
-
-            if (isRegister) {
-                if (!elements.fullname.value.trim()) { showAlert('يرجى إدخال الاسم الكامل'); return false; }
-                const role = elements.role.value;
-                if (!role) { showAlert('يرجى اختيار المسمى الوظيفي'); return false; }
-                if (role === 'doctor' && !elements.specialty.value) { showAlert('يرجى اختيار التخصص الطبي'); return false; }
-                if (role === 'attendant' && !elements.linkedDoctor.value) { showAlert('يجب ربط التمرجي بطبيب مسؤول'); return false; }
-            }
-            return true;
-        }
-
-        async function handleRegistration() {
-            setLoading(true);
-            try {
-                const email = elements.email.value.trim();
-                const password = elements.password.value;
-                const fullname = elements.fullname.value.trim();
-                const role = elements.role.value;
-                const specialty = elements.specialty.value;
-                const linkedDoctorId = elements.linkedDoctor.value;
-
-                // التحقق من وجود الطبيب قبل إنشاء الحساب
-                if (role === 'attendant') {
-                    const doctorDoc = await getDoc(doc(db, "users", linkedDoctorId));
-                    if (!doctorDoc.exists()) {
-                        showAlert('الطبيب المختار غير موجود. يرجى تحديث الصفحة والمحاولة مرة أخرى.');
-                        setLoading(false);
-                        return;
-                    }
-                }
-
-                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                const userId = userCredential.user.uid;
-
-                const userData = { email, name: fullname, role, createdAt: new Date().toISOString() };
-                if (role === 'doctor') userData.specialty = specialty;
-                if (role === 'attendant') userData.linkedDoctorId = linkedDoctorId;
-
-                await setDoc(doc(db, "users", userId), userData);
-                
-                // تسجيل الخروج مباشرة بعد التسجيل لمنع الدخول التلقائي
-                await signOut(auth);
-
-                showAlert('تم إنشاء الحساب بنجاح! يمكنك الآن تسجيل الدخول.', 'success');
-                elements.toggleAuth.click(); // الانتقال لواجهة تسجيل الدخول
-
-            } catch (error) {
-                const errorMessages = {
-                    'auth/email-already-in-use': 'البريد الإلكتروني مستخدم بالفعل.',
-                    'auth/weak-password': 'كلمة المرور ضعيفة جداً.',
-                    'auth/network-request-failed': 'فشل الاتصال بالشبكة، تحقق من اتصالك بالإنترنت.'
-                };
-                showAlert(errorMessages[error.code] || 'حدث خطأ غير متوقع أثناء إنشاء الحساب.');
-            } finally {
-                setLoading(false);
-            }
-        }
-
-        async function handleLogin() {
-            setLoading(true);
-            try {
-                const email = elements.email.value.trim();
-                const password = elements.password.value;
-                const userCredential = await signInWithEmailAndPassword(auth, email, password);
-                const userId = userCredential.user.uid;
-
-                const userDoc = await getDoc(doc(db, "users", userId));
-                if (!userDoc.exists() || !userDoc.data().role) {
-                    await signOut(auth);
-                    showAlert('بيانات المستخدم غير كاملة أو غير موجودة. تواصل مع الدعم.');
-                    return;
-                }
-
-                const userData = userDoc.data();
-                const redirectUrl = REDIRECT_MAP[userData.role];
-
-                if (!redirectUrl) {
-                    await signOut(auth);
-                    showAlert('دور المستخدم غير صالح. لا يمكن تحديد وجهة.');
-                    return;
-                }
-
-                localStorage.setItem('userId', userId);
-                localStorage.setItem('userRole', userData.role);
-                localStorage.setItem('userName', userData.name || email.split('@')[0]);
-
-                if (userData.role === 'attendant' && userData.linkedDoctorId) {
-                    const doctorDoc = await getDoc(doc(db, "users", userData.linkedDoctorId));
-                    if (doctorDoc.exists()) {
-                        localStorage.setItem('doctorName', doctorDoc.data().name);
-                        localStorage.setItem('linkedDoctorId', userData.linkedDoctorId);
-                    }
-                }
-
-                showAlert('تم تسجيل الدخول بنجاح!', 'success');
-                setTimeout(() => { window.location.href = redirectUrl; }, 1000);
-
-            } catch (error) {
-                const errorMessages = {
-                    'auth/user-not-found': 'البريد الإلكتروني غير مسجل.',
-                    'auth/wrong-password': 'كلمة المرور غير صحيحة.',
-                    'auth/too-many-requests': 'محاولات كثيرة خاطئة. حاول مرة أخرى لاحقاً.',
-                    'auth/network-request-failed': 'فشل الاتصال بالشبكة، تحقق من اتصالك بالإنترنت.'
-                };
-                showAlert(errorMessages[error.code] || 'حدث خطأ غير متوقع أثناء تسجيل الدخول.');
-            } finally {
-                setLoading(false);
-            }
-        }
-
-        elements.form.addEventListener('submit', async (e) => {
+        // تنفيذ الدخول/التسجيل
+        document.getElementById('authForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            if (!validateForm(isRegistering)) return;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const role = document.getElementById('role').value;
+            
+            try {
+                if (isRegistering) {
+                    if (!role) return alert('اختر مهنتك أولاً');
+                    
+                    const userCred = await createUserWithEmailAndPassword(auth, email, password);
+                    const userData = { email, role };
 
-            if (isRegistering) {
-                await handleRegistration();
-            } else {
-                await handleLogin();
+                    if (role === 'attendant') {
+                        const linkedDoc = document.getElementById('linked-doctor').value;
+                        if (!linkedDoc) return alert('يجب ربط الممرض بطبيب');
+                        userData.linkedDoctor = linkedDoc;
+                    } else if (role === 'doctor') {
+                        const doctorName = document.getElementById('doctor-name').value;
+                        const doctorSpecialty = document.getElementById('doctor-specialty').value;
+                        if (!doctorName || !doctorSpecialty) return alert('يرجى إدخال اسم وتخصص الدكتور');
+                        userData.name = doctorName;
+                        userData.specialty = doctorSpecialty;
+                    }
+
+                    await setDoc(doc(db, "users", userCred.user.uid), userData);
+                    
+                    localStorage.setItem('userRole', role);
+                    if(userData.linkedDoctor) localStorage.setItem('doctorName', userData.linkedDoctor);
+                    if(userData.name) localStorage.setItem('doctorName', userData.name);
+                    
+                    window.location.href = REDIRECT_MAP[role];
+
+                } else { // تسجيل الدخول
+                    const userCred = await signInWithEmailAndPassword(auth, email, password);
+                    const userDoc = await getDoc(doc(db, "users", userCred.user.uid));
+                    if (userDoc.exists()) {
+                        const data = userDoc.data();
+                        localStorage.setItem('userRole', data.role);
+                        if(data.linkedDoctor) localStorage.setItem('doctorName', data.linkedDoctor);
+                        if(data.role === 'doctor') localStorage.setItem('doctorName', data.name || email.split('@')[0]); 
+                        
+                        window.location.href = REDIRECT_MAP[data.role];
+                    } else {
+                        alert("لم يتم العثور على بيانات المستخدم.");
+                    }
+                }
+            } catch (error) {
+                alert('خطأ: ' + error.message);
             }
         });
     </script>
