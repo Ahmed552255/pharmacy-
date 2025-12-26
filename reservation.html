@@ -9,50 +9,27 @@
         :root { 
             --primary: #45b39d; --dark: #16a085; --bg: #f8fafb;
             --white: #ffffff; --danger: #e74c3c; --warning: #f39c12; --info: #3498db;
-            --text-dark: #333; --text-light: #666;
+            --text-dark: #333; --text-light: #666; --stripe: #f9f9f9;
         }
         
-        body { 
-            font-family: 'Segoe UI', Tahoma, sans-serif; background-color: var(--bg); 
-            margin: 0; padding: 15px; color: var(--text-dark);
-        }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: var(--bg); margin: 0; padding: 15px; color: var(--text-dark); }
         
-        .top-bar { 
-            display: flex; flex-wrap: wrap; justify-content: space-between; 
-            align-items: center; gap: 15px; background: var(--white); 
-            padding: 20px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); 
-            margin-bottom: 20px; 
-        }
+        .top-bar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 15px; background: var(--white); padding: 20px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; }
         .top-bar .title-group { flex-grow: 1; }
         .top-bar .actions-group { display: flex; flex-wrap: wrap; gap: 10px; }
 
-        .table-wrapper { 
-            background: var(--white); border-radius: 15px; 
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05); overflow-x: auto;
-        }
-        table { width: 100%; border-collapse: collapse; text-align: center; min-width: 600px; }
+        .table-wrapper { background: var(--white); border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; text-align: center; min-width: 700px; }
         th { background: var(--primary); color: white; padding: 15px; font-size: 14px; }
         td { padding: 12px; border-bottom: 1px solid #eee; vertical-align: middle; }
+        /* --- تحسين تباين الألوان للجدول --- */
+        tbody tr:nth-child(even) { background-color: var(--stripe); }
+
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(4px); animation: fadeIn 0.3s; }
+        .modal-content { background: white; padding: 30px; border-radius: 20px; width: 90%; max-width: 500px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
         
-        .modal { 
-            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); 
-            align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(4px);
-            animation: fadeIn 0.3s;
-        }
-        .modal-content { 
-            background: white; padding: 30px; border-radius: 20px; 
-            width: 90%; max-width: 500px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        }
-        
-        .stats-modal-content {
-            display: flex; flex-direction: column; gap: 15px;
-            padding: 20px;
-        }
-        .stat-card { 
-            background: var(--bg); padding: 15px; border-radius: 12px; 
-            border-left: 5px solid var(--primary); display: flex; 
-            align-items: center; gap: 15px;
-        }
+        .stats-modal-content { display: flex; flex-direction: column; gap: 15px; padding: 20px; }
+        .stat-card { background: var(--bg); padding: 15px; border-radius: 12px; border-left: 5px solid var(--primary); display: flex; align-items: center; gap: 15px; }
         .stat-card i { font-size: 24px; color: var(--primary); }
         .stat-card .info h3 { margin: 0 0 5px 0; font-size: 22px; }
         .stat-card .info p { margin: 0; color: var(--text-light); }
@@ -61,17 +38,18 @@
         .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
         .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
         
-        .btn {
-            border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;
-            font-weight: bold; font-size: 14px; transition: 0.3s;
-            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-        }
+        .btn, .action-btn { border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px; transition: 0.3s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
         .btn-primary { background: var(--primary); color: white; }
         .btn-primary:hover { background: var(--dark); }
         .btn-secondary { background: var(--info); color: white; }
         .btn-secondary:hover { background: #2980b9; }
         .btn-light { background: #f0f0f0; color: var(--text-dark); }
         .btn-light:hover { background: #e0e0e0; }
+
+        /* --- أزرار التحكم داخل الجدول --- */
+        .action-btn { padding: 8px 10px; margin: 0 3px; }
+        .btn-toggle-status { background: #e9f5f3; color: var(--dark); }
+        .btn-delete { background: #fdedec; color: var(--danger); }
 
         .status-badge { padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; color: white; }
         .status-waiting { background: var(--warning); }
@@ -88,15 +66,9 @@
             <div id="staffInfo" style="color: var(--dark); font-weight: bold; margin-top: 5px;"></div>
         </div>
         <div class="actions-group">
-            <button onclick="showStatsModal()" class="btn btn-light">
-                <i class="fas fa-chart-bar"></i> عرض الإحصائيات
-            </button>
-            <button onclick="logout()" class="btn btn-secondary">
-                <i class="fas fa-sign-out-alt"></i> خروج
-            </button>
-            <button onclick="openBookingModal()" class="btn btn-primary">
-                <i class="fas fa-plus"></i> حجز جديد
-            </button>
+            <button onclick="showStatsModal()" class="btn btn-light"><i class="fas fa-chart-bar"></i> عرض الإحصائيات</button>
+            <button onclick="logout()" class="btn btn-secondary"><i class="fas fa-sign-out-alt"></i> خروج</button>
+            <button onclick="openBookingModal()" class="btn btn-primary"><i class="fas fa-plus"></i> حجز جديد</button>
         </div>
     </div>
 
@@ -105,11 +77,9 @@
             <thead>
                 <tr>
                     <th>المريض</th>
-                    <th>العمر</th>
-                    <th>رقم الهاتف</th>
                     <th>وقت الحجز</th>
-                    <th>قيمة الكشف</th>
                     <th>الحالة</th>
+                    <th>الإجراءات</th>
                 </tr>
             </thead>
             <tbody id="patientsTableBody"></tbody>
@@ -143,7 +113,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, where, orderBy } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, where, orderBy, doc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
         // --- استخدام إعدادات Firebase الصحيحة التي تعمل معك ---
         const firebaseConfig = {
@@ -192,18 +162,19 @@
 
                 tableRowsHTML += `
                     <tr>
-                        <td><strong>${p.name}</strong></td>
-                        <td>${p.age || '-'}</td>
-                        <td>${p.phone}</td>
+                        <td><strong>${p.name}</strong><br><small>${p.phone}</small></td>
                         <td>${p.time}</td>
-                        <td>${p.price || 0} ج.م</td>
                         <td><span class="status-badge ${p.status === 'انتظار' ? 'status-waiting' : 'status-done'}">${p.status}</span></td>
+                        <td>
+                            <button class="action-btn btn-toggle-status" title="تغيير الحالة" onclick="toggleStatus('${doc.id}', '${p.status}')"><i class="fas fa-exchange-alt"></i></button>
+                            <button class="action-btn btn-delete" title="حذف الحجز" onclick="deleteAppointment('${doc.id}')"><i class="fas fa-trash"></i></button>
+                        </td>
                     </tr>
                 `;
             });
 
             if (snapshot.empty) {
-                tbody.innerHTML = `<tr><td colspan="6" style="padding: 30px; color: #888;">لا توجد حجوزات لهذا الطبيب اليوم.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="4" style="padding: 30px; color: #888;">لا توجد حجوزات لهذا الطبيب اليوم.</td></tr>`;
             } else {
                 tbody.innerHTML = tableRowsHTML;
             }
@@ -227,12 +198,24 @@
                     time: new Date().toLocaleTimeString('ar-EG', {hour:'2-digit', minute:'2-digit'}),
                     timestamp: new Date().getTime()
                 });
-                closeBookingModal();
-                document.getElementById('pName').value = ''; document.getElementById('pAge').value = '';
-                document.getElementById('pPhone').value = ''; document.getElementById('pPrice').value = '250';
+                closeBookingModal(); // --- إغلاق النافذة تلقائياً بعد الحفظ ---
             } catch (e) { alert("حدث خطأ أثناء حفظ الحجز."); }
         };
         
+        // --- دوال التحكم الجديدة ---
+        window.deleteAppointment = async (id) => {
+            if (confirm('هل أنت متأكد من حذف هذا الحجز نهائياً؟')) {
+                await deleteDoc(doc(db, "appointments", id));
+            }
+        };
+
+        window.toggleStatus = async (id, currentStatus) => {
+            const newStatus = currentStatus === 'انتظار' ? 'منتهي' : 'انتظار';
+            if (confirm(`هل تريد تغيير حالة الحجز إلى "${newStatus}"؟`)) {
+                await updateDoc(doc(db, "appointments", id), { status: newStatus });
+            }
+        };
+
         window.logout = () => {
             if (confirm('هل أنت متأكد أنك تريد تسجيل الخروج؟')) {
                 localStorage.clear();
@@ -243,7 +226,12 @@
         const bookingModal = document.getElementById('bookingModal');
         const statsModal = document.getElementById('statsModal');
 
-        window.openBookingModal = () => bookingModal.style.display = 'flex';
+        window.openBookingModal = () => {
+            // مسح الحقول قبل فتح النافذة
+            document.getElementById('pName').value = ''; document.getElementById('pAge').value = '';
+            document.getElementById('pPhone').value = ''; document.getElementById('pPrice').value = '250';
+            bookingModal.style.display = 'flex';
+        }
         window.closeBookingModal = () => bookingModal.style.display = 'none';
         
         window.showStatsModal = () => statsModal.style.display = 'flex';
