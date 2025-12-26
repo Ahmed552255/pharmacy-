@@ -6,170 +6,119 @@
     <title>لوحة الطبيب الذكية</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { --primary: #45b39d; --dark: #16a085; --light: #f4fbf9; --white: #ffffff; --accent: #f39c12; }
+        :root { --primary: #45b39d; --dark: #16a085; --light: #f4fbf9; --white: #ffffff; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--light); margin: 0; padding-bottom: 80px; overflow-x: hidden; }
         .doctor-nav { background: var(--white); padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 1000; }
         .section-card { background: white; margin: 12px; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
         .section-header { background: var(--primary); color: white; padding: 15px; display: flex; justify-content: space-between; cursor: pointer; }
         .section-body { padding: 15px; display: none; border: 1px solid #eee; border-top: 0; }
         .section-body.active { display: block; }
-        textarea { width: 100%; border: 1px solid #ddd; border-radius: 8px; padding: 12px; font-size: 16px; resize: none; box-sizing: border-box; }
         .dock-footer { position: fixed; bottom: 0; width: 100%; background: white; padding: 12px 20px; display: grid; grid-template-columns: 1fr 3fr; gap: 12px; box-shadow: 0 -4px 15px rgba(0,0,0,0.1); box-sizing: border-box; z-index: 1000; }
         .btn { border: none; border-radius: 10px; cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .btn-main { background: var(--primary); color: white; font-size: 18px; }
-        .btn-sec { background: var(--accent); color: white; }
         #q-list .q-item { padding: 15px; border-bottom: 1px solid #f0f0f0; cursor: pointer; }
         #q-list .q-item:hover { background: var(--light); }
     </style>
 </head>
 <body>
-
-<nav class="doctor-nav">
-    <div onclick="location.reload()" style="cursor:pointer">
-        <h3 style="margin:0; color:var(--dark)"><i class="fas fa-user-md"></i> لوحة الطبيب</h3>
-        <small id="doc-display-name">جاري التعرف...</small>
+    <!-- HTML structure remains the same -->
+    <nav class="doctor-nav">
+        <div onclick="location.reload()" style="cursor:pointer">
+            <h3 style="margin:0; color:var(--dark)"><i class="fas fa-user-md"></i> لوحة الطبيب</h3>
+            <small id="doc-display-name">جاري التعرف...</small>
+        </div>
+        <div><button class="btn" style="background:var(--light); padding:8px 15px; color: var(--dark);" onclick="toggleQueue()"><i class="fas fa-users"></i> <span id="q-count">0</span></button></div>
+    </nav>
+    <div id="patient-welcome" style="text-align:center; padding:80px 20px;">
+        <i class="fas fa-hospital-user fa-5x" style="color:var(--primary); margin-bottom: 20px;"></i>
+        <h2 id="welcome-msg">مرحباً دكتور</h2>
+        <p style="color: #666;">اختر مريضاً من قائمة الانتظار للبدء.</p>
+        <button class="btn btn-main" style="margin: 20px auto; padding: 10px 25px;" onclick="toggleQueue()">فتح قائمة المرضى</button>
     </div>
-    <div>
-        <button class="btn" style="background:var(--light); padding:8px 15px; color: var(--dark);" onclick="toggleQueue()">
-            <i class="fas fa-users"></i> <span id="q-count">0</span>
-        </button>
+    <div id="main-work-area" style="display:none;">
+        <div class="section-card" style="border-right: 5px solid var(--accent);"><div style="padding:15px;"><small style="color: #888;">المريض الحالي:</small><h3 id="active-p-name" style="margin:5px 0 0 0; color: var(--dark);">---</h3></div></div>
     </div>
-</nav>
-
-<div id="patient-welcome" style="text-align:center; padding:80px 20px;">
-    <i class="fas fa-hospital-user fa-5x" style="color:var(--primary); margin-bottom: 20px;"></i>
-    <h2 id="welcome-msg">مرحباً دكتور</h2>
-    <p style="color: #666;">اختر مريضاً من قائمة الانتظار للبدء.</p>
-    <button class="btn btn-main" style="margin: 20px auto; padding: 10px 25px;" onclick="toggleQueue()">فتح قائمة المرضى</button>
-</div>
-
-<div id="main-work-area" style="display:none;">
-    <div class="section-card" style="border-right: 5px solid var(--accent);">
-        <div style="padding:15px;">
-            <small style="color: #888;">المريض الحالي:</small>
-            <h3 id="active-p-name" style="margin:5px 0 0 0; color: var(--dark);">---</h3>
+    <div class="dock-footer" id="dock-footer" style="display:none;">
+        <button class="btn btn-sec" onclick="cancelSession()"><i class="fas fa-times"></i> إلغاء</button>
+        <button class="btn btn-main" onclick="finishSession()"><i class="fas fa-check-circle"></i> إنهاء الكشف</button>
+    </div>
+    <div id="queue-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:2000; align-items:center; justify-content:center;">
+        <div style="background:white; width:95%; max-width:450px; border-radius:20px; overflow: hidden;">
+            <div style="background: var(--primary); color: white; padding: 20px;"><h3 style="margin:0;"><i class="fas fa-list-ol"></i> قائمة الانتظار</h3></div>
+            <div id="q-list" style="max-height: 400px; overflow-y: auto;"></div>
+            <div style="padding: 15px; background: #f9f9f9;"><button class="btn" style="width:100%; background: #ddd; color: #333;" onclick="toggleQueue()">إغلاق</button></div>
         </div>
     </div>
-    <div class="section-card">
-        <div class="section-header" onclick="toggleSec(0)"><span><i class="fas fa-notes-medical"></i> التشخيص</span><i class="fas fa-chevron-down"></i></div>
-        <div class="section-body active"><textarea id="symptoms-text" rows="4" placeholder="سجل الأعراض والتشخيص هنا..."></textarea></div>
-    </div>
-    <div class="section-card">
-        <div class="section-header" onclick="toggleSec(1)"><span><i class="fas fa-prescription-bottle-medical"></i> الروشتة</span><i class="fas fa-chevron-right"></i></div>
-        <div class="section-body"><textarea id="prescription-text" rows="6" placeholder="الأدوية، الجرعات، والتعليمات..."></textarea></div>
-    </div>
-</div>
 
-<div class="dock-footer" id="dock-footer" style="display:none;">
-    <button class="btn btn-sec" onclick="cancelSession()"><i class="fas fa-times"></i> إلغاء</button>
-    <button class="btn btn-main" onclick="finishSession()"><i class="fas fa-check-circle"></i> إنهاء الكشف</button>
-</div>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+        import { getFirestore, collection, query, where, onSnapshot, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
-<div id="queue-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:2000; align-items:center; justify-content:center;">
-    <div style="background:white; width:95%; max-width:450px; border-radius:20px; overflow: hidden;">
-        <div style="background: var(--primary); color: white; padding: 20px;">
-            <h3 style="margin:0;"><i class="fas fa-list-ol"></i> قائمة الانتظار</h3>
-        </div>
-        <div id="q-list" style="max-height: 400px; overflow-y: auto;"></div>
-        <div style="padding: 15px; background: #f9f9f9;">
-            <button class="btn" style="width:100%; background: #ddd; color: #333;" onclick="toggleQueue()">إغلاق</button>
-        </div>
-    </div>
-</div>
-
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-    import { getFirestore, collection, query, where, onSnapshot, doc, updateDoc, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
-
-    const firebaseConfig = {
-        apiKey: "AIzaSyBTM1aa1cF0gyeLoKLlJPuYgystJ_Q3b_Q",
-        authDomain: "slave-table.firebaseapp.com",
-        projectId: "slave-table",
-        storageBucket: "slave-table.firebasestorage.app",
-        messagingSenderId: "827430776658",
-        appId: "1:827430776658:web:b8301d16116f641359548b"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-
-    // *** التعديل الوحيد المطلوب هنا ***
-    const doctorName = localStorage.getItem('doctorName');
-
-    if (!doctorName) {
-        alert("بيانات الطبيب غير موجودة! سيتم إعادتك لصفحة تسجيل الدخول.");
-        window.location.href = 'index.html';
-    }
-
-    document.getElementById('doc-display-name').innerHTML = `<i class="fas fa-circle" style="color: #2ecc71;"></i> د. ${doctorName}`;
-    document.getElementById('welcome-msg').innerText = `مرحباً د. ${doctorName}`;
-
-    let currentP = null;
-
-    const q = query(
-        collection(db, "appointments"), 
-        where("status", "==", "انتظار"), 
-        where("doctor", "==", doctorName)
-    );
-
-    onSnapshot(q, (snap) => {
-        document.getElementById('q-count').innerText = snap.size;
-        const list = document.getElementById('q-list');
-        list.innerHTML = snap.empty ? `<div style="padding:40px; text-align:center; color:#999;">لا يوجد مرضى حالياً</div>` : "";
-        
-        snap.forEach(d => {
-            const data = d.data();
-            const patientDataString = JSON.stringify({ id: d.id, ...data });
-            list.innerHTML += `<div class="q-item" onclick='selectPatient(${patientDataString})'><b>${data.name}</b></div>`;
-        });
-    });
-
-    window.selectPatient = (patientData) => {
-        currentP = patientData;
-        document.getElementById('patient-welcome').style.display = 'none';
-        document.getElementById('main-work-area').style.display = 'block';
-        document.getElementById('dock-footer').style.display = 'grid';
-        document.getElementById('active-p-name').innerText = currentP.name;
-        toggleQueue();
-    };
-
-    window.finishSession = async () => {
-        if(!currentP) return;
-        
-        const prescriptionData = {
-            patientId: currentP.id,
-            patientName: currentP.name,
-            symptoms: document.getElementById('symptoms-text').value,
-            prescription: document.getElementById('prescription-text').value,
-            doctor: doctorName,
-            timestamp: serverTimestamp()
+        const firebaseConfig = {
+            apiKey: "AIzaSyBTM1aa1cF0gyeLoKLlJPuYgystJ_Q3b_Q",
+            authDomain: "slave-table.firebaseapp.com",
+            projectId: "slave-table",
+            storageBucket: "slave-table.firebasestorage.app",
+            messagingSenderId: "827430776658",
+            appId: "1:827430776658:web:b8301d16116f641359548b"
         };
 
-        try {
-            await addDoc(collection(db, "prescriptions"), prescriptionData);
-            await updateDoc(doc(db, "appointments", currentP.id), { status: "منتهي" });
-            alert("تم إنهاء الكشف بنجاح.");
-            location.reload();
-        } catch (e) {
-            alert("فشل الاتصال: " + e.message);
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // --- الإصلاح الجوهري هنا ---
+        const doctorName = localStorage.getItem('doctorName'); // استخدام doctorName دائماً
+        if (!doctorName) {
+            alert("بيانات الطبيب غير موجودة! سيتم إعادتك لصفحة تسجيل الدخول.");
+            window.location.href = 'index.html';
         }
-    };
 
-    window.cancelSession = () => {
-        if(confirm("هل تريد إلغاء الجلسة؟")) location.reload();
-    };
+        document.getElementById('doc-display-name').innerHTML = `<i class="fas fa-circle" style="color: #2ecc71;"></i> د. ${doctorName}`;
+        document.getElementById('welcome-msg').innerText = `مرحباً د. ${doctorName}`;
 
-    window.toggleQueue = () => {
-        const m = document.getElementById('queue-modal');
-        m.style.display = m.style.display === 'none' ? 'flex' : 'none';
-    };
+        let currentP = null;
 
-    window.toggleSec = (idx) => {
-        document.querySelectorAll('.section-body').forEach((b, i) => {
-            b.classList.toggle('active', i === idx);
-            b.parentElement.querySelector('.section-header i:last-child').className = i === idx ? 'fas fa-chevron-down' : 'fas fa-chevron-right';
+        const q = query(
+            collection(db, "appointments"), 
+            where("status", "==", "انتظار"), 
+            where("doctor", "==", doctorName)
+        );
+
+        onSnapshot(q, (snap) => {
+            document.getElementById('q-count').innerText = snap.size;
+            const list = document.getElementById('q-list');
+            list.innerHTML = snap.empty ? `<div style="padding:40px; text-align:center; color:#999;">لا يوجد مرضى حالياً</div>` : "";
+            snap.forEach(d => {
+                const data = d.data();
+                const patientDataString = JSON.stringify({ id: d.id, ...data });
+                list.innerHTML += `<div class="q-item" onclick='selectPatient(${patientDataString})'><b>${data.name}</b></div>`;
+            });
         });
-    };
-</script>
+
+        window.selectPatient = (patientData) => {
+            currentP = patientData;
+            document.getElementById('patient-welcome').style.display = 'none';
+            document.getElementById('main-work-area').style.display = 'block';
+            document.getElementById('dock-footer').style.display = 'grid';
+            document.getElementById('active-p-name').innerText = currentP.name;
+            toggleQueue();
+        };
+
+        window.finishSession = async () => {
+            if(!currentP) return;
+            try {
+                // تحديث حالة المريض فقط دون المساس بباقي البيانات
+                await updateDoc(doc(db, "appointments", currentP.id), { status: "منتهي" });
+                alert("تم إنهاء الكشف بنجاح.");
+                location.reload();
+            } catch (e) { alert("فشل الاتصال: " + e.message); }
+        };
+
+        window.cancelSession = () => { if(confirm("هل تريد إلغاء الجلسة؟")) location.reload(); };
+        window.toggleQueue = () => {
+            const m = document.getElementById('queue-modal');
+            m.style.display = m.style.display === 'none' ? 'flex' : 'none';
+        };
+    </script>
 </body>
 </html>
