@@ -22,7 +22,6 @@
         table { width: 100%; border-collapse: collapse; text-align: center; min-width: 700px; }
         th { background: var(--primary); color: white; padding: 15px; font-size: 14px; }
         td { padding: 12px; border-bottom: 1px solid #eee; vertical-align: middle; }
-        /* --- تحسين تباين الألوان للجدول --- */
         tbody tr:nth-child(even) { background-color: var(--stripe); }
 
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(4px); animation: fadeIn 0.3s; }
@@ -46,7 +45,6 @@
         .btn-light { background: #f0f0f0; color: var(--text-dark); }
         .btn-light:hover { background: #e0e0e0; }
 
-        /* --- أزرار التحكم داخل الجدول --- */
         .action-btn { padding: 8px 10px; margin: 0 3px; }
         .btn-toggle-status { background: #e9f5f3; color: var(--dark); }
         .btn-delete { background: #fdedec; color: var(--danger); }
@@ -115,14 +113,13 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
         import { getFirestore, collection, addDoc, onSnapshot, query, where, orderBy, doc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
-        // --- استخدام إعدادات Firebase الصحيحة التي تعمل معك ---
         const firebaseConfig = {
-            apiKey: "AIzaSyBy8xPvxQuC6bVLerLpSjzPmvBWyAhuYKo",
-            authDomain: "mogama-49e7f.firebaseapp.com",
-            projectId: "mogama-49e7f",
-            storageBucket: "mogama-49e7f.firebasestorage.app",
-            messagingSenderId: "575066177594",
-            appId: "1:575066177594:web:82137834158b4c353db503"
+            apiKey: "AIzaSyBTM1aa1cF0gyeLoKLlJPuYgystJ_Q3b_Q",
+            authDomain: "slave-table.firebaseapp.com",
+            projectId: "slave-table",
+            storageBucket: "slave-table.firebasestorage.app",
+            messagingSenderId: "827430776658",
+            appId: "1:827430776658:web:b8301d16116f641359548b"
         };
 
         const app = initializeApp(firebaseConfig);
@@ -198,11 +195,10 @@
                     time: new Date().toLocaleTimeString('ar-EG', {hour:'2-digit', minute:'2-digit'}),
                     timestamp: new Date().getTime()
                 });
-                closeBookingModal(); // --- إغلاق النافذة تلقائياً بعد الحفظ ---
-            } catch (e) { alert("حدث خطأ أثناء حفظ الحجز."); }
+                closeBookingModal();
+            } catch (e) { alert("حدث خطأ أثناء حفظ الحجز: " + e.message); }
         };
         
-        // --- دوال التحكم الجديدة ---
         window.deleteAppointment = async (id) => {
             if (confirm('هل أنت متأكد من حذف هذا الحجز نهائياً؟')) {
                 await deleteDoc(doc(db, "appointments", id));
@@ -227,7 +223,6 @@
         const statsModal = document.getElementById('statsModal');
 
         window.openBookingModal = () => {
-            // مسح الحقول قبل فتح النافذة
             document.getElementById('pName').value = ''; document.getElementById('pAge').value = '';
             document.getElementById('pPhone').value = ''; document.getElementById('pPrice').value = '250';
             bookingModal.style.display = 'flex';
