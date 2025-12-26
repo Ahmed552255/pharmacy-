@@ -122,13 +122,14 @@
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
         
+        // --- تم التعديل هنا لربط الكود بقاعدة بيانات "طاولة العبيد" ---
         const firebaseConfig = {
-            apiKey: "AIzaSyBy8xPvxQuC6bVLerLpSjzPmvBWyAhuYKo",
-            authDomain: "mogama-49e7f.firebaseapp.com",
-            projectId: "mogama-49e7f",
-            storageBucket: "mogama-49e7f.firebasestorage.app",
-            messagingSenderId: "575066177594",
-            appId: "1:575066177594:web:82137834158b4c353db503"
+            apiKey: "AIzaSyBTM1aa1cF0gyeLoKLlJPuYgystJ_Q3b_Q",
+            authDomain: "slave-table.firebaseapp.com",
+            projectId: "slave-table",
+            storageBucket: "slave-table.firebasestorage.app",
+            messagingSenderId: "827430776658",
+            appId: "1:827430776658:web:b8301d16116f641359548b"
         };
 
         const app = initializeApp(firebaseConfig);
@@ -147,7 +148,9 @@
                     doctorSelect.innerHTML += `<option value="${name}">${name}</option>`;
                 });
             } catch (e) {
-                doctorSelect.innerHTML = '<option value="د. رأفت">د. رأفت</option>';
+                // في حالة الفشل، يمكن وضع أطباء افتراضيين
+                console.error("Failed to fetch doctors: ", e);
+                doctorSelect.innerHTML = '<option value="د. رأفت">د. رأفت</option><option value="د. محمد">د. محمد</option>';
             }
         }
 
@@ -163,7 +166,7 @@
         };
 
         const REDIRECT_MAP = {
-            'attendant': 'index.html',
+            'attendant': 'reception.html', // تأكد من أن اسم ملف التمرجي صحيح
             'doctor': 'doctor.html',
             'pharmacist': 'pharmacy_main.html'
         };
@@ -176,7 +179,9 @@
             document.getElementById('form-title').textContent = isRegistering ? 'تسجيل حساب جديد' : 'تسجيل الدخول';
             document.getElementById('role-group').style.display = isRegistering ? 'block' : 'none';
             document.getElementById('auth-button').textContent = isRegistering ? 'إنشاء حساب' : 'دخول للنظام';
-            if(!isRegistering) document.getElementById('doctor-link-group').style.display = 'none';
+            if(!isRegistering) {
+                document.getElementById('doctor-link-group').style.display = 'none';
+            }
         });
 
         // تنفيذ الدخول/التسجيل
@@ -206,10 +211,22 @@
                     if (userDoc.exists()) {
                         const data = userDoc.data();
                         localStorage.setItem('userRole', data.role);
-                        if(data.linkedDoctor) localStorage.setItem('doctorName', data.linkedDoctor);
-                        // إذا كان طبيب، نخزن اسمه هو كدكتور
-                        if(data.role === 'doctor') localStorage.setItem('doctorName', email.split('@')[0]); 
+                        
+                        // تحديد اسم الطبيب المرتبط به
+                        let doctorNameToStore = '';
+                        if (data.role === 'doctor') {
+                            // إذا كان المستخدم طبيباً، فاسم الطبيب هو اسمه هو
+                            // نفترض أن اسم الطبيب مخزن في حقل 'name' أو نستمده من الإيميل
+                            doctorNameToStore = data.name || email.split('@')[0];
+                        } else {
+                            // إذا كان ممرضاً أو صيدلياً، نستخدم الطبيب المرتبط به
+                            doctorNameToStore = data.linkedDoctor;
+                        }
+                        localStorage.setItem('doctorName', doctorNameToStore);
+                        
                         window.location.href = REDIRECT_MAP[data.role];
+                    } else {
+                        throw new Error("بيانات المستخدم غير موجودة في قاعدة البيانات.");
                     }
                 }
             } catch (error) {
