@@ -3,64 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة التحكم والاستقبال</title>
+    <title>لوحة الاستقبال</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { 
-            --primary: #45b39d; --dark: #16a085; --bg: #f8fafb;
-            --white: #ffffff; --danger: #e74c3c; --warning: #f39c12; --info: #3498db;
-            --text-dark: #333; --text-light: #666; --stripe: #f9f9f9;
-        }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: var(--bg); margin: 0; padding: 15px; color: var(--text-dark); }
+        :root { --primary: #45b39d; --dark: #16a085; --bg: #f8fafb; --white: #ffffff; --warning: #f39c12; --danger: #e74c3c;}
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: var(--bg); margin: 0; padding: 15px; }
         .top-bar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 15px; background: var(--white); padding: 20px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; }
         .table-wrapper { background: var(--white); border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; text-align: center; min-width: 700px; }
-        th { background: var(--primary); color: white; padding: 15px; font-size: 14px; }
-        td { padding: 12px; border-bottom: 1px solid #eee; vertical-align: middle; }
-        tbody tr:nth-child(even) { background-color: var(--stripe); }
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(4px); animation: fadeIn 0.3s; }
-        .modal-content { background: white; padding: 30px; border-radius: 20px; width: 90%; max-width: 500px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
-        .btn, .action-btn { border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px; transition: 0.3s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
-        .btn-primary { background: var(--primary); color: white; }
-        .action-btn { padding: 8px 10px; margin: 0 3px; }
-        .btn-delete { background: #fdedec; color: var(--danger); }
+        table { width: 100%; border-collapse: collapse; text-align: center; min-width: 600px; }
+        th { background: var(--primary); color: white; padding: 15px; }
+        td { padding: 12px; border-bottom: 1px solid #eee; }
+        tbody tr:nth-child(even) { background-color: #f9f9f9; }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(4px); }
+        .modal-content { background: white; padding: 30px; border-radius: 20px; width: 90%; max-width: 400px; }
+        .btn { border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; display: inline-flex; align-items: center; gap: 8px; color: white; }
+        .btn-primary { background: var(--primary); }
+        .btn-danger { background: var(--danger); }
         .status-badge { padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; color: white; }
         .status-waiting { background: var(--warning); }
         .status-done { background: var(--dark); }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
-    <!-- HTML structure remains the same -->
     <div class="top-bar">
-        <div class="title-group">
-            <h2 style="margin:0; color:var(--primary);"><i class="fas fa-desktop"></i> لوحة التحكم</h2>
+        <div>
+            <h2 style="margin:0; color:var(--primary);"><i class="fas fa-desktop"></i> لوحة الاستقبال</h2>
             <div id="staffInfo" style="color: var(--dark); font-weight: bold; margin-top: 5px;"></div>
         </div>
-        <div class="actions-group">
-            <button onclick="logout()" class="btn btn-secondary"><i class="fas fa-sign-out-alt"></i> خروج</button>
+        <div>
             <button onclick="openBookingModal()" class="btn btn-primary"><i class="fas fa-plus"></i> حجز جديد</button>
+            <button onclick="logout()" class="btn btn-danger"><i class="fas fa-sign-out-alt"></i> خروج</button>
         </div>
     </div>
     <div class="table-wrapper">
         <table>
-            <thead><tr><th>المريض</th><th>وقت الحجز</th><th>الحالة</th><th>الإجراءات</th></tr></thead>
+            <thead><tr><th>المريض</th><th>وقت الحجز</th><th>الحالة</th></tr></thead>
             <tbody id="patientsTableBody"></tbody>
         </table>
     </div>
     <div id="bookingModal" class="modal">
         <div class="modal-content">
             <h3 style="margin-top:0; color:var(--primary);">تسجيل حجز جديد</h3>
-            <div class="form-group"><label>اسم المريض</label><input type="text" id="pName" required></div>
-            <div class="form-group" style="display:none;"><select id="pDoctor"></select></div>
-            <button class="btn btn-primary" style="width:100%; padding: 15px;" onclick="saveNewBooking()">تأكيد الحجز</button>
+            <input type="text" id="pName" placeholder="اسم المريض..." style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; margin-bottom: 15px;">
+            <button onclick="saveNewBooking()" class="btn btn-primary" style="width:100%;">تأكيد الحجز</button>
             <button onclick="closeBookingModal()" style="background:none; border:none; color:gray; width:100%; margin-top:10px;">إلغاء</button>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, where, orderBy, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, where, orderBy } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBTM1aa1cF0gyeLoKLlJPuYgystJ_Q3b_Q",
@@ -74,23 +66,20 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        const assignedDoctorName = localStorage.getItem('doctorName');
-        const userName = localStorage.getItem('userName');
-
-        if (!assignedDoctorName || !userName) {
-            alert("بيانات الجلسة غير كاملة! سيتم إعادتك لصفحة تسجيل الدخول.");
+        const doctorName = localStorage.getItem('doctorName');
+        if (!doctorName) {
+            alert("لم يتم تحديد الطبيب! سيتم إعادتك لصفحة تسجيل الدخول.");
             window.location.href = 'index.html';
         }
         
-        document.getElementById('staffInfo').innerText = `الموظف: ${userName} | عيادة د. ${assignedDoctorName}`;
-        document.getElementById('pDoctor').innerHTML = `<option value="${assignedDoctorName}">${assignedDoctorName}</option>`;
+        document.getElementById('staffInfo').innerText = `عيادة د. ${doctorName}`;
 
         const getTodayDate = () => new Date().toISOString().split('T')[0];
         
         const q = query(
             collection(db, "appointments"), 
             where("date", "==", getTodayDate()), 
-            where("doctor", "==", assignedDoctorName),
+            where("doctor", "==", doctorName),
             orderBy("timestamp", "desc")
         );
 
@@ -104,21 +93,21 @@
                         <td><strong>${p.name}</strong></td>
                         <td>${p.time}</td>
                         <td><span class="status-badge ${p.status === 'انتظار' ? 'status-waiting' : 'status-done'}">${p.status}</span></td>
-                        <td><button class="action-btn btn-delete" title="حذف الحجز" onclick="deleteAppointment('${doc.id}')"><i class="fas fa-trash"></i></button></td>
                     </tr>
                 `;
             });
-            tbody.innerHTML = snapshot.empty ? `<tr><td colspan="4" style="padding: 30px; color: #888;">لا توجد حجوزات لهذا الطبيب اليوم.</td></tr>` : tableRowsHTML;
+            tbody.innerHTML = snapshot.empty ? `<tr><td colspan="3" style="padding: 30px; color: #888;">لا توجد حجوزات لهذا الطبيب اليوم.</td></tr>` : tableRowsHTML;
         });
 
         window.saveNewBooking = async () => {
             const name = document.getElementById('pName').value;
-            const doctor = document.getElementById('pDoctor').value;
             if(!name) return alert('الرجاء إدخال اسم المريض.');
             try {
                 await addDoc(collection(db, "appointments"), {
-                    name, doctor,
-                    status: 'انتظار', date: getTodayDate(),
+                    name: name,
+                    doctor: doctorName,
+                    status: 'انتظار',
+                    date: getTodayDate(),
                     time: new Date().toLocaleTimeString('ar-EG', {hour:'2-digit', minute:'2-digit'}),
                     timestamp: new Date().getTime()
                 });
@@ -126,15 +115,9 @@
             } catch (e) { alert("حدث خطأ: " + e.message); }
         };
         
-        window.deleteAppointment = async (id) => {
-            if (confirm('هل أنت متأكد من حذف هذا الحجز؟')) await deleteDoc(doc(db, "appointments", id));
-        };
-
         window.logout = () => {
-            if (confirm('هل تريد تسجيل الخروج؟')) {
-                localStorage.clear();
-                window.location.href = 'index.html';
-            }
+            localStorage.clear();
+            window.location.href = 'index.html';
         };
 
         const bookingModal = document.getElementById('bookingModal');
