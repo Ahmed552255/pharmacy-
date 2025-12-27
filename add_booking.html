@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إضافة كشف جديد</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #264653;
+            --secondary-color: #2a9d8f;
+            --light-bg: #f8f9fa;
+            --white: #ffffff;
+            --text-dark: #343a40;
+            --border-color: #dee2e6;
+            --danger-color: #e76f51;
+            --shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: var(--light-bg);
+            color: var(--text-dark);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 1rem;
+        }
+
+        .form-container {
+            background-color: var(--white);
+            padding: 2.5rem;
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            width: 100%;
+            max-width: 500px;
+            position: relative;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: none;
+            border: none;
+            font-size: 1.8rem;
+            color: var(--text-dark);
+            cursor: pointer;
+            line-height: 1;
+            transition: color 0.2s;
+        }
+        .close-btn:hover {
+            color: var(--danger-color);
+        }
+
+        .form-title {
+            text-align: center;
+            color: var(--primary-color);
+            margin-top: 0;
+            margin-bottom: 2rem;
+            font-size: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: 'Cairo', sans-serif;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 3px rgba(42, 157, 143, 0.2);
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 1rem;
+            border: none;
+            border-radius: 8px;
+            background-color: var(--secondary-color);
+            color: var(--white);
+            font-size: 1.2rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        .btn-submit:hover {
+            background-color: #238a7e;
+            transform: translateY(-2px);
+        }
+        
+        .btn-submit:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        #error-message {
+            color: var(--danger-color);
+            text-align: center;
+            margin-top: 1rem;
+            display: none;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="form-container">
+        <a href="attendant.html" class="close-btn" title="العودة للصفحة الرئيسية">&times;</a>
+        <h1 class="form-title">إضافة كشف جديد</h1>
+        
+        <form id="bookingForm">
+            <div class="form-group">
+                <label for="patientName">اسم المريض</label>
+                <input type="text" id="patientName" class="form-control" required>
+            </div>
+
+            <div class="form-group">
+                <label for="patientAge">العمر</label>
+                <input type="number" id="patientAge" class="form-control" required>
+            </div>
+
+            <div class="form-group">
+                <label for="patientPhone">رقم الهاتف</label>
+                <input type="tel" id="patientPhone" class="form-control" required>
+            </div>
+
+            <div class="form-group">
+                <label for="doctorSelect">اختر الطبيب</label>
+                <select id="doctorSelect" class="form-control" required>
+                    <option value="" disabled>جاري تحميل الأطباء...</option>
+                </select>
+            </div>
+
+            <button type="submit" id="submitBtn" class="btn-submit">حفظ الكشف</button>
+            <p id="error-message"></p>
+        </form>
+    </div>
+
+    <script type="module">
+        // 1. استيراد الدوال اللازمة من Firebase
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+        import { getFirestore, collection, doc, getDoc, addDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+
+        // 2. إعدادات الاتصال بقاعدة البيانات (استبدلها ببياناتك)
+        const firebaseConfig = {
+            apiKey: "AIzaSy...",
+            authDomain: "your-project.firebaseapp.com",
+            projectId: "your-project-id",
+            storageBucket: "your-project.appspot.com",
+            messagingSenderId: "...",
+            appId: "..."
+        };
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // 3. جلب العناصر من الصفحة
+        const bookingForm = document.getElementById('bookingForm');
+        const doctorSelect = document.getElementById('doctorSelect');
+        const submitBtn = document.getElementById('submitBtn');
+        const errorMessage = document.getElementById('error-message');
+
+        // 4. الدالة الرئيسية التي تعمل عند فتح الصفحة
+        async function initializeAddForm() {
+            const userId = localStorage.getItem('userId');
+            const selectedDoctorId = localStorage.getItem('selectedDoctorId'); // جلب هوية الدكتور المختار من الصفحة السابقة
+
+            // التحقق من تسجيل الدخول
+            if (!userId) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            try {
+                // جلب بيانات الممرض لجلب قائمة الأطباء المرتبطين به
+                const userDoc = await getDoc(doc(db, "users", userId));
+                if (!userDoc.exists()) {
+                    window.location.href = 'login.html'; // إذا لم يوجد المستخدم، اذهب لصفحة الدخول
+                    return;
+                }
+
+                const userData = userDoc.data();
+                const linkedDoctors = userData.linkedDoctors || [];
+
+                // تفريغ القائمة وملؤها بالأطباء
+                doctorSelect.innerHTML = '<option value="" disabled>-- اختر الطبيب --</option>';
+                if (linkedDoctors.length === 0) {
+                    doctorSelect.innerHTML = '<option value="" disabled>لا يوجد أطباء مرتبطون</option>';
+                    return;
+                }
+
+                for (const docId of linkedDoctors) {
+                    const doctorDoc = await getDoc(doc(db, "users", docId));
+                    if (doctorDoc.exists()) {
+                        const doctorData = doctorDoc.data();
+                        const option = document.createElement('option');
+                        option.value = docId;
+                        option.textContent = `د. ${doctorData.name}`;
+                        // إذا كان هذا هو الطبيب المختار في الصفحة السابقة، اجعله هو المختار هنا
+                        if (docId === selectedDoctorId) {
+                            option.selected = true;
+                        }
+                        doctorSelect.appendChild(option);
+                    }
+                }
+            } catch (error) {
+                console.error("Error loading doctors:", error);
+                doctorSelect.innerHTML = '<option value="" disabled>خطأ في تحميل الأطباء</option>';
+            }
+        }
+
+        // 5. معالجة حدث إرسال النموذج (عند الضغط على زر الحفظ)
+        bookingForm.addEventListener('submit', async (e) => {
+            e.preventDefault(); // منع السلوك الافتراضي للنموذج
+            submitBtn.disabled = true; // تعطيل الزر لمنع الضغطات المتكررة
+            submitBtn.textContent = 'جاري الحفظ...';
+            errorMessage.style.display = 'none';
+
+            // جلب البيانات من الحقول
+            const bookingData = {
+                name: document.getElementById('patientName').value,
+                age: document.getElementById('patientAge').value,
+                phone: document.getElementById('patientPhone').value,
+                doctorId: doctorSelect.value,
+                date: new Date().toLocaleDateString('en-CA'), // صيغة YYYY-MM-DD
+                time: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }), // صيغة HH:MM AM/PM
+                status: 'waiting' // الحالة الافتراضية للكشف
+            };
+
+            // التحقق من أن جميع الحقول ممتلئة
+            if (!bookingData.name || !bookingData.age || !bookingData.phone || !bookingData.doctorId) {
+                errorMessage.textContent = 'الرجاء ملء جميع الحقول.';
+                errorMessage.style.display = 'block';
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'حفظ الكشف';
+                return;
+            }
+
+            try {
+                // إضافة البيانات إلى collection اسمها 'appointments' في Firestore
+                await addDoc(collection(db, "appointments"), bookingData);
+                
+                // بعد النجاح، انتقل إلى صفحة الاستقبال الرئيسية
+                window.location.href = 'attendant.html';
+
+            } catch (error) {
+                console.error("Error adding document: ", error);
+                errorMessage.textContent = 'حدث خطأ أثناء الحفظ. الرجاء المحاولة مرة أخرى.';
+                errorMessage.style.display = 'block';
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'حفظ الكشف';
+            }
+        });
+
+        // 6. بدء تشغيل الصفحة
+        initializeAddForm();
+    </script>
+</body>
+</html>
