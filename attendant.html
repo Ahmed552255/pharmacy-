@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
+    <!-- ... (نفس قسم الـ head والـ style بدون تغيير) ... -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>لوحة الاستقبال الذكية</title>
@@ -9,187 +10,85 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* تم تحديث الألوان لتتناسب مع هوية التصميم */
         :root {
-            --primary: #98D8C8;      /* بيبي جرين */
-            --secondary: #6BCB77;    /* أخضر أفتح */
-            --dark: #2D6A4F;         /* أخضر غامق للنصوص */
-            --light: #F7FFF7;        /* خلفية فاتحة جداً */
-            --white: #ffffff;
-            --danger: #e74c3c;
-            --text-light: #6c757d;
-            --border-color: #e0e7e5;
+            --primary: #98D8C8; --secondary: #6BCB77; --dark: #2D6A4F;
+            --light: #F7FFF7; --white: #ffffff; --danger: #e74c3c;
+            --text-light: #6c757d; --border-color: #e0e7e5;
             --shadow: rgba(45, 106, 79, 0.1);
         }
-
         body {
-            font-family: 'Cairo', sans-serif;
-            background-color: var(--light);
-            color: var(--dark);
-            margin: 0;
-            padding: 1.5rem;
-            line-height: 1.6;
+            font-family: 'Cairo', sans-serif; background-color: var(--light);
+            color: var(--dark); margin: 0; padding: 1.5rem; line-height: 1.6;
         }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
+        .container { max-width: 1200px; margin: 0 auto; }
         .header {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 1rem;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.5rem;
-            padding-bottom: 1.5rem;
+            display: flex; flex-wrap: wrap; gap: 1rem; justify-content: space-between;
+            align-items: center; margin-bottom: 1.5rem; padding-bottom: 1.5rem;
             border-bottom: 1px solid var(--border-color);
         }
-
-        .header-title {
-            margin: 0;
-            color: var(--dark);
-            font-size: 1.75rem;
-            font-weight: 700;
-        }
-        
-        .header-actions {
-            display: flex;
-            gap: 0.75rem;
-            align-items: center;
-        }
-
+        .header-title { margin: 0; color: var(--dark); font-size: 1.75rem; font-weight: 700; }
+        .header-actions { display: flex; gap: 0.75rem; align-items: center; }
         .btn {
-            padding: 0.75rem 1.5rem;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 1rem;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            transition: all 0.3s ease;
+            padding: 0.75rem 1.5rem; border: none; border-radius: 8px; font-weight: 600;
+            font-size: 1rem; cursor: pointer; text-decoration: none; display: inline-flex;
+            align-items: center; gap: 0.5rem; transition: all 0.3s ease;
         }
-
         .btn-add {
-            background-color: var(--dark);
-            color: var(--white);
+            background-color: var(--dark); color: var(--white);
             box-shadow: 0 4px 12px rgba(45, 106, 79, 0.2);
         }
-        .btn-add:hover {
-            background-color: #1e4935;
-            transform: translateY(-2px);
-        }
-        
+        .btn-add:hover { background-color: #1e4935; transform: translateY(-2px); }
         .btn-logout {
-            background-color: transparent;
-            color: var(--danger);
-            border: 1px solid var(--danger);
+            background-color: transparent; color: var(--danger); border: 1px solid var(--danger);
             padding: 0.6rem 1.2rem;
         }
-        .btn-logout:hover {
-            background-color: var(--danger);
-            color: var(--white);
-        }
-
+        .btn-logout:hover { background-color: var(--danger); color: var(--white); }
         .doctors-nav {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.75rem;
-            margin-bottom: 1.5rem;
-            padding: 1rem;
-            background-color: var(--white);
-            border-radius: 12px;
+            display: flex; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1.5rem;
+            padding: 1rem; background-color: var(--white); border-radius: 12px;
             box-shadow: 0 5px 15px var(--shadow);
         }
-
         .doc-btn {
-            padding: 0.6rem 1.2rem;
-            border: 1px solid var(--border-color);
-            border-radius: 25px;
-            background-color: var(--white);
-            color: var(--text-light);
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
+            padding: 0.6rem 1.2rem; border: 1px solid var(--border-color); border-radius: 25px;
+            background-color: var(--white); color: var(--text-light); font-weight: 600;
+            cursor: pointer; transition: all 0.3s ease;
         }
-
-        .doc-btn:hover {
-            border-color: var(--primary);
-            color: var(--dark);
-        }
-
+        .doc-btn:hover { border-color: var(--primary); color: var(--dark); }
         .doc-btn.active {
-            background-color: var(--primary);
-            color: var(--dark);
-            border-color: var(--primary);
-            font-weight: 700;
+            background-color: var(--primary); color: var(--dark);
+            border-color: var(--primary); font-weight: 700;
         }
-
         .table-container {
-            background-color: var(--white);
-            border-radius: 12px;
-            overflow: hidden;
+            background-color: var(--white); border-radius: 12px; overflow: hidden;
             box-shadow: 0 5px 20px var(--shadow);
         }
-
         table {
-            width: 100%;
-            border-collapse: collapse;
-            text-align: center;
-            min-width: 700px;
+            width: 100%; border-collapse: collapse; text-align: center; min-width: 700px;
         }
-
-        th, td {
-            padding: 1rem;
-            vertical-align: middle;
-        }
-
+        th, td { padding: 1rem; vertical-align: middle; }
         thead {
-            background-color: var(--dark);
-            color: var(--white);
-            font-size: 0.9rem;
+            background-color: var(--dark); color: var(--white); font-size: 0.9rem;
             text-transform: uppercase;
         }
-
-        tbody tr {
-            border-bottom: 1px solid var(--border-color);
-        }
-        
+        tbody tr { border-bottom: 1px solid var(--border-color); }
         tbody tr:last-child { border-bottom: none; }
         tbody tr:hover { background-color: var(--light); }
-
         .status-badge {
-            padding: 0.3rem 0.8rem;
-            border-radius: 15px;
-            font-weight: 600;
-            font-size: 0.8rem;
-            color: var(--dark);
+            padding: 0.3rem 0.8rem; border-radius: 15px; font-weight: 600;
+            font-size: 0.8rem; color: var(--dark);
         }
         .status-waiting { background-color: #fff3cd; color: #664d03; }
         .status-done { background-color: #d1e7dd; color: #0f5132; }
-
         .btn-delete {
-            background: none;
-            border: none;
-            color: var(--text-light);
-            cursor: pointer;
-            padding: 0.5rem;
-            border-radius: 50%;
-            transition: all 0.2s ease;
+            background: none; border: none; color: var(--text-light); cursor: pointer;
+            padding: 0.5rem; border-radius: 50%; transition: all 0.2s ease;
         }
-        .btn-delete:hover {
-            color: var(--danger);
-            background-color: #fbe9e7;
-        }
+        .btn-delete:hover { color: var(--danger); background-color: #fbe9e7; }
     </style>
 </head>
 <body>
-
     <div class="container">
+        <!-- ... (نفس قسم الـ header والـ table بدون تغيير) ... -->
         <header class="header">
             <h2 class="header-title" id="welcomeMessage">جاري التحميل...</h2>
             <div class="header-actions">
@@ -230,7 +129,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
         import { getFirestore, collection, query, where, onSnapshot, doc, deleteDoc, getDoc, orderBy } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
-        // تم نسخ بيانات الاتصال الصحيحة من ملف تسجيل الدخول الخاص بك
+        // بيانات الاتصال الصحيحة من ملف تسجيل الدخول
         const firebaseConfig = {
             apiKey: "AIzaSyDYgPFDWqtaHm9wzKyRtUqJKS2mQrOiJVk",
             authDomain: "oooooo-ee246.firebaseapp.com",
@@ -264,13 +163,16 @@
                 const userData = userDoc.data();
                 document.getElementById('welcomeMessage').innerText = `أهلاً، ${userData.name || 'موظف الاستقبال'}`;
 
-                // تعديل: الآن يتم جلب الطبيب المرتبط مباشرة من بيانات الممرض
-                const linkedDoctorId = userData.linkedDoctor;
+                // --- الجزء الذي تم تعديله ليكون أكثر ذكاءً ---
+                // يبحث عن الحقل الصحيح للطبيب المرتبط
+                const linkedDoctorId = userData.linkedDoctor || (Array.isArray(userData.linkedDoctors) ? userData.linkedDoctors[0] : null);
+                
                 const doctorsNav = document.getElementById('doctorsList');
                 doctorsNav.innerHTML = '';
 
                 if (!linkedDoctorId) {
-                    doctorsNav.innerHTML = '<span>لا يوجد طبيب مشرف مرتبط بهذا الحساب.</span>';
+                    // إذا لم يجد أي حقل، يعرض الرسالة
+                    doctorsNav.innerHTML = '<span>لا يوجد طبيب مشرف مرتبط بهذا الحساب. يرجى مراجعة مسؤول النظام أو التسجيل مرة أخرى وربط الحساب بطبيب.</span>';
                     return;
                 }
 
@@ -283,8 +185,9 @@
                     btn.onclick = () => switchDoctorView(linkedDoctorId, btn);
                     doctorsNav.appendChild(btn);
                     
-                    // تفعيل الطبيب الوحيد تلقائياً
-                    btn.click();
+                    btn.click(); // تفعيل الطبيب تلقائياً
+                } else {
+                    doctorsNav.innerHTML = `<span>الطبيب المشرف بالمعرف (${linkedDoctorId}) لم يتم العثور عليه.</span>`;
                 }
 
             } catch (error) {
@@ -293,6 +196,7 @@
             }
         }
 
+        // ... (باقي دوال JavaScript بدون تغيير) ...
         function switchDoctorView(doctorId, buttonElement) {
             currentDoctorId = doctorId;
             localStorage.setItem('selectedDoctorId', doctorId);
@@ -365,8 +269,7 @@
         };
 
         window.logout = () => {
-            localStorage.removeItem('userId');
-            localStorage.removeItem('selectedDoctorId');
+            localStorage.clear();
             window.location.href = 'login.html';
         };
 
