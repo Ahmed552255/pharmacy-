@@ -3,872 +3,374 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة الاستقبال الذكية | المجمع الطبي</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>لوحة الاستقبال الذكية</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
         :root {
-            --primary: #98D8C8;
-            --secondary: #6BCB77;
-            --dark: #2D6A4F;
-            --light: #F7FFF7;
+            --primary-color: #264653;
+            --secondary-color: #2a9d8f;
+            --danger-color: #e76f51;
+            --light-bg: #f8f9fa;
             --white: #ffffff;
-            --danger: #e74c3c;
-            --warning: #f39c12;
-            --success: #27ae60;
-            --shadow: rgba(45, 106, 79, 0.15);
+            --text-dark: #343a40;
+            --text-light: #6c757d;
+            --border-color: #dee2e6;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, var(--light) 0%, #E8F5E9 100%);
-            padding: 20px;
-            min-height: 100vh;
+            font-family: 'Cairo', sans-serif;
+            background-color: var(--light-bg);
+            color: var(--text-dark);
+            margin: 0;
+            padding: 1rem;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
         }
 
         .header {
-            background: var(--white);
-            padding: 25px;
-            border-radius: 20px;
-            box-shadow: 0 5px 20px var(--shadow);
-            margin-bottom: 25px;
             display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
             justify-content: space-between;
             align-items: center;
-            flex-wrap: wrap;
-            gap: 15px;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
         }
 
-        .header-left {
-            flex: 1;
-        }
-
-        .header-left h2 {
-            color: var(--dark);
+        .header-title {
+            margin: 0;
+            color: var(--primary-color);
+            font-size: 1.75rem;
             display: flex;
             align-items: center;
-            gap: 10px;
-            margin-bottom: 10px;
+            gap: 0.75rem;
         }
-
-        .staff-info {
+        
+        .header-actions {
             display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-top: 10px;
-            flex-wrap: wrap;
-        }
-
-        .info-badge {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: var(--white);
-            padding: 8px 15px;
-            border-radius: 25px;
-            font-weight: bold;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .stats-container {
-            display: flex;
-            gap: 15px;
-            margin-top: 15px;
-            flex-wrap: wrap;
-        }
-
-        .stat-box {
-            background: var(--light);
-            padding: 15px 20px;
-            border-radius: 15px;
-            border: 2px solid var(--primary);
-            text-align: center;
-            min-width: 120px;
-        }
-
-        .stat-number {
-            font-size: 32px;
-            font-weight: bold;
-            color: var(--dark);
-            display: block;
-        }
-
-        .stat-label {
-            font-size: 12px;
-            color: #666;
-            margin-top: 5px;
-        }
-
-        .header-right {
-            display: flex;
-            gap: 10px;
+            gap: 0.75rem;
             align-items: center;
         }
 
         .btn {
-            padding: 12px 25px;
+            padding: 0.75rem 1.5rem;
             border: none;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: bold;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .btn-add {
+            background-color: var(--secondary-color);
+            color: var(--white);
+        }
+        .btn-add:hover {
+            background-color: #238a7e;
+            transform: translateY(-2px);
+        }
+        
+        .btn-logout {
+            background-color: var(--danger-color);
+            color: var(--white);
+            padding: 0.6rem 1.2rem;
+        }
+        .btn-logout:hover {
+            background-color: #d65a3e;
+        }
+
+        .doctors-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .doc-btn {
+            padding: 0.6rem 1.2rem;
+            border: 2px solid var(--border-color);
+            border-radius: 25px;
+            background-color: var(--white);
+            color: var(--text-light);
+            font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
         }
 
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+        .doc-btn:hover {
+            border-color: var(--secondary-color);
+            color: var(--secondary-color);
         }
 
-        .btn-primary {
-            background: linear-gradient(135deg, var(--secondary), var(--primary));
+        .doc-btn.active {
+            background-color: var(--primary-color);
             color: var(--white);
-        }
-
-        .btn-danger {
-            background: var(--danger);
-            color: var(--white);
-        }
-
-        .btn-secondary {
-            background: #95a5a6;
-            color: var(--white);
+            border-color: var(--primary-color);
+            box-shadow: var(--shadow);
         }
 
         .table-container {
-            background: var(--white);
-            border-radius: 20px;
-            overflow: hidden;
-            box-shadow: 0 5px 20px var(--shadow);
-        }
-
-        .table-header {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            padding: 20px;
-            color: var(--white);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .table-header h3 {
-            display: flex;
-            align-items: center;
-            gap: 10px;
+            background-color: var(--white);
+            border-radius: 12px;
+            overflow-x: auto;
+            box-shadow: var(--shadow);
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
+            text-align: center;
+            min-width: 700px;
+        }
+
+        th, td {
+            padding: 1rem;
+            vertical-align: middle;
         }
 
         thead {
-            background: var(--dark);
+            background-color: var(--primary-color);
             color: var(--white);
-        }
-
-        th {
-            padding: 15px;
-            text-align: center;
-            font-weight: 600;
-        }
-
-        td {
-            padding: 15px;
-            text-align: center;
-            border-bottom: 1px solid #f0f0f0;
         }
 
         tbody tr {
-            transition: background 0.3s ease;
+            border-bottom: 1px solid var(--border-color);
         }
-
-        tbody tr:hover {
-            background: var(--light);
-        }
-
-        .status-badge {
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: bold;
-            display: inline-block;
-        }
-
-        .waiting {
-            background: #fff9e6;
-            color: var(--warning);
-            border: 1px solid var(--warning);
-        }
-
-        .done {
-            background: #e8fcf0;
-            color: var(--success);
-            border: 1px solid var(--success);
-        }
+        
+        tbody tr:nth-child(even) { background-color: #fdfdfd; }
+        tbody tr:nth-child(odd) { background-color: var(--light-bg); }
+        tbody tr:last-child { border-bottom: none; }
+        tbody tr:hover { background-color: #e9ecef; }
 
         .btn-delete {
-            background: var(--danger);
-            color: var(--white);
-            border: none;
-            padding: 8px 15px;
-            border-radius: 8px;
+            background-color: transparent;
+            color: var(--danger-color);
+            border: 1px solid transparent;
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
             cursor: pointer;
-            font-size: 14px;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
         }
-
         .btn-delete:hover {
-            background: #c0392b;
-            transform: scale(1.05);
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.6);
-            align-items: center;
-            justify-content: center;
-            z-index: 2000;
-            backdrop-filter: blur(5px);
-            padding: 20px;
-        }
-
-        .modal.active {
-            display: flex;
-        }
-
-        .modal-content {
-            background: var(--white);
-            padding: 35px;
-            border-radius: 25px;
-            width: 100%;
-            max-width: 550px;
-            max-height: 90vh;
-            overflow-y: auto;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-            animation: slideIn 0.3s ease;
-        }
-
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(-30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid var(--primary);
-        }
-
-        .modal-header h3 {
-            color: var(--dark);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .close-btn {
-            background: none;
-            border: none;
-            font-size: 28px;
-            color: #999;
-            cursor: pointer;
-            transition: color 0.3s;
-        }
-
-        .close-btn:hover {
-            color: var(--danger);
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-            position: relative;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: var(--dark);
-            font-weight: 600;
-            font-size: 14px;
-        }
-
-        .form-group input,
-        .form-group select {
-            width: 100%;
-            padding: 14px 45px 14px 15px;
-            border: 2px solid #e0e0e0;
-            border-radius: 12px;
-            font-size: 15px;
-            transition: all 0.3s ease;
-            background: var(--light);
-        }
-
-        .form-group input:focus,
-        .form-group select:focus {
-            outline: none;
-            border-color: var(--secondary);
-            background: var(--white);
-            box-shadow: 0 0 0 4px rgba(107, 203, 119, 0.1);
-        }
-
-        .input-icon {
-            position: absolute;
-            right: 15px;
-            top: 43px;
-            color: var(--secondary);
-            font-size: 18px;
-        }
-
-        .search-results {
-            position: absolute;
-            background: var(--white);
-            width: 100%;
-            border: 2px solid var(--primary);
-            border-radius: 12px;
-            z-index: 100;
-            max-height: 200px;
-            overflow-y: auto;
-            display: none;
-            box-shadow: 0 5px 20px var(--shadow);
-            margin-top: 5px;
-        }
-
-        .search-item {
-            padding: 12px 15px;
-            cursor: pointer;
-            border-bottom: 1px solid #f0f0f0;
-            transition: background 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .search-item:hover {
-            background: var(--light);
-        }
-
-        .search-item:last-child {
-            border-bottom: none;
-        }
-
-        .divider {
-            border: 0;
-            height: 1px;
-            background: linear-gradient(to right, transparent, var(--primary), transparent);
-            margin: 25px 0;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: #999;
-        }
-
-        .empty-state i {
-            font-size: 64px;
-            margin-bottom: 20px;
-            color: #ddd;
-        }
-
-        @media (max-width: 768px) {
-            .header {
-                flex-direction: column;
-                align-items: stretch;
-            }
-
-            .header-right {
-                justify-content: center;
-            }
-
-            .stats-container {
-                justify-content: center;
-            }
-
-            table {
-                font-size: 13px;
-            }
-
-            th, td {
-                padding: 10px 5px;
-            }
-
-            .modal-content {
-                padding: 25px 20px;
-            }
-        }
-
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: var(--dark);
-        }
-
-        .spinner {
-            border: 4px solid var(--light);
-            border-top: 4px solid var(--secondary);
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 20px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .notification-sound {
-            display: none;
+            background-color: var(--danger-color);
+            color: var(--white);
+            border-color: var(--danger-color);
         }
     </style>
 </head>
 <body>
-    <!-- صوت التنبيه -->
-    <audio id="notificationSound" class="notification-sound">
-        <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFAtPouPuvmwhBCSD0fPTgjMGHm7A7+OZRA0PVqnp7qxXFApNo+PwwW4jBSiF0vPZ" type="audio/wav">
-    </audio>
 
-    <div class="header">
-        <div class="header-left">
-            <h2>
-                <i class="fas fa-user-nurse"></i>
-                لوحة تحكم الاستقبال
-            </h2>
-            <div class="staff-info">
-                <div class="info-badge" id="attendantInfo">
-                    <i class="fas fa-user"></i>
-                    <span>جاري التحميل...</span>
-                </div>
-                <div class="info-badge" id="doctorInfo">
-                    <i class="fas fa-user-md"></i>
-                    <span>العيادة: جاري التحميل...</span>
-                </div>
+    <div class="container">
+        <header class="header">
+            <h2 class="header-title" id="welcomeMessage">جاري التحميل...</h2>
+            <div class="header-actions">
+                <a href="add_booking.html" id="addBookingBtn" class="btn btn-add">إضافة كشف</a>
+                <button onclick="logout()" class="btn btn-logout">تسجيل الخروج</button>
             </div>
-            <div class="stats-container">
-                <div class="stat-box">
-                    <span class="stat-number" id="todayCount">0</span>
-                    <span class="stat-label">كشوفات اليوم</span>
-                </div>
-                <div class="stat-box">
-                    <span class="stat-number" id="waitingCount">0</span>
-                    <span class="stat-label">في الانتظار</span>
-                </div>
-            </div>
-        </div>
-        <div class="header-right">
-            <button class="btn btn-primary" onclick="openModal()">
-                <i class="fas fa-plus-circle"></i>
-                حجز جديد
-            </button>
-            <button class="btn btn-secondary" onclick="logout()">
-                <i class="fas fa-sign-out-alt"></i>
-                خروج
-            </button>
-        </div>
-    </div>
+        </header>
 
-    <div class="table-container">
-        <div class="table-header">
-            <h3>
-                <i class="fas fa-calendar-check"></i>
-                حجوزات اليوم
-            </h3>
-            <span id="currentDate"></span>
-        </div>
-        <div id="tableContent">
-            <div class="loading">
-                <div class="spinner"></div>
-                <p>جاري تحميل الحجوزات...</p>
-            </div>
-        </div>
-    </div>
+        <nav class="doctors-nav" id="doctorsList">
+            <span>جاري تحميل الأطباء...</span>
+        </nav>
 
-    <!-- Modal الحجز -->
-    <div id="bookingModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>
-                    <i class="fas fa-calendar-plus"></i>
-                    حجز موعد جديد
-                </h3>
-                <button class="close-btn" onclick="closeModal()">&times;</button>
-            </div>
-
-            <div class="form-group">
-                <label>
-                    <i class="fas fa-search"></i>
-                    بحث عن مريض سابق
-                </label>
-                <input type="text" id="pSearch" placeholder="ابحث بالاسم أو رقم الهاتف..." oninput="searchPatients(this.value)">
-                <i class="input-icon fas fa-search"></i>
-                <div id="searchResults" class="search-results"></div>
-            </div>
-
-            <hr class="divider">
-
-            <div class="form-group">
-                <label>اسم المريض</label>
-                <input type="text" id="pName" placeholder="أدخل اسم المريض" required>
-                <i class="input-icon fas fa-user"></i>
-            </div>
-
-            <div class="form-group">
-                <label>عمر المريض</label>
-                <input type="number" id="pAge" placeholder="أدخل العمر" required>
-                <i class="input-icon fas fa-birthday-cake"></i>
-            </div>
-
-            <div class="form-group">
-                <label>رقم الهاتف</label>
-                <input type="tel" id="pPhone" placeholder="01xxxxxxxxx" required>
-                <i class="input-icon fas fa-phone"></i>
-            </div>
-
-            <div class="form-group">
-                <label>الطبيب</label>
-                <input type="text" id="pDoctor" readonly style="background: #e8f5e9; cursor: not-allowed;">
-                <i class="input-icon fas fa-user-md"></i>
-            </div>
-
-            <button class="btn btn-primary" style="width: 100%; justify-content: center;" onclick="saveNewBooking()">
-                <i class="fas fa-check-circle"></i>
-                تأكيد الحجز
-            </button>
-        </div>
+        <main class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>م</th>
+                        <th>اسم المريض</th>
+                        <th>العمر</th>
+                        <th>الهاتف</th>
+                        <th>الساعة</th>
+                        <th>الحالة</th>
+                        <th>إجراء</th>
+                    </tr>
+                </thead>
+                <tbody id="bookingsBody">
+                    <tr><td colspan="7">الرجاء اختيار طبيب لعرض الحجوزات الخاصة به.</td></tr>
+                </tbody>
+            </table>
+        </main>
     </div>
 
     <script type="module">
+        // 1. استيراد الدوال اللازمة من Firebase
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, where, orderBy, getDocs, doc, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+        import { getFirestore, collection, query, where, onSnapshot, doc, deleteDoc, getDoc, orderBy } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
+        // 2. إعدادات الاتصال بقاعدة البيانات (استبدلها ببياناتك)
         const firebaseConfig = {
-            apiKey: "AIzaSyDYgPFDWqtaHm9wzKyRtUqJKS2mQrOiJVk",
-            authDomain: "oooooo-ee246.firebaseapp.com",
-            projectId: "oooooo-ee246",
-            storageBucket: "oooooo-ee246.firebasestorage.app",
-            messagingSenderId: "484234388806",
-            appId: "1:484234388806:web:bafc624785ef1cad10b147",
-            measurementId: "G-V8PMYBC290"
+            apiKey: "AIzaSy...",
+            authDomain: "your-project.firebaseapp.com",
+            projectId: "your-project-id",
+            storageBucket: "your-project.appspot.com",
+            messagingSenderId: "...",
+            appId: "..."
         };
-
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // التحقق من تسجيل الدخول
-        const userId = localStorage.getItem('userId');
-        const userRole = localStorage.getItem('userRole');
-        
-        if (!userId || userRole !== 'attendant') {
-            alert('يجب تسجيل الدخول كممرض');
-            window.location.href = 'login.html';
-        }
+        // 3. متغيرات عامة
+        const userId = localStorage.getItem('userId'); // جلب هوية الممرض من التخزين المحلي
+        let currentDoctorId = null; 
+        let unsubscribeFromBookings = null; // لإلغاء المراقبة عند تبديل الدكتور
 
-        let attendantName = '';
-        let linkedDoctorId = '';
-        let linkedDoctorName = '';
-        let lastAppointmentCount = 0;
-
-        // جلب بيانات الممرض والطبيب المرتبط
-        async function loadUserData() {
-            try {
-                const userDoc = await getDoc(doc(db, "users", userId));
-                if (userDoc.exists()) {
-                    const userData = userDoc.data();
-                    attendantName = userData.name;
-                    linkedDoctorId = userData.linkedDoctor;
-
-                    document.getElementById('attendantInfo').innerHTML = `
-                        <i class="fas fa-user"></i>
-                        <span>${attendantName}</span>
-                    `;
-
-                    if (linkedDoctorId) {
-                        const doctorDoc = await getDoc(doc(db, "users", linkedDoctorId));
-                        if (doctorDoc.exists()) {
-                            const doctorData = doctorDoc.data();
-                            linkedDoctorName = `د. ${doctorData.name}`;
-                            document.getElementById('doctorInfo').innerHTML = `
-                                <i class="fas fa-user-md"></i>
-                                <span>العيادة: ${linkedDoctorName}</span>
-                            `;
-                            document.getElementById('pDoctor').value = linkedDoctorName;
-                        }
-                    }
-                }
-            } catch (error) {
-                console.error('Error loading user data:', error);
-            }
-        }
-
-        loadUserData();
-
-        // عرض التاريخ الحالي
-        const today = new Date();
-        document.getElementById('currentDate').textContent = today.toLocaleDateString('ar-EG', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
-
-        const getTodayDate = () => new Date().toLocaleDateString('en-CA');
-
-        // تشغيل صوت التنبيه
-        function playNotificationSound() {
-            const audio = document.getElementById('notificationSound');
-            audio.play().catch(e => console.log('Audio play failed:', e));
-        }
-
-        // عرض الحجوزات مع الاستماع للتحديثات
-        const q = query(
-            collection(db, "appointments"),
-            where("date", "==", getTodayDate()),
-            where("doctorId", "==", linkedDoctorId)
-        );
-
-        onSnapshot(q, (snapshot) => {
-            const docs = [];
-            snapshot.forEach(d => {
-                docs.push({ id: d.id, ...d.data() });
-            });
-
-            docs.sort((a, b) => a.timestamp - b.timestamp);
-
-            const tableContent = document.getElementById('tableContent');
-            const todayCount = docs.length;
-            const waitingCount = docs.filter(d => d.status === 'انتظار').length;
-
-            document.getElementById('todayCount').textContent = todayCount;
-            document.getElementById('waitingCount').textContent = waitingCount;
-
-            // تشغيل صوت عند إضافة حجز جديد
-            if (todayCount > lastAppointmentCount) {
-                playNotificationSound();
-            }
-            lastAppointmentCount = todayCount;
-
-            if (docs.length === 0) {
-                tableContent.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-calendar-times"></i>
-                        <p>لا توجد حجوزات لهذا اليوم</p>
-                    </div>
-                `;
+        // 4. الدالة الرئيسية التي تعمل عند فتح الصفحة
+        async function initializePage() {
+            // التحقق من وجود هوية مستخدم، وإلا يتم توجيهه لصفحة الدخول
+            if(!userId) {
+                window.location.href = 'login.html';
                 return;
             }
+            document.getElementById('addBookingBtn').style.display = 'none'; // إخفاء زر الإضافة مبدئياً
 
-            let tableHTML = `
-                <table>
-                    <thead>
-                        <tr>
-                            <th>المريض</th>
-                            <th>العمر</th>
-                            <th>الهاتف</th>
-                            <th>الطبيب</th>
-                            <th>الوقت</th>
-                            <th>الحالة</th>
-                            <th>الإجراءات</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-            `;
+            try {
+                // جلب بيانات الممرض من collection اسمها 'users'
+                const userDoc = await getDoc(doc(db, "users", userId));
+                if (!userDoc.exists()) {
+                    // إذا لم يتم العثور على المستخدم، يتم تسجيل خروجه
+                    logout();
+                    return;
+                }
+                const userData = userDoc.data();
+                document.getElementById('welcomeMessage').innerText = `أهلاً، ${userData.name || 'موظف الاستقبال'}`;
 
-            docs.forEach((p) => {
-                tableHTML += `
-                    <tr>
-                        <td><strong>${p.name}</strong></td>
-                        <td>${p.age} سنة</td>
-                        <td>${p.phone}</td>
-                        <td>${p.doctor}</td>
-                        <td>${p.time}</td>
+                // جلب قائمة الأطباء المرتبطين بالممرض
+                const linkedDoctors = userData.linkedDoctors || [];
+                const doctorsNav = document.getElementById('doctorsList');
+                doctorsNav.innerHTML = '';
+
+                if (linkedDoctors.length === 0) {
+                    doctorsNav.innerHTML = '<span>لا يوجد أطباء مرتبطون بهذا الحساب.</span>';
+                    return;
+                }
+
+                // إنشاء زر لكل طبيب
+                for (const docId of linkedDoctors) {
+                    const doctorDoc = await getDoc(doc(db, "users", docId));
+                    if(doctorDoc.exists()){
+                        const doctorData = doctorDoc.data();
+                        const btn = document.createElement('button');
+                        btn.className = 'doc-btn';
+                        btn.innerText = "د. " + doctorData.name;
+                        btn.onclick = () => switchDoctorView(docId, btn);
+                        doctorsNav.appendChild(btn);
+                    }
+                }
+                
+                // تفعيل أول طبيب في القائمة تلقائياً
+                if (doctorsNav.firstChild) {
+                    doctorsNav.firstChild.click();
+                }
+
+            } catch (error) {
+                console.error("Initialization Error:", error);
+                document.getElementById('doctorsList').innerHTML = '<span>حدث خطأ أثناء تحميل البيانات.</span>';
+            }
+        }
+
+        // 5. دالة تبديل عرض حجوزات طبيب معين
+        function switchDoctorView(doctorId, buttonElement) {
+            currentDoctorId = doctorId;
+            localStorage.setItem('selectedDoctorId', doctorId); // حفظ هوية الدكتور لصفحة الإضافة
+
+            // تحديث شكل الأزرار
+            document.querySelectorAll('.doc-btn').forEach(b => b.classList.remove('active'));
+            buttonElement.classList.add('active');
+            document.getElementById('addBookingBtn').style.display = 'inline-flex';
+
+            // تحميل حجوزات الدكتور المختار
+            loadBookingsForDoctor(doctorId);
+        }
+
+        // 6. دالة جلب وعرض الحجوزات من Firestore
+        function loadBookingsForDoctor(doctorId) {
+            // إلغاء المراقبة السابقة لمنع تضارب البيانات
+            if(unsubscribeFromBookings) unsubscribeFromBookings();
+
+            // الحصول على تاريخ اليوم بصيغة YYYY-MM-DD
+            const todayString = new Date().toLocaleDateString('en-CA');
+            
+            // إنشاء استعلام (Query) لجلب البيانات المطلوبة فقط
+            const bookingsQuery = query(
+                collection(db, "appointments"), 
+                where("doctorId", "==", doctorId),  // شرط: لنفس الدكتور
+                where("date", "==", todayString),   // شرط: لتاريخ اليوم
+                orderBy("time")                     // ترتيب حسب الوقت
+            );
+
+            // onSnapshot: للاستماع للتغييرات في الوقت الفعلي
+            unsubscribeFromBookings = onSnapshot(bookingsQuery, (snapshot) => {
+                const tbody = document.getElementById('bookingsBody');
+                tbody.innerHTML = ''; // تفريغ الجدول قبل إضافة البيانات الجديدة
+                
+                if (snapshot.empty) {
+                    tbody.innerHTML = '<tr><td colspan="7">لا توجد حجوزات لهذا الطبيب اليوم.</td></tr>';
+                    return;
+                }
+                
+                let counter = 1;
+                snapshot.forEach(docSnap => {
+                    const booking = docSnap.data();
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${counter++}</td>
+                        <td><b>${booking.name || '-'}</b></td>
+                        <td>${booking.age || '-'}</td>
+                        <td>${booking.phone || '-'}</td>
+                        <td>${booking.time || '-'}</td>
+                        <td>${booking.status || 'انتظار'}</td>
                         <td>
-                            <span class="status-badge ${p.status === 'انتظار' ? 'waiting' : 'done'}">
-                                ${p.status}
-                            </span>
-                        </td>
-                        <td>
-                            <button class="btn-delete" onclick="deleteAppointment('${p.id}', '${p.name}')">
-                                <i class="fas fa-trash"></i>
+                            <button class="btn-delete" title="حذف الكشف" onclick="window.deleteBooking('${docSnap.id}')">
                                 حذف
                             </button>
                         </td>
-                    </tr>
-                `;
-            });
-
-            tableHTML += `
-                    </tbody>
-                </table>
-            `;
-
-            tableContent.innerHTML = tableHTML;
-        });
-
-        // البحث عن المرضى
-        window.searchPatients = async (val) => {
-            const resDiv = document.getElementById('searchResults');
-            if (val.length < 2) {
-                resDiv.style.display = 'none';
-                return;
-            }
-
-            try {
-                const qP = query(collection(db, "patients"));
-                const snap = await getDocs(qP);
-                let html = '';
-
-                snap.forEach(doc => {
-                    const data = doc.data();
-                    const searchLower = val.toLowerCase();
-                    if (data.name.toLowerCase().includes(searchLower) || data.phone.includes(val)) {
-                        html += `
-                            <div class="search-item" onclick="selectPatient('${data.name}', '${data.age}', '${data.phone}')">
-                                <i class="fas fa-user-circle"></i>
-                                <div>
-                                    <strong>${data.name}</strong><br>
-                                    <small style="color: #666;">${data.phone}</small>
-                                </div>
-                            </div>
-                        `;
-                    }
-                });
-
-                if (html) {
-                    resDiv.innerHTML = html;
-                    resDiv.style.display = 'block';
-                } else {
-                    resDiv.innerHTML = `
-                        <div class="search-item" style="color: #999; cursor: default;">
-                            <i class="fas fa-info-circle"></i>
-                            لا توجد نتائج
-                        </div>
                     `;
-                    resDiv.style.display = 'block';
-                }
-            } catch (error) {
-                console.error('Search error:', error);
-            }
-        };
-
-        window.selectPatient = (name, age, phone) => {
-            document.getElementById('pName').value = name;
-            document.getElementById('pAge').value = age;
-            document.getElementById('pPhone').value = phone;
-            document.getElementById('searchResults').style.display = 'none';
-            document.getElementById('pSearch').value = '';
-        };
-
-        // حفظ الحجز
-        window.saveNewBooking = async () => {
-            const name = document.getElementById('pName').value.trim();
-            const age = document.getElementById('pAge').value;
-            const phone = document.getElementById('pPhone').value.trim();
-            const doctor = document.getElementById('pDoctor').value;
-
-            if (!name || !age || !phone) {
-                alert('الرجاء إدخال جميع البيانات المطلوبة');
-                return;
-            }
-
-            if (phone.length < 11) {
-                alert('رقم الهاتف غير صحيح');
-                return;
-            }
-
-            try {
-                await addDoc(collection(db, "appointments"), {
-                    name,
-                    age,
-                    phone,
-                    doctor,
-                    doctorId: linkedDoctorId,
-                    attendantName,
-                    status: 'انتظار',
-                    date: getTodayDate(),
-                    time: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
-                    timestamp: Date.now()
+                    tbody.appendChild(row);
                 });
-
-                const qExist = query(collection(db, "patients"), where("phone", "==", phone));
-                const existSnap = await getDocs(qExist);
-                if (existSnap.empty) {
-                    await addDoc(collection(db, "patients"), { name, age, phone });
-                }
-
-                alert('✓ تم الحجز بنجاح');
-                closeModal();
-                clearForm();
-            } catch (e) {
-                alert("خطأ في الحجز: " + e.message);
-            }
-        };
-
-        // حذف الحجز
-        window.deleteAppointment = async (id, name) => {
-            if (!confirm(`هل أنت متأكد من حذف حجز ${name}؟`)) {
-                return;
-            }
-
-            try {
-                await deleteDoc(doc(db, "appointments", id));
-                alert('✓ تم حذف الحجز بنجاح');
-            } catch (error) {
-                alert('خطأ في الحذف: ' + error.message);
-            }
-        };
-
-        function clearForm() {
-            document.getElementById('pName').value = '';
-            document.getElementById('pAge').value = '';
-            document.getElementById('pPhone').value = '';
-            document.getElementById('pSearch').value = '';
+            }, (error) => {
+                console.error("Error fetching bookings:", error);
+                document.getElementById('bookingsBody').innerHTML = '<tr><td colspan="7">حدث خطأ في جلب الحجوزات.</td></tr>';
+            });
         }
 
-        window.openModal = () => {
-            document.getElementById('bookingModal').classList.add('active');
+        // 7. دالة حذف كشف (يتم استدعاؤها من الزر)
+        window.deleteBooking = async (bookingId) => {
+            if(confirm('هل أنت متأكد من حذف هذا الكشف؟ لا يمكن التراجع عن هذا الإجراء.')) {
+                try {
+                    await deleteDoc(doc(db, "appointments", bookingId));
+                    // سيتم تحديث الجدول تلقائياً بفضل onSnapshot
+                } catch (error) {
+                    console.error("Error deleting booking:", error);
+                    alert("حدث خطأ أثناء محاولة الحذف.");
+                }
+            }
         };
 
-        window.closeModal = () => {
-            document.getElementById('bookingModal').classList.remove('active');
-            document.getElementById('searchResults').style.display = 'none';
-        };
-
+        // 8. دالة تسجيل الخروج
         window.logout = () => {
-            if (confirm('هل أنت متأكد من تسجيل الخروج؟')) {
-                localStorage.clear();
-                window.location.href = 'login.html';
-            }
+            localStorage.removeItem('userId');
+            localStorage.removeItem('selectedDoctorId');
+            window.location.href = 'login.html';
         };
 
-        // إغلاق Modal عند الضغط خارجه
-        document.getElementById('bookingModal').addEventListener('click', (e) => {
-            if (e.target.id === 'bookingModal') {
-                closeModal();
-            }
-        });
+        // 9. بدء تشغيل الصفحة
+        initializePage();
     </script>
 </body>
 </html>
