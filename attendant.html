@@ -7,32 +7,33 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        /* تم تحديث الألوان لتتناسب مع هوية التصميم */
         :root {
-            --primary-color: #264653;
-            --secondary-color: #2a9d8f;
-            --danger-color: #e76f51;
-            --light-bg: #f8f9fa;
+            --primary: #98D8C8;      /* بيبي جرين */
+            --secondary: #6BCB77;    /* أخضر أفتح */
+            --dark: #2D6A4F;         /* أخضر غامق للنصوص */
+            --light: #F7FFF7;        /* خلفية فاتحة جداً */
             --white: #ffffff;
-            --text-dark: #343a40;
+            --danger: #e74c3c;
             --text-light: #6c757d;
-            --border-color: #dee2e6;
-            --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --border-color: #e0e7e5;
+            --shadow: rgba(45, 106, 79, 0.1);
         }
 
         body {
             font-family: 'Cairo', sans-serif;
-            background-color: var(--light-bg);
+            background-color: var(--light);
             color: var(--text-dark);
             margin: 0;
-            padding: 1rem;
+            padding: 1.5rem;
             line-height: 1.6;
         }
 
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 0 1rem;
         }
 
         .header {
@@ -48,11 +49,9 @@
 
         .header-title {
             margin: 0;
-            color: var(--primary-color);
+            color: var(--dark);
             font-size: 1.75rem;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
+            font-weight: 700;
         }
         
         .header-actions {
@@ -73,25 +72,27 @@
             align-items: center;
             gap: 0.5rem;
             transition: all 0.3s ease;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
         .btn-add {
-            background-color: var(--secondary-color);
+            background-color: var(--dark);
             color: var(--white);
+            box-shadow: 0 4px 12px rgba(45, 106, 79, 0.2);
         }
         .btn-add:hover {
-            background-color: #238a7e;
+            background-color: #1e4935;
             transform: translateY(-2px);
         }
         
         .btn-logout {
-            background-color: var(--danger-color);
-            color: var(--white);
+            background-color: transparent;
+            color: var(--danger);
+            border: 1px solid var(--danger);
             padding: 0.6rem 1.2rem;
         }
         .btn-logout:hover {
-            background-color: #d65a3e;
+            background-color: var(--danger);
+            color: var(--white);
         }
 
         .doctors-nav {
@@ -99,11 +100,15 @@
             flex-wrap: wrap;
             gap: 0.75rem;
             margin-bottom: 1.5rem;
+            padding: 1rem;
+            background-color: var(--white);
+            border-radius: 12px;
+            box-shadow: 0 5px 15px var(--shadow);
         }
 
         .doc-btn {
             padding: 0.6rem 1.2rem;
-            border: 2px solid var(--border-color);
+            border: 1px solid var(--border-color);
             border-radius: 25px;
             background-color: var(--white);
             color: var(--text-light);
@@ -113,22 +118,22 @@
         }
 
         .doc-btn:hover {
-            border-color: var(--secondary-color);
-            color: var(--secondary-color);
+            border-color: var(--primary);
+            color: var(--dark);
         }
 
         .doc-btn.active {
-            background-color: var(--primary-color);
-            color: var(--white);
-            border-color: var(--primary-color);
-            box-shadow: var(--shadow);
+            background-color: var(--primary);
+            color: var(--dark);
+            border-color: var(--primary);
+            font-weight: 700;
         }
 
         .table-container {
             background-color: var(--white);
             border-radius: 12px;
-            overflow-x: auto;
-            box-shadow: var(--shadow);
+            overflow: hidden;
+            box-shadow: 0 5px 20px var(--shadow);
         }
 
         table {
@@ -144,32 +149,31 @@
         }
 
         thead {
-            background-color: var(--primary-color);
+            background-color: var(--dark);
             color: var(--white);
+            font-size: 0.9rem;
+            text-transform: uppercase;
         }
 
         tbody tr {
             border-bottom: 1px solid var(--border-color);
         }
         
-        tbody tr:nth-child(even) { background-color: #fdfdfd; }
-        tbody tr:nth-child(odd) { background-color: var(--light-bg); }
         tbody tr:last-child { border-bottom: none; }
-        tbody tr:hover { background-color: #e9ecef; }
+        tbody tr:hover { background-color: var(--light); }
 
         .btn-delete {
-            background-color: transparent;
-            color: var(--danger-color);
-            border: 1px solid transparent;
-            padding: 0.4rem 0.8rem;
-            border-radius: 6px;
+            background: none;
+            border: none;
+            color: var(--text-light);
             cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 50%;
             transition: all 0.2s ease;
         }
         .btn-delete:hover {
-            background-color: var(--danger-color);
-            color: var(--white);
-            border-color: var(--danger-color);
+            color: var(--danger);
+            background-color: #fbe9e7;
         }
     </style>
 </head>
@@ -179,13 +183,17 @@
         <header class="header">
             <h2 class="header-title" id="welcomeMessage">جاري التحميل...</h2>
             <div class="header-actions">
-                <a href="add_booking.html" id="addBookingBtn" class="btn btn-add">إضافة كشف</a>
-                <button onclick="logout()" class="btn btn-logout">تسجيل الخروج</button>
+                <a href="add_booking.html" id="addBookingBtn" class="btn btn-add">
+                    <i class="fas fa-plus"></i> إضافة كشف
+                </a>
+                <button onclick="logout()" class="btn btn-logout">
+                    <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
+                </button>
             </div>
         </header>
 
         <nav class="doctors-nav" id="doctorsList">
-            <span>جاري تحميل الأطباء...</span>
+            <span><i class="fas fa-spinner fa-spin"></i> جاري تحميل الأطباء...</span>
         </nav>
 
         <main class="table-container">
@@ -209,48 +217,43 @@
     </div>
 
     <script type="module">
-        // 1. استيراد الدوال اللازمة من Firebase
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
         import { getFirestore, collection, query, where, onSnapshot, doc, deleteDoc, getDoc, orderBy } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
-        // 2. إعدادات الاتصال بقاعدة البيانات (استبدلها ببياناتك)
+        // !!! هام جداً !!!
+        // استبدل هذا الكائن ببيانات مشروعك الحقيقية من موقع Firebase
         const firebaseConfig = {
-            apiKey: "AIzaSy...",
-            authDomain: "your-project.firebaseapp.com",
-            projectId: "your-project-id",
-            storageBucket: "your-project.appspot.com",
-            messagingSenderId: "...",
-            appId: "..."
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT_ID.appspot.com",
+            messagingSenderId: "YOUR_SENDER_ID",
+            appId: "YOUR_APP_ID"
         };
+        
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // 3. متغيرات عامة
-        const userId = localStorage.getItem('userId'); // جلب هوية الممرض من التخزين المحلي
+        const userId = localStorage.getItem('userId');
         let currentDoctorId = null; 
-        let unsubscribeFromBookings = null; // لإلغاء المراقبة عند تبديل الدكتور
+        let unsubscribeFromBookings = null;
 
-        // 4. الدالة الرئيسية التي تعمل عند فتح الصفحة
         async function initializePage() {
-            // التحقق من وجود هوية مستخدم، وإلا يتم توجيهه لصفحة الدخول
             if(!userId) {
                 window.location.href = 'login.html';
                 return;
             }
-            document.getElementById('addBookingBtn').style.display = 'none'; // إخفاء زر الإضافة مبدئياً
+            document.getElementById('addBookingBtn').style.display = 'none';
 
             try {
-                // جلب بيانات الممرض من collection اسمها 'users'
                 const userDoc = await getDoc(doc(db, "users", userId));
                 if (!userDoc.exists()) {
-                    // إذا لم يتم العثور على المستخدم، يتم تسجيل خروجه
                     logout();
                     return;
                 }
                 const userData = userDoc.data();
                 document.getElementById('welcomeMessage').innerText = `أهلاً، ${userData.name || 'موظف الاستقبال'}`;
 
-                // جلب قائمة الأطباء المرتبطين بالممرض
                 const linkedDoctors = userData.linkedDoctors || [];
                 const doctorsNav = document.getElementById('doctorsList');
                 doctorsNav.innerHTML = '';
@@ -260,7 +263,6 @@
                     return;
                 }
 
-                // إنشاء زر لكل طبيب
                 for (const docId of linkedDoctors) {
                     const doctorDoc = await getDoc(doc(db, "users", docId));
                     if(doctorDoc.exists()){
@@ -273,51 +275,42 @@
                     }
                 }
                 
-                // تفعيل أول طبيب في القائمة تلقائياً
                 if (doctorsNav.firstChild) {
                     doctorsNav.firstChild.click();
                 }
 
             } catch (error) {
                 console.error("Initialization Error:", error);
-                document.getElementById('doctorsList').innerHTML = '<span>حدث خطأ أثناء تحميل البيانات.</span>';
+                document.getElementById('doctorsList').innerHTML = '<span>حدث خطأ أثناء تحميل البيانات. تأكد من صحة إعدادات Firebase.</span>';
             }
         }
 
-        // 5. دالة تبديل عرض حجوزات طبيب معين
         function switchDoctorView(doctorId, buttonElement) {
             currentDoctorId = doctorId;
-            localStorage.setItem('selectedDoctorId', doctorId); // حفظ هوية الدكتور لصفحة الإضافة
+            localStorage.setItem('selectedDoctorId', doctorId);
 
-            // تحديث شكل الأزرار
             document.querySelectorAll('.doc-btn').forEach(b => b.classList.remove('active'));
             buttonElement.classList.add('active');
             document.getElementById('addBookingBtn').style.display = 'inline-flex';
 
-            // تحميل حجوزات الدكتور المختار
             loadBookingsForDoctor(doctorId);
         }
 
-        // 6. دالة جلب وعرض الحجوزات من Firestore
         function loadBookingsForDoctor(doctorId) {
-            // إلغاء المراقبة السابقة لمنع تضارب البيانات
             if(unsubscribeFromBookings) unsubscribeFromBookings();
 
-            // الحصول على تاريخ اليوم بصيغة YYYY-MM-DD
             const todayString = new Date().toLocaleDateString('en-CA');
             
-            // إنشاء استعلام (Query) لجلب البيانات المطلوبة فقط
             const bookingsQuery = query(
                 collection(db, "appointments"), 
-                where("doctorId", "==", doctorId),  // شرط: لنفس الدكتور
-                where("date", "==", todayString),   // شرط: لتاريخ اليوم
-                orderBy("time")                     // ترتيب حسب الوقت
+                where("doctorId", "==", doctorId),
+                where("date", "==", todayString),
+                orderBy("time")
             );
 
-            // onSnapshot: للاستماع للتغييرات في الوقت الفعلي
             unsubscribeFromBookings = onSnapshot(bookingsQuery, (snapshot) => {
                 const tbody = document.getElementById('bookingsBody');
-                tbody.innerHTML = ''; // تفريغ الجدول قبل إضافة البيانات الجديدة
+                tbody.innerHTML = '';
                 
                 if (snapshot.empty) {
                     tbody.innerHTML = '<tr><td colspan="7">لا توجد حجوزات لهذا الطبيب اليوم.</td></tr>';
@@ -337,7 +330,7 @@
                         <td>${booking.status || 'انتظار'}</td>
                         <td>
                             <button class="btn-delete" title="حذف الكشف" onclick="window.deleteBooking('${docSnap.id}')">
-                                حذف
+                                <i class="fas fa-trash-alt"></i>
                             </button>
                         </td>
                     `;
@@ -349,12 +342,10 @@
             });
         }
 
-        // 7. دالة حذف كشف (يتم استدعاؤها من الزر)
         window.deleteBooking = async (bookingId) => {
-            if(confirm('هل أنت متأكد من حذف هذا الكشف؟ لا يمكن التراجع عن هذا الإجراء.')) {
+            if(confirm('هل أنت متأكد من حذف هذا الكشف؟')) {
                 try {
                     await deleteDoc(doc(db, "appointments", bookingId));
-                    // سيتم تحديث الجدول تلقائياً بفضل onSnapshot
                 } catch (error) {
                     console.error("Error deleting booking:", error);
                     alert("حدث خطأ أثناء محاولة الحذف.");
@@ -362,14 +353,12 @@
             }
         };
 
-        // 8. دالة تسجيل الخروج
         window.logout = () => {
             localStorage.removeItem('userId');
             localStorage.removeItem('selectedDoctorId');
             window.location.href = 'login.html';
         };
 
-        // 9. بدء تشغيل الصفحة
         initializePage();
     </script>
 </body>
