@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>قائمة حجوزات اليوم</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #98D8C8;      /* بيبي جرين */
+            --secondary: #6BCB77;    /* أخضر أفتح */
+            --dark: #2D6A4F;         /* أخضر غامق للنصوص والعناوين */
+            --light: #F7FFF7;        /* خلفية فاتحة جداً */
+            --white: #ffffff;
+            --danger: #e74c3c;
+            --text-light: #6c757d;
+            --border-color: #e0e7e5;
+            --shadow: rgba(45, 106, 79, 0.1);
+        }
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: var(--light);
+            color: var(--text-dark);
+            margin: 0;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: var(--white);
+            border-radius: 20px;
+            box-shadow: 0 8px 30px var(--shadow);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: #f1f1f1;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            color: var(--text-light);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        .close-btn:hover {
+            background-color: var(--danger);
+            color: var(--white);
+            transform: rotate(90deg);
+        }
+
+        .header {
+            text-align: center;
+            padding: 2.5rem 2rem 2rem 2rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .header h1 {
+            margin: 0;
+            color: var(--dark);
+            font-size: 2.2rem;
+            font-weight: 700;
+        }
+
+        .header .date {
+            font-size: 1rem;
+            color: var(--text-light);
+            margin-top: 0.5rem;
+        }
+
+        .patient-list {
+            padding: 1.5rem;
+            display: grid;
+            gap: 1rem;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+
+        .patient-card {
+            background-color: var(--light);
+            border: 1px solid var(--border-color);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            padding: 1.25rem;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+        }
+
+        .patient-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px var(--shadow);
+            border-color: var(--primary);
+        }
+
+        .patient-card.status-done {
+            background-color: #f1f3f5;
+            opacity: 0.7;
+        }
+        
+        .patient-card.status-done .patient-name {
+            text-decoration: line-through;
+            color: var(--text-light);
+        }
+
+        .patient-icon {
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin-left: 1.5rem;
+        }
+
+        .patient-info {
+            flex-grow: 1;
+        }
+
+        .patient-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--dark);
+            margin: 0 0 0.5rem 0;
+        }
+
+        .patient-details {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem 1.5rem;
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+        .patient-details span {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .patient-status {
+            font-weight: 600;
+            font-size: 0.9rem;
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            color: var(--dark);
+        }
+        
+        .patient-status.status-waiting {
+            background-color: #fff3cd; /* أصفر فاتح */
+            color: #664d03;
+        }
+
+        .patient-status.status-done {
+            background-color: #d1e7dd; /* أخضر فاتح */
+            color: #0f5132;
+        }
+
+        .loading-placeholder, .empty-placeholder {
+            text-align: center;
+            padding: 4rem;
+            color: var(--text-light);
+            font-size: 1.2rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <a href="doctor.html" class="close-btn" title="العودة للوحة التحكم">&times;</a>
+        <header class="header">
+            <h1 id="doctorName">قائمة الحجوزات</h1>
+            <p class="date" id="currentDate"></p>
+        </header>
+
+        <main class="patient-list" id="patientList">
+            <div class="loading-placeholder">جاري تحميل الحجوزات...</div>
+        </main>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+        import { getFirestore, collection, query, where, onSnapshot, doc, getDoc, orderBy } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            // ... ضع إعدادات Firebase الخاصة بك هنا ...
+        };
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const userId = localStorage.getItem('userId');
+        const userRole = localStorage.getItem('userRole');
+
+        if (!userId || userRole !== 'doctor') {
+            window.location.href = 'login.html';
+        }
+
+        document.getElementById('currentDate').textContent = new Date().toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+        async function loadDoctorName() {
+            const userDoc = await getDoc(doc(db, "users", userId));
+            if (userDoc.exists()) {
+                document.getElementById('doctorName').textContent = `حجوزات د. ${userDoc.data().name}`;
+            }
+        }
+
+        function listenForAppointments() {
+            const todayString = new Date().toLocaleDateString('en-CA');
+            const appointmentsQuery = query(
+                collection(db, "appointments"),
+                where("doctorId", "==", userId),
+                where("date", "==", todayString),
+                orderBy("time")
+            );
+
+            onSnapshot(appointmentsQuery, (snapshot) => {
+                const patientList = document.getElementById('patientList');
+                patientList.innerHTML = '';
+
+                if (snapshot.empty) {
+                    patientList.innerHTML = '<div class="empty-placeholder">لا توجد حجوزات لهذا اليوم.</div>';
+                    return;
+                }
+
+                snapshot.forEach(docSnap => {
+                    const booking = { id: docSnap.id, ...docSnap.data() };
+                    const card = document.createElement('div');
+                    card.className = 'patient-card';
+                    
+                    const status = booking.status === 'منتهي' ? 'done' : 'waiting';
+                    const statusText = status === 'done' ? 'مكتمل' : 'انتظار';
+                    
+                    card.classList.add(`status-${status}`);
+
+                    card.innerHTML = `
+                        <i class="fas fa-user-circle patient-icon"></i>
+                        <div class="patient-info">
+                            <h2 class="patient-name">${booking.name}</h2>
+                            <div class="patient-details">
+                                <span><i class="fas fa-birthday-cake"></i> ${booking.age} سنة</span>
+                                <span><i class="fas fa-clock"></i> ${booking.time}</span>
+                            </div>
+                        </div>
+                        <div class="patient-status status-${status}">
+                            ${statusText}
+                        </div>
+                    `;
+
+                    card.onclick = () => {
+                        localStorage.setItem('selectedPatient', JSON.stringify(booking));
+                        window.location.href = 'doctor.html';
+                    };
+
+                    patientList.appendChild(card);
+                });
+            });
+        }
+
+        loadDoctorName();
+        listenForAppointments();
+    </script>
+</body>
+</html>
