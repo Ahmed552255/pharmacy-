@@ -25,7 +25,7 @@
         body {
             font-family: 'Cairo', sans-serif;
             background-color: var(--light);
-            color: var(--text-dark);
+            color: var(--dark);
             margin: 0;
             padding: 1.5rem;
             line-height: 1.6;
@@ -162,6 +162,16 @@
         tbody tr:last-child { border-bottom: none; }
         tbody tr:hover { background-color: var(--light); }
 
+        .status-badge {
+            padding: 0.3rem 0.8rem;
+            border-radius: 15px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            color: var(--dark);
+        }
+        .status-waiting { background-color: #fff3cd; color: #664d03; }
+        .status-done { background-color: #d1e7dd; color: #0f5132; }
+
         .btn-delete {
             background: none;
             border: none;
@@ -220,15 +230,15 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
         import { getFirestore, collection, query, where, onSnapshot, doc, deleteDoc, getDoc, orderBy } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
-        // !!! هام جداً !!!
-        // استبدل هذا الكائن ببيانات مشروعك الحقيقية من موقع Firebase
+        // تم نسخ بيانات الاتصال الصحيحة من ملف تسجيل الدخول الخاص بك
         const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_PROJECT_ID.appspot.com",
-            messagingSenderId: "YOUR_SENDER_ID",
-            appId: "YOUR_APP_ID"
+            apiKey: "AIzaSyDYgPFDWqtaHm9wzKyRtUqJKS2mQrOiJVk",
+            authDomain: "oooooo-ee246.firebaseapp.com",
+            projectId: "oooooo-ee246",
+            storageBucket: "oooooo-ee246.firebasestorage.app",
+            messagingSenderId: "484234388806",
+            appId: "1:484234388806:web:bafc624785ef1cad10b147",
+            measurementId: "G-V8PMYBC290"
         };
         
         const app = initializeApp(firebaseConfig);
@@ -254,29 +264,27 @@
                 const userData = userDoc.data();
                 document.getElementById('welcomeMessage').innerText = `أهلاً، ${userData.name || 'موظف الاستقبال'}`;
 
-                const linkedDoctors = userData.linkedDoctors || [];
+                // تعديل: الآن يتم جلب الطبيب المرتبط مباشرة من بيانات الممرض
+                const linkedDoctorId = userData.linkedDoctor;
                 const doctorsNav = document.getElementById('doctorsList');
                 doctorsNav.innerHTML = '';
 
-                if (linkedDoctors.length === 0) {
-                    doctorsNav.innerHTML = '<span>لا يوجد أطباء مرتبطون بهذا الحساب.</span>';
+                if (!linkedDoctorId) {
+                    doctorsNav.innerHTML = '<span>لا يوجد طبيب مشرف مرتبط بهذا الحساب.</span>';
                     return;
                 }
 
-                for (const docId of linkedDoctors) {
-                    const doctorDoc = await getDoc(doc(db, "users", docId));
-                    if(doctorDoc.exists()){
-                        const doctorData = doctorDoc.data();
-                        const btn = document.createElement('button');
-                        btn.className = 'doc-btn';
-                        btn.innerText = "د. " + doctorData.name;
-                        btn.onclick = () => switchDoctorView(docId, btn);
-                        doctorsNav.appendChild(btn);
-                    }
-                }
-                
-                if (doctorsNav.firstChild) {
-                    doctorsNav.firstChild.click();
+                const doctorDoc = await getDoc(doc(db, "users", linkedDoctorId));
+                if(doctorDoc.exists()){
+                    const doctorData = doctorDoc.data();
+                    const btn = document.createElement('button');
+                    btn.className = 'doc-btn';
+                    btn.innerText = "د. " + doctorData.name;
+                    btn.onclick = () => switchDoctorView(linkedDoctorId, btn);
+                    doctorsNav.appendChild(btn);
+                    
+                    // تفعيل الطبيب الوحيد تلقائياً
+                    btn.click();
                 }
 
             } catch (error) {
@@ -320,6 +328,9 @@
                 let counter = 1;
                 snapshot.forEach(docSnap => {
                     const booking = docSnap.data();
+                    const status = booking.status || 'انتظار';
+                    const statusClass = status === 'منتهي' ? 'status-done' : 'status-waiting';
+
                     const row = document.createElement('tr');
                     row.innerHTML = `
                         <td>${counter++}</td>
@@ -327,7 +338,7 @@
                         <td>${booking.age || '-'}</td>
                         <td>${booking.phone || '-'}</td>
                         <td>${booking.time || '-'}</td>
-                        <td>${booking.status || 'انتظار'}</td>
+                        <td><span class="status-badge ${statusClass}">${status}</span></td>
                         <td>
                             <button class="btn-delete" title="حذف الكشف" onclick="window.deleteBooking('${docSnap.id}')">
                                 <i class="fas fa-trash-alt"></i>
