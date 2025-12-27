@@ -5,983 +5,293 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>لوحة الطبيب الذكية</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
         :root {
-            --primary: #98D8C8;
-            --secondary: #6BCB77;
-            --dark: #2D6A4F;
-            --light: #F7FFF7;
-            --white: #ffffff;
-            --accent: #FFB84D;
-            --danger: #e74c3c;
-            --shadow: rgba(45, 106, 79, 0.15);
+            --primary: #98D8C8; --secondary: #6BCB77; --dark: #2D6A4F;
+            --light: #F7FFF7; --white: #ffffff; --danger: #e74c3c;
+            --text-light: #6c757d; --border-color: #e0e7e5;
+            --shadow: rgba(45, 106, 79, 0.1);
         }
-
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, var(--light) 0%, #E8F5E9 100%);
-            padding-bottom: 100px;
-            overflow-x: hidden;
+            font-family: 'Cairo', sans-serif; background-color: var(--light);
+            margin: 0; padding-bottom: 120px;
         }
+        .container { max-width: 900px; margin: 0 auto; padding: 1.5rem; }
 
+        /* --- شريط التنقل العلوي --- */
         .doctor-nav {
-            background: var(--white);
-            padding: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 4px 20px var(--shadow);
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            border-bottom: 3px solid var(--primary);
+            background: var(--white); padding: 1rem 1.5rem; display: flex;
+            justify-content: space-between; align-items: center;
+            box-shadow: 0 4px 20px var(--shadow); position: sticky; top: 0; z-index: 1000;
         }
-
-        .doctor-info h3 {
-            color: var(--dark);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 8px;
-        }
-
-        .doctor-status {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: #666;
-            font-size: 14px;
-        }
-
-        .status-indicator {
-            width: 10px;
-            height: 10px;
-            background: #2ecc71;
-            border-radius: 50%;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-
-        .nav-actions {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-        }
-
-        .stats-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
-            padding: 20px;
-        }
-
-        .stat-card {
-            background: var(--white);
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px var(--shadow);
-            text-align: center;
-            border-top: 4px solid var(--primary);
-            transition: transform 0.3s ease;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-5px);
-        }
-
-        .stat-card i {
-            font-size: 32px;
-            color: var(--secondary);
-            margin-bottom: 10px;
-        }
-
-        .stat-number {
-            font-size: 36px;
-            font-weight: bold;
-            color: var(--dark);
-            display: block;
-            margin: 10px 0;
-        }
-
-        .stat-label {
-            color: #666;
-            font-size: 14px;
-        }
-
+        .doctor-info h3 { color: var(--dark); margin: 0; font-size: 1.5rem; }
         .queue-btn {
-            background: linear-gradient(135deg, var(--accent), #FF9A3C);
-            color: var(--white);
-            border: none;
-            padding: 12px 20px;
-            border-radius: 12px;
-            cursor: pointer;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            box-shadow: 0 4px 12px rgba(255, 184, 77, 0.3);
+            background: var(--primary); color: var(--dark); border: none;
+            padding: 0.75rem 1.5rem; border-radius: 25px; cursor: pointer;
+            font-weight: 700; display: flex; align-items: center; gap: 0.5rem;
             transition: all 0.3s ease;
         }
+        .queue-btn:hover { background-color: #82c9b7; }
+        .queue-badge { background: var(--dark); color: var(--white); padding: 2px 10px; border-radius: 12px; font-size: 0.9rem; }
 
-        .queue-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 18px rgba(255, 184, 77, 0.4);
-        }
-
-        .queue-badge {
-            background: var(--white);
-            color: var(--accent);
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-weight: bold;
-            font-size: 14px;
-        }
-
-        #patient-welcome {
-            text-align: center;
-            padding: 80px 20px;
-        }
-
-        #patient-welcome i {
-            color: var(--primary);
-            margin-bottom: 30px;
-            animation: float 3s ease-in-out infinite;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-20px); }
-        }
-
-        #patient-welcome h2 {
-            color: var(--dark);
-            margin-bottom: 15px;
-            font-size: 32px;
-        }
-
-        #patient-welcome p {
-            color: #666;
-            font-size: 18px;
-            margin-bottom: 30px;
-        }
-
-        .welcome-btn {
-            background: linear-gradient(135deg, var(--secondary), var(--primary));
-            color: var(--white);
-            border: none;
-            padding: 15px 40px;
-            border-radius: 12px;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 0 5px 15px rgba(107, 203, 119, 0.3);
-            transition: all 0.3s ease;
-        }
-
-        .welcome-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(107, 203, 119, 0.4);
-        }
-
-        .section-card {
-            background: var(--white);
-            margin: 15px 20px;
-            border-radius: 15px;
-            overflow: hidden;
-            box-shadow: 0 4px 15px var(--shadow);
-            transition: all 0.3s ease;
-        }
-
-        .section-card:hover {
-            box-shadow: 0 6px 25px var(--shadow);
-        }
+        /* --- منطقة العمل الرئيسية --- */
+        #patient-welcome { text-align: center; padding: 6rem 1rem; }
+        #patient-welcome i { color: var(--primary); margin-bottom: 1.5rem; }
+        #patient-welcome h2 { color: var(--dark); font-size: 2rem; }
+        #patient-welcome p { color: var(--text-light); }
 
         .patient-card {
-            padding: 20px;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: var(--white);
-            border-radius: 15px;
-            margin: 15px 20px;
-            box-shadow: 0 5px 20px var(--shadow);
+            padding: 1.5rem; background: var(--dark); color: var(--white);
+            border-radius: 15px; margin-bottom: 1.5rem;
         }
+        .patient-card h3 { margin: 0; font-size: 2rem; }
+        .patient-card-details { margin-top: 0.5rem; display: flex; gap: 1.5rem; opacity: 0.9; }
 
-        .patient-card small {
-            opacity: 0.9;
-            font-size: 13px;
+        .section-card {
+            background: var(--white); margin-bottom: 1.5rem;
+            border-radius: 15px; box-shadow: 0 5px 20px var(--shadow);
         }
-
-        .patient-card h3 {
-            margin: 8px 0 0 0;
-            font-size: 24px;
-        }
-
         .section-header {
-            background: var(--dark);
-            color: var(--white);
-            padding: 18px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            cursor: pointer;
-            transition: background 0.3s ease;
+            padding: 1rem 1.5rem; font-weight: 700; font-size: 1.2rem;
+            color: var(--dark); border-bottom: 1px solid var(--border-color);
         }
-
-        .section-header:hover {
-            background: var(--secondary);
-        }
-
-        .section-header span {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-weight: 600;
-            font-size: 16px;
-        }
-
-        .section-body {
-            padding: 20px;
-            display: none;
-            background: var(--light);
-            border-top: 2px solid var(--primary);
-        }
-
-        .section-body.active {
-            display: block;
-            animation: slideDown 0.3s ease;
-        }
-
-        @keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
+        .section-body { padding: 1.5rem; }
+        .textarea-wrapper { position: relative; }
         textarea {
-            width: 100%;
-            border: 2px solid #e0e0e0;
-            border-radius: 12px;
-            padding: 15px;
-            font-size: 16px;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            resize: vertical;
-            transition: all 0.3s ease;
-            min-height: 120px;
+            width: 100%; border: 1px solid var(--border-color); border-radius: 10px;
+            padding: 1rem; font-size: 1.1rem; font-family: 'Cairo', sans-serif;
+            resize: vertical; min-height: 150px;
         }
+        textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(152, 216, 200, 0.3); }
 
-        textarea:focus {
-            outline: none;
-            border-color: var(--secondary);
-            box-shadow: 0 0 0 4px rgba(107, 203, 119, 0.1);
-            background: var(--white);
+        /* --- زر الإملاء الصوتي --- */
+        .speech-btn {
+            position: absolute; left: 15px; top: 15px; background: none; border: none;
+            color: #b0bec5; cursor: pointer; font-size: 1.5rem; transition: color 0.2s;
         }
+        .speech-btn:hover { color: var(--secondary); }
+        .speech-btn.recording { color: var(--danger); animation: pulse-red 1s infinite; }
+        @keyframes pulse-red { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
 
-        .form-label {
-            display: block;
-            margin-bottom: 10px;
-            color: var(--dark);
-            font-weight: 600;
-            font-size: 14px;
-        }
-
+        /* --- الشريط السفلي للأزرار --- */
         .dock-footer {
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-            background: var(--white);
-            padding: 15px 20px;
-            display: none;
-            grid-template-columns: 1fr 2fr;
-            gap: 15px;
-            box-shadow: 0 -4px 20px var(--shadow);
-            z-index: 1000;
-            border-top: 3px solid var(--primary);
+            position: fixed; bottom: 0; width: 100%; background: var(--white);
+            padding: 1rem; display: none; grid-template-columns: 1fr 1fr; gap: 1rem;
+            box-shadow: 0 -4px 20px var(--shadow); z-index: 1000;
         }
-
         .btn {
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            padding: 15px;
-            font-size: 16px;
-            transition: all 0.3s ease;
+            border: none; border-radius: 12px; cursor: pointer; font-weight: 700;
+            display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+            padding: 1rem; font-size: 1.1rem; transition: all 0.3s ease;
         }
-
-        .btn:hover {
-            transform: translateY(-2px);
-        }
-
-        .btn-main {
-            background: linear-gradient(135deg, var(--secondary), var(--primary));
-            color: var(--white);
-            box-shadow: 0 4px 12px rgba(107, 203, 119, 0.3);
-        }
-
-        .btn-main:hover {
-            box-shadow: 0 6px 18px rgba(107, 203, 119, 0.4);
-        }
-
-        .btn-cancel {
-            background: var(--danger);
-            color: var(--white);
-            box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
-        }
-
-        .btn-cancel:hover {
-            box-shadow: 0 6px 18px rgba(231, 76, 60, 0.4);
-        }
-
-        .btn-logout {
-            background: #95a5a6;
-            color: var(--white);
-            padding: 10px 20px;
-            border-radius: 10px;
-            border: none;
-            cursor: pointer;
-            font-weight: bold;
-            transition: all 0.3s ease;
-        }
-
-        .btn-logout:hover {
-            background: #7f8c8d;
-        }
-
-        #queue-modal {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: 2000;
-            align-items: center;
-            justify-content: center;
-            backdrop-filter: blur(5px);
-            padding: 20px;
-        }
-
-        #queue-modal.active {
-            display: flex;
-        }
-
-        .queue-content {
-            background: var(--white);
-            width: 100%;
-            max-width: 500px;
-            border-radius: 20px;
-            overflow: hidden;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-            animation: slideIn 0.3s ease;
-        }
-
-        .queue-header {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: var(--white);
-            padding: 25px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .queue-header h3 {
-            margin: 0;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-size: 22px;
-        }
-
-        #q-list {
-            max-height: 450px;
-            overflow-y: auto;
-        }
-
-        .q-item {
-            padding: 18px 20px;
-            border-bottom: 1px solid #f0f0f0;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .q-item:hover {
-            background: var(--light);
-            padding-right: 25px;
-        }
-
-        .q-item i {
-            color: var(--secondary);
-            font-size: 24px;
-        }
-
-        .q-item-info {
-            flex: 1;
-        }
-
-        .q-item-info strong {
-            color: var(--dark);
-            font-size: 18px;
-            display: block;
-            margin-bottom: 5px;
-        }
-
-        .q-item-info small {
-            color: #666;
-            font-size: 13px;
-        }
-
-        .queue-footer {
-            padding: 15px;
-            background: #f9f9f9;
-        }
-
-        .empty-queue {
-            padding: 60px 20px;
-            text-align: center;
-            color: #999;
-        }
-
-        .empty-queue i {
-            font-size: 64px;
-            margin-bottom: 20px;
-            color: #ddd;
-        }
-
-        .save-btn {
-            background: linear-gradient(135deg, #4CAF50, #45a049);
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: bold;
-            margin-top: 15px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            justify-content: center;
-            width: 100%;
-            font-size: 16px;
-            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
-            transition: all 0.3s ease;
-        }
-
-        .save-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 18px rgba(76, 175, 80, 0.4);
-        }
-
-        @media (max-width: 768px) {
-            .stats-container {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            .doctor-nav {
-                flex-direction: column;
-                gap: 15px;
-            }
-
-            .nav-actions {
-                width: 100%;
-                justify-content: center;
-            }
-
-            .dock-footer {
-                grid-template-columns: 1fr;
-            }
-
-            .stat-card {
-                padding: 15px;
-            }
-
-            .stat-number {
-                font-size: 28px;
-            }
-        }
-
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(-30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255,255,255,.3);
-            border-radius: 50%;
-            border-top-color: #fff;
-            animation: spin 1s ease-in-out infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
+        .btn-main { background: var(--dark); color: var(--white); }
+        .btn-secondary { background: var(--light); color: var(--dark); border: 1px solid var(--border-color); }
     </style>
 </head>
 <body>
 
 <nav class="doctor-nav">
     <div class="doctor-info">
-        <h3>
-            <i class="fas fa-user-md"></i>
-            <span>لوحة تحكم الطبيب</span>
-        </h3>
-        <div class="doctor-status">
-            <div class="status-indicator"></div>
-            <span id="doc-display-name">جاري التحميل...</span>
-        </div>
+        <h3 id="doc-display-name">لوحة الطبيب</h3>
     </div>
-    <div class="nav-actions">
-        <button class="queue-btn" onclick="toggleQueue()">
-            <i class="fas fa-users"></i>
-            <span>قائمة الانتظار</span>
-            <span class="queue-badge" id="q-count">0</span>
-        </button>
-        <button class="btn-logout" onclick="logout()">
-            <i class="fas fa-sign-out-alt"></i>
-            خروج
-        </button>
-    </div>
+    <button class="queue-btn" onclick="window.location.href='doctor_queue.html'">
+        <i class="fas fa-users"></i>
+        <span>قائمة الانتظار</span>
+        <span class="queue-badge" id="q-count">0</span>
+    </button>
 </nav>
 
-<div class="stats-container">
-    <div class="stat-card">
-        <i class="fas fa-calendar-check"></i>
-        <span class="stat-number" id="today-count">0</span>
-        <span class="stat-label">كشوفات اليوم</span>
-    </div>
-    <div class="stat-card">
-        <i class="fas fa-clock"></i>
-        <span class="stat-number" id="waiting-count">0</span>
-        <span class="stat-label">في الانتظار</span>
-    </div>
-    <div class="stat-card">
-        <i class="fas fa-check-circle"></i>
-        <span class="stat-number" id="completed-count">0</span>
-        <span class="stat-label">تم الانتهاء</span>
-    </div>
-</div>
-
-<div id="patient-welcome">
-    <i class="fas fa-hospital-user fa-5x"></i>
-    <h2 id="welcome-msg">مرحباً دكتور</h2>
-    <p>اختر مريضاً من قائمة الانتظار لبدء الكشف</p>
-    <button class="welcome-btn" onclick="toggleQueue()">
-        <i class="fas fa-users"></i>
-        فتح قائمة المرضى
-    </button>
-</div>
-
-<div id="main-work-area" style="display:none;">
-    <div class="patient-card">
-        <small><i class="fas fa-user-injured"></i> المريض الحالي</small>
-        <h3 id="active-p-name">---</h3>
-        <div style="margin-top: 10px; display: flex; gap: 15px; font-size: 14px;">
-            <span><i class="fas fa-birthday-cake"></i> <span id="active-p-age">--</span> سنة</span>
-            <span><i class="fas fa-phone"></i> <span id="active-p-phone">--</span></span>
-        </div>
+<div class="container">
+    <div id="patient-welcome">
+        <i class="fas fa-notes-medical fa-4x"></i>
+        <h2 id="welcome-msg">مرحباً دكتور</h2>
+        <p>اختر مريضاً من قائمة الانتظار لبدء الكشف</p>
     </div>
 
-    <div class="section-card">
-        <div class="section-header" onclick="toggleSec(0)">
-            <span><i class="fas fa-notes-medical"></i> الأعراض والتشخيص</span>
-            <i class="fas fa-chevron-down"></i>
+    <div id="main-work-area" style="display:none;">
+        <div class="patient-card">
+            <h3 id="active-p-name">---</h3>
+            <div class="patient-card-details">
+                <span><i class="fas fa-birthday-cake"></i> <span id="active-p-age">--</span> سنة</span>
+                <span><i class="fas fa-phone"></i> <span id="active-p-phone">--</span></span>
+            </div>
         </div>
-        <div class="section-body active">
-            <label class="form-label">سجل الأعراض والفحوصات والتشخيص</label>
-            <textarea id="symptoms-text" rows="5" placeholder="مثال: صداع شديد، دوخة، ضغط الدم 140/90..."></textarea>
-            <button class="save-btn" onclick="saveDraft('symptoms')">
-                <i class="fas fa-save"></i>
-                حفظ مؤقت
-            </button>
-        </div>
-    </div>
 
-    <div class="section-card">
-        <div class="section-header" onclick="toggleSec(1)">
-            <span><i class="fas fa-prescription-bottle-medical"></i> الروشتة الطبية</span>
-            <i class="fas fa-chevron-right"></i>
+        <div class="section-card">
+            <div class="section-header"><i class="fas fa-stethoscope"></i> الأعراض والتشخيص</div>
+            <div class="section-body">
+                <div class="textarea-wrapper">
+                    <textarea id="symptoms-text" placeholder="اكتب أو اضغط على الميكروفون للتحدث..."></textarea>
+                    <button class="speech-btn" id="symptoms-speech-btn" title="إملاء الأعراض"><i class="fas fa-microphone"></i></button>
+                </div>
+            </div>
         </div>
-        <div class="section-body">
-            <label class="form-label">الأدوية والجرعات والتعليمات</label>
-            <textarea id="prescription-text" rows="8" placeholder="مثال:&#10;1. أموكسيسيلين 500 مجم - 3 مرات يومياً لمدة 7 أيام&#10;2. بانادول 500 مجم - عند الحاجة للألم&#10;3. شرب السوائل بكثرة والراحة"></textarea>
-            <button class="save-btn" onclick="saveDraft('prescription')">
-                <i class="fas fa-save"></i>
-                حفظ مؤقت
-            </button>
-        </div>
-    </div>
 
-    <div class="section-card">
-        <div class="section-header" onclick="toggleSec(2)">
-            <span><i class="fas fa-notes-medical"></i> ملاحظات إضافية</span>
-            <i class="fas fa-chevron-right"></i>
-        </div>
-        <div class="section-body">
-            <label class="form-label">أي ملاحظات أو تعليمات إضافية</label>
-            <textarea id="notes-text" rows="4" placeholder="ملاحظات خاصة، تحذيرات، متابعة مطلوبة..."></textarea>
-            <button class="save-btn" onclick="saveDraft('notes')">
-                <i class="fas fa-save"></i>
-                حفظ مؤقت
-            </button>
+        <div class="section-card">
+            <div class="section-header"><i class="fas fa-prescription"></i> الروشتة الطبية</div>
+            <div class="section-body">
+                 <div class="textarea-wrapper">
+                    <textarea id="prescription-text" placeholder="اكتب أو اضغط على الميكروفون لإملاء الروشتة..."></textarea>
+                    <button class="speech-btn" id="prescription-speech-btn" title="إملاء الروشتة"><i class="fas fa-microphone"></i></button>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
 <div class="dock-footer" id="dock-footer">
-    <button class="btn btn-cancel" onclick="cancelSession()">
-        <i class="fas fa-times-circle"></i>
-        إلغاء
+    <button class="btn btn-secondary" onclick="viewPatientRecords()">
+        <i class="fas fa-history"></i>
+        سجلات المريض
     </button>
     <button class="btn btn-main" onclick="finishSession()">
         <i class="fas fa-check-circle"></i>
-        إنهاء الكشف وإرسال للصيدلية
+        إنهاء الكشف
     </button>
-</div>
-
-<div id="queue-modal">
-    <div class="queue-content">
-        <div class="queue-header">
-            <h3>
-                <i class="fas fa-list-ol"></i>
-                قائمة المرضى
-            </h3>
-            <span class="queue-badge" id="q-count-modal">0</span>
-        </div>
-        <div id="q-list"></div>
-        <div class="queue-footer">
-            <button class="btn" style="width:100%; background: #ddd; color: #333;" onclick="toggleQueue()">
-                <i class="fas fa-times"></i>
-                إغلاق
-            </button>
-        </div>
-    </div>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-    import { getFirestore, collection, query, where, onSnapshot, doc, updateDoc, addDoc, serverTimestamp, getDocs, getDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+    import { getFirestore, collection, query, where, onSnapshot, doc, updateDoc, addDoc, serverTimestamp, getDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
-    const firebaseConfig = {
-        apiKey: "AIzaSyDYgPFDWqtaHm9wzKyRtUqJKS2mQrOiJVk",
-        authDomain: "oooooo-ee246.firebaseapp.com",
-        projectId: "oooooo-ee246",
-        storageBucket: "oooooo-ee246.firebasestorage.app",
-        messagingSenderId: "484234388806",
-        appId: "1:484234388806:web:bafc624785ef1cad10b147",
-        measurementId: "G-V8PMYBC290"
-    };
-
+    const firebaseConfig = { /* ... ضع إعدادات Firebase الخاصة بك هنا ... */ };
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
     const userId = localStorage.getItem('userId');
-    const userRole = localStorage.getItem('userRole');
-    
-    if (!userId || userRole !== 'doctor') {
-        alert('يجب تسجيل الدخول كطبيب');
-        window.location.href = 'login.html';
-    }
+    if (!userId) window.location.href = 'login.html';
 
-    let doctorName = '';
-    let doctorSpecialty = '';
-    let currentP = null;
+    let currentPatient = null;
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let recognition;
+    let activeTextarea = null;
 
-    async function loadDoctorData() {
-        try {
-            const userDoc = await getDoc(doc(db, "users", userId));
-            if (userDoc.exists()) {
-                const userData = userDoc.data();
-                doctorName = userData.name;
-                doctorSpecialty = userData.specialty || 'عام';
-                
-                document.getElementById('doc-display-name').innerHTML = `د. ${doctorName} - ${doctorSpecialty}`;
-                document.getElementById('welcome-msg').innerText = `مرحباً د. ${doctorName}`;
+    async function initializePage() {
+        const userDoc = await getDoc(doc(db, "users", userId));
+        if (userDoc.exists()) {
+            const name = userDoc.data().name;
+            document.getElementById('doc-display-name').innerText = `د. ${name}`;
+            document.getElementById('welcome-msg').innerText = `مرحباً د. ${name}`;
+        }
+
+        listenToQueue();
+
+        if (SpeechRecognition) {
+            setupSpeechRecognition();
+        } else {
+            document.querySelectorAll('.speech-btn').forEach(btn => btn.style.display = 'none');
+        }
+
+        const selectedPatientData = localStorage.getItem('selectedPatient');
+        if (selectedPatientData) {
+            try {
+                const patient = JSON.parse(selectedPatientData);
+                selectPatient(patient);
+                localStorage.removeItem('selectedPatient');
+            } catch (e) {
+                localStorage.removeItem('selectedPatient');
             }
-        } catch (error) {
-            console.error('Error loading doctor data:', error);
         }
     }
 
-    loadDoctorData();
-
-    const getTodayDate = () => new Date().toLocaleDateString('en-CA');
-
-    const qWaiting = query(
-        collection(db, "appointments"),
-        where("status", "==", "انتظار"),
-        where("doctorId", "==", userId)
-    );
-
-    const qToday = query(
-        collection(db, "appointments"),
-        where("date", "==", getTodayDate()),
-        where("doctorId", "==", userId)
-    );
-
-    onSnapshot(qWaiting, (snap) => {
-        const waitingCount = snap.size;
-        document.getElementById('q-count').innerText = waitingCount;
-        document.getElementById('q-count-modal').innerText = waitingCount;
-        document.getElementById('waiting-count').innerText = waitingCount;
-        
-        const list = document.getElementById('q-list');
-        
-        if (snap.empty) {
-            list.innerHTML = `
-                <div class="empty-queue">
-                    <i class="fas fa-inbox"></i>
-                    <p>لا يوجد مرضى في الانتظار حالياً</p>
-                </div>
-            `;
-            return;
-        }
-        
-        list.innerHTML = '';
-        
-        snap.forEach(d => {
-            const data = d.data();
-            const patientData = { id: d.id, ...data };
-            const patientDataString = JSON.stringify(patientData).replace(/'/g, "\\'");
-            
-            const item = document.createElement('div');
-            item.className = 'q-item';
-            item.onclick = () => selectPatient(patientData);
-            item.innerHTML = `
-                <i class="fas fa-user-circle"></i>
-                <div class="q-item-info">
-                    <strong>${data.name}</strong>
-                    <small><i class="fas fa-clock"></i> ${data.time} | <i class="fas fa-phone"></i> ${data.phone}</small>
-                </div>
-                <i class="fas fa-chevron-left" style="color: #ccc;"></i>
-            `;
-            list.appendChild(item);
+    function listenToQueue() {
+        const q = query(collection(db, "appointments"), where("status", "==", "waiting"), where("doctorId", "==", userId));
+        onSnapshot(q, (snap) => {
+            document.getElementById('q-count').innerText = snap.size;
         });
-    });
-
-    onSnapshot(qToday, (snap) => {
-        const todayCount = snap.size;
-        const completedCount = snap.docs.filter(d => d.data().status === 'منتهي').length;
-        
-        document.getElementById('today-count').innerText = todayCount;
-        document.getElementById('completed-count').innerText = completedCount;
-    });
+    }
 
     window.selectPatient = (patientData) => {
-        currentP = patientData;
+        currentPatient = patientData;
         document.getElementById('patient-welcome').style.display = 'none';
         document.getElementById('main-work-area').style.display = 'block';
         document.getElementById('dock-footer').style.display = 'grid';
         
-        document.getElementById('active-p-name').innerText = currentP.name;
-        document.getElementById('active-p-age').innerText = currentP.age || '--';
-        document.getElementById('active-p-phone').innerText = currentP.phone || '--';
+        document.getElementById('active-p-name').innerText = currentPatient.name;
+        document.getElementById('active-p-age').innerText = currentPatient.age || '--';
+        document.getElementById('active-p-phone').innerText = currentPatient.phone || '--';
         
         document.getElementById('symptoms-text').value = '';
         document.getElementById('prescription-text').value = '';
-        document.getElementById('notes-text').value = '';
-        
-        toggleQueue();
-        
-        window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
-    window.saveDraft = (type) => {
-        const field = type === 'symptoms' ? 'symptoms-text' : 
-                     type === 'prescription' ? 'prescription-text' : 'notes-text';
-        const value = document.getElementById(field).value;
+    function setupSpeechRecognition() {
+        recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = 'ar-EG';
+
+        recognition.onresult = (event) => {
+            let final_transcript = '';
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+                if (event.results[i].isFinal) {
+                    final_transcript += event.results[i][0].transcript + ' ';
+                }
+            }
+            if (activeTextarea && final_transcript) {
+                activeTextarea.value += final_transcript;
+            }
+        };
         
-        if (value.trim()) {
-            localStorage.setItem(`draft_${currentP?.id}_${type}`, value);
-            
-            const btn = event.target;
-            const originalHTML = btn.innerHTML;
-            btn.innerHTML = '<i class="fas fa-check"></i> تم الحفظ';
-            btn.style.background = 'linear-gradient(135deg, #2ecc71, #27ae60)';
-            
-            setTimeout(() => {
-                btn.innerHTML = originalHTML;
-                btn.style.background = '';
-            }, 2000);
+        recognition.onend = () => {
+            document.querySelector('.speech-btn.recording')?.classList.remove('recording');
+            activeTextarea = null;
+        };
+
+        document.getElementById('symptoms-speech-btn').onclick = () => toggleListening(document.getElementById('symptoms-text'), 'symptoms-speech-btn');
+        document.getElementById('prescription-speech-btn').onclick = () => toggleListening(document.getElementById('prescription-text'), 'prescription-speech-btn');
+    }
+
+    function toggleListening(textarea, btnId) {
+        const btn = document.getElementById(btnId);
+        if (activeTextarea) {
+            recognition.stop();
+            return;
         }
-    };
+        activeTextarea = textarea;
+        recognition.start();
+        btn.classList.add('recording');
+    }
 
     window.finishSession = async () => {
-        if (!currentP) return;
-        
+        if (!currentPatient) return;
         const symptoms = document.getElementById('symptoms-text').value.trim();
         const prescription = document.getElementById('prescription-text').value.trim();
-        const notes = document.getElementById('notes-text').value.trim();
-        
-        if (!symptoms && !prescription) {
-            alert('الرجاء إدخال التشخيص أو الروشتة على الأقل');
-            return;
-        }
-
-        if (!confirm(`هل أنت متأكد من إنهاء كشف ${currentP.name}؟`)) {
-            return;
-        }
-
-        const btn = event.target;
-        btn.disabled = true;
-        btn.innerHTML = '<div class="loading"></div> جاري الحفظ...';
+        if (!symptoms && !prescription) return alert('الرجاء إدخال التشخيص أو الروشتة.');
+        if (!confirm(`هل أنت متأكد من إنهاء كشف ${currentPatient.name}؟`)) return;
 
         try {
             await addDoc(collection(db, "prescriptions"), {
-                patientId: currentP.id,
-                patientName: currentP.name,
-                patientAge: currentP.age,
-                patientPhone: currentP.phone,
+                patientId: currentPatient.id,
+                patientName: currentPatient.name,
+                patientPhone: currentPatient.phone,
                 symptoms: symptoms,
                 prescription: prescription,
-                notes: notes,
-                doctor: `د. ${doctorName}`,
                 doctorId: userId,
-                specialty: doctorSpecialty,
-                status: 'قيد التحضير',
-                date: getTodayDate(),
-                timestamp: serverTimestamp(),
-                createdAt: new Date().toISOString()
+                date: new Date().toLocaleDateString('en-CA'),
+                timestamp: serverTimestamp()
             });
-
-            await updateDoc(doc(db, "appointments", currentP.id), {
-                status: "منتهي",
-                completedAt: serverTimestamp()
-            });
-
-            localStorage.removeItem(`draft_${currentP.id}_symptoms`);
-            localStorage.removeItem(`draft_${currentP.id}_prescription`);
-            localStorage.removeItem(`draft_${currentP.id}_notes```javascript
-            localStorage.removeItem(`draft_${currentP.id}_notes`);
-
-            alert('✓ تم إنهاء الكشف بنجاح وإرسال الروشتة للصيدلية');
-            
-            currentP = null;
-            document.getElementById('patient-welcome').style.display = 'block';
-            document.getElementById('main-work-area').style.display = 'none';
-            document.getElementById('dock-footer').style.display = 'none';
-            
-            document.getElementById('symptoms-text').value = '';
-            document.getElementById('prescription-text').value = '';
-            document.getElementById('notes-text').value = '';
-            
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            
+            await updateDoc(doc(db, "appointments", currentPatient.id), { status: "منتهي" });
+            alert('✓ تم إنهاء الكشف بنجاح.');
+            window.location.reload(); // إعادة تحميل الصفحة للعودة للحالة الأولية
         } catch (e) {
             alert("خطأ في الحفظ: " + e.message);
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-check-circle"></i> إنهاء الكشف وإرسال للصيدلية';
         }
     };
 
-    window.cancelSession = () => {
-        if (confirm(`هل تريد إلغاء كشف ${currentP?.name || 'المريض'}؟\n\nسيتم حذف جميع البيانات المدخلة.`)) {
-            if (currentP) {
-                localStorage.removeItem(`draft_${currentP.id}_symptoms`);
-                localStorage.removeItem(`draft_${currentP.id}_prescription`);
-                localStorage.removeItem(`draft_${currentP.id}_notes`);
-            }
-            
-            currentP = null;
-            document.getElementById('patient-welcome').style.display = 'block';
-            document.getElementById('main-work-area').style.display = 'none';
-            document.getElementById('dock-footer').style.display = 'none';
-            
-            document.getElementById('symptoms-text').value = '';
-            document.getElementById('prescription-text').value = '';
-            document.getElementById('notes-text').value = '';
-            
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
+    window.viewPatientRecords = () => {
+        if (!currentPatient) return;
+        // تخزين بيانات المريض للانتقال بها إلى صفحة السجلات
+        localStorage.setItem('patientForRecords', JSON.stringify({
+            name: currentPatient.name,
+            phone: currentPatient.phone
+        }));
+        // فتح صفحة السجلات في نافذة جديدة
+        window.open('patient_records.html', '_blank');
     };
 
-    window.toggleQueue = () => {
-        const modal = document.getElementById('queue-modal');
-        modal.classList.toggle('active');
-    };
-
-    window.toggleSec = (idx) => {
-        const bodies = document.querySelectorAll('.section-body');
-        const headers = document.querySelectorAll('.section-header');
-        
-        bodies.forEach((body, i) => {
-            if (i === idx) {
-                body.classList.add('active');
-                const icon = headers[i].querySelector('i:last-child');
-                icon.className = 'fas fa-chevron-down';
-            } else {
-                body.classList.remove('active');
-                const icon = headers[i].querySelector('i:last-child');
-                icon.className = 'fas fa-chevron-right';
-            }
-        });
-    };
-
-    window.logout = () => {
-        if (currentP) {
-            alert('لا يمكن تسجيل الخروج أثناء الكشف على مريض\n\nالرجاء إنهاء أو إلغاء الكشف أولاً');
-            return;
-        }
-        
-        if (confirm('هل أنت متأكد من تسجيل الخروج؟')) {
-            localStorage.clear();
-            window.location.href = 'login.html';
-        }
-    };
-
-    document.getElementById('queue-modal').addEventListener('click', (e) => {
-        if (e.target.id === 'queue-modal') {
-            toggleQueue();
-        }
-    });
-
-    window.addEventListener('beforeunload', (e) => {
-        if (currentP) {
-            e.preventDefault();
-            e.returnValue = 'لديك كشف جاري، هل أنت متأكد من المغادرة؟';
-        }
-    });
-
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            if (document.getElementById('queue-modal').classList.contains('active')) {
-                toggleQueue();
-            }
-        }
-    });
-
-    setInterval(() => {
-        const indicator = document.querySelector('.status-indicator');
-        if (indicator) {
-            indicator.style.opacity = indicator.style.opacity === '0.5' ? '1' : '0.5';
-        }
-    }, 1000);
+    initializePage();
 </script>
 </body>
-    </html>
+</html>
