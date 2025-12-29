@@ -42,27 +42,12 @@
             padding: 0.6rem 1.2rem;
         }
         .btn-logout:hover { background-color: var(--danger); color: var(--white); }
-        .doctors-nav {
-            display: flex; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1.5rem;
-            padding: 1rem; background-color: var(--white); border-radius: 12px;
-            box-shadow: 0 5px 15px var(--shadow);
-        }
-        .doc-btn {
-            padding: 0.6rem 1.2rem; border: 1px solid var(--border-color); border-radius: 25px;
-            background-color: var(--white); color: var(--text-light); font-weight: 600;
-            cursor: pointer; transition: all 0.3s ease;
-        }
-        .doc-btn:hover { border-color: var(--primary); color: var(--dark); }
-        .doc-btn.active {
-            background-color: var(--primary); color: var(--dark);
-            border-color: var(--primary); font-weight: 700;
-        }
         .table-container {
             background-color: var(--white); border-radius: 12px; overflow-x: auto;
-            box-shadow: 0 5px 20px var(--shadow);
+            box-shadow: 0 5px 20px var(--shadow); margin-top: 1.5rem;
         }
         table {
-            width: 100%; border-collapse: collapse; text-align: center; min-width: 800px;
+            width: 100%; border-collapse: collapse; text-align: center; min-width: 900px;
         }
         th, td { padding: 1rem; vertical-align: middle; }
         thead {
@@ -74,7 +59,7 @@
         tbody tr:hover { background-color: var(--light); }
         .status-badge {
             padding: 0.3rem 0.8rem; border-radius: 15px; font-weight: 600;
-            font-size: 0.8rem; color: var(--dark);
+            font-size: 0.8rem;
         }
         .status-waiting { background-color: #fff3cd; color: #664d03; }
         .status-done { background-color: #d1e7dd; color: #0f5132; }
@@ -91,7 +76,7 @@
         <header class="header">
             <h2 class="header-title" id="welcomeMessage">جاري التحميل...</h2>
             <div class="header-actions">
-                <a href="add_booking.html" id="addBookingBtn" class="btn btn-add" style="display: none;">
+                <a href="add_booking.html" id="addBookingBtn" class="btn btn-add">
                     <i class="fas fa-plus"></i> إضافة كشف
                 </a>
                 <button id="logoutBtn" class="btn btn-logout">
@@ -100,25 +85,20 @@
             </div>
         </header>
 
-        <nav class="doctors-nav" id="doctorsList">
-            <div class="loading-placeholder"><i class="fas fa-spinner fa-spin"></i> جاري تحميل الأطباء...</div>
-        </nav>
-
         <main class="table-container">
             <table>
                 <thead>
                     <tr>
                         <th>#</th>
                         <th>اسم المريض</th>
-                        <th>العمر</th>
-                        <th>الهاتف</th>
+                        <th>الطبيب</th>
                         <th>الوقت</th>
                         <th>الحالة</th>
                         <th>إجراء</th>
                     </tr>
                 </thead>
                 <tbody id="bookingsBody">
-                    <tr><td colspan="7" class="loading-placeholder">الرجاء اختيار طبيب لعرض الحجوزات الخاصة به.</td></tr>
+                    <tr><td colspan="6" class="loading-placeholder"><i class="fas fa-spinner fa-spin"></i> جاري تحميل الحجوزات...</td></tr>
                 </tbody>
             </table>
         </main>
@@ -127,7 +107,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
-        import { getFirestore, collection, query, where, onSnapshot, doc, deleteDoc, getDoc, getDocs, orderBy } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+        import { getFirestore, collection, query, where, onSnapshot, doc, deleteDoc, getDoc, orderBy } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDYgPFDWqtaHm9wzKyRtUqJKS2mQrOiJVk",
@@ -143,34 +123,27 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        let currentDoctorId = null; 
         let unsubscribeFromBookings = null;
+        let doctorsMap = new Map();
 
         const ui = {
             welcomeMessage: document.getElementById('welcomeMessage'),
-            addBookingBtn: document.getElementById('addBookingBtn'),
             logoutBtn: document.getElementById('logoutBtn'),
-            doctorsListNav: document.getElementById('doctorsList'),
             bookingsBody: document.getElementById('bookingsBody')
         };
 
         function handleLogout() {
-            signOut(auth).then(() => {
+            signOut(auth).catch(console.error).finally(() => {
                 localStorage.clear();
                 window.location.href = 'login.html';
-            }).catch(error => {
-                console.error("Logout Error:", error);
-                alert("حدث خطأ أثناء تسجيل الخروج.");
             });
         }
 
         async function initializePage(user) {
             try {
-                const userDocRef = doc(db, "users", user.uid);
-                const userDoc = await getDoc(userDocRef);
-
+                const userDoc = await getDoc(doc(db, "users", user.uid));
                 if (!userDoc.exists()) {
-                    alert("بيانات المستخدم غير موجودة. سيتم تسجيل خروجك.");
+                    alert("بيانات المستخدم غير موجودة.");
                     handleLogout();
                     return;
                 }
@@ -178,84 +151,51 @@
                 const userData = userDoc.data();
                 ui.welcomeMessage.textContent = `أهلاً، ${userData.name || 'موظف الاستقبال'}`;
 
-                // **الكود المصحح لجلب الأطباء المرتبطين**
                 const linkedDoctorIds = userData.linkedDoctors || [];
                 if (linkedDoctorIds.length === 0) {
-                    ui.doctorsListNav.innerHTML = '<div class="loading-placeholder">لا يوجد أطباء مرتبطون بهذا الحساب. يرجى مراجعة مسؤول النظام.</div>';
+                    ui.bookingsBody.innerHTML = '<tr><td colspan="6" class="loading-placeholder">لا يوجد أطباء مرتبطون بهذا الحساب.</td></tr>';
                     return;
                 }
-
-                const doctorDocsPromises = linkedDoctorIds.map(id => getDoc(doc(db, "users", id)));
-                const doctorDocs = await Promise.all(doctorDocsPromises);
-
-                ui.doctorsListNav.innerHTML = ''; // إفراغ محتوى التحميل
-                doctorDocs.forEach((doctorDoc, index) => {
-                    if (doctorDoc.exists()) {
-                        const doctorData = doctorDoc.data();
-                        const doctorId = linkedDoctorIds[index];
-                        
-                        const btn = document.createElement('button');
-                        btn.className = 'doc-btn';
-                        btn.textContent = `د. ${doctorData.name}`;
-                        btn.dataset.doctorId = doctorId; // تخزين المعرف في الزر
-                        btn.onclick = () => switchDoctorView(doctorId, btn);
-                        
-                        ui.doctorsListNav.appendChild(btn);
-                    }
+                
+                // جلب بيانات الأطباء مرة واحدة لتخزين أسمائهم
+                const doctorsQuery = query(collection(db, "users"), where("__name__", "in", linkedDoctorIds));
+                const doctorsSnapshot = await getDocs(doctorsQuery);
+                doctorsSnapshot.forEach(doc => {
+                    doctorsMap.set(doc.id, doc.data().name || "طبيب غير معروف");
                 });
 
-                // تفعيل أول طبيب في القائمة تلقائياً
-                const firstDoctorBtn = ui.doctorsListNav.querySelector('.doc-btn');
-                if (firstDoctorBtn) {
-                    firstDoctorBtn.click();
-                } else {
-                     ui.bookingsBody.innerHTML = '<tr><td colspan="7" class="loading-placeholder">لم يتم العثور على بيانات الأطباء المرتبطين.</td></tr>';
-                }
+                loadAllBookings(linkedDoctorIds);
 
             } catch (error) {
                 console.error("Initialization Error:", error);
-                ui.doctorsListNav.innerHTML = '<div class="loading-placeholder">حدث خطأ أثناء تحميل البيانات.</div>';
+                ui.bookingsBody.innerHTML = '<tr><td colspan="6" class="loading-placeholder">حدث خطأ أثناء تحميل البيانات.</td></tr>';
             }
         }
 
-        function switchDoctorView(doctorId, buttonElement) {
-            currentDoctorId = doctorId;
-            localStorage.setItem('selectedDoctorId', doctorId); // لتمريره لصفحة إضافة الحجز
+        function loadAllBookings(doctorIds) {
+            if (unsubscribeFromBookings) unsubscribeFromBookings();
 
-            document.querySelectorAll('.doc-btn').forEach(b => b.classList.remove('active'));
-            buttonElement.classList.add('active');
-            ui.addBookingBtn.style.display = 'inline-flex';
-
-            loadBookingsForDoctor(doctorId);
-        }
-
-        function loadBookingsForDoctor(doctorId) {
-            if (unsubscribeFromBookings) {
-                unsubscribeFromBookings(); // إيقاف الاستماع السابق
-            }
-
-            ui.bookingsBody.innerHTML = '<tr><td colspan="7" class="loading-placeholder"><i class="fas fa-spinner fa-spin"></i> جاري تحميل الحجوزات...</td></tr>';
-            
             const today = new Date();
             const todayString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
             
             const bookingsQuery = query(
                 collection(db, "appointments"), 
-                where("doctorId", "==", doctorId),
+                where("doctorId", "in", doctorIds),
                 where("date", "==", todayString),
                 orderBy("time")
             );
 
             unsubscribeFromBookings = onSnapshot(bookingsQuery, (snapshot) => {
                 if (snapshot.empty) {
-                    ui.bookingsBody.innerHTML = '<tr><td colspan="7" class="loading-placeholder">لا توجد حجوزات لهذا الطبيب اليوم.</td></tr>';
+                    ui.bookingsBody.innerHTML = '<tr><td colspan="6" class="loading-placeholder">لا توجد حجوزات اليوم.</td></tr>';
                     return;
                 }
                 
-                ui.bookingsBody.innerHTML = ''; // إفراغ الجدول قبل إضافة الصفوف الجديدة
+                ui.bookingsBody.innerHTML = '';
                 let counter = 1;
                 snapshot.forEach(docSnap => {
                     const booking = docSnap.data();
+                    const doctorName = doctorsMap.get(booking.doctorId) || "غير محدد";
                     const status = booking.status || 'انتظار';
                     const statusClass = status === 'منتهي' ? 'status-done' : 'status-waiting';
 
@@ -263,8 +203,7 @@
                     row.innerHTML = `
                         <td>${counter++}</td>
                         <td><b>${booking.patientName || '-'}</b></td>
-                        <td>${booking.age || '-'}</td>
-                        <td>${booking.phone || '-'}</td>
+                        <td>د. ${doctorName}</td>
                         <td>${booking.time || '-'}</td>
                         <td><span class="status-badge ${statusClass}">${status}</span></td>
                         <td>
@@ -276,13 +215,11 @@
                 });
             }, (error) => {
                 console.error("Error fetching bookings:", error);
-                ui.bookingsBody.innerHTML = '<tr><td colspan="7" class="loading-placeholder">حدث خطأ في جلب الحجوزات. تأكد من إنشاء الفهرس المطلوب في Firestore.</td></tr>';
-                // تذكير مهم في الكونسول
-                console.warn("إذا كان هذا أول تشغيل، قد تحتاج لإنشاء فهرس مركب في Firestore. ابحث عن رسالة خطأ في الكونسول تحتوي على رابط لإنشاء الفهرس.");
+                ui.bookingsBody.innerHTML = '<tr><td colspan="6" class="loading-placeholder">حدث خطأ في جلب الحجوزات. تأكد من إنشاء الفهرس المطلوب في Firestore.</td></tr>';
+                console.warn("تنبيه: قد تحتاج لإنشاء فهرس مركب في Firestore. ابحث عن رسالة خطأ في الكونسول تحتوي على رابط لإنشاء الفهرس.");
             });
         }
 
-        // تفويض الأحداث لحذف الحجوزات
         ui.bookingsBody.addEventListener('click', async (e) => {
             const deleteButton = e.target.closest('.btn-action');
             if (deleteButton) {
@@ -290,29 +227,23 @@
                 if (confirm('هل أنت متأكد من حذف هذا الكشف؟')) {
                     try {
                         await deleteDoc(doc(db, "appointments", bookingId));
-                        // سيتم تحديث الواجهة تلقائياً بفضل onSnapshot
                     } catch (error) {
                         console.error("Error deleting booking:", error);
-                        alert("حدث خطأ أثناء محاولة الحذف.");
+                        alert("حدث خطأ أثناء الحذف.");
                     }
                 }
             }
         });
 
-        // مراقبة حالة المصادقة
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                // المستخدم مسجل دخوله
                 initializePage(user);
             } else {
-                // المستخدم ليس مسجل دخوله
-                localStorage.clear();
                 window.location.href = 'login.html';
             }
         });
 
         ui.logoutBtn.addEventListener('click', handleLogout);
-
     </script>
 </body>
 </html>
