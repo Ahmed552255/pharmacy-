@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <!-- ... (نفس قسم الـ head والـ style بدون تغيير) ... -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>لوحة الاستقبال الذكية</title>
@@ -59,16 +58,16 @@
             border-color: var(--primary); font-weight: 700;
         }
         .table-container {
-            background-color: var(--white); border-radius: 12px; overflow: hidden;
+            background-color: var(--white); border-radius: 12px; overflow-x: auto;
             box-shadow: 0 5px 20px var(--shadow);
         }
         table {
-            width: 100%; border-collapse: collapse; text-align: center; min-width: 700px;
+            width: 100%; border-collapse: collapse; text-align: center; min-width: 800px;
         }
         th, td { padding: 1rem; vertical-align: middle; }
         thead {
             background-color: var(--dark); color: var(--white); font-size: 0.9rem;
-            text-transform: uppercase;
+            text-transform: uppercase; letter-spacing: 0.5px;
         }
         tbody tr { border-bottom: 1px solid var(--border-color); }
         tbody tr:last-child { border-bottom: none; }
@@ -79,47 +78,47 @@
         }
         .status-waiting { background-color: #fff3cd; color: #664d03; }
         .status-done { background-color: #d1e7dd; color: #0f5132; }
-        .btn-delete {
+        .btn-action {
             background: none; border: none; color: var(--text-light); cursor: pointer;
-            padding: 0.5rem; border-radius: 50%; transition: all 0.2s ease;
+            padding: 0.5rem; border-radius: 50%; transition: all 0.2s ease; font-size: 1rem;
         }
-        .btn-delete:hover { color: var(--danger); background-color: #fbe9e7; }
+        .btn-action:hover { color: var(--danger); background-color: #fbe9e7; }
+        .loading-placeholder { text-align: center; padding: 2rem; color: var(--text-light); }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- ... (نفس قسم الـ header والـ table بدون تغيير) ... -->
         <header class="header">
             <h2 class="header-title" id="welcomeMessage">جاري التحميل...</h2>
             <div class="header-actions">
-                <a href="add_booking.html" id="addBookingBtn" class="btn btn-add">
+                <a href="add_booking.html" id="addBookingBtn" class="btn btn-add" style="display: none;">
                     <i class="fas fa-plus"></i> إضافة كشف
                 </a>
-                <button onclick="logout()" class="btn btn-logout">
+                <button id="logoutBtn" class="btn btn-logout">
                     <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
                 </button>
             </div>
         </header>
 
         <nav class="doctors-nav" id="doctorsList">
-            <span><i class="fas fa-spinner fa-spin"></i> جاري تحميل الأطباء...</span>
+            <div class="loading-placeholder"><i class="fas fa-spinner fa-spin"></i> جاري تحميل الأطباء...</div>
         </nav>
 
         <main class="table-container">
             <table>
                 <thead>
                     <tr>
-                        <th>م</th>
+                        <th>#</th>
                         <th>اسم المريض</th>
                         <th>العمر</th>
                         <th>الهاتف</th>
-                        <th>الساعة</th>
+                        <th>الوقت</th>
                         <th>الحالة</th>
                         <th>إجراء</th>
                     </tr>
                 </thead>
                 <tbody id="bookingsBody">
-                    <tr><td colspan="7">الرجاء اختيار طبيب لعرض الحجوزات الخاصة به.</td></tr>
+                    <tr><td colspan="7" class="loading-placeholder">الرجاء اختيار طبيب لعرض الحجوزات الخاصة به.</td></tr>
                 </tbody>
             </table>
         </main>
@@ -127,9 +126,9 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-        import { getFirestore, collection, query, where, onSnapshot, doc, deleteDoc, getDoc, orderBy } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
+        import { getFirestore, collection, query, where, onSnapshot, doc, deleteDoc, getDoc, getDocs, orderBy } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
-        // بيانات الاتصال الصحيحة من ملف تسجيل الدخول
         const firebaseConfig = {
             apiKey: "AIzaSyDYgPFDWqtaHm9wzKyRtUqJKS2mQrOiJVk",
             authDomain: "oooooo-ee246.firebaseapp.com",
@@ -141,77 +140,104 @@
         };
         
         const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
         const db = getFirestore(app);
 
-        const userId = localStorage.getItem('userId');
         let currentDoctorId = null; 
         let unsubscribeFromBookings = null;
 
-        async function initializePage() {
-            if(!userId) {
+        const ui = {
+            welcomeMessage: document.getElementById('welcomeMessage'),
+            addBookingBtn: document.getElementById('addBookingBtn'),
+            logoutBtn: document.getElementById('logoutBtn'),
+            doctorsListNav: document.getElementById('doctorsList'),
+            bookingsBody: document.getElementById('bookingsBody')
+        };
+
+        function handleLogout() {
+            signOut(auth).then(() => {
+                localStorage.clear();
                 window.location.href = 'login.html';
-                return;
-            }
-            document.getElementById('addBookingBtn').style.display = 'none';
+            }).catch(error => {
+                console.error("Logout Error:", error);
+                alert("حدث خطأ أثناء تسجيل الخروج.");
+            });
+        }
 
+        async function initializePage(user) {
             try {
-                const userDoc = await getDoc(doc(db, "users", userId));
+                const userDocRef = doc(db, "users", user.uid);
+                const userDoc = await getDoc(userDocRef);
+
                 if (!userDoc.exists()) {
-                    logout();
+                    alert("بيانات المستخدم غير موجودة. سيتم تسجيل خروجك.");
+                    handleLogout();
                     return;
                 }
+
                 const userData = userDoc.data();
-                document.getElementById('welcomeMessage').innerText = `أهلاً، ${userData.name || 'موظف الاستقبال'}`;
+                ui.welcomeMessage.textContent = `أهلاً، ${userData.name || 'موظف الاستقبال'}`;
 
-                // --- الجزء الذي تم تعديله ليكون أكثر ذكاءً ---
-                // يبحث عن الحقل الصحيح للطبيب المرتبط
-                const linkedDoctorId = userData.linkedDoctor || (Array.isArray(userData.linkedDoctors) ? userData.linkedDoctors[0] : null);
-                
-                const doctorsNav = document.getElementById('doctorsList');
-                doctorsNav.innerHTML = '';
-
-                if (!linkedDoctorId) {
-                    // إذا لم يجد أي حقل، يعرض الرسالة
-                    doctorsNav.innerHTML = '<span>لا يوجد طبيب مشرف مرتبط بهذا الحساب. يرجى مراجعة مسؤول النظام أو التسجيل مرة أخرى وربط الحساب بطبيب.</span>';
+                // **الكود المصحح لجلب الأطباء المرتبطين**
+                const linkedDoctorIds = userData.linkedDoctors || [];
+                if (linkedDoctorIds.length === 0) {
+                    ui.doctorsListNav.innerHTML = '<div class="loading-placeholder">لا يوجد أطباء مرتبطون بهذا الحساب. يرجى مراجعة مسؤول النظام.</div>';
                     return;
                 }
 
-                const doctorDoc = await getDoc(doc(db, "users", linkedDoctorId));
-                if(doctorDoc.exists()){
-                    const doctorData = doctorDoc.data();
-                    const btn = document.createElement('button');
-                    btn.className = 'doc-btn';
-                    btn.innerText = "د. " + doctorData.name;
-                    btn.onclick = () => switchDoctorView(linkedDoctorId, btn);
-                    doctorsNav.appendChild(btn);
-                    
-                    btn.click(); // تفعيل الطبيب تلقائياً
+                const doctorDocsPromises = linkedDoctorIds.map(id => getDoc(doc(db, "users", id)));
+                const doctorDocs = await Promise.all(doctorDocsPromises);
+
+                ui.doctorsListNav.innerHTML = ''; // إفراغ محتوى التحميل
+                doctorDocs.forEach((doctorDoc, index) => {
+                    if (doctorDoc.exists()) {
+                        const doctorData = doctorDoc.data();
+                        const doctorId = linkedDoctorIds[index];
+                        
+                        const btn = document.createElement('button');
+                        btn.className = 'doc-btn';
+                        btn.textContent = `د. ${doctorData.name}`;
+                        btn.dataset.doctorId = doctorId; // تخزين المعرف في الزر
+                        btn.onclick = () => switchDoctorView(doctorId, btn);
+                        
+                        ui.doctorsListNav.appendChild(btn);
+                    }
+                });
+
+                // تفعيل أول طبيب في القائمة تلقائياً
+                const firstDoctorBtn = ui.doctorsListNav.querySelector('.doc-btn');
+                if (firstDoctorBtn) {
+                    firstDoctorBtn.click();
                 } else {
-                    doctorsNav.innerHTML = `<span>الطبيب المشرف بالمعرف (${linkedDoctorId}) لم يتم العثور عليه.</span>`;
+                     ui.bookingsBody.innerHTML = '<tr><td colspan="7" class="loading-placeholder">لم يتم العثور على بيانات الأطباء المرتبطين.</td></tr>';
                 }
 
             } catch (error) {
                 console.error("Initialization Error:", error);
-                document.getElementById('doctorsList').innerHTML = '<span>حدث خطأ أثناء تحميل البيانات. تأكد من صحة إعدادات Firebase.</span>';
+                ui.doctorsListNav.innerHTML = '<div class="loading-placeholder">حدث خطأ أثناء تحميل البيانات.</div>';
             }
         }
 
-        // ... (باقي دوال JavaScript بدون تغيير) ...
         function switchDoctorView(doctorId, buttonElement) {
             currentDoctorId = doctorId;
-            localStorage.setItem('selectedDoctorId', doctorId);
+            localStorage.setItem('selectedDoctorId', doctorId); // لتمريره لصفحة إضافة الحجز
 
             document.querySelectorAll('.doc-btn').forEach(b => b.classList.remove('active'));
             buttonElement.classList.add('active');
-            document.getElementById('addBookingBtn').style.display = 'inline-flex';
+            ui.addBookingBtn.style.display = 'inline-flex';
 
             loadBookingsForDoctor(doctorId);
         }
 
         function loadBookingsForDoctor(doctorId) {
-            if(unsubscribeFromBookings) unsubscribeFromBookings();
+            if (unsubscribeFromBookings) {
+                unsubscribeFromBookings(); // إيقاف الاستماع السابق
+            }
 
-            const todayString = new Date().toLocaleDateString('en-CA');
+            ui.bookingsBody.innerHTML = '<tr><td colspan="7" class="loading-placeholder"><i class="fas fa-spinner fa-spin"></i> جاري تحميل الحجوزات...</td></tr>';
+            
+            const today = new Date();
+            const todayString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
             
             const bookingsQuery = query(
                 collection(db, "appointments"), 
@@ -221,59 +247,72 @@
             );
 
             unsubscribeFromBookings = onSnapshot(bookingsQuery, (snapshot) => {
-                const tbody = document.getElementById('bookingsBody');
-                tbody.innerHTML = '';
-                
                 if (snapshot.empty) {
-                    tbody.innerHTML = '<tr><td colspan="7">لا توجد حجوزات لهذا الطبيب اليوم.</td></tr>';
+                    ui.bookingsBody.innerHTML = '<tr><td colspan="7" class="loading-placeholder">لا توجد حجوزات لهذا الطبيب اليوم.</td></tr>';
                     return;
                 }
                 
+                ui.bookingsBody.innerHTML = ''; // إفراغ الجدول قبل إضافة الصفوف الجديدة
                 let counter = 1;
                 snapshot.forEach(docSnap => {
                     const booking = docSnap.data();
                     const status = booking.status || 'انتظار';
                     const statusClass = status === 'منتهي' ? 'status-done' : 'status-waiting';
 
-                    const row = document.createElement('tr');
+                    const row = ui.bookingsBody.insertRow();
                     row.innerHTML = `
                         <td>${counter++}</td>
-                        <td><b>${booking.name || '-'}</b></td>
+                        <td><b>${booking.patientName || '-'}</b></td>
                         <td>${booking.age || '-'}</td>
                         <td>${booking.phone || '-'}</td>
                         <td>${booking.time || '-'}</td>
                         <td><span class="status-badge ${statusClass}">${status}</span></td>
                         <td>
-                            <button class="btn-delete" title="حذف الكشف" onclick="window.deleteBooking('${docSnap.id}')">
+                            <button class="btn-action" title="حذف الكشف" data-booking-id="${docSnap.id}">
                                 <i class="fas fa-trash-alt"></i>
                             </button>
                         </td>
                     `;
-                    tbody.appendChild(row);
                 });
             }, (error) => {
                 console.error("Error fetching bookings:", error);
-                document.getElementById('bookingsBody').innerHTML = '<tr><td colspan="7">حدث خطأ في جلب الحجوزات.</td></tr>';
+                ui.bookingsBody.innerHTML = '<tr><td colspan="7" class="loading-placeholder">حدث خطأ في جلب الحجوزات. تأكد من إنشاء الفهرس المطلوب في Firestore.</td></tr>';
+                // تذكير مهم في الكونسول
+                console.warn("إذا كان هذا أول تشغيل، قد تحتاج لإنشاء فهرس مركب في Firestore. ابحث عن رسالة خطأ في الكونسول تحتوي على رابط لإنشاء الفهرس.");
             });
         }
 
-        window.deleteBooking = async (bookingId) => {
-            if(confirm('هل أنت متأكد من حذف هذا الكشف؟')) {
-                try {
-                    await deleteDoc(doc(db, "appointments", bookingId));
-                } catch (error) {
-                    console.error("Error deleting booking:", error);
-                    alert("حدث خطأ أثناء محاولة الحذف.");
+        // تفويض الأحداث لحذف الحجوزات
+        ui.bookingsBody.addEventListener('click', async (e) => {
+            const deleteButton = e.target.closest('.btn-action');
+            if (deleteButton) {
+                const bookingId = deleteButton.dataset.bookingId;
+                if (confirm('هل أنت متأكد من حذف هذا الكشف؟')) {
+                    try {
+                        await deleteDoc(doc(db, "appointments", bookingId));
+                        // سيتم تحديث الواجهة تلقائياً بفضل onSnapshot
+                    } catch (error) {
+                        console.error("Error deleting booking:", error);
+                        alert("حدث خطأ أثناء محاولة الحذف.");
+                    }
                 }
             }
-        };
+        });
 
-        window.logout = () => {
-            localStorage.clear();
-            window.location.href = 'login.html';
-        };
+        // مراقبة حالة المصادقة
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // المستخدم مسجل دخوله
+                initializePage(user);
+            } else {
+                // المستخدم ليس مسجل دخوله
+                localStorage.clear();
+                window.location.href = 'login.html';
+            }
+        });
 
-        initializePage();
+        ui.logoutBtn.addEventListener('click', handleLogout);
+
     </script>
 </body>
 </html>
