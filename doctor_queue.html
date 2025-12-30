@@ -14,7 +14,7 @@
             --light: #F7FFF7; --white: #ffffff; --danger: #e74c3c;
             --text-light: #6c757d; --border-color: #e0e7e5;
             --shadow: rgba(45, 106, 79, 0.1);
-            --gold: #ffc107;
+            --gold: #ffc107; --info: #0dcaf0;
         }
         body {
             font-family: 'Cairo', sans-serif; background-color: var(--light);
@@ -59,10 +59,10 @@
             transform: translateY(-5px); box-shadow: 0 8px 20px var(--shadow);
             border-color: var(--primary);
         }
-        .patient-card.status-done {
-            background-color: #f8f9fa; opacity: 0.7;
+        .patient-card.status-done, .patient-card.status-current {
+            background-color: #f8f9fa; opacity: 0.7; cursor: not-allowed;
         }
-        .patient-card.status-done .patient-name {
+        .patient-card.status-done .patient-name, .patient-card.status-current .patient-name {
             text-decoration: line-through; color: var(--text-light);
         }
         .patient-icon {
@@ -83,10 +83,11 @@
         .patient-details span { display: flex; align-items: center; gap: 0.5rem; }
         .patient-status {
             font-weight: 700; font-size: 0.9rem; padding: 0.4rem 1rem;
-            border-radius: 20px; color: var(--dark);
+            border-radius: 20px;
         }
         .patient-status.status-waiting { background-color: #fff3cd; color: #664d03; }
-        .patient-status.status-done { background-color: #d1e7dd; color: #0f5132; }
+        .patient-status.status-current { background-color: var(--secondary); color: var(--white); }
+        .patient-status.status-done { background-color: #e9ecef; color: var(--text-light); }
         .loading-placeholder, .empty-placeholder {
             text-align: center; padding: 4rem; color: var(--text-light); font-size: 1.2rem;
         }
@@ -106,7 +107,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-        import { getFirestore, collection, query, where, onSnapshot, doc, getDoc, orderBy } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+        import { getFirestore, collection, query, where, onSnapshot, doc, getDoc, orderBy, updateDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDYgPFDWqtaHm9wzKyRtUqJKS2mQrOiJVk",
@@ -159,11 +160,24 @@
                     const card = document.createElement('div');
                     card.className = 'patient-card';
                     
-                    const status = booking.status === 'منتهي' ? 'done' : 'waiting';
-                    const statusText = status === 'done' ? 'مكتمل' : 'انتظار';
-                    card.classList.add(`status-${status}`);
+                    const status = booking.status || 'انتظار';
+                    let statusClass, statusText;
 
-                    // تحديد نوع الزيارة (كشف جديد أو إعادة)
+                    switch(status) {
+                        case 'بالداخل':
+                            statusClass = 'current';
+                            statusText = 'بالداخل حالياً';
+                            break;
+                        case 'منتهي':
+                            statusClass = 'done';
+                            statusText = 'مكتمل';
+                            break;
+                        default:
+                            statusClass = 'waiting';
+                            statusText = 'انتظار';
+                    }
+                    card.classList.add(`status-${statusClass}`);
+
                     const visitType = booking.visitType === 'revisit' ? 'إعادة' : 'كشف جديد';
                     const visitIcon = booking.visitType === 'revisit' ? 'fa-redo' : 'fa-star';
 
@@ -179,18 +193,29 @@
                                 <span><i class="fas fa-clock"></i> ${booking.time}</span>
                             </div>
                         </div>
-                        <div class="patient-status status-${status}">
+                        <div class="patient-status status-${statusClass}">
                             ${statusText}
                         </div>
                     `;
 
-                    card.onclick = () => {
-                        // لاحقاً، سنقوم بربط هذا بصفحة الكشف الفعلية
-                        localStorage.setItem('currentPatientId', booking.id);
-                        localStorage.setItem('currentPatientData', JSON.stringify(booking));
-                        // window.location.href = 'examination.html';
-                        alert(`تم اختيار المريض: ${booking.patientName}`);
-                    };
+                    // --- الجزء الأهم: التعامل مع الضغط على الكارت ---
+                    if (status === 'انتظار') {
+                        card.onclick = async () => {
+                            try {
+                                // الميزة الإضافية: تحديث حالة المريض إلى "بالداخل"
+                                const bookingRef = doc(db, "appointments", booking.id);
+                                await updateDoc(bookingRef, { status: 'بالداخل' });
+
+                                // حفظ الـ ID والانتقال للصفحة التالية
+                                localStorage.setItem('currentBookingId', booking.id);
+                                window.location.href = 'doctor.html';
+
+                            } catch (error) {
+                                console.error("Error updating status:", error);
+                                alert("حدث خطأ، الرجاء المحاولة مرة أخرى.");
+                            }
+                        };
+                    }
 
                     patientList.appendChild(card);
                 });
