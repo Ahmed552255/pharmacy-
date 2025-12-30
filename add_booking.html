@@ -29,6 +29,25 @@
             font-size: 1.8rem; color: var(--text-light); cursor: pointer; line-height: 1; transition: color 0.2s;
         }
         .close-btn:hover { color: var(--danger); }
+        
+        /* === شريط عرض الوقت والتاريخ الجديد === */
+        .datetime-display {
+            background-color: var(--light);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--dark);
+        }
+        .datetime-display i {
+            margin-left: 8px;
+            color: var(--secondary);
+        }
+        /* ===================================== */
+
         .form-title {
             text-align: center; color: var(--dark); margin-top: 0; margin-bottom: 1rem; font-size: 2rem;
         }
@@ -70,6 +89,13 @@
 <body>
     <div class="form-container">
         <a href="attendant.html" class="close-btn" title="العودة">&times;</a>
+        
+        <!-- شريط عرض الوقت والتاريخ -->
+        <div id="datetime-display" class="datetime-display">
+            <i class="fas fa-clock"></i><span id="time-span">--:--:--</span> | 
+            <i class="fas fa-calendar-alt"></i><span id="date-span">----/--/--</span>
+        </div>
+
         <h1 class="form-title">إضافة / بحث عن كشف</h1>
         
         <form id="bookingForm">
@@ -105,7 +131,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
-        import { getFirestore, collection, doc, getDoc, addDoc, getDocs, query, where, limit, setDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+        import { getFirestore, collection, doc, getDoc, addDoc, getDocs, query, where, limit, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDYgPFDWqtaHm9wzKyRtUqJKS2mQrOiJVk",
@@ -130,7 +156,9 @@
             searchResults: document.getElementById('search-results'),
             patientName: document.getElementById('patientName'),
             patientAge: document.getElementById('patientAge'),
-            patientPhone: document.getElementById('patientPhone')
+            patientPhone: document.getElementById('patientPhone'),
+            timeSpan: document.getElementById('time-span'),
+            dateSpan: document.getElementById('date-span')
         };
         
         let selectedPatientId = null;
@@ -140,41 +168,48 @@
             ui.alertBox.style.display = 'block';
         }
 
+        // === دالة تحديث الوقت والتاريخ على الشاشة ===
+        function updateLiveDateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('ar-EG');
+            const dateString = now.toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            ui.timeSpan.textContent = timeString;
+            ui.dateSpan.textContent = dateString;
+        }
+
         async function initializeForm(user) {
+            updateLiveDateTime();
+            setInterval(updateLiveDateTime, 1000); // تحديث الوقت كل ثانية
+
             try {
                 const userDoc = await getDoc(doc(db, "users", user.uid));
                 if (!userDoc.exists()) { window.location.href = 'login.html'; return; }
 
-                // **الكود المصحح هنا**
-                // البحث عن الحقل الصحيح 'linkedDoctor'
                 const linkedDoctorId = userDoc.data().linkedDoctor; 
-                
                 if (!linkedDoctorId) {
                     ui.doctorSelect.innerHTML = '<option value="" disabled selected>لا يوجد طبيب مشرف مرتبط</option>';
                     return;
                 }
 
-                // جلب بيانات الطبيب المحدد
                 const doctorDoc = await getDoc(doc(db, "users", linkedDoctorId));
                 if (doctorDoc.exists()) {
-                    ui.doctorSelect.innerHTML = ''; // إفراغ القائمة
+                    ui.doctorSelect.innerHTML = '';
                     const option = document.createElement('option');
                     option.value = doctorDoc.id;
                     option.textContent = `د. ${doctorDoc.data().name}`;
-                    option.selected = true; // جعله الخيار الوحيد والمحدد
+                    option.selected = true;
                     ui.doctorSelect.appendChild(option);
-                    ui.doctorSelect.disabled = true; // تعطيل القائمة لأن هناك طبيب واحد فقط
+                    ui.doctorSelect.disabled = true;
                 } else {
                     ui.doctorSelect.innerHTML = '<option value="" disabled selected>لم يتم العثور على الطبيب</option>';
                 }
-
             } catch (error) {
                 console.error("Error loading doctor:", error);
                 ui.doctorSelect.innerHTML = '<option value="" disabled selected>خطأ في تحميل الطبيب</option>';
             }
         }
 
-        // --- باقي كود البحث وحفظ النموذج يبقى كما هو بدون تغيير ---
+        // --- باقي الكود كما هو ---
         ui.patientSearch.addEventListener('input', async (e) => {
             const searchTerm = e.target.value.trim();
             if (searchTerm.length < 2) { ui.searchResults.style.display = 'none'; return; }
@@ -214,6 +249,7 @@
             ui.alertBox.style.display = 'none';
             const patientName = ui.patientName.value.trim();
             const doctorId = ui.doctorSelect.value;
+
             if (!patientName || !doctorId) {
                 showAlert('الرجاء إدخال اسم المريض واختيار الطبيب.');
                 ui.submitBtn.disabled = false;
@@ -228,20 +264,23 @@
                         name: patientName,
                         age: ui.patientAge.value || null,
                         phone: patientPhone,
-                        createdAt: new Date()
+                        createdAt: serverTimestamp()
                     }, { merge: true });
                     selectedPatientId = patientPhone;
                 }
+                
+                // حفظ بيانات الكشف مع الوقت والتاريخ التلقائي
+                const now = new Date();
                 const appointmentData = {
                     patientName: patientName,
                     patientId: selectedPatientId,
                     age: ui.patientAge.value || null,
                     phone: patientPhone,
                     doctorId: doctorId,
-                    date: new Date().toISOString().split('T')[0],
-                    time: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
+                    date: now.toISOString().split('T')[0], // YYYY-MM-DD
+                    time: now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }), // HH:MM
                     status: 'انتظار',
-                    createdAt: new Date()
+                    createdAt: serverTimestamp() // استخدام وقت الخادم لضمان الدقة
                 };
                 await addDoc(collection(db, "appointments"), appointmentData);
                 window.location.href = 'attendant.html';
