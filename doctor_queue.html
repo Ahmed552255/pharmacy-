@@ -95,7 +95,9 @@
 </head>
 <body>
     <div class="container">
-        <a href="doctor_dashboard.html" class="close-btn" title="العودة للوحة التحكم">&times;</a>
+        <!-- === تم التعديل هنا === -->
+        <a href="doctor.html" class="close-btn" title="العودة لصفحة الكشف الرئيسية">&times;</a>
+        
         <header class="header">
             <h1 id="doctorName">قائمة الحجوزات</h1>
             <p class="date" id="currentDate"></p>
@@ -198,15 +200,12 @@
                         </div>
                     `;
 
-                    // --- الجزء الأهم: التعامل مع الضغط على الكارت ---
                     if (status === 'انتظار') {
                         card.onclick = async () => {
                             try {
-                                // الميزة الإضافية: تحديث حالة المريض إلى "بالداخل"
                                 const bookingRef = doc(db, "appointments", booking.id);
                                 await updateDoc(bookingRef, { status: 'بالداخل' });
 
-                                // حفظ الـ ID والانتقال للصفحة التالية
                                 localStorage.setItem('currentBookingId', booking.id);
                                 window.location.href = 'doctor.html';
 
