@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>إضافة كشف جديد</title>
+    <title>إضافة / بحث عن كشف</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
@@ -16,108 +16,73 @@
             --shadow: rgba(45, 106, 79, 0.1);
         }
         body {
-            font-family: 'Cairo', sans-serif;
-            background-color: var(--light);
-            color: var(--dark);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            padding: 1rem;
+            font-family: 'Cairo', sans-serif; background-color: var(--light);
+            color: var(--dark); display: flex; justify-content: center;
+            align-items: flex-start; min-height: 100vh; margin: 0; padding: 2rem 1rem;
         }
         .form-container {
-            background-color: var(--white);
-            padding: 2.5rem;
-            border-radius: 16px;
-            box-shadow: 0 10px 30px var(--shadow);
-            width: 100%;
-            max-width: 500px;
-            position: relative;
+            background-color: var(--white); padding: 2.5rem; border-radius: 16px;
+            box-shadow: 0 10px 30px var(--shadow); width: 100%; max-width: 550px; position: relative;
         }
         .close-btn {
-            position: absolute;
-            top: 15px;
-            left: 15px;
-            background: none;
-            border: none;
-            font-size: 1.8rem;
-            color: var(--text-light);
-            cursor: pointer;
-            line-height: 1;
-            transition: color 0.2s;
+            position: absolute; top: 15px; left: 15px; background: none; border: none;
+            font-size: 1.8rem; color: var(--text-light); cursor: pointer; line-height: 1; transition: color 0.2s;
         }
-        .close-btn:hover {
-            color: var(--danger);
-        }
+        .close-btn:hover { color: var(--danger); }
         .form-title {
-            text-align: center;
-            color: var(--dark);
-            margin-top: 0;
-            margin-bottom: 2rem;
-            font-size: 2rem;
+            text-align: center; color: var(--dark); margin-top: 0; margin-bottom: 1rem; font-size: 2rem;
         }
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-        .form-group label {
-            display: block;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-        }
+        .form-group { margin-bottom: 1.25rem; position: relative; }
+        .form-group label { display: block; font-weight: 600; margin-bottom: 0.5rem; }
         .form-control {
-            width: 100%;
-            padding: 0.9rem 1rem;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            font-size: 1rem;
-            font-family: 'Cairo', sans-serif;
+            width: 100%; padding: 0.9rem 1rem; border: 1px solid var(--border-color);
+            border-radius: 8px; font-size: 1rem; font-family: 'Cairo', sans-serif;
             transition: border-color 0.2s, box-shadow 0.2s;
         }
         .form-control:focus {
-            outline: none;
-            border-color: var(--primary);
+            outline: none; border-color: var(--primary);
             box-shadow: 0 0 0 3px rgba(152, 216, 200, 0.4);
         }
+        /* --- New Styles for Search --- */
+        #search-results {
+            position: absolute; background: var(--white); border: 1px solid var(--border-color);
+            border-radius: 8px; box-shadow: 0 4px 10px var(--shadow);
+            width: 100%; max-height: 200px; overflow-y: auto;
+            top: 100%; left: 0; z-index: 10; display: none;
+        }
+        .search-item {
+            padding: 0.8rem 1rem; cursor: pointer; border-bottom: 1px solid var(--border-color);
+        }
+        .search-item:last-child { border-bottom: none; }
+        .search-item:hover { background-color: var(--light); }
+        .search-item small { color: var(--text-light); display: block; font-size: 0.85rem; }
+        /* --- End New Styles --- */
         .btn-submit {
-            width: 100%;
-            padding: 1rem;
-            border: none;
-            border-radius: 8px;
+            width: 100%; padding: 1rem; border: none; border-radius: 8px;
             background: linear-gradient(135deg, var(--dark), var(--secondary));
-            color: var(--white);
-            font-size: 1.2rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 1rem;
+            color: var(--white); font-size: 1.2rem; font-weight: 700;
+            cursor: pointer; transition: all 0.3s ease; margin-top: 1rem;
         }
-        .btn-submit:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(45, 106, 79, 0.3);
-        }
-        .btn-submit:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-        .alert {
-            color: var(--danger);
-            text-align: center;
-            margin-top: 1rem;
-            display: none;
-            font-weight: 600;
-        }
+        .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(45, 106, 79, 0.3); }
+        .btn-submit:disabled { background: #ccc; cursor: not-allowed; transform: none; box-shadow: none; }
+        .alert { color: var(--danger); text-align: center; margin-top: 1rem; display: none; font-weight: 600; }
+        hr { border: 0; border-top: 1px solid var(--border-color); margin: 2rem 0; }
     </style>
 </head>
 <body>
-
     <div class="form-container">
-        <a href="attendant.html" class="close-btn" title="العودة للصفحة الرئيسية">&times;</a>
-        <h1 class="form-title">إضافة كشف جديد</h1>
+        <a href="attendant.html" class="close-btn" title="العودة">&times;</a>
+        <h1 class="form-title">إضافة / بحث عن كشف</h1>
         
         <form id="bookingForm">
+            <!-- Search Section -->
+            <div class="form-group">
+                <label for="patientSearch"><i class="fas fa-search"></i> بحث عن مريض (بالاسم أو رقم الهاتف)</label>
+                <input type="text" id="patientSearch" class="form-control" placeholder="اكتب هنا للبحث...">
+                <div id="search-results"></div>
+            </div>
+            <hr>
+            <!-- Patient Details Section -->
             <div class="form-group">
                 <label for="patientName">اسم المريض</label>
                 <input type="text" id="patientName" class="form-control" required>
@@ -144,7 +109,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
-        import { getFirestore, collection, doc, getDoc, addDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+        import { getFirestore, collection, doc, getDoc, addDoc, getDocs, query, where, limit, setDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDYgPFDWqtaHm9wzKyRtUqJKS2mQrOiJVk",
@@ -164,8 +129,15 @@
             form: document.getElementById('bookingForm'),
             doctorSelect: document.getElementById('doctorSelect'),
             submitBtn: document.getElementById('submitBtn'),
-            alertBox: document.getElementById('alertBox')
+            alertBox: document.getElementById('alertBox'),
+            patientSearch: document.getElementById('patientSearch'),
+            searchResults: document.getElementById('search-results'),
+            patientName: document.getElementById('patientName'),
+            patientAge: document.getElementById('patientAge'),
+            patientPhone: document.getElementById('patientPhone')
         };
+        
+        let selectedPatientId = null; // لتخزين هوية المريض المختار من البحث
 
         function showAlert(message) {
             ui.alertBox.textContent = message;
@@ -175,10 +147,7 @@
         async function initializeForm(user) {
             try {
                 const userDoc = await getDoc(doc(db, "users", user.uid));
-                if (!userDoc.exists()) {
-                    window.location.href = 'login.html';
-                    return;
-                }
+                if (!userDoc.exists()) { window.location.href = 'login.html'; return; }
 
                 const linkedDoctorIds = userDoc.data().linkedDoctors || [];
                 if (linkedDoctorIds.length === 0) {
@@ -196,20 +165,63 @@
                     option.textContent = `د. ${doc.data().name}`;
                     ui.doctorSelect.appendChild(option);
                 });
-
             } catch (error) {
                 console.error("Error loading doctors:", error);
                 ui.doctorSelect.innerHTML = '<option value="" disabled selected>خطأ في تحميل الأطباء</option>';
             }
         }
 
+        // --- Search Logic ---
+        ui.patientSearch.addEventListener('input', async (e) => {
+            const searchTerm = e.target.value.trim();
+            if (searchTerm.length < 2) {
+                ui.searchResults.style.display = 'none';
+                return;
+            }
+
+            try {
+                // البحث بالاسم ورقم الهاتف في نفس الوقت يتطلب فهرسة
+                const nameQuery = query(collection(db, "patients"), where("name", ">=", searchTerm), where("name", "<=", searchTerm + '\uf8ff'), limit(5));
+                const phoneQuery = query(collection(db, "patients"), where("phone", ">=", searchTerm), where("phone", "<=", searchTerm + '\uf8ff'), limit(5));
+                
+                const [nameResults, phoneResults] = await Promise.all([getDocs(nameQuery), getDocs(phoneQuery)]);
+                
+                const results = new Map();
+                nameResults.forEach(doc => results.set(doc.id, doc.data()));
+                phoneResults.forEach(doc => results.set(doc.id, doc.data()));
+
+                ui.searchResults.innerHTML = '';
+                if (results.size === 0) {
+                    ui.searchResults.innerHTML = '<div class="search-item">لا توجد نتائج</div>';
+                } else {
+                    results.forEach((data, id) => {
+                        const item = document.createElement('div');
+                        item.className = 'search-item';
+                        item.innerHTML = `<b>${data.name}</b><small>${data.phone || 'لا يوجد رقم هاتف'}</small>`;
+                        item.onclick = () => {
+                            ui.patientName.value = data.name;
+                            ui.patientAge.value = data.age || '';
+                            ui.patientPhone.value = data.phone || '';
+                            selectedPatientId = id; // حفظ هوية المريض
+                            ui.searchResults.style.display = 'none';
+                        };
+                        ui.searchResults.appendChild(item);
+                    });
+                }
+                ui.searchResults.style.display = 'block';
+            } catch (error) {
+                console.error("Search error:", error);
+            }
+        });
+
+        // --- Form Submission Logic ---
         ui.form.addEventListener('submit', async (e) => {
             e.preventDefault();
             ui.submitBtn.disabled = true;
             ui.submitBtn.textContent = 'جاري الحفظ...';
             ui.alertBox.style.display = 'none';
 
-            const patientName = document.getElementById('patientName').value.trim();
+            const patientName = ui.patientName.value.trim();
             const doctorId = ui.doctorSelect.value;
 
             if (!patientName || !doctorId) {
@@ -219,20 +231,36 @@
                 return;
             }
 
-            const bookingData = {
-                patientName: patientName,
-                age: document.getElementById('patientAge').value || null,
-                phone: document.getElementById('patientPhone').value || null,
-                doctorId: doctorId,
-                date: new Date().toISOString().split('T')[0], // صيغة YYYY-MM-DD
-                time: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }), // صيغة HH:MM (24-hour)
-                status: 'انتظار',
-                createdAt: new Date()
-            };
-
             try {
-                await addDoc(collection(db, "appointments"), bookingData);
+                // **الميزة الإضافية: إنشاء أو تحديث سجل المريض**
+                const patientPhone = ui.patientPhone.value.trim() || null;
+                if (!selectedPatientId && patientPhone) { // إذا كان مريضاً جديداً وله رقم هاتف
+                    const patientRef = doc(db, "patients", patientPhone); // استخدام رقم الهاتف كمعرف فريد
+                    await setDoc(patientRef, {
+                        name: patientName,
+                        age: ui.patientAge.value || null,
+                        phone: patientPhone,
+                        createdAt: new Date()
+                    }, { merge: true }); // merge:true لتحديث البيانات إذا كان الرقم موجوداً
+                    selectedPatientId = patientPhone;
+                }
+
+                // حفظ بيانات الكشف
+                const appointmentData = {
+                    patientName: patientName,
+                    patientId: selectedPatientId, // ربط الكشف بسجل المريض
+                    age: ui.patientAge.value || null,
+                    phone: patientPhone,
+                    doctorId: doctorId,
+                    date: new Date().toISOString().split('T')[0],
+                    time: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
+                    status: 'انتظار',
+                    createdAt: new Date()
+                };
+
+                await addDoc(collection(db, "appointments"), appointmentData);
                 window.location.href = 'attendant.html';
+
             } catch (error) {
                 console.error("Error adding document: ", error);
                 showAlert('حدث خطأ أثناء الحفظ. الرجاء المحاولة مرة أخرى.');
