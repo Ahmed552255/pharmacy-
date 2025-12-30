@@ -123,8 +123,7 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        let unsubscribeFromBookings = null;
-        let doctorsMap = new Map();
+        let unsubscribe; // متغير واحد لإيقاف الاستماع
 
         const ui = {
             welcomeMessage: document.getElementById('welcomeMessage'),
@@ -132,16 +131,22 @@
             bookingsBody: document.getElementById('bookingsBody')
         };
 
+        // دالة تسجيل الخروج
         function handleLogout() {
+            if (unsubscribe) unsubscribe(); // إيقاف الاستماع عند الخروج
             signOut(auth).catch(console.error).finally(() => {
                 localStorage.clear();
                 window.location.href = 'login.html';
             });
         }
 
+        // الدالة الرئيسية التي تعمل عند تحميل الصفحة
         async function initializePage(user) {
             try {
-                const userDoc = await getDoc(doc(db, "users", user.uid));
+                // 1. جلب بيانات الموظف الحالي
+                const userDocRef = doc(db, "users", user.uid);
+                const userDoc = await getDoc(userDocRef);
+
                 if (!userDoc.exists()) {
                     alert("بيانات المستخدم غير موجودة.");
                     handleLogout();
@@ -151,75 +156,66 @@
                 const userData = userDoc.data();
                 ui.welcomeMessage.textContent = `أهلاً، ${userData.name || 'موظف الاستقبال'}`;
 
-                const linkedDoctorIds = userData.linkedDoctors || [];
-                if (linkedDoctorIds.length === 0) {
-                    ui.bookingsBody.innerHTML = '<tr><td colspan="6" class="loading-placeholder">لا يوجد أطباء مرتبطون بهذا الحساب.</td></tr>';
+                // 2. الحصول على هوية الطبيب المرتبط بالموظف
+                const linkedDoctorId = userData.linkedDoctor;
+                if (!linkedDoctorId) {
+                    ui.bookingsBody.innerHTML = '<tr><td colspan="6" class="loading-placeholder">هذا الحساب غير مرتبط بأي طبيب.</td></tr>';
                     return;
                 }
-                
-                // جلب بيانات الأطباء مرة واحدة لتخزين أسمائهم
-                const doctorsQuery = query(collection(db, "users"), where("__name__", "in", linkedDoctorIds));
-                const doctorsSnapshot = await getDocs(doctorsQuery);
-                doctorsSnapshot.forEach(doc => {
-                    doctorsMap.set(doc.id, doc.data().name || "طبيب غير معروف");
-                });
 
-                loadAllBookings(linkedDoctorIds);
+                // 3. جلب اسم الطبيب المرتبط (لعرضه في الجدول)
+                const doctorDoc = await getDoc(doc(db, "users", linkedDoctorId));
+                const doctorName = doctorDoc.exists() ? doctorDoc.data().name : "طبيب غير معروف";
+
+                // 4. بناء الاستعلام الصحيح والمباشر
+                const todayString = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+                const bookingsQuery = query(
+                    collection(db, "appointments"),
+                    where("doctorId", "==", linkedDoctorId),
+                    where("date", "==", todayString),
+                    orderBy("time")
+                );
+
+                // 5. الاستماع للتغيرات في الحجوزات وعرضها
+                unsubscribe = onSnapshot(bookingsQuery, (snapshot) => {
+                    if (snapshot.empty) {
+                        ui.bookingsBody.innerHTML = '<tr><td colspan="6" class="loading-placeholder">لا توجد حجوزات اليوم.</td></tr>';
+                        return;
+                    }
+                    
+                    ui.bookingsBody.innerHTML = ''; // إفراغ الجدول
+                    let counter = 1;
+                    snapshot.forEach(docSnap => {
+                        const booking = docSnap.data();
+                        const status = booking.status || 'انتظار';
+                        const statusClass = status === 'منتهي' ? 'status-done' : 'status-waiting';
+
+                        const row = ui.bookingsBody.insertRow();
+                        row.innerHTML = `
+                            <td>${counter++}</td>
+                            <td><b>${booking.patientName || '-'}</b></td>
+                            <td>د. ${doctorName}</td>
+                            <td>${booking.time || '-'}</td>
+                            <td><span class="status-badge ${statusClass}">${status}</span></td>
+                            <td>
+                                <button class="btn-action" title="حذف الكشف" data-booking-id="${docSnap.id}">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </td>
+                        `;
+                    });
+                }, (error) => {
+                    console.error("Error fetching bookings:", error);
+                    ui.bookingsBody.innerHTML = '<tr><td colspan="6" class="loading-placeholder">حدث خطأ في جلب الحجوزات. تأكد من إنشاء الفهرس المطلوب في Firestore.</td></tr>';
+                });
 
             } catch (error) {
                 console.error("Initialization Error:", error);
-                ui.bookingsBody.innerHTML = '<tr><td colspan="6" class="loading-placeholder">حدث خطأ أثناء تحميل البيانات.</td></tr>';
+                ui.bookingsBody.innerHTML = '<tr><td colspan="6" class="loading-placeholder">حدث خطأ فادح أثناء تحميل الصفحة.</td></tr>';
             }
         }
 
-        function loadAllBookings(doctorIds) {
-            if (unsubscribeFromBookings) unsubscribeFromBookings();
-
-            const today = new Date();
-            const todayString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-            
-            const bookingsQuery = query(
-                collection(db, "appointments"), 
-                where("doctorId", "in", doctorIds),
-                where("date", "==", todayString),
-                orderBy("time")
-            );
-
-            unsubscribeFromBookings = onSnapshot(bookingsQuery, (snapshot) => {
-                if (snapshot.empty) {
-                    ui.bookingsBody.innerHTML = '<tr><td colspan="6" class="loading-placeholder">لا توجد حجوزات اليوم.</td></tr>';
-                    return;
-                }
-                
-                ui.bookingsBody.innerHTML = '';
-                let counter = 1;
-                snapshot.forEach(docSnap => {
-                    const booking = docSnap.data();
-                    const doctorName = doctorsMap.get(booking.doctorId) || "غير محدد";
-                    const status = booking.status || 'انتظار';
-                    const statusClass = status === 'منتهي' ? 'status-done' : 'status-waiting';
-
-                    const row = ui.bookingsBody.insertRow();
-                    row.innerHTML = `
-                        <td>${counter++}</td>
-                        <td><b>${booking.patientName || '-'}</b></td>
-                        <td>د. ${doctorName}</td>
-                        <td>${booking.time || '-'}</td>
-                        <td><span class="status-badge ${statusClass}">${status}</span></td>
-                        <td>
-                            <button class="btn-action" title="حذف الكشف" data-booking-id="${docSnap.id}">
-                                <i class="fas fa-trash-alt"></i>
-                            </button>
-                        </td>
-                    `;
-                });
-            }, (error) => {
-                console.error("Error fetching bookings:", error);
-                ui.bookingsBody.innerHTML = '<tr><td colspan="6" class="loading-placeholder">حدث خطأ في جلب الحجوزات. تأكد من إنشاء الفهرس المطلوب في Firestore.</td></tr>';
-                console.warn("تنبيه: قد تحتاج لإنشاء فهرس مركب في Firestore. ابحث عن رسالة خطأ في الكونسول تحتوي على رابط لإنشاء الفهرس.");
-            });
-        }
-
+        // معالج حدث الحذف
         ui.bookingsBody.addEventListener('click', async (e) => {
             const deleteButton = e.target.closest('.btn-action');
             if (deleteButton) {
@@ -235,6 +231,7 @@
             }
         });
 
+        // مراقبة حالة تسجيل الدخول
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 initializePage(user);
@@ -243,6 +240,7 @@
             }
         });
 
+        // ربط زر تسجيل الخروج بالدالة
         ui.logoutBtn.addEventListener('click', handleLogout);
     </script>
 </body>
