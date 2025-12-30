@@ -7,22 +7,18 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            --primary-color: #264653;
-            --secondary-color: #2a9d8f;
-            --light-bg: #f8f9fa;
-            --white: #ffffff;
-            --text-dark: #343a40;
-            --border-color: #dee2e6;
-            --danger-color: #e76f51;
-            --shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+            --primary: #98D8C8; --secondary: #6BCB77; --dark: #2D6A4F;
+            --light: #F7FFF7; --white: #ffffff; --danger: #e74c3c;
+            --text-light: #6c757d; --border-color: #e0e7e5;
+            --shadow: rgba(45, 106, 79, 0.1);
         }
-
         body {
             font-family: 'Cairo', sans-serif;
-            background-color: var(--light-bg);
-            color: var(--text-dark);
+            background-color: var(--light);
+            color: var(--dark);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -30,17 +26,15 @@
             margin: 0;
             padding: 1rem;
         }
-
         .form-container {
             background-color: var(--white);
             padding: 2.5rem;
             border-radius: 16px;
-            box-shadow: var(--shadow);
+            box-shadow: 0 10px 30px var(--shadow);
             width: 100%;
             max-width: 500px;
             position: relative;
         }
-
         .close-btn {
             position: absolute;
             top: 15px;
@@ -48,74 +42,68 @@
             background: none;
             border: none;
             font-size: 1.8rem;
-            color: var(--text-dark);
+            color: var(--text-light);
             cursor: pointer;
             line-height: 1;
             transition: color 0.2s;
         }
         .close-btn:hover {
-            color: var(--danger-color);
+            color: var(--danger);
         }
-
         .form-title {
             text-align: center;
-            color: var(--primary-color);
+            color: var(--dark);
             margin-top: 0;
             margin-bottom: 2rem;
             font-size: 2rem;
         }
-
         .form-group {
             margin-bottom: 1.5rem;
         }
-
         .form-group label {
             display: block;
             font-weight: 600;
             margin-bottom: 0.5rem;
         }
-
         .form-control {
             width: 100%;
-            padding: 0.8rem 1rem;
+            padding: 0.9rem 1rem;
             border: 1px solid var(--border-color);
             border-radius: 8px;
             font-size: 1rem;
             font-family: 'Cairo', sans-serif;
             transition: border-color 0.2s, box-shadow 0.2s;
         }
-
         .form-control:focus {
             outline: none;
-            border-color: var(--secondary-color);
-            box-shadow: 0 0 0 3px rgba(42, 157, 143, 0.2);
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(152, 216, 200, 0.4);
         }
-
         .btn-submit {
             width: 100%;
             padding: 1rem;
             border: none;
             border-radius: 8px;
-            background-color: var(--secondary-color);
+            background: linear-gradient(135deg, var(--dark), var(--secondary));
             color: var(--white);
             font-size: 1.2rem;
             font-weight: 700;
             cursor: pointer;
-            transition: background-color 0.3s, transform 0.2s;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
         }
-
         .btn-submit:hover {
-            background-color: #238a7e;
             transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(45, 106, 79, 0.3);
         }
-        
         .btn-submit:disabled {
-            background-color: #ccc;
+            background: #ccc;
             cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
         }
-
-        #error-message {
-            color: var(--danger-color);
+        .alert {
+            color: var(--danger);
             text-align: center;
             margin-top: 1rem;
             display: none;
@@ -134,146 +122,132 @@
                 <label for="patientName">اسم المريض</label>
                 <input type="text" id="patientName" class="form-control" required>
             </div>
-
             <div class="form-group">
                 <label for="patientAge">العمر</label>
-                <input type="number" id="patientAge" class="form-control" required>
+                <input type="number" id="patientAge" class="form-control">
             </div>
-
             <div class="form-group">
                 <label for="patientPhone">رقم الهاتف</label>
-                <input type="tel" id="patientPhone" class="form-control" required>
+                <input type="tel" id="patientPhone" class="form-control">
             </div>
-
             <div class="form-group">
-                <label for="doctorSelect">اختر الطبيب</label>
+                <label for="doctorSelect">الطبيب</label>
                 <select id="doctorSelect" class="form-control" required>
-                    <option value="" disabled>جاري تحميل الأطباء...</option>
+                    <option value="" disabled selected>جاري تحميل الأطباء...</option>
                 </select>
             </div>
-
             <button type="submit" id="submitBtn" class="btn-submit">حفظ الكشف</button>
-            <p id="error-message"></p>
+            <p id="alertBox" class="alert"></p>
         </form>
     </div>
 
     <script type="module">
-        // 1. استيراد الدوال اللازمة من Firebase
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-        import { getFirestore, collection, doc, getDoc, addDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
+        import { getFirestore, collection, doc, getDoc, addDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
-        // 2. إعدادات الاتصال بقاعدة البيانات (استبدلها ببياناتك)
         const firebaseConfig = {
-            apiKey: "AIzaSy...",
-            authDomain: "your-project.firebaseapp.com",
-            projectId: "your-project-id",
-            storageBucket: "your-project.appspot.com",
-            messagingSenderId: "...",
-            appId: "..."
+            apiKey: "AIzaSyDYgPFDWqtaHm9wzKyRtUqJKS2mQrOiJVk",
+            authDomain: "oooooo-ee246.firebaseapp.com",
+            projectId: "oooooo-ee246",
+            storageBucket: "oooooo-ee246.firebasestorage.app",
+            messagingSenderId: "484234388806",
+            appId: "1:484234388806:web:bafc624785ef1cad10b147",
+            measurementId: "G-V8PMYBC290"
         };
+        
         const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // 3. جلب العناصر من الصفحة
-        const bookingForm = document.getElementById('bookingForm');
-        const doctorSelect = document.getElementById('doctorSelect');
-        const submitBtn = document.getElementById('submitBtn');
-        const errorMessage = document.getElementById('error-message');
+        const ui = {
+            form: document.getElementById('bookingForm'),
+            doctorSelect: document.getElementById('doctorSelect'),
+            submitBtn: document.getElementById('submitBtn'),
+            alertBox: document.getElementById('alertBox')
+        };
 
-        // 4. الدالة الرئيسية التي تعمل عند فتح الصفحة
-        async function initializeAddForm() {
-            const userId = localStorage.getItem('userId');
-            const selectedDoctorId = localStorage.getItem('selectedDoctorId'); // جلب هوية الدكتور المختار من الصفحة السابقة
+        function showAlert(message) {
+            ui.alertBox.textContent = message;
+            ui.alertBox.style.display = 'block';
+        }
 
-            // التحقق من تسجيل الدخول
-            if (!userId) {
-                window.location.href = 'login.html';
-                return;
-            }
-
+        async function initializeForm(user) {
             try {
-                // جلب بيانات الممرض لجلب قائمة الأطباء المرتبطين به
-                const userDoc = await getDoc(doc(db, "users", userId));
+                const userDoc = await getDoc(doc(db, "users", user.uid));
                 if (!userDoc.exists()) {
-                    window.location.href = 'login.html'; // إذا لم يوجد المستخدم، اذهب لصفحة الدخول
+                    window.location.href = 'login.html';
                     return;
                 }
 
-                const userData = userDoc.data();
-                const linkedDoctors = userData.linkedDoctors || [];
-
-                // تفريغ القائمة وملؤها بالأطباء
-                doctorSelect.innerHTML = '<option value="" disabled>-- اختر الطبيب --</option>';
-                if (linkedDoctors.length === 0) {
-                    doctorSelect.innerHTML = '<option value="" disabled>لا يوجد أطباء مرتبطون</option>';
+                const linkedDoctorIds = userDoc.data().linkedDoctors || [];
+                if (linkedDoctorIds.length === 0) {
+                    ui.doctorSelect.innerHTML = '<option value="" disabled selected>لا يوجد أطباء مرتبطون</option>';
                     return;
                 }
 
-                for (const docId of linkedDoctors) {
-                    const doctorDoc = await getDoc(doc(db, "users", docId));
-                    if (doctorDoc.exists()) {
-                        const doctorData = doctorDoc.data();
-                        const option = document.createElement('option');
-                        option.value = docId;
-                        option.textContent = `د. ${doctorData.name}`;
-                        // إذا كان هذا هو الطبيب المختار في الصفحة السابقة، اجعله هو المختار هنا
-                        if (docId === selectedDoctorId) {
-                            option.selected = true;
-                        }
-                        doctorSelect.appendChild(option);
-                    }
-                }
+                const doctorsQuery = query(collection(db, "users"), where("__name__", "in", linkedDoctorIds));
+                const doctorsSnapshot = await getDocs(doctorsQuery);
+
+                ui.doctorSelect.innerHTML = '<option value="" disabled selected>-- اختر الطبيب --</option>';
+                doctorsSnapshot.forEach(doc => {
+                    const option = document.createElement('option');
+                    option.value = doc.id;
+                    option.textContent = `د. ${doc.data().name}`;
+                    ui.doctorSelect.appendChild(option);
+                });
+
             } catch (error) {
                 console.error("Error loading doctors:", error);
-                doctorSelect.innerHTML = '<option value="" disabled>خطأ في تحميل الأطباء</option>';
+                ui.doctorSelect.innerHTML = '<option value="" disabled selected>خطأ في تحميل الأطباء</option>';
             }
         }
 
-        // 5. معالجة حدث إرسال النموذج (عند الضغط على زر الحفظ)
-        bookingForm.addEventListener('submit', async (e) => {
-            e.preventDefault(); // منع السلوك الافتراضي للنموذج
-            submitBtn.disabled = true; // تعطيل الزر لمنع الضغطات المتكررة
-            submitBtn.textContent = 'جاري الحفظ...';
-            errorMessage.style.display = 'none';
+        ui.form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            ui.submitBtn.disabled = true;
+            ui.submitBtn.textContent = 'جاري الحفظ...';
+            ui.alertBox.style.display = 'none';
 
-            // جلب البيانات من الحقول
-            const bookingData = {
-                name: document.getElementById('patientName').value,
-                age: document.getElementById('patientAge').value,
-                phone: document.getElementById('patientPhone').value,
-                doctorId: doctorSelect.value,
-                date: new Date().toLocaleDateString('en-CA'), // صيغة YYYY-MM-DD
-                time: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }), // صيغة HH:MM AM/PM
-                status: 'waiting' // الحالة الافتراضية للكشف
-            };
+            const patientName = document.getElementById('patientName').value.trim();
+            const doctorId = ui.doctorSelect.value;
 
-            // التحقق من أن جميع الحقول ممتلئة
-            if (!bookingData.name || !bookingData.age || !bookingData.phone || !bookingData.doctorId) {
-                errorMessage.textContent = 'الرجاء ملء جميع الحقول.';
-                errorMessage.style.display = 'block';
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'حفظ الكشف';
+            if (!patientName || !doctorId) {
+                showAlert('الرجاء إدخال اسم المريض واختيار الطبيب.');
+                ui.submitBtn.disabled = false;
+                ui.submitBtn.textContent = 'حفظ الكشف';
                 return;
             }
 
-            try {
-                // إضافة البيانات إلى collection اسمها 'appointments' في Firestore
-                await addDoc(collection(db, "appointments"), bookingData);
-                
-                // بعد النجاح، انتقل إلى صفحة الاستقبال الرئيسية
-                window.location.href = 'attendant.html';
+            const bookingData = {
+                patientName: patientName,
+                age: document.getElementById('patientAge').value || null,
+                phone: document.getElementById('patientPhone').value || null,
+                doctorId: doctorId,
+                date: new Date().toISOString().split('T')[0], // صيغة YYYY-MM-DD
+                time: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }), // صيغة HH:MM (24-hour)
+                status: 'انتظار',
+                createdAt: new Date()
+            };
 
+            try {
+                await addDoc(collection(db, "appointments"), bookingData);
+                window.location.href = 'attendant.html';
             } catch (error) {
                 console.error("Error adding document: ", error);
-                errorMessage.textContent = 'حدث خطأ أثناء الحفظ. الرجاء المحاولة مرة أخرى.';
-                errorMessage.style.display = 'block';
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'حفظ الكشف';
+                showAlert('حدث خطأ أثناء الحفظ. الرجاء المحاولة مرة أخرى.');
+                ui.submitBtn.disabled = false;
+                ui.submitBtn.textContent = 'حفظ الكشف';
             }
         });
 
-        // 6. بدء تشغيل الصفحة
-        initializeAddForm();
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                initializeForm(user);
+            } else {
+                window.location.href = 'login.html';
+            }
+        });
     </script>
 </body>
 </html>
