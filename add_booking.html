@@ -43,7 +43,6 @@
             outline: none; border-color: var(--primary);
             box-shadow: 0 0 0 3px rgba(152, 216, 200, 0.4);
         }
-        /* --- New Styles for Search --- */
         #search-results {
             position: absolute; background: var(--white); border: 1px solid var(--border-color);
             border-radius: 8px; box-shadow: 0 4px 10px var(--shadow);
@@ -56,7 +55,6 @@
         .search-item:last-child { border-bottom: none; }
         .search-item:hover { background-color: var(--light); }
         .search-item small { color: var(--text-light); display: block; font-size: 0.85rem; }
-        /* --- End New Styles --- */
         .btn-submit {
             width: 100%; padding: 1rem; border: none; border-radius: 8px;
             background: linear-gradient(135deg, var(--dark), var(--secondary));
@@ -75,14 +73,12 @@
         <h1 class="form-title">إضافة / بحث عن كشف</h1>
         
         <form id="bookingForm">
-            <!-- Search Section -->
             <div class="form-group">
                 <label for="patientSearch"><i class="fas fa-search"></i> بحث عن مريض (بالاسم أو رقم الهاتف)</label>
                 <input type="text" id="patientSearch" class="form-control" placeholder="اكتب هنا للبحث...">
                 <div id="search-results"></div>
             </div>
             <hr>
-            <!-- Patient Details Section -->
             <div class="form-group">
                 <label for="patientName">اسم المريض</label>
                 <input type="text" id="patientName" class="form-control" required>
@@ -98,7 +94,7 @@
             <div class="form-group">
                 <label for="doctorSelect">الطبيب</label>
                 <select id="doctorSelect" class="form-control" required>
-                    <option value="" disabled selected>جاري تحميل الأطباء...</option>
+                    <option value="" disabled selected>جاري تحميل الطبيب...</option>
                 </select>
             </div>
             <button type="submit" id="submitBtn" class="btn-submit">حفظ الكشف</button>
@@ -137,7 +133,7 @@
             patientPhone: document.getElementById('patientPhone')
         };
         
-        let selectedPatientId = null; // لتخزين هوية المريض المختار من البحث
+        let selectedPatientId = null;
 
         function showAlert(message) {
             ui.alertBox.textContent = message;
@@ -149,47 +145,46 @@
                 const userDoc = await getDoc(doc(db, "users", user.uid));
                 if (!userDoc.exists()) { window.location.href = 'login.html'; return; }
 
-                const linkedDoctorIds = userDoc.data().linkedDoctors || [];
-                if (linkedDoctorIds.length === 0) {
-                    ui.doctorSelect.innerHTML = '<option value="" disabled selected>لا يوجد أطباء مرتبطون</option>';
+                // **الكود المصحح هنا**
+                // البحث عن الحقل الصحيح 'linkedDoctor'
+                const linkedDoctorId = userDoc.data().linkedDoctor; 
+                
+                if (!linkedDoctorId) {
+                    ui.doctorSelect.innerHTML = '<option value="" disabled selected>لا يوجد طبيب مشرف مرتبط</option>';
                     return;
                 }
 
-                const doctorsQuery = query(collection(db, "users"), where("__name__", "in", linkedDoctorIds));
-                const doctorsSnapshot = await getDocs(doctorsQuery);
-
-                ui.doctorSelect.innerHTML = '<option value="" disabled selected>-- اختر الطبيب --</option>';
-                doctorsSnapshot.forEach(doc => {
+                // جلب بيانات الطبيب المحدد
+                const doctorDoc = await getDoc(doc(db, "users", linkedDoctorId));
+                if (doctorDoc.exists()) {
+                    ui.doctorSelect.innerHTML = ''; // إفراغ القائمة
                     const option = document.createElement('option');
-                    option.value = doc.id;
-                    option.textContent = `د. ${doc.data().name}`;
+                    option.value = doctorDoc.id;
+                    option.textContent = `د. ${doctorDoc.data().name}`;
+                    option.selected = true; // جعله الخيار الوحيد والمحدد
                     ui.doctorSelect.appendChild(option);
-                });
+                    ui.doctorSelect.disabled = true; // تعطيل القائمة لأن هناك طبيب واحد فقط
+                } else {
+                    ui.doctorSelect.innerHTML = '<option value="" disabled selected>لم يتم العثور على الطبيب</option>';
+                }
+
             } catch (error) {
-                console.error("Error loading doctors:", error);
-                ui.doctorSelect.innerHTML = '<option value="" disabled selected>خطأ في تحميل الأطباء</option>';
+                console.error("Error loading doctor:", error);
+                ui.doctorSelect.innerHTML = '<option value="" disabled selected>خطأ في تحميل الطبيب</option>';
             }
         }
 
-        // --- Search Logic ---
+        // --- باقي كود البحث وحفظ النموذج يبقى كما هو بدون تغيير ---
         ui.patientSearch.addEventListener('input', async (e) => {
             const searchTerm = e.target.value.trim();
-            if (searchTerm.length < 2) {
-                ui.searchResults.style.display = 'none';
-                return;
-            }
-
+            if (searchTerm.length < 2) { ui.searchResults.style.display = 'none'; return; }
             try {
-                // البحث بالاسم ورقم الهاتف في نفس الوقت يتطلب فهرسة
                 const nameQuery = query(collection(db, "patients"), where("name", ">=", searchTerm), where("name", "<=", searchTerm + '\uf8ff'), limit(5));
                 const phoneQuery = query(collection(db, "patients"), where("phone", ">=", searchTerm), where("phone", "<=", searchTerm + '\uf8ff'), limit(5));
-                
                 const [nameResults, phoneResults] = await Promise.all([getDocs(nameQuery), getDocs(phoneQuery)]);
-                
                 const results = new Map();
                 nameResults.forEach(doc => results.set(doc.id, doc.data()));
                 phoneResults.forEach(doc => results.set(doc.id, doc.data()));
-
                 ui.searchResults.innerHTML = '';
                 if (results.size === 0) {
                     ui.searchResults.innerHTML = '<div class="search-item">لا توجد نتائج</div>';
@@ -202,53 +197,44 @@
                             ui.patientName.value = data.name;
                             ui.patientAge.value = data.age || '';
                             ui.patientPhone.value = data.phone || '';
-                            selectedPatientId = id; // حفظ هوية المريض
+                            selectedPatientId = id;
                             ui.searchResults.style.display = 'none';
                         };
                         ui.searchResults.appendChild(item);
                     });
                 }
                 ui.searchResults.style.display = 'block';
-            } catch (error) {
-                console.error("Search error:", error);
-            }
+            } catch (error) { console.error("Search error:", error); }
         });
 
-        // --- Form Submission Logic ---
         ui.form.addEventListener('submit', async (e) => {
             e.preventDefault();
             ui.submitBtn.disabled = true;
             ui.submitBtn.textContent = 'جاري الحفظ...';
             ui.alertBox.style.display = 'none';
-
             const patientName = ui.patientName.value.trim();
             const doctorId = ui.doctorSelect.value;
-
             if (!patientName || !doctorId) {
                 showAlert('الرجاء إدخال اسم المريض واختيار الطبيب.');
                 ui.submitBtn.disabled = false;
                 ui.submitBtn.textContent = 'حفظ الكشف';
                 return;
             }
-
             try {
-                // **الميزة الإضافية: إنشاء أو تحديث سجل المريض**
                 const patientPhone = ui.patientPhone.value.trim() || null;
-                if (!selectedPatientId && patientPhone) { // إذا كان مريضاً جديداً وله رقم هاتف
-                    const patientRef = doc(db, "patients", patientPhone); // استخدام رقم الهاتف كمعرف فريد
+                if (!selectedPatientId && patientPhone) {
+                    const patientRef = doc(db, "patients", patientPhone);
                     await setDoc(patientRef, {
                         name: patientName,
                         age: ui.patientAge.value || null,
                         phone: patientPhone,
                         createdAt: new Date()
-                    }, { merge: true }); // merge:true لتحديث البيانات إذا كان الرقم موجوداً
+                    }, { merge: true });
                     selectedPatientId = patientPhone;
                 }
-
-                // حفظ بيانات الكشف
                 const appointmentData = {
                     patientName: patientName,
-                    patientId: selectedPatientId, // ربط الكشف بسجل المريض
+                    patientId: selectedPatientId,
                     age: ui.patientAge.value || null,
                     phone: patientPhone,
                     doctorId: doctorId,
@@ -257,10 +243,8 @@
                     status: 'انتظار',
                     createdAt: new Date()
                 };
-
                 await addDoc(collection(db, "appointments"), appointmentData);
                 window.location.href = 'attendant.html';
-
             } catch (error) {
                 console.error("Error adding document: ", error);
                 showAlert('حدث خطأ أثناء الحفظ. الرجاء المحاولة مرة أخرى.');
@@ -270,11 +254,8 @@
         });
 
         onAuthStateChanged(auth, (user) => {
-            if (user) {
-                initializeForm(user);
-            } else {
-                window.location.href = 'login.html';
-            }
+            if (user) { initializeForm(user); } 
+            else { window.location.href = 'login.html'; }
         });
     </script>
 </body>
