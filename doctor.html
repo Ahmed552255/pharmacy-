@@ -156,7 +156,7 @@
         mode: 'add_drug', currentBooking: null,
     };
 
-    const DRUG_TYPES = { tab: "برشام", syrup: "شراب", amp: "حقن", supp: "لبوس", drops: "قطرة", spray: "بخاخ", cream: "كريم", oint: "مرهم", powder: "بودرة", vial: "فيال" };
+    const DRUG_TYPES = { tab: "برشام", syrup: "شراب", amp: "حقن", supp: "لبوس", drops: "قطرة", spray: "بخاخ", cream: "كريم", oint: "مرهم", eff: "فوار" };
 
     async function initialize() {
         state.allDrugs = typeof DRUG_DATABASE !== 'undefined' ? DRUG_DATABASE : {};
