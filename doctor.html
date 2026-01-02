@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>مساعد الطبيب الذكي</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- نفس الـ CSS بدون تغيير -->
     <style>
         :root {
             --primary-color: #00897b; --secondary-color: #004d40; --accent-color: #ffc107;
@@ -42,7 +41,9 @@
             margin-bottom: 12px; border-left: 5px solid var(--primary-color);
             box-shadow: var(--card-shadow); animation: fadeIn 0.4s ease-out;
         }
+        .drug-name-container { display: flex; align-items: center; gap: 8px; }
         .drug-name { color: var(--secondary-color); font-size: 16px; font-weight: 600; }
+        .alternating-drug { font-size: 16px; color: var(--primary-color); font-weight: 600; margin-top: 4px; }
         .dose-entry { background-color: #e8f5e9; padding: 8px 10px; border-radius: 10px; margin-top: 8px; font-size: 14px; display: flex; justify-content: space-between; align-items: center; }
         .controls-section {
             background-color: var(--white-color); padding: 12px; position: fixed; bottom: 0;
@@ -54,9 +55,6 @@
         #typeSelect { width: 100px; background-color: #f1f8e9; }
         #drugSearch { flex: 1; }
         #drugSearch:focus { border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(0, 137, 123, 0.2); }
-        .suggestions-bar { display: flex; gap: 8px; overflow-x: auto; padding: 5px 0; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
-        .suggestions-bar::-webkit-scrollbar { display: none; }
-        .suggest-chip { background-color: #e8f5e9; padding: 8px 16px; border-radius: 20px; font-size: 14px; white-space: nowrap; cursor: pointer; border: 1px solid transparent; }
         .results-box {
             position: absolute; bottom: calc(100% + 10px); left: 12px; right: 12px;
             background-color: var(--white-color); border-radius: 15px; box-shadow: 0 -8px 30px rgba(0,0,0,0.15);
@@ -69,13 +67,22 @@
         .btn-primary { background-color: var(--primary-color); color: white; }
         .btn-success { background-color: var(--success-color); color: white; }
         .btn-icon { background: none; font-size: 20px; padding: 5px; color: var(--subtle-text-color); }
+        .btn-add-alt { background-color: #e0f2f1; color: var(--primary-color); border-radius: 50%; width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold; padding: 0; line-height: 1; }
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 1500; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+        .overlay.active { opacity: 1; pointer-events: auto; }
+        .sidebar { position: fixed; top: 0; right: -320px; width: 320px; height: 100%; background-color: var(--white-color); box-shadow: -5px 0 20px rgba(0,0,0,0.1); transition: right 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94); z-index: 2000; display: flex; flex-direction: column; }
+        .sidebar.active { right: 0; }
+        .sidebar-header { padding: 12px 16px; background-color: var(--primary-color); color: white; display: flex; justify-content: space-between; align-items: center; }
+        .sidebar-content { padding: 16px; overflow-y: auto; flex-grow: 1; }
+        .template-item { background-color: #f8f9fa; padding: 12px; border-radius: 10px; margin-bottom: 10px; border: 1px solid #eee; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        .template-item:hover { background-color: #e8f5e9; }
     </style>
 </head>
 <body>
 
 <div class="main-layout">
     <header>
-        <a href="doctor_queue.html" class="btn btn-icon"><i class="fas fa-chevron-right"></i></a>
+        <button onclick="toggleSidebar()" class="btn btn-icon"><i class="fas fa-bars"></i></button>
         <div id="doctorNameHeader" class="title"></div>
         <div>
             <button onclick="openPatientRecord()" class="btn" style="font-size: 14px;"><i class="fas fa-history"></i> السجل</button>
@@ -84,34 +91,27 @@
     </header>
 
     <div id="patientInfoCard" class="patient-info-card" style="display: none;"></div>
-    
-    <div id="symptomsSection" style="display: none;">
-        <textarea id="symptomsInput" rows="2" placeholder="اكتب الأعراض والتشخيص هنا..."></textarea>
-    </div>
-
-    <main id="prescriptionList">
-        <div id="welcomeMessage" style="text-align: center; color: var(--subtle-text-color); margin-top: 20vh; font-size: 18px;">
-            اختر مريضاً من قائمة الانتظار للبدء...
-        </div>
-    </main>
+    <div id="symptomsSection" style="display: none;"><textarea id="symptomsInput" rows="2" placeholder="اكتب الأعراض والتشخيص هنا..."></textarea></div>
+    <main id="prescriptionList"><div id="welcomeMessage" style="text-align: center; color: var(--subtle-text-color); margin-top: 20vh; font-size: 18px;">اختر مريضاً من قائمة الانتظار للبدء...</div></main>
 
     <footer id="controlsSection" class="controls-section" style="display: none;">
         <div id="resultsBox" class="results-box"></div>
-        <div id="doseSuggestionsBar" class="suggestions-bar" style="display:none;"></div>
-
-        <div class="search-group" id="drugSearchGroup">
-            <select id="typeSelect"></select>
-            <input type="text" id="drugSearch" placeholder="ابحث عن صنف..." autocomplete="off">
-        </div>
-        
-        <div id="doseInputArea" style="display:none; gap:10px;">
-            <input type="text" id="manualDoseInput" placeholder="اكتب الاستخدام...">
-            <button id="confirmDoseBtn" class="btn btn-primary">إضافة</button>
-        </div>
+        <div class="search-group" id="drugSearchGroup"><select id="typeSelect"></select><input type="text" id="drugSearch" placeholder="ابحث عن صنف..." autocomplete="off"></div>
+        <div id="doseInputArea" style="display:none; gap:10px;"><input type="text" id="manualDoseInput" placeholder="اكتب الاستخدام..."><button id="confirmDoseBtn" class="btn btn-primary">إضافة</button></div>
     </footer>
 </div>
 
-<!-- Firebase SDK -->
+<div class="overlay" id="overlay" onclick="closeAllPopups()"></div>
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-header"><h3><i class="fas fa-bolt"></i> النماذج السريعة</h3><button onclick="toggleSidebar()" class="btn btn-icon" style="color: white;">&times;</button></div>
+    <div class="sidebar-content">
+        <button onclick="saveCurrentAsTemplate()" class="btn btn-primary" style="width:100%; margin-bottom:20px;"><i class="fas fa-save"></i> حفظ الروشتة الحالية كنموذج</button>
+        <hr style="border:none; border-top:1px solid #eee; margin: 10px 0 20px;">
+        <div id="templatesList"></div>
+    </div>
+</div>
+
+<script src="organized_drugs (1).json.js"></script>
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
     import { getFirestore, doc, getDoc, addDoc, updateDoc, collection, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
@@ -135,7 +135,6 @@
         prescriptionList: document.getElementById('prescriptionList'),
         welcomeMessage: document.getElementById('welcomeMessage'),
         resultsBox: document.getElementById('resultsBox'),
-        doseSuggestionsBar: document.getElementById('doseSuggestionsBar'),
         drugSearch: document.getElementById('drugSearch'),
         typeSelect: document.getElementById('typeSelect'),
         manualDoseInput: document.getElementById('manualDoseInput'),
@@ -147,35 +146,27 @@
         controlsSection: document.getElementById('controlsSection'),
         confirmDoseBtn: document.getElementById('confirmDoseBtn'),
         symptomsInput: document.getElementById('symptomsInput'),
+        sidebar: document.getElementById('sidebar'),
+        overlay: document.getElementById('overlay'),
+        templatesList: document.getElementById('templatesList'),
     };
 
     const state = {
-        allDrugs: {},
-        prescribedDrugs: [],
-        activeDrugIndex: null,
-        mode: 'add_drug',
-        currentBooking: null,
+        allDrugs: {}, prescribedDrugs: [], templates: [], activeDrugIndex: null,
+        mode: 'add_drug', currentBooking: null,
     };
 
     const DRUG_TYPES = { tab: "برشام", syrup: "شراب", amp: "حقن", supp: "لبوس", drops: "قطرة", spray: "بخاخ", cream: "كريم", oint: "مرهم", powder: "بودرة", vial: "فيال" };
 
     async function initialize() {
-        console.log("Initializing page...");
-        try {
-            // --- === الحل الصحيح: جلب ملف JSON المحلي === ---
-            // تأكد من أن اسم الملف هنا يطابق تماماً اسم الملف في مشروعك
-            const response = await fetch('./organized_drugs (1).json'); 
-            if (!response.ok) {
-                throw new Error(`Network response was not ok: ${response.statusText}`);
-            }
-            state.allDrugs = await response.json();
-            console.log("%cLocal drug database loaded successfully.", "color: green; font-weight: bold;");
-        } catch (error) { 
-            console.error("%cFailed to load local drug database:", "color: red; font-weight: bold;", error);
-            alert("فشل تحميل قاعدة بيانات الأدوية المحلية. تأكد من وجود ملف 'organized_drugs (1).json' في نفس المجلد.");
+        state.allDrugs = typeof DRUG_DATABASE !== 'undefined' ? DRUG_DATABASE : {};
+        if (Object.keys(state.allDrugs).length === 0) {
+            console.error("Local drug database is empty or not found.");
+            alert("فشلت في العثور على قاعدة بيانات الأدوية المحلية.");
         }
         
         UI.typeSelect.innerHTML = Object.entries(DRUG_TYPES).map(([k, v]) => `<option value="${k}">${v}</option>`).join('');
+        loadTemplates();
         
         const doctorName = localStorage.getItem('userName');
         UI.doctorNameHeader.textContent = doctorName ? `د. ${doctorName}` : 'مساعد الطبيب';
@@ -201,8 +192,7 @@
 
     function addEventListeners() {
         UI.drugSearch.addEventListener('input', handleSearch);
-        UI.typeSelect.addEventListener('change', () => UI.drugSearch.focus());
-        UI.manualDoseInput.addEventListener('input', () => updateDoseSuggestions(UI.manualDoseInput.value));
+        UI.typeSelect.addEventListener('change', handleSearch);
         UI.confirmDoseBtn.addEventListener('click', confirmDose);
     }
 
@@ -227,50 +217,39 @@
     }
 
     window.selectDrug = (name) => {
-        state.prescribedDrugs.push({ name: name, doses: [] });
-        state.activeDrugIndex = state.prescribedDrugs.length - 1;
-        setMode('add_dose');
+        if (state.mode === 'add_drug') {
+            state.prescribedDrugs.push({ name: name, alternate: null, doses: [] });
+            state.activeDrugIndex = state.prescribedDrugs.length - 1;
+            setMode('add_dose');
+        } else if (state.mode === 'add_alternate') {
+            state.prescribedDrugs[state.activeDrugIndex].alternate = name;
+            const hours = prompt("كم عدد ساعات التبادل؟", "6");
+            if (hours) {
+                state.prescribedDrugs[state.activeDrugIndex].doses.push(`بالتبادل كل ${hours} ساعات`);
+            }
+            setMode('add_drug');
+        }
         renderPrescription();
     }
 
-    function setMode(newMode) {
+    function setMode(newMode, context = null) {
         state.mode = newMode;
         UI.resultsBox.style.display = 'none';
         UI.drugSearch.value = '';
-        if (newMode === 'add_drug') {
+        if (newMode === 'add_drug' || newMode === 'add_alternate') {
             UI.doseInputArea.style.display = 'none';
-            UI.doseSuggestionsBar.style.display = 'none';
             UI.drugSearchGroup.style.display = 'flex';
-            UI.drugSearch.placeholder = 'ابحث عن صنف...';
+            UI.drugSearch.placeholder = newMode === 'add_alternate' ? 'ابحث عن الدواء البديل...' : 'ابحث عن صنف...';
             UI.drugSearch.focus();
+            if (newMode === 'add_alternate') state.activeDrugIndex = context.index;
         } else if (newMode === 'add_dose') {
             UI.drugSearchGroup.style.display = 'none';
             UI.doseInputArea.style.display = 'flex';
             UI.manualDoseInput.value = '';
             UI.manualDoseInput.placeholder = 'اكتب الاستخدام...';
-            updateDoseSuggestions();
             UI.manualDoseInput.focus();
         }
     }
-
-    function updateDoseSuggestions(query = '') {
-        const type = UI.typeSelect.value;
-        let suggestions = [];
-        const baseSuggestions = { tab: ["قرص", "قرصين", "نص قرص"], syrup: ["ملعقة كبيرة", "ملعقة صغيرة", "5 مل"], amp: ["حقنة"], default: ["مرة"] }[type] || ["مرة"];
-        
-        if (query.match(/^[2-4]$/)) {
-            const num = parseInt(query);
-            const hours = Math.floor(24 / num);
-            const freqText = `كل ${hours} ساعات`;
-            suggestions.push(`${baseSuggestions[0]} ${freqText} بعد الأكل`, `${baseSuggestions[0]} ${freqText} قبل الأكل`);
-        } else if (query === '1') {
-            suggestions.push(`${baseSuggestions[0]} مرة يومياً بعد الغداء`, `${baseSuggestions[0]} مرة يومياً قبل النوم`);
-        }
-        UI.doseSuggestionsBar.innerHTML = suggestions.map(s => `<div class="suggest-chip" onclick="applyDoseSuggestion('${s.replace(/'/g, "\\'")}')">${s}</div>`).join('');
-        UI.doseSuggestionsBar.style.display = 'flex';
-    }
-    
-    window.applyDoseSuggestion = (suggestion) => { UI.manualDoseInput.value = suggestion + " "; UI.manualDoseInput.focus(); }
 
     function confirmDose() {
         const doseText = UI.manualDoseInput.value.trim();
@@ -286,13 +265,15 @@
         UI.prescriptionList.innerHTML = state.prescribedDrugs.map((drug, index) => `
             <div class="prescribed-card" data-index="${index}">
                 <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                    <div class="drug-name">${index + 1}. ${drug.name}</div>
+                    <div class="drug-name-container">
+                        <div class="drug-name">${index + 1}. ${drug.name}</div>
+                        ${!drug.alternate ? `<button class="btn-add-alt" title="إضافة بديل" onclick="setMode('add_alternate', {index: ${index}})">+</button>` : ''}
+                    </div>
                     <button onclick="removeDrug(${index})" class="btn btn-icon" style="color:var(--danger-color); padding:0;">&times;</button>
                 </div>
+                ${drug.alternate ? `<div class="alternating-drug">+ ${drug.alternate}</div>` : ''}
                 <div style="margin-top: 8px;">${drug.doses.map((dose, doseIndex) => `<div class="dose-entry"><span>- ${dose}</span><button onclick="removeDose(${index},${doseIndex})" class="btn btn-icon" style="font-size:12px; color:var(--subtle-text-color); padding:0;">&times;</button></div>`).join('')}</div>
-                <div style="margin-top:8px; display:flex; gap:10px;">
-                    <button onclick="addAnotherDose(${index})" class="btn" style="color:var(--accent-color); background:none; font-size:13px; padding: 4px 0;">+ إضافة استخدام</button>
-                </div>
+                <div style="margin-top:8px;"><button onclick="addAnotherDose(${index})" class="btn" style="color:var(--accent-color); background:none; font-size:13px; padding: 4px 0;">+ إضافة استخدام</button></div>
             </div>
         `).join('');
     }
@@ -301,25 +282,60 @@
     window.removeDrug = (index) => { state.prescribedDrugs.splice(index, 1); renderPrescription(); }
     window.removeDose = (drugIndex, doseIndex) => { state.prescribedDrugs[drugIndex].doses.splice(doseIndex, 1); renderPrescription(); }
 
+    window.toggleSidebar = () => {
+        const isActive = UI.sidebar.classList.toggle('active');
+        UI.overlay.classList.toggle('active', isActive);
+        if (isActive) renderTemplatesList();
+    }
+    window.closeAllPopups = () => {
+        if (UI.sidebar.classList.contains('active')) toggleSidebar();
+        UI.overlay.classList.remove('active');
+    }
+    window.saveCurrentAsTemplate = () => {
+        if (state.prescribedDrugs.length === 0) return alert("الروشتة فارغة!");
+        const name = prompt("أدخل اسم للنموذج (مثلاً: روشتة برد أطفال):");
+        if (!name) return;
+        state.templates.push({ name: name, items: JSON.parse(JSON.stringify(state.prescribedDrugs)) });
+        localStorage.setItem('prescription_templates', JSON.stringify(state.templates));
+        alert(`تم حفظ نموذج "${name}" بنجاح.`);
+        renderTemplatesList();
+    }
+    function loadTemplates() { state.templates = JSON.parse(localStorage.getItem('prescription_templates') || '[]'); }
+    function renderTemplatesList() {
+        UI.templatesList.innerHTML = state.templates.map((t, i) => `
+            <div class="template-item" onclick="loadTemplate(${i})">
+                <span><b>${t.name}</b> <small>(${t.items.length} أصناف)</small></span>
+                <button onclick="event.stopPropagation(); deleteTemplate(${i});" class="btn btn-icon" style="font-size:12px; color:var(--danger-color);"><i class="fas fa-trash"></i></button>
+            </div>
+        `).join('') || `<p style="color:var(--subtle-text-color); text-align:center;">لا توجد نماذج محفوظة.</p>`;
+    }
+    window.loadTemplate = (index) => {
+        if (state.prescribedDrugs.length > 0 && !confirm("سيتم استبدال الروشتة الحالية. هل أنت متأكد؟")) return;
+        state.prescribedDrugs = JSON.parse(JSON.stringify(state.templates[index].items));
+        renderPrescription();
+        toggleSidebar();
+    }
+    window.deleteTemplate = (index) => {
+        if (!confirm(`هل أنت متأكد من حذف نموذج "${state.templates[index].name}"؟`)) return;
+        state.templates.splice(index, 1);
+        localStorage.setItem('prescription_templates', JSON.stringify(state.templates));
+        renderTemplatesList();
+    }
+
     window.finishAndSavePrescription = async () => {
         if (!state.currentBooking) return alert("الرجاء اختيار مريض أولاً من قائمة الانتظار.");
-        if (state.prescribedDrugs.length === 0) return alert("الروشتة فارغة. الرجاء إضافة دواء واحد على الأقل.");
+        if (state.prescribedDrugs.length === 0) return alert("الروشتة فارغة.");
         if (!confirm(`هل أنت متأكد من إنهاء وحفظ كشف المريض ${state.currentBooking.patientName}؟`)) return;
 
         const prescriptionData = {
-            bookingId: state.currentBooking.id,
-            patientId: state.currentBooking.patientId,
-            patientName: state.currentBooking.patientName,
-            symptoms: UI.symptomsInput.value.trim(),
-            medications: state.prescribedDrugs,
-            doctorId: doctorId,
-            createdAt: serverTimestamp()
+            bookingId: state.currentBooking.id, patientId: state.currentBooking.patientId,
+            patientName: state.currentBooking.patientName, symptoms: UI.symptomsInput.value.trim(),
+            medications: state.prescribedDrugs, doctorId: doctorId, createdAt: serverTimestamp()
         };
 
         try {
             await addDoc(collection(db, "prescriptions"), prescriptionData);
             await updateDoc(doc(db, "appointments", state.currentBooking.id), { status: "منتهي" });
-            
             localStorage.removeItem('currentBookingId');
             alert('✓ تم إنهاء الكشف وحفظ الروشتة بنجاح.');
             window.location.href = 'doctor_queue.html';
