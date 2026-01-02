@@ -147,9 +147,15 @@
 
     async function initialize() {
         try {
-            const response = await fetch('https://raw.githubusercontent.com/Bero-Kamal/pharmacy-database/main/organized_drugs.json');
+            // --- === تم تصحيح الرابط هنا === ---
+            const response = await fetch('https://raw.githubusercontent.com/Bero-Kamal/pharmacy-database/main/organized_drugs%20(1).json');
+            if (!response.ok) throw new Error(`Network response was not ok: ${response.statusText}`);
             state.allDrugs = await response.json();
-        } catch (e) { console.error("Failed to load drug database", e); }
+            console.log("Drug database loaded successfully.");
+        } catch (e) { 
+            console.error("Failed to load drug database:", e);
+            alert("فشل تحميل قاعدة بيانات الأدوية. قد تواجه مشاكل في البحث.");
+        }
         
         populateTypeSelect();
         
@@ -247,7 +253,7 @@
 
     window.renderPrescription = () => {
         if (!state.currentBooking) return;
-        UI.welcomeMessage.style.display = state.prescribedDrugs.length > 0 ? 'none' : 'block';
+        UI.welcomeMessage.style.display = 'none';
         UI.prescriptionList.innerHTML = state.prescribedDrugs.map((drug, index) => `
             <div class="prescribed-card" data-index="${index}">
                 <div style="display:flex; justify-content:space-between; align-items:flex-start;">
