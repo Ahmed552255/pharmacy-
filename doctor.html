@@ -28,7 +28,7 @@
         .patient-info-card {
             background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
             color: var(--white-color); padding: 12px 16px; margin: 16px; border-radius: 14px;
-            box-shadow: 0 4px 15px rgba(0, 77, 64, 0.2); animation: fadeIn 0.5s;
+            box-shadow: 0 4px 15px rgba(0, 77, 64, 0.2); animation: fadeIn 0.5s; cursor: pointer;
         }
         #symptomsSection { padding: 0 16px 16px 16px; }
         #symptomsInput {
@@ -73,7 +73,7 @@
         .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 15px; }
         .modal-title { font-size: 18px; font-weight: 600; color: var(--secondary-color); }
         .modal-body { max-height: 60vh; overflow-y: auto; }
-        .modal-footer { margin-top: 15px; text-align: left; }
+        .modal-footer { margin-top: 15px; text-align: left; border-top: 1px solid var(--border-color); padding-top: 15px; }
         .template-item { padding: 12px; border-bottom: 1px solid var(--border-color); cursor: pointer; }
         .template-item:hover { background-color: #e8f5e9; }
         .exchange-btn { color: var(--accent-color); background: none; font-size: 18px; padding: 0 5px; cursor: pointer; border: none; }
@@ -84,18 +84,16 @@
 <div class="main-layout">
     <header>
         <div>
-            <button onclick="UI.templatesModal.style.display='flex'" class="btn btn-icon"><i class="fas fa-bars"></i></button>
+            <button id="openTemplatesBtn" class="btn btn-icon"><i class="fas fa-bars"></i></button>
             <a href="doctor_queue.html" class="btn btn-icon"><i class="fas fa-chevron-right"></i></a>
         </div>
         <div id="doctorNameHeader" class="title"></div>
         <div>
-            <button onclick="openSaveTemplateModal()" class="btn" style="font-size: 14px;"><i class="fas fa-save"></i> حفظ كروشتة</button>
-            <button onclick="openPatientRecord()" class="btn" style="font-size: 14px;"><i class="fas fa-history"></i> السجل</button>
             <button onclick="finishAndSavePrescription()" class="btn btn-success" style="font-size: 14px; margin-right: 8px;"><i class="fas fa-check-circle"></i> إنهاء</button>
         </div>
     </header>
 
-    <div id="patientInfoCard" class="patient-info-card" style="display: none;"></div>
+    <div id="patientInfoCard" class="patient-info-card" style="display: none;" onclick="openPatientRecord()"></div>
     
     <div id="symptomsSection" style="display: none;">
         <textarea id="symptomsInput" rows="2" placeholder="اكتب الأعراض والتشخيص هنا..."></textarea>
@@ -132,6 +130,9 @@
             <button class="btn btn-icon" onclick="UI.templatesModal.style.display='none'">&times;</button>
         </div>
         <div id="templatesList" class="modal-body">جاري تحميل الروشتات...</div>
+        <div class="modal-footer">
+            <button class="btn btn-primary" onclick="openSaveTemplateModal()"><i class="fas fa-save"></i> حفظ الروشتة الحالية</button>
+        </div>
     </div>
 </div>
 
@@ -193,6 +194,7 @@
         templatesList: document.getElementById('templatesList'),
         saveTemplateModal: document.getElementById('saveTemplateModal'),
         templateNameInput: document.getElementById('templateNameInput'),
+        openTemplatesBtn: document.getElementById('openTemplatesBtn'),
     };
 
     const state = {
@@ -251,6 +253,9 @@
         UI.manualDoseInput.addEventListener('input', () => updateDoseSuggestions(UI.manualDoseInput.value));
         UI.confirmDoseBtn.addEventListener('click', confirmDose);
         UI.addExchangeDrugBtn.addEventListener('click', startExchangeDrug);
+        UI.openTemplatesBtn.addEventListener('click', () => {
+            UI.templatesModal.style.display = 'flex';
+        });
     }
 
     function handleSearch() {
