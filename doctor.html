@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>مساعد الطبيب الذكي</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- نفس الـ CSS بدون تغيير -->
     <style>
         :root {
             --primary-color: #00897b; --secondary-color: #004d40; --accent-color: #ffc107;
@@ -69,15 +68,28 @@
         .btn-primary { background-color: var(--primary-color); color: white; }
         .btn-success { background-color: var(--success-color); color: white; }
         .btn-icon { background: none; font-size: 20px; padding: 5px; color: var(--subtle-text-color); }
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 2000; display: none; justify-content: center; align-items: center; }
+        .modal-content { background: var(--white-color); padding: 20px; border-radius: 15px; width: 90%; max-width: 400px; box-shadow: 0 5px 25px rgba(0,0,0,0.2); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 15px; }
+        .modal-title { font-size: 18px; font-weight: 600; color: var(--secondary-color); }
+        .modal-body { max-height: 60vh; overflow-y: auto; }
+        .modal-footer { margin-top: 15px; text-align: left; }
+        .template-item { padding: 12px; border-bottom: 1px solid var(--border-color); cursor: pointer; }
+        .template-item:hover { background-color: #e8f5e9; }
+        .exchange-btn { color: var(--accent-color); background: none; font-size: 18px; padding: 0 5px; cursor: pointer; border: none; }
     </style>
 </head>
 <body>
 
 <div class="main-layout">
     <header>
-        <a href="doctor_queue.html" class="btn btn-icon"><i class="fas fa-chevron-right"></i></a>
+        <div>
+            <button onclick="UI.templatesModal.style.display='flex'" class="btn btn-icon"><i class="fas fa-bars"></i></button>
+            <a href="doctor_queue.html" class="btn btn-icon"><i class="fas fa-chevron-right"></i></a>
+        </div>
         <div id="doctorNameHeader" class="title"></div>
         <div>
+            <button onclick="openSaveTemplateModal()" class="btn" style="font-size: 14px;"><i class="fas fa-save"></i> حفظ كروشتة</button>
             <button onclick="openPatientRecord()" class="btn" style="font-size: 14px;"><i class="fas fa-history"></i> السجل</button>
             <button onclick="finishAndSavePrescription()" class="btn btn-success" style="font-size: 14px; margin-right: 8px;"><i class="fas fa-check-circle"></i> إنهاء</button>
         </div>
@@ -104,17 +116,46 @@
             <input type="text" id="drugSearch" placeholder="ابحث عن صنف..." autocomplete="off">
         </div>
         
-        <div id="doseInputArea" style="display:none; gap:10px;">
-            <input type="text" id="manualDoseInput" placeholder="اكتب الاستخدام...">
+        <div id="doseInputArea" style="display:none; gap:10px; align-items: center;">
+            <input type="text" id="manualDoseInput" style="flex: 1;" placeholder="اكتب الاستخدام...">
+            <button id="addExchangeDrugBtn" class="btn exchange-btn" title="إضافة صنف بالتبادل">+</button>
             <button id="confirmDoseBtn" class="btn btn-primary">إضافة</button>
         </div>
     </footer>
 </div>
 
+<!-- Templates Modal -->
+<div id="templatesModal" class="modal-overlay" onclick="if(event.target === this) this.style.display='none'">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title">الروشتات المحفوظة</h3>
+            <button class="btn btn-icon" onclick="UI.templatesModal.style.display='none'">&times;</button>
+        </div>
+        <div id="templatesList" class="modal-body">جاري تحميل الروشتات...</div>
+    </div>
+</div>
+
+<!-- Save Template Modal -->
+<div id="saveTemplateModal" class="modal-overlay" onclick="if(event.target === this) this.style.display='none'">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title">حفظ الروشتة الحالية</h3>
+            <button class="btn btn-icon" onclick="UI.saveTemplateModal.style.display='none'">&times;</button>
+        </div>
+        <div class="modal-body">
+            <input type="text" id="templateNameInput" placeholder="أدخل اسم للروشتة" style="width: 100%;">
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-primary" onclick="savePrescriptionAsTemplate()">حفظ</button>
+        </div>
+    </div>
+</div>
+
+
 <!-- Firebase SDK -->
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-    import { getFirestore, doc, getDoc, addDoc, updateDoc, collection, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, addDoc, updateDoc, collection, serverTimestamp, getDocs, query, where } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyDYgPFDWqtaHm9wzKyRtUqJKS2mQrOiJVk",
@@ -147,6 +188,11 @@
         controlsSection: document.getElementById('controlsSection'),
         confirmDoseBtn: document.getElementById('confirmDoseBtn'),
         symptomsInput: document.getElementById('symptomsInput'),
+        addExchangeDrugBtn: document.getElementById('addExchangeDrugBtn'),
+        templatesModal: document.getElementById('templatesModal'),
+        templatesList: document.getElementById('templatesList'),
+        saveTemplateModal: document.getElementById('saveTemplateModal'),
+        templateNameInput: document.getElementById('templateNameInput'),
     };
 
     const state = {
@@ -155,19 +201,18 @@
         activeDrugIndex: null,
         mode: 'add_drug',
         currentBooking: null,
+        templates: [],
+        isAddingExchange: false,
+        exchangeDoseText: '',
     };
 
-    const DRUG_TYPES = { tab: "برشام", syrup: "شراب", amp: "حقن", supp: "لبوس", drops: "قطرة", spray: "بخاخ", cream: "كريم", oint: "مرهم", powder: "بودرة", vial: "فيال" };
+    const DRUG_TYPES = { tab: "برشام", syrup: "شراب", amp: "حقن", supp: "لبوس", drops: "قطرة", spray: "بخاخ", cream: "كريم", oint: "مرهم", powder: "فوار" };
 
     async function initialize() {
         console.log("Initializing page...");
         try {
-            // --- === الحل الصحيح: جلب ملف JSON المحلي === ---
-            // تأكد من أن اسم الملف هنا يطابق تماماً اسم الملف في مشروعك
             const response = await fetch('./organized_drugs (1).json'); 
-            if (!response.ok) {
-                throw new Error(`Network response was not ok: ${response.statusText}`);
-            }
+            if (!response.ok) throw new Error(`Network response was not ok: ${response.statusText}`);
             state.allDrugs = await response.json();
             console.log("%cLocal drug database loaded successfully.", "color: green; font-weight: bold;");
         } catch (error) { 
@@ -195,6 +240,7 @@
             }
         }
         
+        loadTemplates();
         renderPrescription();
         addEventListeners();
     }
@@ -204,6 +250,7 @@
         UI.typeSelect.addEventListener('change', () => UI.drugSearch.focus());
         UI.manualDoseInput.addEventListener('input', () => updateDoseSuggestions(UI.manualDoseInput.value));
         UI.confirmDoseBtn.addEventListener('click', confirmDose);
+        UI.addExchangeDrugBtn.addEventListener('click', startExchangeDrug);
     }
 
     function handleSearch() {
@@ -213,7 +260,7 @@
         const firstLetter = query.charAt(0).toUpperCase();
         
         if (!state.allDrugs[type] || !state.allDrugs[type][firstLetter]) {
-            UI.resultsBox.innerHTML = `<div class="custom-add" onclick="selectDrug('${UI.drugSearch.value.trim()}')">➕ إضافة "${UI.drugSearch.value}" كصنف مخصص</div>`;
+            UI.resultsBox.innerHTML = `<div class="custom-add" onclick="selectDrug('${UI.drugSearch.value.trim().replace(/'/g, "\\'")}')">➕ إضافة "${UI.drugSearch.value}" كصنف مخصص</div>`;
             UI.resultsBox.style.display = 'block';
             return;
         }
@@ -221,16 +268,25 @@
         const mainGroup = state.allDrugs[type][firstLetter];
         const matches = mainGroup.filter(d => d.t.toLowerCase().includes(query)).slice(0, 10);
         let html = matches.map(d => `<div class="result-row" onclick="selectDrug('${d.t.replace(/'/g, "\\'")}')"><span>${d.t}</span></div>`).join('');
-        html += `<div class="custom-add" onclick="selectDrug('${UI.drugSearch.value.trim()}')">➕ إضافة "${UI.drugSearch.value}" كصنف مخصص</div>`;
+        html += `<div class="custom-add" onclick="selectDrug('${UI.drugSearch.value.trim().replace(/'/g, "\\'")}')">➕ إضافة "${UI.drugSearch.value}" كصنف مخصص</div>`;
         UI.resultsBox.innerHTML = html;
         UI.resultsBox.style.display = 'block';
     }
 
     window.selectDrug = (name) => {
-        state.prescribedDrugs.push({ name: name, doses: [] });
-        state.activeDrugIndex = state.prescribedDrugs.length - 1;
-        setMode('add_dose');
-        renderPrescription();
+        if (state.isAddingExchange) {
+            const doseText = UI.manualDoseInput.value.trim() || "كل 12 ساعة";
+            const fullDose = `${state.exchangeDoseText} بالتبادل مع ${name} ${doseText}`;
+            state.prescribedDrugs[state.activeDrugIndex].doses.push(fullDose);
+            state.isAddingExchange = false;
+            setMode('add_drug');
+            renderPrescription();
+        } else {
+            state.prescribedDrugs.push({ name: name, doses: [] });
+            state.activeDrugIndex = state.prescribedDrugs.length - 1;
+            setMode('add_dose');
+            renderPrescription();
+        }
     }
 
     function setMode(newMode) {
@@ -250,6 +306,11 @@
             UI.manualDoseInput.placeholder = 'اكتب الاستخدام...';
             updateDoseSuggestions();
             UI.manualDoseInput.focus();
+        } else if (newMode === 'exchange_drug') {
+            UI.doseInputArea.style.display = 'none';
+            UI.drugSearchGroup.style.display = 'flex';
+            UI.drugSearch.placeholder = `ابحث عن الصنف الثاني للتبادل...`;
+            UI.drugSearch.focus();
         }
     }
 
@@ -281,6 +342,17 @@
         renderPrescription();
     }
 
+    function startExchangeDrug() {
+        const doseText = UI.manualDoseInput.value.trim();
+        if (!doseText) {
+            alert("الرجاء كتابة استخدام الصنف الأول أولاً (مثال: قرص كل 12 ساعة).");
+            return;
+        }
+        state.isAddingExchange = true;
+        state.exchangeDoseText = doseText;
+        setMode('exchange_drug');
+    }
+
     function renderPrescription() {
         if (!state.currentBooking) return;
         UI.prescriptionList.innerHTML = state.prescribedDrugs.map((drug, index) => `
@@ -300,6 +372,69 @@
     window.addAnotherDose = (index) => { state.activeDrugIndex = index; setMode('add_dose'); }
     window.removeDrug = (index) => { state.prescribedDrugs.splice(index, 1); renderPrescription(); }
     window.removeDose = (drugIndex, doseIndex) => { state.prescribedDrugs[drugIndex].doses.splice(doseIndex, 1); renderPrescription(); }
+
+    async function loadTemplates() {
+        UI.templatesList.innerHTML = 'جاري التحميل...';
+        const q = query(collection(db, "prescriptionTemplates"), where("doctorId", "==", doctorId));
+        const querySnapshot = await getDocs(q);
+        state.templates = [];
+        querySnapshot.forEach((doc) => {
+            state.templates.push({ id: doc.id, ...doc.data() });
+        });
+        renderTemplates();
+    }
+
+    function renderTemplates() {
+        if (state.templates.length === 0) {
+            UI.templatesList.innerHTML = '<div style="text-align:center; color: var(--subtle-text-color); padding: 20px 0;">لا توجد روشتات محفوظة.</div>';
+            return;
+        }
+        UI.templatesList.innerHTML = state.templates.map(t => `
+            <div class="template-item" onclick="applyTemplate('${t.id}')">${t.name}</div>
+        `).join('');
+    }
+
+    window.applyTemplate = (templateId) => {
+        const template = state.templates.find(t => t.id === templateId);
+        if (template && template.medications) {
+            state.prescribedDrugs.push(...JSON.parse(JSON.stringify(template.medications))); // Deep copy
+            renderPrescription();
+            UI.templatesModal.style.display = 'none';
+        }
+    }
+
+    window.openSaveTemplateModal = () => {
+        if (state.prescribedDrugs.length === 0) {
+            alert("لا يمكن حفظ روشتة فارغة.");
+            return;
+        }
+        UI.templateNameInput.value = '';
+        UI.saveTemplateModal.style.display = 'flex';
+        UI.templateNameInput.focus();
+    }
+
+    window.savePrescriptionAsTemplate = async () => {
+        const name = UI.templateNameInput.value.trim();
+        if (!name) {
+            alert("الرجاء إدخال اسم للروشتة.");
+            return;
+        }
+        const templateData = {
+            name: name,
+            doctorId: doctorId,
+            medications: state.prescribedDrugs,
+            createdAt: serverTimestamp()
+        };
+        try {
+            await addDoc(collection(db, "prescriptionTemplates"), templateData);
+            alert(`تم حفظ الروشتة باسم "${name}" بنجاح.`);
+            UI.saveTemplateModal.style.display = 'none';
+            loadTemplates(); // Refresh the list
+        } catch (e) {
+            console.error("Error saving template:", e);
+            alert("حدث خطأ أثناء الحفظ: " + e.message);
+        }
+    }
 
     window.finishAndSavePrescription = async () => {
         if (!state.currentBooking) return alert("الرجاء اختيار مريض أولاً من قائمة الانتظار.");
