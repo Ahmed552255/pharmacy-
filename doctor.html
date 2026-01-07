@@ -22,20 +22,24 @@
         header {
             background-color: var(--white-color); padding: 12px 16px;
             display: flex; justify-content: space-between; align-items: center;
-            border-bottom: 1px solid var(--border-color); position: sticky; top: 0; z-index: 1000;
+            border-bottom: 1px solid var(--border-color); flex-shrink: 0; z-index: 1000;
         }
         header .title { font-weight: 600; font-size: 17px; color: var(--primary-color); }
         .patient-info-card {
             background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
             color: var(--white-color); padding: 12px 16px; margin: 16px; border-radius: 14px;
-            box-shadow: 0 4px 15px rgba(0, 77, 64, 0.2); animation: fadeIn 0.5s; cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 77, 64, 0.2); animation: fadeIn 0.5s; cursor: pointer; flex-shrink: 0;
         }
-        #symptomsSection { padding: 0 16px 16px 16px; }
+        #symptomsSection { padding: 0 16px 16px 16px; flex-shrink: 0; }
         #symptomsInput {
             width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--border-color);
             font-size: 16px; box-sizing: border-box; background-color: var(--white-color);
         }
-        #prescriptionList { flex-grow: 1; padding: 0 16px 150px 16px; overflow-y: auto; }
+        #prescriptionList {
+            flex-grow: 1; padding: 0 16px; overflow-y: auto;
+            /* The footer has a fixed height, so we need padding-bottom to see the last item */
+            padding-bottom: 150px; 
+        }
         .prescribed-card {
             background-color: var(--white-color); padding: 12px 16px; border-radius: 14px;
             margin-bottom: 12px; border-left: 5px solid var(--primary-color);
@@ -44,25 +48,33 @@
         .drug-name { color: var(--secondary-color); font-size: 16px; font-weight: 600; }
         .dose-entry { background-color: #e8f5e9; padding: 8px 10px; border-radius: 10px; margin-top: 8px; font-size: 14px; display: flex; justify-content: space-between; align-items: center; }
         .controls-section {
-            background-color: var(--white-color); padding: 12px; position: fixed; bottom: 0;
-            left: 0; right: 0; border-top: 1px solid #e0e0e0;
-            box-shadow: 0 -4px 15px rgba(0,0,0,0.07); z-index: 900; animation: slideInUp 0.3s;
+            background-color: var(--white-color); padding: 12px;
+            border-top: 1px solid #e0e0e0; box-shadow: 0 -4px 15px rgba(0,0,0,0.07);
+            z-index: 900; animation: slideInUp 0.3s; flex-shrink: 0;
         }
         .search-group { display: flex; gap: 10px; margin-bottom: 10px; }
         select, input { padding: 12px; border-radius: 10px; border: 1px solid var(--border-color); font-size: 16px; outline: none; background-color: var(--white-color); box-sizing: border-box; }
         #typeSelect { width: 100px; background-color: #f1f8e9; }
         #drugSearch { flex: 1; }
         #drugSearch:focus { border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(0, 137, 123, 0.2); }
-        .suggestions-bar { display: flex; gap: 8px; overflow-x: auto; padding: 5px 0; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
-        .suggestions-bar::-webkit-scrollbar { display: none; }
-        .suggest-chip { background-color: #e8f5e9; padding: 8px 16px; border-radius: 20px; font-size: 14px; white-space: nowrap; cursor: pointer; border: 1px solid transparent; }
-        .results-box {
-            position: absolute; bottom: calc(100% + 10px); left: 12px; right: 12px;
-            background-color: var(--white-color); border-radius: 15px; box-shadow: 0 -8px 30px rgba(0,0,0,0.15);
-            max-height: 45vh; overflow-y: auto; display: none;
+        .suggestions-bar { display: flex; flex-wrap: wrap; gap: 8px; padding: 5px 0; }
+        .suggest-chip {
+            background-color: #e0f2f1; color: var(--secondary-color);
+            padding: 8px 16px; border-radius: 20px; font-size: 14px;
+            white-space: nowrap; cursor: pointer; border: 1px solid #b2dfdb;
+            transition: background-color 0.2s;
         }
-        .result-row { padding: 14px 16px; border-bottom: 1px solid #f0f0f0; cursor: pointer; display: flex; justify-content: space-between; }
+        .suggest-chip:hover { background-color: #b2dfdb; }
+        .results-box {
+            position: absolute; bottom: 100%; left: 12px; right: 12px; margin-bottom: 10px;
+            background-color: var(--white-color); border-radius: 15px; box-shadow: 0 -8px 30px rgba(0,0,0,0.15);
+            max-height: 40vh; overflow-y: auto; display: none;
+        }
+        .result-row { padding: 14px 16px; border-bottom: 1px solid #f0f0f0; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
         .result-row:hover { background-color: #e8f5e9; }
+        .result-row .source-badge { font-size: 10px; padding: 2px 8px; border-radius: 10px; color: white; }
+        .source-fav { background-color: var(--accent-color); }
+        .source-db { background-color: var(--primary-color); }
         .custom-add { padding: 14px 16px; color: var(--primary-color); font-weight: 600; cursor: pointer; }
         .btn { border: none; padding: 8px 15px; border-radius: 10px; font-weight: 600; cursor: pointer; transition: transform 0.1s; text-decoration: none; }
         .btn-primary { background-color: var(--primary-color); color: white; }
@@ -105,7 +117,7 @@
         </div>
     </main>
 
-    <footer id="controlsSection" class="controls-section" style="display: none;">
+    <footer id="controlsSection" class="controls-section" style="display: none; position: relative;">
         <div id="resultsBox" class="results-box"></div>
         <div id="doseSuggestionsBar" class="suggestions-bar" style="display:none;"></div>
 
@@ -122,41 +134,13 @@
     </footer>
 </div>
 
-<!-- Templates Modal -->
-<div id="templatesModal" class="modal-overlay" onclick="if(event.target === this) this.style.display='none'">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3 class="modal-title">الروشتات المحفوظة</h3>
-            <button class="btn btn-icon" onclick="UI.templatesModal.style.display='none'">&times;</button>
-        </div>
-        <div id="templatesList" class="modal-body">جاري تحميل الروشتات...</div>
-        <div class="modal-footer">
-            <button class="btn btn-primary" onclick="openSaveTemplateModal()"><i class="fas fa-save"></i> حفظ الروشتة الحالية</button>
-        </div>
-    </div>
-</div>
+<!-- Modals remain the same -->
+<div id="templatesModal" class="modal-overlay" onclick="if(event.target === this) this.style.display='none'"><div class="modal-content"><div class="modal-header"><h3 class="modal-title">الروشتات المحفوظة</h3><button class="btn btn-icon" onclick="UI.templatesModal.style.display='none'">&times;</button></div><div id="templatesList" class="modal-body"></div><div class="modal-footer"><button class="btn btn-primary" onclick="openSaveTemplateModal()"><i class="fas fa-save"></i> حفظ الروشتة الحالية</button></div></div></div>
+<div id="saveTemplateModal" class="modal-overlay" onclick="if(event.target === this) this.style.display='none'"><div class="modal-content"><div class="modal-header"><h3 class="modal-title">حفظ الروشتة الحالية</h3><button class="btn btn-icon" onclick="UI.saveTemplateModal.style.display='none'">&times;</button></div><div class="modal-body"><input type="text" id="templateNameInput" placeholder="أدخل اسم للروشتة" style="width: 100%;"></div><div class="modal-footer"><button class="btn btn-primary" onclick="savePrescriptionAsTemplate()">حفظ</button></div></div></div>
 
-<!-- Save Template Modal -->
-<div id="saveTemplateModal" class="modal-overlay" onclick="if(event.target === this) this.style.display='none'">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3 class="modal-title">حفظ الروشتة الحالية</h3>
-            <button class="btn btn-icon" onclick="UI.saveTemplateModal.style.display='none'">&times;</button>
-        </div>
-        <div class="modal-body">
-            <input type="text" id="templateNameInput" placeholder="أدخل اسم للروشتة" style="width: 100%;">
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-primary" onclick="savePrescriptionAsTemplate()">حفظ</button>
-        </div>
-    </div>
-</div>
-
-
-<!-- Firebase SDK -->
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-    import { getFirestore, doc, getDoc, addDoc, updateDoc, collection, serverTimestamp, getDocs, query, where } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, addDoc, updateDoc, collection, serverTimestamp, getDocs, query, where, setDoc, increment } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyDYgPFDWqtaHm9wzKyRtUqJKS2mQrOiJVk",
@@ -199,6 +183,7 @@
 
     const state = {
         allDrugs: {},
+        favoriteDrugs: [],
         prescribedDrugs: [],
         activeDrugIndex: null,
         mode: 'add_drug',
@@ -212,21 +197,16 @@
 
     async function initialize() {
         console.log("Initializing page...");
-        try {
-            const response = await fetch('./organized_drugs (1).json'); 
-            if (!response.ok) throw new Error(`Network response was not ok: ${response.statusText}`);
-            state.allDrugs = await response.json();
-            console.log("%cLocal drug database loaded successfully.", "color: green; font-weight: bold;");
-        } catch (error) { 
-            console.error("%cFailed to load local drug database:", "color: red; font-weight: bold;", error);
-            alert("فشل تحميل قاعدة بيانات الأدوية المحلية. تأكد من وجود ملف 'organized_drugs (1).json' في نفس المجلد.");
-        }
-        
-        UI.typeSelect.innerHTML = Object.entries(DRUG_TYPES).map(([k, v]) => `<option value="${k}">${v}</option>`).join('');
-        
         const doctorName = localStorage.getItem('userName');
         UI.doctorNameHeader.textContent = doctorName ? `د. ${doctorName}` : 'مساعد الطبيب';
 
+        await Promise.all([
+            loadExternalDrugDB(),
+            loadFavoriteDrugs()
+        ]);
+        
+        UI.typeSelect.innerHTML = Object.entries(DRUG_TYPES).map(([k, v]) => `<option value="${k}">${v}</option>`).join('');
+        
         const currentBookingId = localStorage.getItem('currentBookingId');
         if (currentBookingId) {
             const bookingDoc = await getDoc(doc(db, "appointments", currentBookingId));
@@ -247,38 +227,79 @@
         addEventListeners();
     }
 
+    async function loadExternalDrugDB() {
+        try {
+            const response = await fetch('./organized_drugs (1).json'); 
+            if (!response.ok) throw new Error(`Network response was not ok: ${response.statusText}`);
+            state.allDrugs = await response.json();
+            console.log("%cLocal drug database loaded successfully.", "color: green;");
+        } catch (error) { 
+            console.error("%cFailed to load local drug database:", "color: red;", error);
+            alert("فشل تحميل قاعدة بيانات الأدوية المحلية.");
+        }
+    }
+
+    async function loadFavoriteDrugs() {
+        const favQuery = query(collection(db, `doctors/${doctorId}/favoriteDrugs`));
+        const snapshot = await getDocs(favQuery);
+        state.favoriteDrugs = snapshot.docs.map(d => ({ name: d.id, ...d.data() }));
+        state.favoriteDrugs.sort((a, b) => a.name.localeCompare(b.name)); // Sort alphabetically
+        console.log(`%cLoaded ${state.favoriteDrugs.length} favorite drugs.`, "color: blue;");
+    }
+
     function addEventListeners() {
         UI.drugSearch.addEventListener('input', handleSearch);
         UI.typeSelect.addEventListener('change', () => UI.drugSearch.focus());
         UI.manualDoseInput.addEventListener('input', () => updateDoseSuggestions(UI.manualDoseInput.value));
         UI.confirmDoseBtn.addEventListener('click', confirmDose);
         UI.addExchangeDrugBtn.addEventListener('click', startExchangeDrug);
-        UI.openTemplatesBtn.addEventListener('click', () => {
-            UI.templatesModal.style.display = 'flex';
-        });
+        UI.openTemplatesBtn.addEventListener('click', () => UI.templatesModal.style.display = 'flex');
     }
 
     function handleSearch() {
         const query = UI.drugSearch.value.trim().toLowerCase();
         if (query.length < 1) { UI.resultsBox.style.display = 'none'; return; }
+        
         const type = UI.typeSelect.value;
         const firstLetter = query.charAt(0).toUpperCase();
-        
-        if (!state.allDrugs[type] || !state.allDrugs[type][firstLetter]) {
-            UI.resultsBox.innerHTML = `<div class="custom-add" onclick="selectDrug('${UI.drugSearch.value.trim().replace(/'/g, "\\'")}')">➕ إضافة "${UI.drugSearch.value}" كصنف مخصص</div>`;
-            UI.resultsBox.style.display = 'block';
-            return;
+        let results = [];
+
+        // 1. Search in favorite drugs
+        const favMatches = state.favoriteDrugs
+            .filter(d => d.type === type && d.name.toLowerCase().includes(query))
+            .map(d => ({ name: d.name, source: 'fav' }));
+        results.push(...favMatches);
+
+        // 2. Search in external DB
+        if (state.allDrugs[type] && state.allDrugs[type][firstLetter]) {
+            const dbMatches = state.allDrugs[type][firstLetter]
+                .filter(d => d.t.toLowerCase().includes(query))
+                .map(d => ({ name: d.t, source: 'db' }));
+            results.push(...dbMatches);
         }
 
-        const mainGroup = state.allDrugs[type][firstLetter];
-        const matches = mainGroup.filter(d => d.t.toLowerCase().includes(query)).slice(0, 10);
-        let html = matches.map(d => `<div class="result-row" onclick="selectDrug('${d.t.replace(/'/g, "\\'")}')"><span>${d.t}</span></div>`).join('');
-        html += `<div class="custom-add" onclick="selectDrug('${UI.drugSearch.value.trim().replace(/'/g, "\\'")}')">➕ إضافة "${UI.drugSearch.value}" كصنف مخصص</div>`;
+        // Remove duplicates, giving priority to favorites
+        const uniqueResults = Array.from(new Map(results.map(item => [item.name, item])).values());
+        
+        let html = uniqueResults.slice(0, 10).map(d => `
+            <div class="result-row" onclick="selectDrug('${d.name.replace(/'/g, "\\'")}', '${d.source === 'db'}')">
+                <span>${d.name}</span>
+                <span class="source-badge ${d.source === 'fav' ? 'source-fav' : 'source-db'}">
+                    ${d.source === 'fav' ? 'مفضل' : 'قاعدة البيانات'}
+                </span>
+            </div>
+        `).join('');
+        
+        html += `<div class="custom-add" onclick="selectDrug('${UI.drugSearch.value.trim().replace(/'/g, "\\'")}', true)">➕ إضافة "${UI.drugSearch.value}" كصنف مخصص</div>`;
         UI.resultsBox.innerHTML = html;
         UI.resultsBox.style.display = 'block';
     }
 
-    window.selectDrug = (name) => {
+    window.selectDrug = (name, isFromDB) => {
+        if (isFromDB) { // Only track usage for drugs from the main DB
+            trackDrugUsage(name, UI.typeSelect.value);
+        }
+
         if (state.isAddingExchange) {
             const doseText = UI.manualDoseInput.value.trim() || "كل 12 ساعة";
             const fullDose = `${state.exchangeDoseText} بالتبادل مع ${name} ${doseText}`;
@@ -291,6 +312,26 @@
             state.activeDrugIndex = state.prescribedDrugs.length - 1;
             setMode('add_dose');
             renderPrescription();
+        }
+    }
+
+    async function trackDrugUsage(drugName, drugType) {
+        const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+        const docRef = doc(db, `doctors/${doctorId}/drugUsage/${today}/drugs/${drugName}`);
+        
+        try {
+            await setDoc(docRef, { count: increment(1), type: drugType }, { merge: true });
+            const drugDoc = await getDoc(docRef);
+            if (drugDoc.data().count === 3) {
+                // Add to favorites if it reaches 3 uses today
+                const favDocRef = doc(db, `doctors/${doctorId}/favoriteDrugs/${drugName}`);
+                await setDoc(favDocRef, { type: drugType });
+                console.log(`Drug "${drugName}" added to favorites.`);
+                // Reload favorites to reflect the change immediately
+                await loadFavoriteDrugs();
+            }
+        } catch (error) {
+            console.error("Error tracking drug usage:", error);
         }
     }
 
@@ -394,15 +435,13 @@
             UI.templatesList.innerHTML = '<div style="text-align:center; color: var(--subtle-text-color); padding: 20px 0;">لا توجد روشتات محفوظة.</div>';
             return;
         }
-        UI.templatesList.innerHTML = state.templates.map(t => `
-            <div class="template-item" onclick="applyTemplate('${t.id}')">${t.name}</div>
-        `).join('');
+        UI.templatesList.innerHTML = state.templates.map(t => `<div class="template-item" onclick="applyTemplate('${t.id}')">${t.name}</div>`).join('');
     }
 
     window.applyTemplate = (templateId) => {
         const template = state.templates.find(t => t.id === templateId);
         if (template && template.medications) {
-            state.prescribedDrugs.push(...JSON.parse(JSON.stringify(template.medications))); // Deep copy
+            state.prescribedDrugs.push(...JSON.parse(JSON.stringify(template.medications)));
             renderPrescription();
             UI.templatesModal.style.display = 'none';
         }
@@ -420,21 +459,13 @@
 
     window.savePrescriptionAsTemplate = async () => {
         const name = UI.templateNameInput.value.trim();
-        if (!name) {
-            alert("الرجاء إدخال اسم للروشتة.");
-            return;
-        }
-        const templateData = {
-            name: name,
-            doctorId: doctorId,
-            medications: state.prescribedDrugs,
-            createdAt: serverTimestamp()
-        };
+        if (!name) { alert("الرجاء إدخال اسم للروشتة."); return; }
+        const templateData = { name: name, doctorId: doctorId, medications: state.prescribedDrugs, createdAt: serverTimestamp() };
         try {
             await addDoc(collection(db, "prescriptionTemplates"), templateData);
             alert(`تم حفظ الروشتة باسم "${name}" بنجاح.`);
             UI.saveTemplateModal.style.display = 'none';
-            loadTemplates(); // Refresh the list
+            loadTemplates();
         } catch (e) {
             console.error("Error saving template:", e);
             alert("حدث خطأ أثناء الحفظ: " + e.message);
@@ -442,24 +473,19 @@
     }
 
     window.finishAndSavePrescription = async () => {
-        if (!state.currentBooking) return alert("الرجاء اختيار مريض أولاً من قائمة الانتظار.");
-        if (state.prescribedDrugs.length === 0) return alert("الروشتة فارغة. الرجاء إضافة دواء واحد على الأقل.");
+        if (!state.currentBooking) return alert("الرجاء اختيار مريض أولاً.");
+        if (state.prescribedDrugs.length === 0) return alert("الروشتة فارغة.");
         if (!confirm(`هل أنت متأكد من إنهاء وحفظ كشف المريض ${state.currentBooking.patientName}؟`)) return;
 
         const prescriptionData = {
-            bookingId: state.currentBooking.id,
-            patientId: state.currentBooking.patientId,
-            patientName: state.currentBooking.patientName,
-            symptoms: UI.symptomsInput.value.trim(),
-            medications: state.prescribedDrugs,
-            doctorId: doctorId,
-            createdAt: serverTimestamp()
+            bookingId: state.currentBooking.id, patientId: state.currentBooking.patientId,
+            patientName: state.currentBooking.patientName, symptoms: UI.symptomsInput.value.trim(),
+            medications: state.prescribedDrugs, doctorId: doctorId, createdAt: serverTimestamp()
         };
 
         try {
             await addDoc(collection(db, "prescriptions"), prescriptionData);
             await updateDoc(doc(db, "appointments", state.currentBooking.id), { status: "منتهي" });
-            
             localStorage.removeItem('currentBookingId');
             alert('✓ تم إنهاء الكشف وحفظ الروشتة بنجاح.');
             window.location.href = 'doctor_queue.html';
@@ -470,9 +496,7 @@
     }
 
     window.openPatientRecord = () => {
-        if (!state.currentBooking || !state.currentBooking.patientId) {
-            return alert("لا يوجد سجل دائم لهذا المريض لعرضه.");
-        }
+        if (!state.currentBooking || !state.currentBooking.patientId) return alert("لا يوجد سجل دائم لهذا المريض لعرضه.");
         localStorage.setItem('recordsPatientId', state.currentBooking.patientId);
         window.open('patient_records.html', '_blank');
     }
