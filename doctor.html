@@ -28,16 +28,12 @@
         .patient-info-card {
             background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
             color: var(--white-color); padding: 12px 16px; margin: 16px; border-radius: 14px;
-            box-shadow: 0 4px 15px rgba(0, 77, 64, 0.2); animation: fadeIn 0.5s; cursor: pointer; flex-shrink: 0;
+            box-shadow: 0 4px 15px rgba(0, 77, 64, 0.2); animation: fadeIn 0.5s; flex-shrink: 0;
+            display: flex; justify-content: space-between; align-items: center;
         }
-        #symptomsSection { padding: 0 16px 16px 16px; flex-shrink: 0; }
-        #symptomsInput {
-            width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--border-color);
-            font-size: 16px; box-sizing: border-box; background-color: var(--white-color);
-        }
+        .patient-info-card .info-text { cursor: pointer; }
         #prescriptionList {
             flex-grow: 1; padding: 0 16px; overflow-y: auto;
-            /* The footer has a fixed height, so we need padding-bottom to see the last item */
             padding-bottom: 150px; 
         }
         .prescribed-card {
@@ -105,12 +101,15 @@
         </div>
     </header>
 
-    <div id="patientInfoCard" class="patient-info-card" style="display: none;" onclick="openPatientRecord()"></div>
-    
-    <div id="symptomsSection" style="display: none;">
-        <textarea id="symptomsInput" rows="2" placeholder="اكتب الأعراض والتشخيص هنا..."></textarea>
+    <div id="patientInfoCard" class="patient-info-card" style="display: none;">
+        <div class="info-text" onclick="openPatientRecord()">
+            <b id="patientNameText"></b> - <span id="patientAgeText"></span>
+        </div>
+        <button onclick="openPatientRecord()" class="btn btn-icon" style="color: white; background: rgba(255,255,255,0.2); border-radius: 50%; width: 35px; height: 35px;">
+            <i class="fas fa-history"></i>
+        </button>
     </div>
-
+    
     <main id="prescriptionList">
         <div id="welcomeMessage" style="text-align: center; color: var(--subtle-text-color); margin-top: 20vh; font-size: 18px;">
             اختر مريضاً من قائمة الانتظار للبدء...
@@ -127,7 +126,7 @@
         </div>
         
         <div id="doseInputArea" style="display:none; gap:10px; align-items: center;">
-            <input type="text" id="manualDoseInput" style="flex: 1;" placeholder="اكتب الاستخدام...">
+            <input type="text" id="manualDoseInput" style="flex: 1;" placeholder="اكتب الاستخدام (مثال: 1 أو 2...)" inputmode="numeric" pattern="[0-9]*">
             <button id="addExchangeDrugBtn" class="btn exchange-btn" title="إضافة صنف بالتبادل">+</button>
             <button id="confirmDoseBtn" class="btn btn-primary">إضافة</button>
         </div>
@@ -169,10 +168,9 @@
         drugSearchGroup: document.getElementById('drugSearchGroup'),
         doctorNameHeader: document.getElementById('doctorNameHeader'),
         patientInfoCard: document.getElementById('patientInfoCard'),
-        symptomsSection: document.getElementById('symptomsSection'),
-        controlsSection: document.getElementById('controlsSection'),
+        patientNameText: document.getElementById('patientNameText'),
+        patientAgeText: document.getElementById('patientAgeText'),
         confirmDoseBtn: document.getElementById('confirmDoseBtn'),
-        symptomsInput: document.getElementById('symptomsInput'),
         addExchangeDrugBtn: document.getElementById('addExchangeDrugBtn'),
         templatesModal: document.getElementById('templatesModal'),
         templatesList: document.getElementById('templatesList'),
@@ -182,15 +180,9 @@
     };
 
     const state = {
-        allDrugs: {},
-        favoriteDrugs: [],
-        prescribedDrugs: [],
-        activeDrugIndex: null,
-        mode: 'add_drug',
-        currentBooking: null,
-        templates: [],
-        isAddingExchange: false,
-        exchangeDoseText: '',
+        allDrugs: {}, favoriteDrugs: [], prescribedDrugs: [],
+        activeDrugIndex: null, mode: 'add_drug', currentBooking: null,
+        templates: [], isAddingExchange: false, exchangeDoseText: '',
     };
 
     const DRUG_TYPES = { tab: "برشام", syrup: "شراب", amp: "حقن", supp: "لبوس", drops: "قطرة", spray: "بخاخ", cream: "كريم", oint: "مرهم", powder: "فوار" };
@@ -200,10 +192,7 @@
         const doctorName = localStorage.getItem('userName');
         UI.doctorNameHeader.textContent = doctorName ? `د. ${doctorName}` : 'مساعد الطبيب';
 
-        await Promise.all([
-            loadExternalDrugDB(),
-            loadFavoriteDrugs()
-        ]);
+        await Promise.all([ loadExternalDrugDB(), loadFavoriteDrugs() ]);
         
         UI.typeSelect.innerHTML = Object.entries(DRUG_TYPES).map(([k, v]) => `<option value="${k}">${v}</option>`).join('');
         
@@ -212,11 +201,11 @@
             const bookingDoc = await getDoc(doc(db, "appointments", currentBookingId));
             if (bookingDoc.exists()) {
                 state.currentBooking = { id: bookingDoc.id, ...bookingDoc.data() };
-                UI.patientInfoCard.innerHTML = `<b>${state.currentBooking.patientName}</b> - ${state.currentBooking.age || 'غير محدد'} سنة`;
-                UI.patientInfoCard.style.display = 'block';
-                UI.symptomsSection.style.display = 'block';
-                UI.controlsSection.style.display = 'block';
+                UI.patientNameText.textContent = state.currentBooking.patientName;
+                UI.patientAgeText.textContent = `${state.currentBooking.age || 'غير محدد'} سنة`;
+                UI.patientInfoCard.style.display = 'flex';
                 UI.welcomeMessage.style.display = 'none';
+                UI.controlsSection.style.display = 'block';
             } else {
                 UI.welcomeMessage.textContent = 'المريض المحدد غير موجود. اختر مريضاً آخر من القائمة.';
             }
@@ -243,7 +232,7 @@
         const favQuery = query(collection(db, `doctors/${doctorId}/favoriteDrugs`));
         const snapshot = await getDocs(favQuery);
         state.favoriteDrugs = snapshot.docs.map(d => ({ name: d.id, ...d.data() }));
-        state.favoriteDrugs.sort((a, b) => a.name.localeCompare(b.name)); // Sort alphabetically
+        state.favoriteDrugs.sort((a, b) => a.name.localeCompare(b.name));
         console.log(`%cLoaded ${state.favoriteDrugs.length} favorite drugs.`, "color: blue;");
     }
 
@@ -264,13 +253,11 @@
         const firstLetter = query.charAt(0).toUpperCase();
         let results = [];
 
-        // 1. Search in favorite drugs
         const favMatches = state.favoriteDrugs
             .filter(d => d.type === type && d.name.toLowerCase().includes(query))
             .map(d => ({ name: d.name, source: 'fav' }));
         results.push(...favMatches);
 
-        // 2. Search in external DB
         if (state.allDrugs[type] && state.allDrugs[type][firstLetter]) {
             const dbMatches = state.allDrugs[type][firstLetter]
                 .filter(d => d.t.toLowerCase().includes(query))
@@ -278,7 +265,6 @@
             results.push(...dbMatches);
         }
 
-        // Remove duplicates, giving priority to favorites
         const uniqueResults = Array.from(new Map(results.map(item => [item.name, item])).values());
         
         let html = uniqueResults.slice(0, 10).map(d => `
@@ -296,9 +282,7 @@
     }
 
     window.selectDrug = (name, isFromDB) => {
-        if (isFromDB) { // Only track usage for drugs from the main DB
-            trackDrugUsage(name, UI.typeSelect.value);
-        }
+        if (isFromDB) { trackDrugUsage(name, UI.typeSelect.value); }
 
         if (state.isAddingExchange) {
             const doseText = UI.manualDoseInput.value.trim() || "كل 12 ساعة";
@@ -316,23 +300,19 @@
     }
 
     async function trackDrugUsage(drugName, drugType) {
-        const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+        const today = new Date().toISOString().split('T')[0];
         const docRef = doc(db, `doctors/${doctorId}/drugUsage/${today}/drugs/${drugName}`);
         
         try {
             await setDoc(docRef, { count: increment(1), type: drugType }, { merge: true });
             const drugDoc = await getDoc(docRef);
             if (drugDoc.data().count === 3) {
-                // Add to favorites if it reaches 3 uses today
                 const favDocRef = doc(db, `doctors/${doctorId}/favoriteDrugs/${drugName}`);
                 await setDoc(favDocRef, { type: drugType });
                 console.log(`Drug "${drugName}" added to favorites.`);
-                // Reload favorites to reflect the change immediately
                 await loadFavoriteDrugs();
             }
-        } catch (error) {
-            console.error("Error tracking drug usage:", error);
-        }
+        } catch (error) { console.error("Error tracking drug usage:", error); }
     }
 
     function setMode(newMode) {
@@ -349,7 +329,7 @@
             UI.drugSearchGroup.style.display = 'none';
             UI.doseInputArea.style.display = 'flex';
             UI.manualDoseInput.value = '';
-            UI.manualDoseInput.placeholder = 'اكتب الاستخدام...';
+            UI.manualDoseInput.placeholder = 'اكتب الاستخدام (مثال: 1 أو 2...)';
             updateDoseSuggestions();
             UI.manualDoseInput.focus();
         } else if (newMode === 'exchange_drug') {
@@ -363,18 +343,24 @@
     function updateDoseSuggestions(query = '') {
         const type = UI.typeSelect.value;
         let suggestions = [];
-        const baseSuggestions = { tab: ["قرص", "قرصين", "نص قرص"], syrup: ["ملعقة كبيرة", "ملعقة صغيرة", "5 مل"], amp: ["حقنة"], default: ["مرة"] }[type] || ["مرة"];
+        const base = { tab: "قرص", syrup: "مل", amp: "حقنة", supp: "لبوسة", drops: "نقطة", spray: "بخة", cream: "دهان", oint: "دهان", powder: "كيس" }[type] || "مرة";
+        const plural = { tab: "أقراص", syrup: "مل", amp: "حقن", supp: "لبوس", drops: "نقط", spray: "بخات", cream: "دهان", oint: "دهان", powder: "أكياس" }[type] || "مرات";
         
-        if (query.match(/^[2-4]$/)) {
-            const num = parseInt(query);
-            const hours = Math.floor(24 / num);
-            const freqText = `كل ${hours} ساعات`;
-            suggestions.push(`${baseSuggestions[0]} ${freqText} بعد الأكل`, `${baseSuggestions[0]} ${freqText} قبل الأكل`);
-        } else if (query === '1') {
-            suggestions.push(`${baseSuggestions[0]} مرة يومياً بعد الغداء`, `${baseSuggestions[0]} مرة يومياً قبل النوم`);
+        const times = {
+            "1": [`${base} مرة يومياً صباحاً`, `${base} مرة يومياً مساءاً`, `${base} مرة يومياً بعد الغداء`, `${base} مرة يومياً قبل النوم`],
+            "2": [`${base} كل 12 ساعة`, `${base} صباحاً ومساءاً`, `${base} بعد الفطار والعشاء`, `${base} قبل الفطار والعشاء`],
+            "3": [`${base} كل 8 ساعات`, `${base} 3 مرات يومياً بعد الأكل`, `${base} 3 مرات يومياً قبل الأكل`],
+            "4": [`${base} كل 6 ساعات`, `${plural} 4 مرات يومياً`],
+        };
+
+        if (times[query]) {
+            suggestions.push(...times[query]);
+        } else if (!query) { // Default suggestions
+            suggestions.push(...(times["2"] || []), ...(times["3"] || []));
         }
+
         UI.doseSuggestionsBar.innerHTML = suggestions.map(s => `<div class="suggest-chip" onclick="applyDoseSuggestion('${s.replace(/'/g, "\\'")}')">${s}</div>`).join('');
-        UI.doseSuggestionsBar.style.display = 'flex';
+        UI.doseSuggestionsBar.style.display = suggestions.length > 0 ? 'flex' : 'none';
     }
     
     window.applyDoseSuggestion = (suggestion) => { UI.manualDoseInput.value = suggestion + " "; UI.manualDoseInput.focus(); }
@@ -423,10 +409,7 @@
         UI.templatesList.innerHTML = 'جاري التحميل...';
         const q = query(collection(db, "prescriptionTemplates"), where("doctorId", "==", doctorId));
         const querySnapshot = await getDocs(q);
-        state.templates = [];
-        querySnapshot.forEach((doc) => {
-            state.templates.push({ id: doc.id, ...doc.data() });
-        });
+        state.templates = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         renderTemplates();
     }
 
@@ -448,10 +431,7 @@
     }
 
     window.openSaveTemplateModal = () => {
-        if (state.prescribedDrugs.length === 0) {
-            alert("لا يمكن حفظ روشتة فارغة.");
-            return;
-        }
+        if (state.prescribedDrugs.length === 0) { alert("لا يمكن حفظ روشتة فارغة."); return; }
         UI.templateNameInput.value = '';
         UI.saveTemplateModal.style.display = 'flex';
         UI.templateNameInput.focus();
@@ -466,10 +446,7 @@
             alert(`تم حفظ الروشتة باسم "${name}" بنجاح.`);
             UI.saveTemplateModal.style.display = 'none';
             loadTemplates();
-        } catch (e) {
-            console.error("Error saving template:", e);
-            alert("حدث خطأ أثناء الحفظ: " + e.message);
-        }
+        } catch (e) { console.error("Error saving template:", e); alert("حدث خطأ أثناء الحفظ: " + e.message); }
     }
 
     window.finishAndSavePrescription = async () => {
@@ -479,7 +456,7 @@
 
         const prescriptionData = {
             bookingId: state.currentBooking.id, patientId: state.currentBooking.patientId,
-            patientName: state.currentBooking.patientName, symptoms: UI.symptomsInput.value.trim(),
+            patientName: state.currentBooking.patientName,
             medications: state.prescribedDrugs, doctorId: doctorId, createdAt: serverTimestamp()
         };
 
@@ -489,10 +466,7 @@
             localStorage.removeItem('currentBookingId');
             alert('✓ تم إنهاء الكشف وحفظ الروشتة بنجاح.');
             window.location.href = 'doctor_queue.html';
-        } catch (e) {
-            console.error("Error finishing session:", e);
-            alert("خطأ في الحفظ: " + e.message);
-        }
+        } catch (e) { console.error("Error finishing session:", e); alert("خطأ في الحفظ: " + e.message); }
     }
 
     window.openPatientRecord = () => {
