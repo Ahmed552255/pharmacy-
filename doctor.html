@@ -11,10 +11,10 @@
             --success-color: #4caf50; --danger-color: #f44336; --white-color: #ffffff;
             --background-color: #f0f4f8; --text-color: #263238; --subtle-text-color: #546e7a;
             --border-color: #cfd8dc; --card-shadow: 0 4px 12px rgba(0, 77, 64, 0.08);
-            /* ألوان جديدة للاقتراحات */
+            /* ألوان متباينة للاقتراحات */
             --chip-color-1: #e0f2f1; --chip-border-1: #b2dfdb; --chip-hover-1: #b2dfdb;
-            --chip-color-2: #e8eaf6; --chip-border-2: #c5cae9; --chip-hover-2: #c5cae9;
-            --chip-color-3: #f1f8e9; --chip-border-3: #dcedc8; --chip-hover-3: #dcedc8;
+            --chip-color-2: #fff3e0; --chip-border-2: #ffe0b2; --chip-hover-2: #ffe0b2;
+            --chip-color-3: #e8eaf6; --chip-border-3: #c5cae9; --chip-hover-3: #c5cae9;
         }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes slideInUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
@@ -36,6 +36,15 @@
             display: flex; justify-content: space-between; align-items: center;
         }
         .patient-info-card .info-text { cursor: pointer; }
+        /* تعديل: إضافة حقل التشخيص */
+        .diagnosis-section {
+            padding: 0 16px 12px 16px; margin-top: -5px;
+        }
+        .diagnosis-section textarea {
+            width: 100%; box-sizing: border-box; padding: 10px; border-radius: 10px;
+            border: 1px solid var(--border-color); font-size: 15px; resize: vertical;
+            min-height: 50px;
+        }
         #prescriptionList {
             flex-grow: 1; padding: 0 16px; overflow-y: auto;
             padding-bottom: 150px; 
@@ -59,12 +68,10 @@
         #drugSearch:focus { border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(0, 137, 123, 0.2); }
         .suggestions-bar { display: flex; flex-wrap: wrap; gap: 8px; padding: 5px 0; }
         .suggest-chip {
-            color: var(--secondary-color);
-            padding: 8px 16px; border-radius: 20px; font-size: 14px;
-            white-space: nowrap; cursor: pointer;
-            transition: background-color 0.2s;
+            color: var(--secondary-color); padding: 8px 16px; border-radius: 20px; font-size: 14px;
+            white-space: nowrap; cursor: pointer; transition: background-color 0.2s;
         }
-        /* تطبيق الألوان المتباينة على الاقتراحات */
+        /* تعديل: تطبيق الألوان المتباينة على الاقتراحات */
         .suggest-chip:nth-child(3n+1) { background-color: var(--chip-color-1); border: 1px solid var(--chip-border-1); }
         .suggest-chip:nth-child(3n+1):hover { background-color: var(--chip-hover-1); }
         .suggest-chip:nth-child(3n+2) { background-color: var(--chip-color-2); border: 1px solid var(--chip-border-2); }
@@ -82,6 +89,7 @@
         .result-row .source-badge { font-size: 10px; padding: 2px 8px; border-radius: 10px; color: white; }
         .source-fav { background-color: var(--accent-color); }
         .source-db { background-color: var(--primary-color); }
+        .source-local { background-color: var(--success-color); } /* لون جديد للأدوية المستخدمة محلياً */
         .custom-add { padding: 14px 16px; color: var(--primary-color); font-weight: 600; cursor: pointer; }
         .btn { border: none; padding: 8px 15px; border-radius: 10px; font-weight: 600; cursor: pointer; transition: transform 0.1s; text-decoration: none; }
         .btn-primary { background-color: var(--primary-color); color: white; }
@@ -101,14 +109,13 @@
 <body>
 
 <div class="main-layout">
+    <!-- تعديل: الشريط العلوي سيظل ظاهراً دائماً -->
     <header>
         <div>
-            <!-- تم تعديل الزر هنا: الآن يفتح قائمة الانتظار -->
             <a href="doctor_queue.html" class="btn btn-icon"><i class="fas fa-bars"></i></a>
         </div>
         <div id="doctorNameHeader" class="title"></div>
         <div>
-            <!-- زر الروشتات المحفوظة الجديد -->
             <button id="openTemplatesBtn" class="btn btn-icon"><i class="fas fa-folder-open"></i></button>
             <button onclick="finishAndSavePrescription()" class="btn btn-success" style="font-size: 14px; margin-right: 8px;"><i class="fas fa-check-circle"></i> إنهاء</button>
         </div>
@@ -123,6 +130,11 @@
         </button>
     </div>
     
+    <!-- تعديل: إضافة قسم التشخيص -->
+    <div id="diagnosisSection" class="diagnosis-section" style="display: none;">
+        <textarea id="diagnosisInput" placeholder="اكتب التشخيص هنا..."></textarea>
+    </div>
+
     <main id="prescriptionList">
         <div id="welcomeMessage" style="text-align: center; color: var(--subtle-text-color); margin-top: 20vh; font-size: 18px;">
             اختر مريضاً من قائمة الانتظار للبدء...
@@ -190,11 +202,14 @@
         saveTemplateModal: document.getElementById('saveTemplateModal'),
         templateNameInput: document.getElementById('templateNameInput'),
         openTemplatesBtn: document.getElementById('openTemplatesBtn'),
-        controlsSection: document.getElementById('controlsSection'), // تمت إضافة هذا
+        controlsSection: document.getElementById('controlsSection'),
+        diagnosisSection: document.getElementById('diagnosisSection'), // إضافة قسم التشخيص
+        diagnosisInput: document.getElementById('diagnosisInput'), // إضافة حقل التشخيص
     };
 
     const state = {
         allDrugs: {}, favoriteDrugs: [], prescribedDrugs: [],
+        locallyUsedDrugs: {}, // تعديل: لتخزين الأدوية المستخدمة محلياً
         activeDrugIndex: null, mode: 'add_drug', currentBooking: null,
         templates: [], isAddingExchange: false, exchangeDoseText: '',
     };
@@ -205,6 +220,9 @@
         console.log("Initializing page...");
         const doctorName = localStorage.getItem('userName');
         UI.doctorNameHeader.textContent = doctorName ? `د. ${doctorName}` : 'مساعد الطبيب';
+
+        // تعديل: تحميل الأدوية المستخدمة محلياً
+        loadLocallyUsedDrugs();
 
         await Promise.all([ loadExternalDrugDB(), loadFavoriteDrugs() ]);
         
@@ -220,7 +238,7 @@
                 UI.patientInfoCard.style.display = 'flex';
                 UI.welcomeMessage.style.display = 'none';
                 UI.controlsSection.style.display = 'block';
-                // التعديل: الانتقال مباشرة لوضع إضافة الدواء
+                UI.diagnosisSection.style.display = 'block'; // تعديل: إظهار قسم التشخيص
                 setMode('add_drug');
             } else {
                 UI.welcomeMessage.textContent = 'المريض المحدد غير موجود. اختر مريضاً آخر من القائمة.';
@@ -230,6 +248,32 @@
         loadTemplates();
         renderPrescription();
         addEventListeners();
+    }
+
+    // تعديل: دالة لتحميل الأدوية المستخدمة من التخزين المحلي
+    function loadLocallyUsedDrugs() {
+        const stored = localStorage.getItem('locallyUsedDrugs');
+        if (stored) {
+            state.locallyUsedDrugs = JSON.parse(stored);
+            console.log("Locally used drugs loaded.");
+        }
+    }
+
+    // تعديل: دالة لحفظ الأدوية المستخدمة في التخزين المحلي
+    function saveLocallyUsedDrug(drugName, drugType) {
+        if (!state.locallyUsedDrugs[drugType]) {
+            state.locallyUsedDrugs[drugType] = [];
+        }
+        // إزالة الدواء إذا كان موجوداً لإضافته في المقدمة
+        const index = state.locallyUsedDrugs[drugType].indexOf(drugName);
+        if (index > -1) {
+            state.locallyUsedDrugs[drugType].splice(index, 1);
+        }
+        // إضافة الدواء في بداية القائمة
+        state.locallyUsedDrugs[drugType].unshift(drugName);
+        // الحفاظ على آخر 20 دواء مستخدم فقط لكل نوع
+        state.locallyUsedDrugs[drugType] = state.locallyUsedDrugs[drugType].slice(0, 20);
+        localStorage.setItem('locallyUsedDrugs', JSON.stringify(state.locallyUsedDrugs));
     }
 
     async function loadExternalDrugDB() {
@@ -258,7 +302,6 @@
         UI.manualDoseInput.addEventListener('input', () => updateDoseSuggestions(UI.manualDoseInput.value));
         UI.confirmDoseBtn.addEventListener('click', confirmDose);
         UI.addExchangeDrugBtn.addEventListener('click', startExchangeDrug);
-        // تم تعديل هذا الزر ليفتح نافذة الروشتات المحفوظة
         UI.openTemplatesBtn.addEventListener('click', () => UI.templatesModal.style.display = 'flex');
     }
 
@@ -269,6 +312,12 @@
         const type = UI.typeSelect.value;
         const firstLetter = query.charAt(0).toUpperCase();
         let results = [];
+
+        // تعديل: إضافة الأدوية المستخدمة محلياً أولاً
+        const localMatches = (state.locallyUsedDrugs[type] || [])
+            .filter(name => name.toLowerCase().includes(query))
+            .map(name => ({ name, source: 'local' }));
+        results.push(...localMatches);
 
         const favMatches = state.favoriteDrugs
             .filter(d => d.type === type && d.name.toLowerCase().includes(query))
@@ -284,22 +333,27 @@
 
         const uniqueResults = Array.from(new Map(results.map(item => [item.name, item])).values());
         
-        let html = uniqueResults.slice(0, 10).map(d => `
-            <div class="result-row" onclick="selectDrug('${d.name.replace(/'/g, "\\'")}', '${d.source === 'db'}')">
-                <span>${d.name}</span>
-                <span class="source-badge ${d.source === 'fav' ? 'source-fav' : 'source-db'}">
-                    ${d.source === 'fav' ? 'مفضل' : 'قاعدة البيانات'}
-                </span>
-            </div>
-        `).join('');
+        let html = uniqueResults.slice(0, 10).map(d => {
+            const badgeClass = d.source === 'fav' ? 'source-fav' : (d.source === 'local' ? 'source-local' : 'source-db');
+            const badgeText = d.source === 'fav' ? 'مفضل' : (d.source === 'local' ? 'مستخدم حديثاً' : 'قاعدة البيانات');
+            return `
+                <div class="result-row" onclick="selectDrug('${d.name.replace(/'/g, "\\'")}', '${d.source !== 'custom'}')">
+                    <span>${d.name}</span>
+                    <span class="source-badge ${badgeClass}">${badgeText}</span>
+                </div>`;
+        }).join('');
         
-        html += `<div class="custom-add" onclick="selectDrug('${UI.drugSearch.value.trim().replace(/'/g, "\\'")}', true)">➕ إضافة "${UI.drugSearch.value}" كصنف مخصص</div>`;
+        html += `<div class="custom-add" onclick="selectDrug('${UI.drugSearch.value.trim().replace(/'/g, "\\'")}', true, 'custom')">➕ إضافة "${UI.drugSearch.value}" كصنف مخصص</div>`;
         UI.resultsBox.innerHTML = html;
         UI.resultsBox.style.display = 'block';
     }
 
-    window.selectDrug = (name, isFromDB) => {
-        if (isFromDB) { trackDrugUsage(name, UI.typeSelect.value); }
+    window.selectDrug = (name, isFromDB, source = 'db') => {
+        if (isFromDB) { 
+            trackDrugUsage(name, UI.typeSelect.value);
+            // تعديل: حفظ الدواء المستخدم محلياً
+            saveLocallyUsedDrug(name, UI.typeSelect.value);
+        }
 
         if (state.isAddingExchange) {
             const doseText = UI.manualDoseInput.value.trim() || "كل 12 ساعة";
@@ -410,7 +464,8 @@
                     <div class="drug-name">${index + 1}. ${drug.name}</div>
                     <button onclick="removeDrug(${index})" class="btn btn-icon" style="color:var(--danger-color); padding:0;">&times;</button>
                 </div>
-                <div style="margin-top: 8px;">${drug.doses.map((dose, doseIndex) => `<div class="dose-entry"><span>- ${dose}</span><button onclick="removeDose(${index},${doseIndex})" class="btn btn-icon" style="font-size:12px; color:var(--subtle-text-color); padding:0;">&times;</button></div>`).join('')}</div>
+                <div style="margin-top: 8px;">${drug.doses.map((dose, doseIndex) => `<div class="dose-entry"><span>- ${dose}</span><button onclick="removeDose(${index},${doseIndex})" class="btn btn-icon" style="font-size:12px; color:var(--subtle-text-color); padding:0;">&times;</button></div>`).join('')
+</div>
                 <div style="margin-top:8px; display:flex; gap:10px;">
                     <button onclick="addAnotherDose(${index})" class="btn" style="color:var(--accent-color); background:none; font-size:13px; padding: 4px 0;">+ إضافة استخدام</button>
                 </div>
@@ -468,13 +523,17 @@
 
     window.finishAndSavePrescription = async () => {
         if (!state.currentBooking) return alert("الرجاء اختيار مريض أولاً.");
-        if (state.prescribedDrugs.length === 0) return alert("الروشتة فارغة.");
+        if (state.prescribedDrugs.length === 0 && !UI.diagnosisInput.value.trim()) return alert("الروشتة والتشخيص فارغان. الرجاء إدخال بيانات.");
         if (!confirm(`هل أنت متأكد من إنهاء وحفظ كشف المريض ${state.currentBooking.patientName}؟`)) return;
+
+        const diagnosisText = UI.diagnosisInput.value.trim();
 
         const prescriptionData = {
             bookingId: state.currentBooking.id, patientId: state.currentBooking.patientId,
             patientName: state.currentBooking.patientName,
-            medications: state.prescribedDrugs, doctorId: doctorId, createdAt: serverTimestamp()
+            medications: state.prescribedDrugs, 
+            diagnosis: diagnosisText, // تعديل: إضافة التشخيص
+            doctorId: doctorId, createdAt: serverTimestamp()
         };
 
         try {
@@ -496,4 +555,3 @@
 </script>
 </body>
 </html>
-
