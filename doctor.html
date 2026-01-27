@@ -11,6 +11,10 @@
             --success-color: #4caf50; --danger-color: #f44336; --white-color: #ffffff;
             --background-color: #f0f4f8; --text-color: #263238; --subtle-text-color: #546e7a;
             --border-color: #cfd8dc; --card-shadow: 0 4px 12px rgba(0, 77, 64, 0.08);
+            /* ألوان جديدة للاقتراحات */
+            --chip-color-1: #e0f2f1; --chip-border-1: #b2dfdb; --chip-hover-1: #b2dfdb;
+            --chip-color-2: #e8eaf6; --chip-border-2: #c5cae9; --chip-hover-2: #c5cae9;
+            --chip-color-3: #f1f8e9; --chip-border-3: #dcedc8; --chip-hover-3: #dcedc8;
         }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes slideInUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
@@ -55,12 +59,19 @@
         #drugSearch:focus { border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(0, 137, 123, 0.2); }
         .suggestions-bar { display: flex; flex-wrap: wrap; gap: 8px; padding: 5px 0; }
         .suggest-chip {
-            background-color: #e0f2f1; color: var(--secondary-color);
+            color: var(--secondary-color);
             padding: 8px 16px; border-radius: 20px; font-size: 14px;
-            white-space: nowrap; cursor: pointer; border: 1px solid #b2dfdb;
+            white-space: nowrap; cursor: pointer;
             transition: background-color 0.2s;
         }
-        .suggest-chip:hover { background-color: #b2dfdb; }
+        /* تطبيق الألوان المتباينة على الاقتراحات */
+        .suggest-chip:nth-child(3n+1) { background-color: var(--chip-color-1); border: 1px solid var(--chip-border-1); }
+        .suggest-chip:nth-child(3n+1):hover { background-color: var(--chip-hover-1); }
+        .suggest-chip:nth-child(3n+2) { background-color: var(--chip-color-2); border: 1px solid var(--chip-border-2); }
+        .suggest-chip:nth-child(3n+2):hover { background-color: var(--chip-hover-2); }
+        .suggest-chip:nth-child(3n+3) { background-color: var(--chip-color-3); border: 1px solid var(--chip-border-3); }
+        .suggest-chip:nth-child(3n+3):hover { background-color: var(--chip-hover-3); }
+
         .results-box {
             position: absolute; bottom: 100%; left: 12px; right: 12px; margin-bottom: 10px;
             background-color: var(--white-color); border-radius: 15px; box-shadow: 0 -8px 30px rgba(0,0,0,0.15);
@@ -92,11 +103,13 @@
 <div class="main-layout">
     <header>
         <div>
-            <button id="openTemplatesBtn" class="btn btn-icon"><i class="fas fa-bars"></i></button>
-            <a href="doctor_queue.html" class="btn btn-icon"><i class="fas fa-chevron-right"></i></a>
+            <!-- تم تعديل الزر هنا: الآن يفتح قائمة الانتظار -->
+            <a href="doctor_queue.html" class="btn btn-icon"><i class="fas fa-bars"></i></a>
         </div>
         <div id="doctorNameHeader" class="title"></div>
         <div>
+            <!-- زر الروشتات المحفوظة الجديد -->
+            <button id="openTemplatesBtn" class="btn btn-icon"><i class="fas fa-folder-open"></i></button>
             <button onclick="finishAndSavePrescription()" class="btn btn-success" style="font-size: 14px; margin-right: 8px;"><i class="fas fa-check-circle"></i> إنهاء</button>
         </div>
     </header>
@@ -177,6 +190,7 @@
         saveTemplateModal: document.getElementById('saveTemplateModal'),
         templateNameInput: document.getElementById('templateNameInput'),
         openTemplatesBtn: document.getElementById('openTemplatesBtn'),
+        controlsSection: document.getElementById('controlsSection'), // تمت إضافة هذا
     };
 
     const state = {
@@ -206,6 +220,8 @@
                 UI.patientInfoCard.style.display = 'flex';
                 UI.welcomeMessage.style.display = 'none';
                 UI.controlsSection.style.display = 'block';
+                // التعديل: الانتقال مباشرة لوضع إضافة الدواء
+                setMode('add_drug');
             } else {
                 UI.welcomeMessage.textContent = 'المريض المحدد غير موجود. اختر مريضاً آخر من القائمة.';
             }
@@ -242,6 +258,7 @@
         UI.manualDoseInput.addEventListener('input', () => updateDoseSuggestions(UI.manualDoseInput.value));
         UI.confirmDoseBtn.addEventListener('click', confirmDose);
         UI.addExchangeDrugBtn.addEventListener('click', startExchangeDrug);
+        // تم تعديل هذا الزر ليفتح نافذة الروشتات المحفوظة
         UI.openTemplatesBtn.addEventListener('click', () => UI.templatesModal.style.display = 'flex');
     }
 
@@ -409,7 +426,7 @@
         UI.templatesList.innerHTML = 'جاري التحميل...';
         const q = query(collection(db, "prescriptionTemplates"), where("doctorId", "==", doctorId));
         const querySnapshot = await getDocs(q);
-        state.templates = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        state.templates = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         renderTemplates();
     }
 
@@ -479,3 +496,4 @@
 </script>
 </body>
 </html>
+
