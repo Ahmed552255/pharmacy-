@@ -338,34 +338,12 @@
                 </div>
             </div>
 
-            <!-- Specialty Selection (for doctors only) -->
+            <!-- Specialty Input (for doctors only) - تم التعديل -->
             <div class="form-group specialty-group" id="specialtyGroup">
                 <label for="specialty">التخصص الطبي</label>
                 <div class="input-wrapper">
                     <i class="fas fa-stethoscope"></i>
-                    <select id="specialty">
-                        <option value="" disabled selected>اختر التخصص</option>
-                        <option value="باطنة">باطنة</option>
-                        <option value="جراحة">جراحة عامة</option>
-                        <option value="أطفال">طب الأطفال</option>
-                        <option value="نساء وولادة">نساء وولادة</option>
-                        <option value="عظام">جراحة العظام</option>
-                        <option value="قلب">أمراض القلب</option>
-                        <option value="أنف وأذن">أنف وأذن وحنجرة</option>
-                        <option value="عيون">طب العيون</option>
-                        <option value="جلدية">الأمراض الجلدية</option>
-                        <option value="أعصاب">طب الأعصاب</option>
-                        <option value="مسالك بولية">المسالك البولية</option>
-                        <option value="نفسية">الطب النفسي</option>
-                        <option value="أسنان">طب الأسنان</option>
-                        <option value="تجميل">جراحة التجميل</option>
-                        <option value="أشعة">الأشعة التشخيصية</option>
-                        <option value="تخدير">التخدير والعناية المركزة</option>
-                        <option value="طوارئ">طب الطوارئ</option>
-                        <option value="روماتيزم">الروماتيزم والمفاصل</option>
-                        <option value="كلى">أمراض الكلى</option>
-                        <option value="صدرية">أمراض الصدر والجهاز التنفسي</option>
-                    </select>
+                    <input type="text" id="specialty" placeholder="مثال: باطنة، أطفال، إلخ.">
                 </div>
             </div>
 
@@ -400,7 +378,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -490,35 +468,35 @@
             }
         });
 
-        // Load Doctors from Firestore
+        // Load Doctors from Firestore - تم التعديل
         async function loadDoctors() {
             try {
-                linkedDoctorSelect.innerHTML = '<option value="" disabled selected>جاري التحميل...</option>';
+                linkedDoctorSelect.innerHTML = '<option value="" disabled selected>جاري تحميل الأطباء...</option>';
                 
                 const q = query(collection(db, "users"), where("role", "==", "doctor"));
                 const querySnapshot = await getDocs(q);
                 
                 if (querySnapshot.empty) {
-                    linkedDoctorSelect.innerHTML = '<option value="" disabled selected>لا يوجد أطباء مسجلين</option>';
+                    linkedDoctorSelect.innerHTML = '<option value="" disabled selected>لا يوجد أطباء مسجلون حالياً</option>';
                     return;
                 }
                 
-                linkedDoctorSelect.innerHTML = '<option value="" disabled selected>اختر الطبيب</option>';
+                linkedDoctorSelect.innerHTML = '<option value="" disabled selected>اختر الطبيب المشرف</option>';
                 
                 querySnapshot.forEach((doc) => {
                     const data = doc.data();
                     const option = document.createElement('option');
                     option.value = doc.id;
-                    option.textContent = `د. ${data.name} - ${data.specialty || 'عام'}`;
+                    option.textContent = `د. ${data.name} - ${data.specialty || 'تخصص غير محدد'}`;
                     linkedDoctorSelect.appendChild(option);
                 });
             } catch (error) {
                 console.error('Error loading doctors:', error);
-                linkedDoctorSelect.innerHTML = '<option value="" disabled selected>خطأ في التحميل</option>';
+                linkedDoctorSelect.innerHTML = '<option value="" disabled selected>خطأ في تحميل قائمة الأطباء</option>';
             }
         }
 
-        // Form Submission
+        // Form Submission - تم التعديل
         document.getElementById('authForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
@@ -538,15 +516,8 @@
                     const name = document.getElementById('name').value.trim();
                     const role = document.getElementById('role').value;
                     
-                    if (!name) {
-                        showAlert('الرجاء إدخال الاسم');
-                        loadingSpinner.classList.remove('active');
-                        submitBtn.disabled = false;
-                        return;
-                    }
-                    
-                    if (!role) {
-                        showAlert('الرجاء اختيار المهنة');
+                    if (!name || !role) {
+                        showAlert('الرجاء ملء جميع الحقول المطلوبة');
                         loadingSpinner.classList.remove('active');
                         submitBtn.disabled = false;
                         return;
@@ -556,9 +527,9 @@
                     let linkedDoctor = null;
                     
                     if (role === 'doctor') {
-                        specialty = document.getElementById('specialty').value;
+                        specialty = document.getElementById('specialty').value.trim();
                         if (!specialty) {
-                            showAlert('الرجاء اختيار التخصص');
+                            showAlert('الرجاء كتابة التخصص الطبي');
                             loadingSpinner.classList.remove('active');
                             submitBtn.disabled = false;
                             return;
@@ -587,8 +558,17 @@
                         createdAt: new Date().toISOString()
                     });
                     
-                    showAlert('تم إنشاء الحساب بنجاح!', 'success');
+                    showAlert('تم إنشاء الحساب بنجاح! سيتم توجيهك الآن.', 'success');
                     
+                    // الدخول مباشرة بعد التسجيل
+                    const userDoc = await getDoc(doc(db, "users", user.uid));
+                    const userData = userDoc.data();
+                    localStorage.setItem('userRole', userData.role);
+                    localStorage.setItem('userName', userData.name);
+                    localStorage.setItem('userId', user.uid);
+                    if (userData.specialty) localStorage.setItem('userSpecialty', userData.specialty);
+                    if (userData.linkedDoctor) localStorage.setItem('linkedDoctor', userData.linkedDoctor);
+
                     setTimeout(() => {
                         window.location.href = REDIRECT_MAP[role];
                     }, 1500);
@@ -600,13 +580,14 @@
                     const userDoc = await getDoc(doc(db, "users", user.uid));
                     
                     if (!userDoc.exists()) {
-                        showAlert('المستخدم غير موجود');
+                        showAlert('بيانات الاعتماد غير صحيحة أو الحساب غير موجود.');
                         loadingSpinner.classList.remove('active');
                         submitBtn.disabled = false;
                         return;
                     }
                     
                     const userData = userDoc.data();
+                    // حفظ البيانات في التخزين المحلي عند تسجيل الدخول
                     localStorage.setItem('userRole', userData.role);
                     localStorage.setItem('userName', userData.name);
                     localStorage.setItem('userId', user.uid);
@@ -619,7 +600,7 @@
                         localStorage.setItem('linkedDoctor', userData.linkedDoctor);
                     }
                     
-                    showAlert('تم تسجيل الدخول بنجاح!', 'success');
+                    showAlert('تم تسجيل الدخول بنجاح! جاري التوجيه...', 'success');
                     
                     setTimeout(() => {
                         window.location.href = REDIRECT_MAP[userData.role];
@@ -630,17 +611,13 @@
                 let errorMessage = 'حدث خطأ، الرجاء المحاولة مرة أخرى';
                 
                 if (error.code === 'auth/email-already-in-use') {
-                    errorMessage = 'البريد الإلكتروني مستخدم بالفعل';
+                    errorMessage = 'هذا البريد الإلكتروني مسجل بالفعل.';
                 } else if (error.code === 'auth/invalid-email') {
-                    errorMessage = 'البريد الإلكتروني غير صحيح';
+                    errorMessage = 'صيغة البريد الإلكتروني غير صحيحة.';
                 } else if (error.code === 'auth/weak-password') {
-                    errorMessage = 'كلمة المرور ضعيفة جداً';
-                } else if (error.code === 'auth/user-not-found') {
-                    errorMessage = 'المستخدم غير موجود';
-                } else if (error.code === 'auth/wrong-password') {
-                    errorMessage = 'كلمة المرور غير صحيحة';
+                    errorMessage = 'كلمة المرور ضعيفة جداً.';
                 } else if (error.code === 'auth/invalid-credential') {
-                    errorMessage = 'البريد أو كلمة المرور غير صحيحة';
+                    errorMessage = 'البريد الإلكتروني أو كلمة المرور غير صحيحة.';
                 }
                 
                 showAlert(errorMessage);
@@ -650,16 +627,7 @@
             }
         });
 
-        // Check if user is already logged in
-        onAuthStateChanged(auth, async (user) => {
-            if (user && !isRegistering) {
-                const userDoc = await getDoc(doc(db, "users", user.uid));
-                if (userDoc.exists()) {
-                    const userData = userDoc.data();
-                    window.location.href = REDIRECT_MAP[userData.role];
-                }
-            }
-        });
+        // تم حذف onAuthStateChanged لمنع الدخول التلقائي
     </script>
 </body>
 </html>
