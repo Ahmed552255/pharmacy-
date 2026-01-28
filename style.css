@@ -10,192 +10,267 @@
     --text-color: #263238; 
     --subtle-text-color: #546e7a;
     --border-color: #cfd8dc; 
-    --card-shadow: 0 4px 12px rgba(0, 77, 64, 0.08);
-    /* ألوان جديدة لتباين أوضح في البحث */
+    --card-shadow: 0 0.25rem 0.75rem rgba(0, 77, 64, 0.08); /* rem */
     --search-row-odd-bg: #ffffff; 
     --search-row-even-bg: #f1f5f9;
     --search-row-hover-bg: #e0f2f1;
+    
+    /* 1. تحديد حجم الخط الأساسي على مستوى الجذر (html) */
+    font-size: 16px; /* القيمة المرجعية لوحدة rem */
 }
 
 /* --- إعادة تعيين الأنماط الأساسية --- */
 * {
     box-sizing: border-box;
+    margin: 0;
+    padding: 0;
 }
 
 html {
-    /* منع تكبير النص عند تغيير اتجاه الشاشة في iOS */
     -webkit-text-size-adjust: 100%;
 }
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     background-color: var(--background-color); 
-    margin: 0; 
     color: var(--text-color);
-    /* منع التمرير على مستوى الصفحة بالكامل */
     overflow: hidden;
-    height: 100vh; /* ارتفاع كامل للشاشة */
-    width: 100vw;  /* عرض كامل للشاشة */
+    width: 100vw;
+    height: 100vh; 
+    height: 100dvh;
+    height: calc(var(--vh, 1vh) * 100);
 }
 
-/* --- 1. الهيكل الرئيسي باستخدام Flexbox (الحل الأساسي للمشكلة) --- */
+/* --- الهيكل الرئيسي --- */
 .main-layout {
     display: flex;
     flex-direction: column;
-    height: 100vh; /* يشغل 100% من ارتفاع الشاشة */
+    height: 100%;
+    width: 100%;
 }
 
 header {
     background-color: var(--white-color); 
-    padding: 12px 16px;
+    padding: 0.75rem 4%; /* rem و % */
     display: flex; 
     justify-content: space-between; 
     align-items: center;
     border-bottom: 1px solid var(--border-color);
-    flex-shrink: 0; /* منع الشريط العلوي من الانكماش */
+    flex-shrink: 0;
     z-index: 1000;
 }
 
-/* --- 2. جعل المحتوى الرئيسي قابل للتمرير (Main Content Scroll) --- */
-main#prescriptionList {
-    flex-grow: 1; /* يأخذ كل المساحة المتبقية */
-    overflow-y: auto; /* يسمح بالتمرير العمودي فقط لهذا الجزء */
-    padding: 16px;
-    /* إزالة الحشو السفلي القديم لضمان وصول المحتوى للحافة */
+header .title { 
+    font-weight: 600; 
+    font-size: 1.05rem; /* rem */
+    color: var(--primary-color); 
 }
 
-footer.controls-section {
-    background-color: var(--white-color); 
-    padding: 12px;
-    border-top: 1px solid #e0e0e0; 
-    box-shadow: 0 -4px 15px rgba(0,0,0,0.07);
-    z-index: 900;
-    flex-shrink: 0; /* منع الشريط السفلي من الانكماش */
-    position: relative; /* ضروري لصندوق النتائج */
+/* --- المحتوى القابل للتمرير --- */
+.content-wrapper {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 0 4%; /* % */
 }
 
-/* --- تنسيقات العناصر الأخرى --- */
 .patient-info-card {
     background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
     color: var(--white-color); 
-    padding: 12px 16px; 
-    margin: 16px; 
-    border-radius: 14px;
-    box-shadow: 0 4px 15px rgba(0, 77, 64, 0.2);
-    flex-shrink: 0; /* منع البطاقة من الانكماش */
+    padding: 0.75rem 1rem; /* rem */
+    margin: 1rem 0; /* rem */
+    border-radius: 0.9rem; /* rem */
+    box-shadow: 0 0.25rem 1rem rgba(0, 77, 64, 0.2); /* rem */
+    flex-shrink: 0; 
     display: flex; 
     justify-content: space-between; 
     align-items: center;
 }
 
 .diagnosis-section {
-    padding: 0 16px 10px 16px;
-    flex-shrink: 0; /* منع قسم التشخيص من الانكماش */
+    padding-bottom: 0.6rem; /* rem */
+    flex-shrink: 0;
 }
 
 #diagnosisInput {
     width: 100%;
-    padding: 12px;
-    border-radius: 10px;
+    padding: 0.75rem; /* rem */
+    border-radius: 0.6rem; /* rem */
     border: 1px solid var(--border-color);
-    font-size: 15px;
+    font-size: 0.95rem; /* rem */
     resize: vertical;
-    min-height: 50px;
+    min-height: 3rem; /* rem */
+}
+
+main#prescriptionList {
+    padding-bottom: 1rem; /* rem */
 }
 
 .prescribed-card {
     background-color: var(--white-color); 
-    padding: 12px 16px; 
-    border-radius: 14px;
-    margin-bottom: 12px; 
-    border-left: 5px solid var(--primary-color);
+    padding: 0.75rem 1rem; /* rem */
+    border-radius: 0.9rem; /* rem */
+    margin-bottom: 0.75rem; /* rem */
+    border-left: 0.3rem solid var(--primary-color); /* rem */
     box-shadow: var(--card-shadow);
 }
 
-/* --- 3. تحسين وضوح التباين في نتائج البحث --- */
+.drug-name { 
+    color: var(--secondary-color); 
+    font-size: 1rem; /* rem */
+    font-weight: 600; 
+}
+
+.dose-entry { 
+    background-color: #e8f5e9; 
+    padding: 0.5rem 0.6rem; /* rem */
+    border-radius: 0.6rem; /* rem */
+    margin-top: 0.5rem; /* rem */
+    font-size: 0.9rem; /* rem */
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+}
+
+/* --- الشريط السفلي --- */
+footer.controls-section {
+    background-color: var(--white-color); 
+    padding: 0.75rem 4%; /* rem و % */
+    border-top: 1px solid #e0e0e0; 
+    box-shadow: 0 -0.25rem 1rem rgba(0,0,0,0.07); /* rem */
+    z-index: 900;
+    flex-shrink: 0;
+    position: relative;
+}
+
+.search-group { 
+    display: flex; 
+    gap: 2%; /* % */
+    margin-bottom: 0.6rem; /* rem */
+}
+
+select, input { 
+    padding: 0.75rem; /* rem */
+    border-radius: 0.6rem; /* rem */
+    border: 1px solid var(--border-color); 
+    font-size: 1rem; /* rem */
+    outline: none; 
+    background-color: var(--white-color); 
+}
+
+#typeSelect { 
+    width: 25%; /* % */
+    max-width: 100px; /* حد أقصى للحفاظ على الشكل */
+    background-color: #f1f8e9; 
+}
+
+#drugSearch { 
+    flex: 1; 
+}
+
+#drugSearch:focus, #diagnosisInput:focus { 
+    border-color: var(--primary-color); 
+    box-shadow: 0 0 0 0.2rem rgba(0, 137, 123, 0.2); /* rem */
+    outline: none; 
+}
+
+.suggestions-bar { 
+    display: flex; 
+    flex-wrap: wrap; 
+    gap: 0.5rem; /* rem */
+    padding: 0.3rem 0; /* rem */
+}
+
+.suggest-chip { 
+    background-color: #e0f2f1; 
+    color: var(--secondary-color); 
+    padding: 0.5rem 1rem; /* rem */
+    border-radius: 1.25rem; /* rem */
+    font-size: 0.85rem; /* rem */
+    white-space: nowrap; 
+    cursor: pointer; 
+    border: 1px solid #b2dfdb; 
+    transition: background-color 0.2s; 
+}
+
+/* --- صندوق نتائج البحث --- */
 .results-box {
     position: absolute; 
     bottom: 100%; 
-    left: 12px; 
-    right: 12px; 
-    margin-bottom: 10px;
+    left: 4%; /* % */
+    right: 4%; /* % */
+    margin-bottom: 0.6rem; /* rem */
     background-color: var(--white-color); 
-    border-radius: 15px; 
-    box-shadow: 0 -8px 30px rgba(0,0,0,0.15);
+    border-radius: 1rem; /* rem */
+    box-shadow: 0 -0.5rem 2rem rgba(0,0,0,0.15); /* rem */
     max-height: 40vh; 
     overflow-y: auto; 
     display: none;
-    border: 1px solid var(--border-color); /* إضافة حدود لتمييز الصندوق */
+    border: 1px solid var(--border-color);
 }
 
-.result-row { 
-    padding: 14px 16px; 
+.result-row, .custom-add { 
+    padding: 0.9rem 1rem; /* rem */
     border-bottom: 1px solid var(--border-color); 
     cursor: pointer; 
     display: flex; 
     justify-content: space-between; 
     align-items: center;
-    transition: background-color 0.2s; /* انتقال ناعم عند المرور */
+    transition: background-color 0.2s;
 }
 
-/* تطبيق لون الخلفية على الصفوف الفردية */
-.result-row:nth-child(odd) {
-    background-color: var(--search-row-odd-bg);
+.result-row:nth-child(odd) { background-color: var(--search-row-odd-bg); }
+.result-row:nth-child(even) { background-color: var(--search-row-even-bg); }
+.result-row:hover { background-color: var(--search-row-hover-bg); }
+.result-row:last-child, .custom-add:last-child { border-bottom: none; }
+
+.result-row .source-badge { 
+    font-size: 0.65rem; /* rem */
+    padding: 0.15rem 0.5rem; /* rem */
+    border-radius: 0.6rem; /* rem */
+    color: white; 
 }
 
-/* تطبيق لون خلفية مختلف على الصفوف الزوجية لتباين أوضح */
-.result-row:nth-child(even) {
-    background-color: var(--search-row-even-bg);
-}
-
-/* تغيير اللون عند مرور الماوس */
-.result-row:hover { 
-    background-color: var(--search-row-hover-bg); 
-}
-
-/* إزالة الحد السفلي من آخر عنصر */
-.result-row:last-child, .custom-add:last-child {
-    border-bottom: none;
-}
-
-.custom-add { 
-    padding: 14px 16px; 
-    color: var(--primary-color); 
+/* --- الأزرار والنوافذ المنبثقة --- */
+.btn { 
+    border: none; 
+    padding: 0.5rem 1rem; /* rem */
+    border-radius: 0.6rem; /* rem */
     font-weight: 600; 
     cursor: pointer; 
-    background-color: var(--search-row-odd-bg);
-}
-.custom-add:hover {
-    background-color: var(--search-row-hover-bg);
+    transition: transform 0.1s; 
+    text-decoration: none; 
+    font-size: 0.9rem; /* rem */
 }
 
-/* --- باقي التنسيقات (لم تتغير) --- */
-header .title { font-weight: 600; font-size: 17px; color: var(--primary-color); }
-.patient-info-card .info-text { cursor: pointer; }
-.drug-name { color: var(--secondary-color); font-size: 16px; font-weight: 600; }
-.dose-entry { background-color: #e8f5e9; padding: 8px 10px; border-radius: 10px; margin-top: 8px; font-size: 14px; display: flex; justify-content: space-between; align-items: center; }
-.search-group { display: flex; gap: 10px; margin-bottom: 10px; }
-select, input { padding: 12px; border-radius: 10px; border: 1px solid var(--border-color); font-size: 16px; outline: none; background-color: var(--white-color); }
-#typeSelect { width: 100px; background-color: #f1f8e9; }
-#drugSearch { flex: 1; }
-#drugSearch:focus, #diagnosisInput:focus { border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(0, 137, 123, 0.2); outline: none; }
-.suggestions-bar { display: flex; flex-wrap: wrap; gap: 8px; padding: 5px 0; }
-.suggest-chip { background-color: #e0f2f1; color: var(--secondary-color); padding: 8px 16px; border-radius: 20px; font-size: 14px; white-space: nowrap; cursor: pointer; border: 1px solid #b2dfdb; transition: background-color 0.2s; }
-.suggest-chip:hover { background-color: #b2dfdb; }
-.result-row .source-badge { font-size: 10px; padding: 2px 8px; border-radius: 10px; color: white; }
-.source-fav { background-color: var(--accent-color); }
-.source-db { background-color: var(--primary-color); }
-.source-local { background-color: #2962ff; }
-.btn { border: none; padding: 8px 15px; border-radius: 10px; font-weight: 600; cursor: pointer; transition: transform 0.1s; text-decoration: none; }
-.btn-primary { background-color: var(--primary-color); color: white; }
-.btn-success { background-color: var(--success-color); color: white; }
-.btn-icon { background: none; font-size: 20px; padding: 5px; color: var(--subtle-text-color); }
-.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 2000; display: none; justify-content: center; align-items: center; }
-.modal-content { background: var(--white-color); padding: 20px; border-radius: 15px; width: 90%; max-width: 400px; box-shadow: 0 5px 25px rgba(0,0,0,0.2); }
-.modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 15px; }
-.modal-title { font-size: 18px; font-weight: 600; color: var(--secondary-color); }
-.modal-body { max-height: 60vh; overflow-y: auto; }
-.modal-footer { margin-top: 15px; text-align: left; border-top: 1px solid var(--border-color); padding-top: 15px; }
-.template-item { padding: 12px; border-bottom: 1px solid var(--border-color); cursor: pointer; }
-.template-item:hover { background-color: #e8f5e9; }
-.exchange-btn { color: var(--accent-color); background: none; font-size: 18px; padding: 0 5px; cursor: pointer; border: none; }
+.btn-icon { 
+    background: none; 
+    font-size: 1.25rem; /* rem */
+    padding: 0.3rem; /* rem */
+    color: var(--subtle-text-color); 
+}
+
+.modal-overlay { 
+    position: fixed; 
+    top: 0; left: 0; right: 0; bottom: 0; 
+    background: rgba(0,0,0,0.5); 
+    z-index: 2000; 
+    display: none; 
+    justify-content: center; 
+    align-items: center; 
+    padding: 5%; /* % */
+}
+
+.modal-content { 
+    background: var(--white-color); 
+    padding: 1.25rem; /* rem */
+    border-radius: 1rem; /* rem */
+    width: 100%; 
+    max-width: 400px; /* حد أقصى للحفاظ على الشكل */
+    box-shadow: 0 0.3rem 1.5rem rgba(0,0,0,0.2); /* rem */
+}
+
+.modal-title { 
+    font-size: 1.1rem; /* rem */
+    font-weight: 600; 
+    color: var(--secondary-color); 
+}
