@@ -1,0 +1,79 @@
+:root {
+    --primary-color: #00897b; --secondary-color: #004d40; --accent-color: #ffc107;
+    --success-color: #4caf50; --danger-color: #f44336; --white-color: #ffffff;
+    --background-color: #f0f4f8; --text-color: #263238; --subtle-text-color: #546e7a;
+    --border-color: #cfd8dc; --card-shadow: 0 4px 12px rgba(0, 77, 64, 0.08);
+}
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes slideInUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-color: var(--background-color); margin: 0; overflow: hidden; color: var(--text-color);
+}
+.main-layout { display: flex; flex-direction: column; height: 100vh; }
+header {
+    background-color: var(--white-color); padding: 12px 16px;
+    display: flex; justify-content: space-between; align-items: center;
+    border-bottom: 1px solid var(--border-color); flex-shrink: 0; z-index: 1000;
+}
+header .title { font-weight: 600; font-size: 17px; color: var(--primary-color); }
+.patient-info-card {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: var(--white-color); padding: 12px 16px; margin: 16px; border-radius: 14px;
+    box-shadow: 0 4px 15px rgba(0, 77, 64, 0.2); animation: fadeIn 0.5s; flex-shrink: 0;
+    display: flex; justify-content: space-between; align-items: center;
+}
+.patient-info-card .info-text { cursor: pointer; }
+#prescriptionList {
+    flex-grow: 1; padding: 0 16px; overflow-y: auto;
+    padding-bottom: 150px; 
+}
+.prescribed-card {
+    background-color: var(--white-color); padding: 12px 16px; border-radius: 14px;
+    margin-bottom: 12px; border-left: 5px solid var(--primary-color);
+    box-shadow: var(--card-shadow); animation: fadeIn 0.4s ease-out;
+}
+.drug-name { color: var(--secondary-color); font-size: 16px; font-weight: 600; }
+.dose-entry { background-color: #e8f5e9; padding: 8px 10px; border-radius: 10px; margin-top: 8px; font-size: 14px; display: flex; justify-content: space-between; align-items: center; }
+.controls-section {
+    background-color: var(--white-color); padding: 12px;
+    border-top: 1px solid #e0e0e0; box-shadow: 0 -4px 15px rgba(0,0,0,0.07);
+    z-index: 900; animation: slideInUp 0.3s; flex-shrink: 0;
+}
+.search-group { display: flex; gap: 10px; margin-bottom: 10px; }
+select, input { padding: 12px; border-radius: 10px; border: 1px solid var(--border-color); font-size: 16px; outline: none; background-color: var(--white-color); box-sizing: border-box; }
+#typeSelect { width: 100px; background-color: #f1f8e9; }
+#drugSearch { flex: 1; }
+#drugSearch:focus { border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(0, 137, 123, 0.2); }
+.suggestions-bar { display: flex; flex-wrap: wrap; gap: 8px; padding: 5px 0; }
+.suggest-chip {
+    background-color: #e0f2f1; color: var(--secondary-color);
+    padding: 8px 16px; border-radius: 20px; font-size: 14px;
+    white-space: nowrap; cursor: pointer; border: 1px solid #b2dfdb;
+    transition: background-color 0.2s;
+}
+.suggest-chip:hover { background-color: #b2dfdb; }
+.results-box {
+    position: absolute; bottom: 100%; left: 12px; right: 12px; margin-bottom: 10px;
+    background-color: var(--white-color); border-radius: 15px; box-shadow: 0 -8px 30px rgba(0,0,0,0.15);
+    max-height: 40vh; overflow-y: auto; display: none;
+}
+.result-row { padding: 14px 16px; border-bottom: 1px solid #f0f0f0; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+.result-row:hover { background-color: #e8f5e9; }
+.result-row .source-badge { font-size: 10px; padding: 2px 8px; border-radius: 10px; color: white; }
+.source-fav { background-color: var(--accent-color); }
+.source-db { background-color: var(--primary-color); }
+.custom-add { padding: 14px 16px; color: var(--primary-color); font-weight: 600; cursor: pointer; }
+.btn { border: none; padding: 8px 15px; border-radius: 10px; font-weight: 600; cursor: pointer; transition: transform 0.1s; text-decoration: none; }
+.btn-primary { background-color: var(--primary-color); color: white; }
+.btn-success { background-color: var(--success-color); color: white; }
+.btn-icon { background: none; font-size: 20px; padding: 5px; color: var(--subtle-text-color); }
+.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 2000; display: none; justify-content: center; align-items: center; }
+.modal-content { background: var(--white-color); padding: 20px; border-radius: 15px; width: 90%; max-width: 400px; box-shadow: 0 5px 25px rgba(0,0,0,0.2); }
+.modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 15px; }
+.modal-title { font-size: 18px; font-weight: 600; color: var(--secondary-color); }
+.modal-body { max-height: 60vh; overflow-y: auto; }
+.modal-footer { margin-top: 15px; text-align: left; border-top: 1px solid var(--border-color); padding-top: 15px; }
+.template-item { padding: 12px; border-bottom: 1px solid var(--border-color); cursor: pointer; }
+.template-item:hover { background-color: #e8f5e9; }
+.exchange-btn { color: var(--accent-color); background: none; font-size: 18px; padding: 0 5px; cursor: pointer; border: none; }
