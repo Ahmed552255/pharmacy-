@@ -1,69 +1,191 @@
+/* --- متغيرات الألوان والأساسيات --- */
 :root {
-    --primary-color: #00897b; --secondary-color: #004d40; --accent-color: #ffc107;
-    --success-color: #4caf50; --danger-color: #f44336; --white-color: #ffffff;
-    --background-color: #f0f4f8; --text-color: #263238; --subtle-text-color: #546e7a;
-    --border-color: #cfd8dc; --card-shadow: 0 4px 12px rgba(0, 77, 64, 0.08);
+    --primary-color: #00897b; 
+    --secondary-color: #004d40; 
+    --accent-color: #ffc107;
+    --success-color: #4caf50; 
+    --danger-color: #f44336; 
+    --white-color: #ffffff;
+    --background-color: #f0f4f8; 
+    --text-color: #263238; 
+    --subtle-text-color: #546e7a;
+    --border-color: #cfd8dc; 
+    --card-shadow: 0 4px 12px rgba(0, 77, 64, 0.08);
+    /* ألوان جديدة لتباين أوضح في البحث */
+    --search-row-odd-bg: #ffffff; 
+    --search-row-even-bg: #f1f5f9;
+    --search-row-hover-bg: #e0f2f1;
 }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes slideInUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+/* --- إعادة تعيين الأنماط الأساسية --- */
+* {
+    box-sizing: border-box;
+}
+
+html {
+    /* منع تكبير النص عند تغيير اتجاه الشاشة في iOS */
+    -webkit-text-size-adjust: 100%;
+}
+
 body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    background-color: var(--background-color); margin: 0; overflow: hidden; color: var(--text-color);
+    background-color: var(--background-color); 
+    margin: 0; 
+    color: var(--text-color);
+    /* منع التمرير على مستوى الصفحة بالكامل */
+    overflow: hidden;
+    height: 100vh; /* ارتفاع كامل للشاشة */
+    width: 100vw;  /* عرض كامل للشاشة */
 }
-.main-layout { display: flex; flex-direction: column; height: 100vh; }
+
+/* --- 1. الهيكل الرئيسي باستخدام Flexbox (الحل الأساسي للمشكلة) --- */
+.main-layout {
+    display: flex;
+    flex-direction: column;
+    height: 100vh; /* يشغل 100% من ارتفاع الشاشة */
+}
+
 header {
-    background-color: var(--white-color); padding: 12px 16px;
-    display: flex; justify-content: space-between; align-items: center;
-    border-bottom: 1px solid var(--border-color); flex-shrink: 0; z-index: 1000;
+    background-color: var(--white-color); 
+    padding: 12px 16px;
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+    flex-shrink: 0; /* منع الشريط العلوي من الانكماش */
+    z-index: 1000;
 }
-header .title { font-weight: 600; font-size: 17px; color: var(--primary-color); }
+
+/* --- 2. جعل المحتوى الرئيسي قابل للتمرير (Main Content Scroll) --- */
+main#prescriptionList {
+    flex-grow: 1; /* يأخذ كل المساحة المتبقية */
+    overflow-y: auto; /* يسمح بالتمرير العمودي فقط لهذا الجزء */
+    padding: 16px;
+    /* إزالة الحشو السفلي القديم لضمان وصول المحتوى للحافة */
+}
+
+footer.controls-section {
+    background-color: var(--white-color); 
+    padding: 12px;
+    border-top: 1px solid #e0e0e0; 
+    box-shadow: 0 -4px 15px rgba(0,0,0,0.07);
+    z-index: 900;
+    flex-shrink: 0; /* منع الشريط السفلي من الانكماش */
+    position: relative; /* ضروري لصندوق النتائج */
+}
+
+/* --- تنسيقات العناصر الأخرى --- */
 .patient-info-card {
     background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-    color: var(--white-color); padding: 12px 16px; margin: 16px; border-radius: 14px;
-    box-shadow: 0 4px 15px rgba(0, 77, 64, 0.2); animation: fadeIn 0.5s; flex-shrink: 0;
-    display: flex; justify-content: space-between; align-items: center;
+    color: var(--white-color); 
+    padding: 12px 16px; 
+    margin: 16px; 
+    border-radius: 14px;
+    box-shadow: 0 4px 15px rgba(0, 77, 64, 0.2);
+    flex-shrink: 0; /* منع البطاقة من الانكماش */
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center;
 }
-.patient-info-card .info-text { cursor: pointer; }
-#prescriptionList {
-    flex-grow: 1; padding: 0 16px; overflow-y: auto;
-    padding-bottom: 150px; 
+
+.diagnosis-section {
+    padding: 0 16px 10px 16px;
+    flex-shrink: 0; /* منع قسم التشخيص من الانكماش */
 }
+
+#diagnosisInput {
+    width: 100%;
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    font-size: 15px;
+    resize: vertical;
+    min-height: 50px;
+}
+
 .prescribed-card {
-    background-color: var(--white-color); padding: 12px 16px; border-radius: 14px;
-    margin-bottom: 12px; border-left: 5px solid var(--primary-color);
-    box-shadow: var(--card-shadow); animation: fadeIn 0.4s ease-out;
+    background-color: var(--white-color); 
+    padding: 12px 16px; 
+    border-radius: 14px;
+    margin-bottom: 12px; 
+    border-left: 5px solid var(--primary-color);
+    box-shadow: var(--card-shadow);
 }
+
+/* --- 3. تحسين وضوح التباين في نتائج البحث --- */
+.results-box {
+    position: absolute; 
+    bottom: 100%; 
+    left: 12px; 
+    right: 12px; 
+    margin-bottom: 10px;
+    background-color: var(--white-color); 
+    border-radius: 15px; 
+    box-shadow: 0 -8px 30px rgba(0,0,0,0.15);
+    max-height: 40vh; 
+    overflow-y: auto; 
+    display: none;
+    border: 1px solid var(--border-color); /* إضافة حدود لتمييز الصندوق */
+}
+
+.result-row { 
+    padding: 14px 16px; 
+    border-bottom: 1px solid var(--border-color); 
+    cursor: pointer; 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center;
+    transition: background-color 0.2s; /* انتقال ناعم عند المرور */
+}
+
+/* تطبيق لون الخلفية على الصفوف الفردية */
+.result-row:nth-child(odd) {
+    background-color: var(--search-row-odd-bg);
+}
+
+/* تطبيق لون خلفية مختلف على الصفوف الزوجية لتباين أوضح */
+.result-row:nth-child(even) {
+    background-color: var(--search-row-even-bg);
+}
+
+/* تغيير اللون عند مرور الماوس */
+.result-row:hover { 
+    background-color: var(--search-row-hover-bg); 
+}
+
+/* إزالة الحد السفلي من آخر عنصر */
+.result-row:last-child, .custom-add:last-child {
+    border-bottom: none;
+}
+
+.custom-add { 
+    padding: 14px 16px; 
+    color: var(--primary-color); 
+    font-weight: 600; 
+    cursor: pointer; 
+    background-color: var(--search-row-odd-bg);
+}
+.custom-add:hover {
+    background-color: var(--search-row-hover-bg);
+}
+
+/* --- باقي التنسيقات (لم تتغير) --- */
+header .title { font-weight: 600; font-size: 17px; color: var(--primary-color); }
+.patient-info-card .info-text { cursor: pointer; }
 .drug-name { color: var(--secondary-color); font-size: 16px; font-weight: 600; }
 .dose-entry { background-color: #e8f5e9; padding: 8px 10px; border-radius: 10px; margin-top: 8px; font-size: 14px; display: flex; justify-content: space-between; align-items: center; }
-.controls-section {
-    background-color: var(--white-color); padding: 12px;
-    border-top: 1px solid #e0e0e0; box-shadow: 0 -4px 15px rgba(0,0,0,0.07);
-    z-index: 900; animation: slideInUp 0.3s; flex-shrink: 0;
-}
 .search-group { display: flex; gap: 10px; margin-bottom: 10px; }
-select, input { padding: 12px; border-radius: 10px; border: 1px solid var(--border-color); font-size: 16px; outline: none; background-color: var(--white-color); box-sizing: border-box; }
+select, input { padding: 12px; border-radius: 10px; border: 1px solid var(--border-color); font-size: 16px; outline: none; background-color: var(--white-color); }
 #typeSelect { width: 100px; background-color: #f1f8e9; }
 #drugSearch { flex: 1; }
-#drugSearch:focus { border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(0, 137, 123, 0.2); }
+#drugSearch:focus, #diagnosisInput:focus { border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(0, 137, 123, 0.2); outline: none; }
 .suggestions-bar { display: flex; flex-wrap: wrap; gap: 8px; padding: 5px 0; }
-.suggest-chip {
-    background-color: #e0f2f1; color: var(--secondary-color);
-    padding: 8px 16px; border-radius: 20px; font-size: 14px;
-    white-space: nowrap; cursor: pointer; border: 1px solid #b2dfdb;
-    transition: background-color 0.2s;
-}
+.suggest-chip { background-color: #e0f2f1; color: var(--secondary-color); padding: 8px 16px; border-radius: 20px; font-size: 14px; white-space: nowrap; cursor: pointer; border: 1px solid #b2dfdb; transition: background-color 0.2s; }
 .suggest-chip:hover { background-color: #b2dfdb; }
-.results-box {
-    position: absolute; bottom: 100%; left: 12px; right: 12px; margin-bottom: 10px;
-    background-color: var(--white-color); border-radius: 15px; box-shadow: 0 -8px 30px rgba(0,0,0,0.15);
-    max-height: 40vh; overflow-y: auto; display: none;
-}
-.result-row { padding: 14px 16px; border-bottom: 1px solid #f0f0f0; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
-.result-row:hover { background-color: #e8f5e9; }
 .result-row .source-badge { font-size: 10px; padding: 2px 8px; border-radius: 10px; color: white; }
 .source-fav { background-color: var(--accent-color); }
 .source-db { background-color: var(--primary-color); }
-.custom-add { padding: 14px 16px; color: var(--primary-color); font-weight: 600; cursor: pointer; }
+.source-local { background-color: #2962ff; }
 .btn { border: none; padding: 8px 15px; border-radius: 10px; font-weight: 600; cursor: pointer; transition: transform 0.1s; text-decoration: none; }
 .btn-primary { background-color: var(--primary-color); color: white; }
 .btn-success { background-color: var(--success-color); color: white; }
