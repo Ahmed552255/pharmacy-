@@ -2,27 +2,18 @@
    المتغيرات الرئيسية للتصميم (Variables)
    ================================= */
 :root {
-    /* -- درجات الأخضر الجديدة والأكثر حداثة -- */
-    --primary-color: #10b981;       /* أخضر زمردي مشرق (Emerald) */
-    --secondary-color: #047857;     /* أخضر أعمق وأكثر تركيزاً */
-    
-    --accent-color: #f59e0b;        /* لون مميز (كهرماني) */
-    --success-color: #22c55e;       /* لون النجاح (أخضر ليموني) */
-    --danger-color: #ef4444;        /* لون الخطر (أحمر) */
+    --primary-color: #00897b;       /* اللون الأساسي (أخضر) */
+    --secondary-color: #004d40;     /* اللون الثانوي (أخضر داكن) */
+    --accent-color: #ffc107;        /* اللون المميز (أصفر) */
+    --success-color: #4caf50;       /* لون النجاح */
+    --danger-color: #f44336;        /* لون الخطر */
     --white-color: #ffffff;         /* اللون الأبيض */
-    
-    /* -- ألوان الخلفية والنصوص -- */
-    --background-color: #f0fdfa;    /* خلفية خضراء باهتة جداً لإحساس بالراحة */
-    --text-color: #1f2937;          /* لون النص (رمادي داكن) */
-    --subtle-text-color: #6b7280;   /* لون النص الفرعي (رمادي) */
-    --border-color: #d1d5db;        /* لون الحدود */
-    
-    /* -- ألوان التأثير الزجاجي -- */
-    --glass-bg: rgba(255, 255, 255, 0.6); /* لون الخلفية الزجاجية */
-    --glass-border: rgba(255, 255, 255, 0.2); /* لون حدود التأثير الزجاجي */
-    --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1); /* ظل ناعم */
-    
-    --card-shadow: 0 4px 12px rgba(16, 185, 129, 0.1); /* ظل الكروت */
+    --background-color: #f0f4f8;    /* لون الخلفية العام */
+    --text-color: #263238;          /* لون النص الأساسي */
+    --subtle-text-color: #546e7a;   /* لون النص الفرعي/الهادئ */
+    --border-color: #cfd8dc;        /* لون الحدود */
+    --card-shadow: 0 4px 12px rgba(0, 77, 64, 0.08); /* ظل الكروت */
+    --light-gray-background: #f7f9fa; /* لون خلفية إضافي للتباين */
 }
 
 /* =================================
@@ -54,37 +45,33 @@ body {
     display: flex;
     flex-direction: column;
     height: 100vh;
-    overflow: hidden;
+    overflow: hidden; /* منع التمرير على مستوى الصفحة كلها، التمرير سيكون داخلياً */
 }
 
 /* =================================
-   الشريط العلوي (Header) - مع التأثير الزجاجي
+   الشريط العلوي (Header)
    ================================= */
 header {
-    /* -- تطبيق التأثير الزجاجي -- */
-    background: var(--glass-bg);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border-bottom: 1px solid var(--glass-border);
-    
-    padding: 8px 16px;
+    background-color: var(--white-color);
+    padding: 12px 16px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    flex-shrink: 0;
+    border-bottom: 1px solid var(--border-color);
+    flex-shrink: 0; /* منع الشريط من الانكماش */
     z-index: 1000;
 }
 
 .header-left, .header-right {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 8px; /* مسافة بين الأيقونات والنص في الشريط العلوي */
 }
 
 header .title {
     font-weight: 600;
-    font-size: 18px;
-    color: var(--secondary-color);
+    font-size: 17px;
+    color: var(--primary-color);
 }
 
 /* =================================
@@ -93,12 +80,12 @@ header .title {
 .patient-info-card {
     background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
     color: var(--white-color);
-    padding: 14px 18px;
+    padding: 12px 16px;
     margin: 16px;
-    border-radius: 16px;
-    box-shadow: 0 6px 20px rgba(4, 120, 87, 0.25);
+    border-radius: 14px;
+    box-shadow: 0 4px 15px rgba(0, 77, 64, 0.2);
     animation: fadeIn 0.5s;
-    flex-shrink: 0;
+    flex-shrink: 0; /* منع الكارت من الانكماش */
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -113,13 +100,13 @@ header .title {
 .diagnosis-section {
     padding: 0 16px 10px 16px;
     animation: fadeIn 0.5s;
-    flex-shrink: 0;
+    flex-shrink: 0; /* منع هذا القسم من الانكماش */
 }
 
 #diagnosisInput {
     width: 100%;
     padding: 12px;
-    border-radius: 12px;
+    border-radius: 10px;
     border: 1px solid var(--border-color);
     font-size: 15px;
     box-sizing: border-box;
@@ -130,17 +117,17 @@ header .title {
 #diagnosisInput:focus {
     outline: none;
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+    box-shadow: 0 0 0 3px rgba(0, 137, 123, 0.2);
 }
 
 /* =================================
    قائمة الأدوية الموصوفة (Prescription List)
    ================================= */
 #prescriptionList {
-    flex-grow: 1;
+    flex-grow: 1; /* هذا العنصر سيأخذ كل المساحة المتبقية */
     padding: 0 16px;
-    overflow-y: auto;
-    padding-bottom: 20px;
+    overflow-y: auto; /* التمرير العمودي سيحدث هنا فقط */
+    padding-bottom: 20px; /* مساحة إضافية في الأسفل لراحة العين */
 }
 
 .prescribed-card {
@@ -160,7 +147,7 @@ header .title {
 }
 
 .dose-entry {
-    background-color: #ecfdf5; /* أخضر باهت متناسق */
+    background-color: #e8f5e9;
     padding: 8px 10px;
     border-radius: 10px;
     margin-top: 8px;
@@ -171,21 +158,17 @@ header .title {
 }
 
 /* =================================
-   قسم التحكم السفلي - مع التأثير الزجاجي
+   قسم التحكم والبحث السفلي (Controls Section)
    ================================= */
 .controls-section {
-    /* -- تطبيق التأثير الزجاجي -- */
-    background: var(--glass-bg);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border-top: 1px solid var(--glass-border);
-    box-shadow: var(--glass-shadow);
-    
+    background-color: var(--white-color);
     padding: 12px;
+    border-top: 1px solid #e0e0e0;
+    box-shadow: 0 -4px 15px rgba(0,0,0,0.07);
     z-index: 900;
     animation: slideInUp 0.3s;
-    flex-shrink: 0;
-    position: relative;
+    flex-shrink: 0; /* منع هذا القسم من الانكماش */
+    position: relative; /* ضروري لتحديد موضع صندوق النتائج */
 }
 
 .search-group {
@@ -206,7 +189,7 @@ select, input {
 
 #typeSelect {
     width: 100px;
-    background-color: #f0fdfa;
+    background-color: #f1f8e9;
 }
 
 #drugSearch {
@@ -214,7 +197,79 @@ select, input {
 }
 #drugSearch:focus {
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+    box-shadow: 0 0 0 3px rgba(0, 137, 123, 0.2);
+}
+
+.suggestions-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 5px 0;
+}
+
+.suggest-chip {
+    background-color: #e0f2f1;
+    color: var(--secondary-color);
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    white-space: nowrap;
+    cursor: pointer;
+    border: 1px solid #b2dfdb;
+    transition: background-color 0.2s;
+}
+.suggest-chip:hover {
+    background-color: #b2dfdb;
+}
+
+/* =================================
+   صندوق نتائج البحث (Search Results Box)
+   ================================= */
+.results-box {
+    position: absolute;
+    bottom: 100%; /* يظهر فوق قسم التحكم */
+    left: 12px;
+    right: 12px;
+    margin-bottom: 10px;
+    background-color: var(--white-color);
+    border-radius: 15px;
+    box-shadow: 0 -8px 30px rgba(0,0,0,0.15);
+    max-height: 40vh;
+    overflow-y: auto;
+    display: none;
+    z-index: 10;
+}
+
+.result-row {
+    padding: 14px 16px;
+    border-bottom: 1px solid #f0f0f0;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.result-row:nth-child(even) {
+    background-color: var(--light-gray-background);
+}
+.result-row:hover {
+    background-color: #e8f5e9;
+}
+
+.result-row .source-badge {
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    color: white;
+}
+.source-fav { background-color: var(--accent-color); }
+.source-db { background-color: var(--primary-color); }
+.source-local { background-color: #2962ff; }
+
+.custom-add {
+    padding: 14px 16px;
+    color: var(--primary-color);
+    font-weight: 600;
+    cursor: pointer;
 }
 
 /* =================================
@@ -226,32 +281,24 @@ select, input {
     border-radius: 10px;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: transform 0.1s;
     text-decoration: none;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-}
-.btn:active {
-    transform: scale(0.95); /* تأثير عند الضغط */
+    gap: 8px; /* مسافة بين الأيقونة والنص */
 }
 
 .btn-primary { background-color: var(--primary-color); color: white; }
-.btn-primary:hover { background-color: var(--secondary-color); }
-
+.btn-success { background-color: var(--success-color); color: white; }
 .btn-secondary { background-color: var(--subtle-text-color); color: white; }
-.btn-secondary:hover { background-color: #4b5563; }
+.btn-secondary:hover { background-color: #455a64; }
 
 .btn-icon {
-    background: transparent;
-    font-size: 24px; /* تكبير الأيقونة قليلاً */
+    background: none;
+    font-size: 20px;
     padding: 5px;
     color: var(--subtle-text-color);
-    border-radius: 50%; /* جعل خلفية الأيقونة دائرية */
-}
-.btn-icon:hover {
-    background-color: rgba(0, 0, 0, 0.05);
 }
 
 .action-buttons {
@@ -260,13 +307,77 @@ select, input {
     margin-top: 12px;
 }
 .action-buttons .btn {
-    flex-grow: 1;
+    flex-grow: 1; /* لجعل الأزرار تملأ المساحة بالتساوي */
 }
 
 /* تنسيق أيقونات جوجل */
-.material-icons-outlined {
+.material-icons {
     vertical-align: middle;
 }
 
-/* (باقي الأكواد مثل صندوق النتائج والنافذة المنبثقة تبقى كما هي) */
-/* ... يمكنك لصق باقي الأكواد هنا ... */
+/* =================================
+   النافذة المنبثقة (Modal)
+   ================================= */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 2000;
+    display: none;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background: var(--white-color);
+    padding: 20px;
+    border-radius: 15px;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 5px 25px rgba(0,0,0,0.2);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+}
+
+.modal-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--secondary-color);
+}
+
+.modal-body {
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+.modal-footer {
+    margin-top: 15px;
+    text-align: left;
+    border-top: 1px solid var(--border-color);
+    padding-top: 15px;
+}
+
+.template-item {
+    padding: 12px;
+    border-bottom: 1px solid var(--border-color);
+    cursor: pointer;
+}
+.template-item:hover {
+    background-color: #e8f5e9;
+}
+
+.exchange-btn {
+    color: var(--accent-color);
+    background: none;
+    font-size: 18px;
+    padding: 0 5px;
+    cursor: pointer;
+    border: none;
+}
