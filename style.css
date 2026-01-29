@@ -11,41 +11,28 @@
     --subtle-text-color: #546e7a;
     --border-color: #cfd8dc; 
     --card-shadow: 0 0.25rem 0.75rem rgba(0, 77, 64, 0.08);
-    --search-row-odd-bg: #ffffff; 
-    --search-row-even-bg: #f1f5f9;
-    --search-row-hover-bg: #e0f2f1;
-    
     font-size: 16px;
 }
 
-/* --- إعادة تعيين الأنماط الأساسية --- */
+/* --- إعادة تعيين الأنماط --- */
 * {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
 }
 
-html {
-    -webkit-text-size-adjust: 100%;
-}
-
-/* --- 1. تعديل الـ Body (أهم خطوة) --- */
-body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    background-color: var(--background-color); 
-    color: var(--text-color);
-    /* تم حذف overflow: hidden للسماح بالتمرير الطبيعي */
+/* --- الهيكل الرئيسي (مهم جداً) --- */
+html, body {
+    height: 100%; /* عشان نضمن إن الصفحة مالية الشاشة */
     width: 100%;
-    min-height: 100vh; /* استخدام min-height للسماح بالتمدد */
-    display: flex;
-    flex-direction: column;
+    overflow: hidden; /* هنمنع السكرول هنا عشان نتحكم فيه جوه */
+    background-color: var(--background-color);
 }
 
-/* --- 2. تعديل الـ Layout الرئيسي --- */
 .main-layout {
     display: flex;
     flex-direction: column;
-    min-height: 100vh; /* يضمن أن الـ layout يملأ الشاشة على الأقل */
+    height: 100vh; /* طول ثابت يملأ الشاشة */
     width: 100%;
 }
 
@@ -56,51 +43,36 @@ header {
     justify-content: space-between; 
     align-items: center;
     border-bottom: 1px solid var(--border-color);
-    flex-shrink: 0;
+    flex-shrink: 0; /* يمنع الهيدر إنه يكش */
     z-index: 1000;
-    /* يمكن جعله sticky أيضًا إذا أردنا بقاءه عند التمرير لأعلى */
-    position: sticky;
-    top: 0;
 }
 
-/* تعديل الـ content-wrapper ليكون مرنًا */
+/* --- المحتوى القابل للتمرير --- */
 .content-wrapper {
-    flex: 1 0 auto; /* يجعله يأخذ كل المساحة المتاحة بين الهيدر والفوتر */
+    flex: 1; /* ياخد كل المساحة الفاضية اللي في النص */
+    overflow-y: auto; /* يظهر السكرول هنا بس */
     padding: 0 4%;
-    /* تم حذف overflow-y للسماح بالتمرير الطبيعي للصفحة */
+    -webkit-overflow-scrolling: touch; /* سكرول ناعم للموبايل */
 }
 
-/* --- 3. حل مشكلة الـ Footer مع الكيبورد --- */
+/* --- الشريط السفلي --- */
 footer.controls-section {
     background-color: var(--white-color); 
     padding: 0.75rem 4%;
     border-top: 1px solid #e0e0e0; 
     box-shadow: 0 -0.25rem 1rem rgba(0,0,0,0.07);
-    
-    /* جعله لزجًا في الأسفل */
-    position: sticky;
-    bottom: 0;
-    
-    width: 100%;
+    flex-shrink: 0; /* يمنع الفوتر إنه يختفي أو يكش */
     z-index: 900;
-    flex-shrink: 0;
 }
 
-/* --- باقي التنسيقات (مع تعديلات طفيفة لتناسب الهيكل الجديد) --- */
+/* --- باقي التنسيقات --- */
 .patient-info-card {
     background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
     color: var(--white-color); 
     padding: 0.75rem 1rem;
-    margin: 1rem 0; /* إضافة هامش علوي وسفلي */
+    margin: 1rem 0;
     border-radius: 0.9rem;
     box-shadow: 0 0.25rem 1rem rgba(0, 77, 64, 0.2);
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center;
-}
-
-.diagnosis-section {
-    padding-bottom: 0.6rem;
 }
 
 #diagnosisInput {
@@ -109,58 +81,36 @@ footer.controls-section {
     border-radius: 0.6rem;
     border: 1px solid var(--border-color);
     font-size: 0.95rem;
-    resize: vertical;
-    min-height: 3rem;
+    resize: none; /* عشان ميبوظش الشكل في الموبايل */
 }
 
-main#prescriptionList {
-    /* إضافة حشو سفلي لضمان عدم تغطية آخر عنصر بالفوتر قبل التمرير */
-    padding-bottom: 1rem; 
+.search-group { 
+    display: flex; 
+    gap: 2%; 
+    margin-bottom: 0.6rem; 
 }
 
-.prescribed-card {
-    background-color: var(--white-color); 
-    padding: 0.75rem 1rem;
-    border-radius: 0.9rem;
-    margin-bottom: 0.75rem;
-    border-left: 0.3rem solid var(--primary-color);
-    box-shadow: var(--card-shadow);
+#typeSelect { width: 30%; background-color: #f1f8e9; }
+#drugSearch { flex: 1; }
+
+select, input { 
+    padding: 0.75rem; 
+    border-radius: 0.6rem; 
+    border: 1px solid var(--border-color); 
+    font-size: 1rem;
 }
 
-/* --- صندوق نتائج البحث --- */
+/* صندوق نتائج البحث */
 .results-box {
     position: absolute; 
     bottom: 100%; 
     left: 4%;
     right: 4%;
-    margin-bottom: 0.6rem;
+    margin-bottom: 0.5rem;
     background-color: var(--white-color); 
     border-radius: 1rem;
     box-shadow: 0 -0.5rem 2rem rgba(0,0,0,0.15);
     max-height: 40vh; 
-    overflow-y: auto; 
-    display: none;
+    overflow-y: auto;
     border: 1px solid var(--border-color);
 }
-
-/* (باقي التنسيقات للأزرار والخطوط والنوافذ المنبثقة تبقى كما هي) */
-.drug-name { color: var(--secondary-color); font-size: 1rem; font-weight: 600; }
-.dose-entry { background-color: #e8f5e9; padding: 0.5rem 0.6rem; border-radius: 0.6rem; margin-top: 0.5rem; font-size: 0.9rem; display: flex; justify-content: space-between; align-items: center; }
-.search-group { display: flex; gap: 2%; margin-bottom: 0.6rem; }
-select, input { padding: 0.75rem; border-radius: 0.6rem; border: 1px solid var(--border-color); font-size: 1rem; outline: none; background-color: var(--white-color); }
-#typeSelect { width: 25%; max-width: 100px; background-color: #f1f8e9; }
-#drugSearch { flex: 1; }
-#drugSearch:focus, #diagnosisInput:focus { border-color: var(--primary-color); box-shadow: 0 0 0 0.2rem rgba(0, 137, 123, 0.2); outline: none; }
-.suggestions-bar { display: flex; flex-wrap: wrap; gap: 0.5rem; padding: 0.3rem 0; }
-.suggest-chip { background-color: #e0f2f1; color: var(--secondary-color); padding: 0.5rem 1rem; border-radius: 1.25rem; font-size: 0.85rem; white-space: nowrap; cursor: pointer; border: 1px solid #b2dfdb; transition: background-color 0.2s; }
-.result-row, .custom-add { padding: 0.9rem 1rem; border-bottom: 1px solid var(--border-color); cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background-color 0.2s; }
-.result-row:nth-child(odd) { background-color: var(--search-row-odd-bg); }
-.result-row:nth-child(even) { background-color: var(--search-row-even-bg); }
-.result-row:hover { background-color: var(--search-row-hover-bg); }
-.result-row:last-child, .custom-add:last-child { border-bottom: none; }
-.result-row .source-badge { font-size: 0.65rem; padding: 0.15rem 0.5rem; border-radius: 0.6rem; color: white; }
-.btn { border: none; padding: 0.5rem 1rem; border-radius: 0.6rem; font-weight: 600; cursor: pointer; transition: transform 0.1s; text-decoration: none; font-size: 0.9rem; }
-.btn-icon { background: none; font-size: 1.25rem; padding: 0.3rem; color: var(--subtle-text-color); }
-.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 2000; display: none; justify-content: center; align-items: center; padding: 5%; }
-.modal-content { background: var(--white-color); padding: 1.25rem; border-radius: 1rem; width: 100%; max-width: 400px; box-shadow: 0 0.3rem 1.5rem rgba(0,0,0,0.2); }
-.modal-title { font-size: 1.1rem; font-weight: 600; color: var(--secondary-color); }
