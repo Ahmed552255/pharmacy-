@@ -1,6 +1,11 @@
+// =================================================================
+//  نظام إدارة الروشتات الإلكترونية - نسخة معدّلة
+// =================================================================
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
 import { getFirestore, doc, getDoc, addDoc, updateDoc, collection, serverTimestamp, getDocs, query, where, setDoc, increment } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
+// --- 1. إعدادات الاتصال بقاعدة البيانات (Firebase) ---
 const firebaseConfig = {
     apiKey: "AIzaSyDYgPFDWqtaHm9wzKyRtUqJKS2mQrOiJVk",
     authDomain: "oooooo-ee246.firebaseapp.com",
@@ -13,9 +18,18 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+
+// --- 2. التحقق من هوية الطبيب وجلب بياناته ---
 const doctorId = localStorage.getItem('userId');
 if (!doctorId) window.location.href = 'login.html';
 
+// جلب بيانات الطبيب لتضمينها في الروشتة لاحقًا
+const doctorInfo = {
+    id: doctorId,
+    name: localStorage.getItem('userName') || 'طبيب غير محدد',
+    
+
+// --- 3. تعريف عناصر واجهة المستخدم (UI) ---
 const UI = {
     prescriptionList: document.getElementById('prescriptionList'),
     welcomeMessage: document.getElementById('welcomeMessage'),
@@ -39,18 +53,25 @@ const UI = {
     openTemplatesBtn: document.getElementById('openTemplatesBtn'),
 };
 
+// --- 4. الحالة الداخلية للتطبيق (State) ---
 const state = {
-    allDrugs: {}, favoriteDrugs: [], prescribedDrugs: [],
-    activeDrugIndex: null, mode: 'add_drug', currentBooking: null,
-    templates: [], isAddingExchange: false, exchangeDoseText: '',
+    allDrugs: {}, 
+    favoriteDrugs: [], 
+    prescribedDrugs: [], // الأدوية المؤقتة للروشتة الحالية
+    activeDrugIndex: null, 
+    mode: 'add_drug', 
+    currentBooking: null, // سيحتوي على بيانات المريض من الحجز
+    templates: [], 
+    isAddingExchange: false, 
+    exchangeDoseText: '',
 };
 
 const DRUG_TYPES = { tab: "برشام", syrup: "شراب", amp: "حقن", supp: "لبوس", drops: "قطرة", spray: "بخاخ", cream: "كريم", oint: "مرهم", powder: "فوار" };
 
+// --- 5. دالة التهيئة الرئيسية ---
 async function initialize() {
     console.log("Initializing page...");
-    const doctorName = localStorage.getItem('userName');
-    UI.doctorNameHeader.textContent = doctorName ? `د. ${doctorName}` : 'مساعد الطبيب';
+    UI.doctorNameHeader.textContent = `د. ${doctorInfo.name}`;
 
     await Promise.all([ loadExternalDrugDB(), loadFavoriteDrugs() ]);
     
@@ -60,7 +81,10 @@ async function initialize() {
     if (currentBookingId) {
         const bookingDoc = await getDoc(doc(db, "appointments", currentBookingId));
         if (bookingDoc.exists()) {
+            // تخزين بيانات الحجز بالكامل في الحالة
             state.currentBooking = { id: bookingDoc.id, ...bookingDoc.data() };
+            
+            // عرض بيانات المريض
             UI.patientNameText.textContent = state.currentBooking.patientName;
             UI.patientAgeText.textContent = `${state.currentBooking.age || 'غير محدد'} سنة`;
             UI.patientInfoCard.style.display = 'flex';
@@ -75,6 +99,76 @@ async function initialize() {
     renderPrescription();
     addEventListeners();
 }
+
+// ... (باقي الدوال لم تتغير: loadExternalDrugDB, loadFavoriteDrugs, addEventListeners, handleSearch, selectDrug, trackDrugUsage, setMode, updateDoseSuggestions, applyDoseSuggestion, confirmDose, startExchangeDrug, renderPrescription, addAnotherDose, removeDrug, removeDose, loadTemplates, renderTemplates, applyTemplate, openSaveTemplateModal, savePrescriptionAsTemplate, openPatientRecord)
+// ملاحظة: تم نسخ الدوال التي لم تتغير كما هي في الأسفل لتكتمل الصورة
+
+// =================================================================
+//  الدالة المحورية: إنهاء وحفظ الروشتة (تم تعديلها بالكامل)
+// =================================================================
+window.finishAndSavePrescription = async () => {
+    // 1. التحقق من وجود مريض ووجود أدوية
+    if (!state.currentBooking) {
+        return alert("الرجاء اختيار مريض أولاً.");
+    }
+    if (state.prescribedDrugs.length === 0) {
+        return alert("لا يمكن حفظ روشتة فارغة.");
+    }
+    if (!confirm(`هل أنت متأكد من إنهاء وحفظ روشتة المريض: ${state.currentBooking.patientName}؟`)) {
+        return;
+    }
+
+    // 2. تجميع كل البيانات المطلوبة في كائن واحد (Object)
+    const prescriptionData = {
+        // --- بيانات المريض ---
+        patient: {
+            id: state.currentBooking.patientId,
+            name: state.currentBooking.patientName,
+            age: state.currentBooking.age || 'غير محدد',
+            phone: state.currentBooking.patientPhone || 'غير متوفر' // **جديد**: نفترض وجوده في الحجز
+        },
+        // --- بيانات الطبيب ---
+        doctor: {
+            id: doctorInfo.id,
+            name: doctorInfo.name,
+            phone: doctorInfo.phone
+        },
+        // --- تفاصيل الروشتة ---
+        medications: state.prescribedDrugs.map(drug => ({ // **جديد**: هيكلة أفضل للأدوية
+            name: drug.name,
+            doses: drug.doses // قائمة الاستخدامات
+        })),
+        // --- بيانات إضافية ---
+        bookingId: state.currentBooking.id, // للربط مع الحجز الأصلي
+        createdAt: serverTimestamp(), // **جديد**: تاريخ ووقت الكشف (من الخادم مباشرة)
+        status: "new" // **جديد ومهم**: حالة الروشتة لتطبيق الصيدلية
+    };
+
+    console.log("جاري حفظ بيانات الروشتة:", prescriptionData);
+
+    try {
+        // 3. حفظ كائن الروشتة في مجموعة "prescriptions"
+        const docRef = await addDoc(collection(db, "prescriptions"), prescriptionData);
+        console.log("تم حفظ الروشتة بنجاح بالمعرّف:", docRef.id);
+
+        // 4. تحديث حالة الحجز الأصلي إلى "منتهي"
+        await updateDoc(doc(db, "appointments", state.currentBooking.id), { status: "منتهي" });
+
+        // 5. تنظيف الحالة وتوجيه المستخدم
+        localStorage.removeItem('currentBookingId');
+        alert('✓ تم إنهاء الكشف وحفظ الروشتة بنجاح.');
+        window.location.href = 'doctor_queue.html'; // الانتقال لصفحة قائمة الانتظار
+
+    } catch (e) {
+        console.error("حدث خطأ أثناء إنهاء الجلسة وحفظ الروشتة:", e);
+        alert("خطأ في الحفظ: " + e.message);
+    }
+};
+
+
+// =================================================================
+//  باقي الدوال (بدون تغيير)
+// =================================================================
 
 async function loadExternalDrugDB() {
     try {
@@ -309,26 +403,6 @@ window.savePrescriptionAsTemplate = async () => {
     } catch (e) { console.error("Error saving template:", e); alert("حدث خطأ أثناء الحفظ: " + e.message); }
 }
 
-window.finishAndSavePrescription = async () => {
-    if (!state.currentBooking) return alert("الرجاء اختيار مريض أولاً.");
-    if (state.prescribedDrugs.length === 0) return alert("الروشتة فارغة.");
-    if (!confirm(`هل أنت متأكد من إنهاء وحفظ كشف المريض ${state.currentBooking.patientName}؟`)) return;
-
-    const prescriptionData = {
-        bookingId: state.currentBooking.id, patientId: state.currentBooking.patientId,
-        patientName: state.currentBooking.patientName,
-        medications: state.prescribedDrugs, doctorId: doctorId, createdAt: serverTimestamp()
-    };
-
-    try {
-        await addDoc(collection(db, "prescriptions"), prescriptionData);
-        await updateDoc(doc(db, "appointments", state.currentBooking.id), { status: "منتهي" });
-        localStorage.removeItem('currentBookingId');
-        alert('✓ تم إنهاء الكشف وحفظ الروشتة بنجاح.');
-        window.location.href = 'doctor_queue.html';
-    } catch (e) { console.error("Error finishing session:", e); alert("خطأ في الحفظ: " + e.message); }
-}
-
 window.openPatientRecord = () => {
     if (!state.currentBooking || !state.currentBooking.patientId) return alert("لا يوجد سجل دائم لهذا المريض لعرضه.");
     localStorage.setItem('recordsPatientId', state.currentBooking.patientId);
@@ -338,7 +412,6 @@ window.openPatientRecord = () => {
 // Global functions for modals in HTML
 window.openSaveTemplateModal = openSaveTemplateModal;
 window.savePrescriptionAsTemplate = savePrescriptionAsTemplate;
-window.finishAndSavePrescription = finishAndSavePrescription;
 window.openPatientRecord = openPatientRecord;
 window.applyTemplate = applyTemplate;
 
