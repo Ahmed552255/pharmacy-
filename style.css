@@ -1,39 +1,16 @@
-/* --- متغيرات الألوان والأساسيات --- */
-:root {
-    --primary-color: #00897b; 
-    --secondary-color: #004d40; 
-    --accent-color: #ffc107;
-    --success-color: #4caf50; 
-    --danger-color: #f44336; 
-    --white-color: #ffffff;
-    --background-color: #f0f4f8; 
-    --text-color: #263238; 
-    --subtle-text-color: #546e7a;
-    --border-color: #cfd8dc; 
-    --card-shadow: 0 0.25rem 0.75rem rgba(0, 77, 64, 0.08);
-    font-size: 16px;
-}
-
-/* --- إعادة تعيين الأنماط --- */
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
-
-/* --- الهيكل الرئيسي (مهم جداً) --- */
+/* 1. التعديل الأساسي للهيكل */
 html, body {
-    height: 100%; /* عشان نضمن إن الصفحة مالية الشاشة */
-    width: 100%;
-    overflow: hidden; /* هنمنع السكرول هنا عشان نتحكم فيه جوه */
+    height: auto; /* سيب الطول يتحدد بالمحتوى */
+    min-height: 100%;
+    overflow-x: hidden;
+    overflow-y: auto; /* فعل السكرول الطبيعي */
     background-color: var(--background-color);
 }
 
 .main-layout {
-    display: flex;
-    flex-direction: column;
-    height: 100vh; /* طول ثابت يملأ الشاشة */
+    display: block; /* الغي الـ flex عشان ميتضغطش */
     width: 100%;
+    padding-bottom: 120px; /* مساحة تحت عشان الفوتر ميغطيش على آخر دواء */
 }
 
 header {
@@ -43,74 +20,41 @@ header {
     justify-content: space-between; 
     align-items: center;
     border-bottom: 1px solid var(--border-color);
-    flex-shrink: 0; /* يمنع الهيدر إنه يكش */
+    position: sticky; /* يفضل فوق وأنت بتسكرول */
+    top: 0;
     z-index: 1000;
 }
 
-/* --- المحتوى القابل للتمرير --- */
+/* 2. المحتوى سيبه ياخد راحته */
 .content-wrapper {
-    flex: 1; /* ياخد كل المساحة الفاضية اللي في النص */
-    overflow-y: auto; /* يظهر السكرول هنا بس */
     padding: 0 4%;
-    -webkit-overflow-scrolling: touch; /* سكرول ناعم للموبايل */
+    width: 100%;
 }
 
-/* --- الشريط السفلي --- */
+/* 3. الفوتر - الحل السحري للموبايل */
 footer.controls-section {
     background-color: var(--white-color); 
     padding: 0.75rem 4%;
     border-top: 1px solid #e0e0e0; 
     box-shadow: 0 -0.25rem 1rem rgba(0,0,0,0.07);
-    flex-shrink: 0; /* يمنع الفوتر إنه يختفي أو يكش */
+    
+    position: fixed; /* خليه ثابت في الشاشة من تحت */
+    bottom: 0;
+    left: 0;
+    width: 100%;
     z-index: 900;
 }
 
-/* --- باقي التنسيقات --- */
-.patient-info-card {
-    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-    color: var(--white-color); 
-    padding: 0.75rem 1rem;
-    margin: 1rem 0;
-    border-radius: 0.9rem;
-    box-shadow: 0 0.25rem 1rem rgba(0, 77, 64, 0.2);
-}
-
-#diagnosisInput {
-    width: 100%;
-    padding: 0.75rem;
-    border-radius: 0.6rem;
-    border: 1px solid var(--border-color);
-    font-size: 0.95rem;
-    resize: none; /* عشان ميبوظش الشكل في الموبايل */
-}
-
-.search-group { 
-    display: flex; 
-    gap: 2%; 
-    margin-bottom: 0.6rem; 
-}
-
-#typeSelect { width: 30%; background-color: #f1f8e9; }
-#drugSearch { flex: 1; }
-
-select, input { 
-    padding: 0.75rem; 
-    border-radius: 0.6rem; 
-    border: 1px solid var(--border-color); 
-    font-size: 1rem;
-}
-
-/* صندوق نتائج البحث */
+/* 4. تعديل للـ Results Box عشان متبعدش عن مكانها */
 .results-box {
     position: absolute; 
     bottom: 100%; 
     left: 4%;
     right: 4%;
     margin-bottom: 0.5rem;
-    background-color: var(--white-color); 
-    border-radius: 1rem;
-    box-shadow: 0 -0.5rem 2rem rgba(0,0,0,0.15);
-    max-height: 40vh; 
-    overflow-y: auto;
+    max-height: 35vh; /* تقليل الارتفاع عشان الكيبورد */
+    background-color: var(--white-color);
     border: 1px solid var(--border-color);
+    border-radius: 1rem;
+    overflow-y: auto;
 }
