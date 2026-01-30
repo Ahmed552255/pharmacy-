@@ -18,113 +18,22 @@
             --shadow-color: rgba(0, 0, 0, 0.05);
             --danger-color: #dc3545;
         }
-
-        body {
-            font-family: 'Cairo', sans-serif;
-            background-color: var(--primary-bg);
-            color: var(--text-color);
-            margin: 0;
-            padding: 20px;
-            line-height: 1.7;
-        }
-
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background-color: var(--secondary-bg);
-            border-radius: 12px;
-            box-shadow: 0 4px 12px var(--shadow-color);
-            overflow: hidden;
-        }
-
-        .header {
-            padding: 20px 25px;
-            background-color: var(--accent-color);
-            color: white;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .header h1 {
-            margin: 0;
-            font-size: 24px;
-            font-weight: 700;
-        }
-
-        .header p {
-            margin: 5px 0 0;
-            font-size: 16px;
-            opacity: 0.9;
-        }
-
-        .content {
-            padding: 25px;
-        }
-
-        .loader, .message {
-            text-align: center;
-            padding: 50px 20px;
-            font-size: 18px;
-            color: var(--subtle-text-color);
-        }
-
-        .examination-card {
-            background-color: var(--primary-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            margin-bottom: 20px;
-            padding: 20px;
-            transition: box-shadow 0.2s ease-in-out;
-        }
-
-        .examination-card:hover {
-            box-shadow: 0 2px 8px var(--shadow-color);
-        }
-        
-        .examination-card:last-child {
-            margin-bottom: 0;
-        }
-
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #ced4da;
-            padding-bottom: 10px;
-            margin-bottom: 15px;
-        }
-
-        .card-header .date {
-            font-weight: 600;
-            color: var(--accent-color);
-        }
-
-        .medication-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        .medication-item {
-            margin-bottom: 15px;
-        }
-
-        .medication-item .drug-name {
-            font-weight: 700;
-            font-size: 1.1em;
-            color: var(--text-color);
-        }
-
-        .doses-list {
-            list-style-type: '- ';
-            padding-right: 20px;
-            margin-top: 5px;
-            color: var(--subtle-text-color);
-        }
-        
-        .dose-entry {
-            font-size: 0.95em;
-        }
-
+        body { font-family: 'Cairo', sans-serif; background-color: var(--primary-bg); color: var(--text-color); margin: 0; padding: 20px; line-height: 1.7; }
+        .container { max-width: 800px; margin: 0 auto; background-color: var(--secondary-bg); border-radius: 12px; box-shadow: 0 4px 12px var(--shadow-color); overflow: hidden; }
+        .header { padding: 20px 25px; background-color: var(--accent-color); color: white; border-bottom: 1px solid var(--border-color); }
+        .header h1 { margin: 0; font-size: 24px; font-weight: 700; }
+        .header p { margin: 5px 0 0; font-size: 16px; opacity: 0.9; }
+        .content { padding: 25px; }
+        .loader, .message { text-align: center; padding: 50px 20px; font-size: 18px; color: var(--subtle-text-color); }
+        .examination-card { background-color: var(--primary-bg); border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 20px; padding: 20px; }
+        .examination-card:last-child { margin-bottom: 0; }
+        .card-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ced4da; padding-bottom: 10px; margin-bottom: 15px; }
+        .card-header .date { font-weight: 600; color: var(--accent-color); }
+        .medication-list { list-style: none; padding: 0; margin: 0; }
+        .medication-item { margin-bottom: 15px; }
+        .medication-item .drug-name { font-weight: 700; font-size: 1.1em; color: var(--text-color); }
+        .doses-list { list-style-type: '- '; padding-right: 20px; margin-top: 5px; color: var(--subtle-text-color); }
+        .dose-entry { font-size: 0.95em; }
     </style>
 </head>
 <body>
@@ -148,7 +57,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
         import { getFirestore, collection, query, where, getDocs, orderBy } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
-        // --- Firebase Configuration ---
         const firebaseConfig = {
             apiKey: "AIzaSyDYgPFDWqtaHm9wzKyRtUqJKS2mQrOiJVk",
             authDomain: "oooooo-ee246.firebaseapp.com",
@@ -159,82 +67,71 @@
             measurementId: "G-V8PMYBC290"
         };
 
-        // --- Firebase Initialization ---
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // --- UI Elements ---
         const patientNameHeader = document.getElementById('patientNameHeader');
         const recordsContainer = document.getElementById('recordsContainer');
         const loader = document.getElementById('loader');
 
-        /**
-         * Formats a Firestore Timestamp into a readable date string.
-         * @param {object} timestamp - The Firestore timestamp object.
-         * @returns {string} A formatted date string (e.g., "29 يناير 2026").
-         */
         function formatTimestamp(timestamp) {
-            if (!timestamp || !timestamp.toDate) {
-                return "تاريخ غير محدد";
-            }
+            if (!timestamp || !timestamp.toDate) return "تاريخ غير محدد";
             const date = timestamp.toDate();
-            return new Intl.DateTimeFormat('ar-EG', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            }).format(date);
+            return new Intl.DateTimeFormat('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' }).format(date);
         }
 
-        /**
-         * Fetches and displays the patient's examination history.
-         */
         async function loadPatientRecords() {
-            // 1. Get doctor and patient IDs from localStorage
+            console.log("--- بدء عملية جلب سجلات المريض ---");
+
             const doctorId = localStorage.getItem('userId');
             const patientId = localStorage.getItem('recordsPatientId');
 
+            // --- خطوة 1: التحقق من المدخلات ---
+            console.log("معرّف الطبيب (doctorId):", doctorId);
+            console.log("معرّف المريض (patientId):", patientId);
+
             if (!doctorId) {
-                recordsContainer.innerHTML = `<div class="message" style="color: var(--danger-color);">خطأ: لم يتم التعرف على الطبيب. الرجاء تسجيل الدخول مرة أخرى.</div>`;
+                recordsContainer.innerHTML = `<div class="message" style="color: var(--danger-color);">خطأ: لم يتم العثور على معرّف الطبيب في localStorage.</div>`;
                 return;
             }
-
             if (!patientId) {
                 patientNameHeader.textContent = "لم يتم تحديد مريض";
-                recordsContainer.innerHTML = `<div class="message">الرجاء العودة واختيار مريض لعرض سجله الطبي.</div>`;
+                recordsContainer.innerHTML = `<div class="message">خطأ: لم يتم العثور على معرّف المريض في localStorage.</div>`;
                 return;
             }
 
             try {
-                // 2. Create a query to find the patient's records under the specific doctor
-                const examinationsRef = collection(db, `doctors/${doctorId}/examinations`);
+                // --- خطوة 2: بناء مسار المجموعة وإنشاء الاستعلام ---
+                const collectionPath = `doctors/${doctorId}/examinations`;
+                console.log("مسار المجموعة المستهدفة:", collectionPath);
+                
+                const examinationsRef = collection(db, collectionPath);
+                
+                console.log("إنشاء الاستعلام للبحث عن patientInfo.id:", patientId);
                 const q = query(
                     examinationsRef,
                     where("patientInfo.id", "==", patientId),
-                    orderBy("createdAt", "desc") // Order by newest first
+                    orderBy("createdAt", "desc")
                 );
 
                 const querySnapshot = await getDocs(q);
 
-                // Hide loader
+                // --- خطوة 3: التحقق من النتائج ---
+                console.log(`تم العثور على ${querySnapshot.size} سجل.`);
+                
                 loader.style.display = 'none';
 
                 if (querySnapshot.empty) {
-                    // Attempt to get patient name from the first record if any, otherwise show generic message
                     patientNameHeader.textContent = `سجل المريض`;
-                    recordsContainer.innerHTML = `<div class="message">لا توجد كشوفات سابقة مسجلة لهذا المريض.</div>`;
-                    // We might not have the patient's name if there are no records, so we try to find it
-                    // This part is a bit tricky without an extra DB read, so we'll handle it gracefully.
-                    // A better approach would be to pass the patient's name in localStorage as well.
+                    recordsContainer.innerHTML = `<div class="message">لا توجد كشوفات سابقة مسجلة لهذا المريض. (تأكد من تطابق patientId ومن وجود كشوفات محفوظة له).</div>`;
                     return;
                 }
 
-                // 3. Process and render the records
                 let patientName = "";
                 const recordsHtml = querySnapshot.docs.map(doc => {
                     const record = doc.data();
-                    if (!patientName) {
-                        patientName = record.patientInfo.name; // Get patient name from the first record
-                    }
+                    console.log("بيانات السجل:", record); // طباعة بيانات كل سجل يتم العثور عليه
+                    if (!patientName) patientName = record.patientInfo.name;
 
                     const medicationsHtml = record.medications.map(med => `
                         <li class="medication-item">
@@ -247,12 +144,8 @@
 
                     return `
                         <div class="examination-card">
-                            <div class="card-header">
-                                <span class="date">${formatTimestamp(record.createdAt)}</span>
-                            </div>
-                            <ul class="medication-list">
-                                ${medicationsHtml}
-                            </ul>
+                            <div class="card-header"><span class="date">${formatTimestamp(record.createdAt)}</span></div>
+                            <ul class="medication-list">${medicationsHtml}</ul>
                         </div>
                     `;
                 }).join('');
@@ -261,13 +154,19 @@
                 recordsContainer.innerHTML = recordsHtml;
 
             } catch (error) {
-                console.error("Error fetching patient records:", error);
+                // --- خطوة 4: التعامل مع الأخطاء ---
+                console.error("حدث خطأ فادح أثناء جلب البيانات:", error);
                 loader.style.display = 'none';
-                recordsContainer.innerHTML = `<div class="message" style="color: var(--danger-color);">حدث خطأ أثناء جلب البيانات. الرجاء المحاولة مرة أخرى.</div>`;
+                recordsContainer.innerHTML = `<div class="message" style="color: var(--danger-color);">حدثت مشكلة أثناء جلب المعلومات. افتح الـ Console (F12) لرؤية تفاصيل الخطأ.</div>`;
+                
+                // رسالة إضافية للمساعدة في تشخيص أخطاء الفهرسة
+                if (error.code === 'failed-precondition') {
+                    console.error("خطأ محتمل في الفهرس (Index):", "قد تحتاج إلى إنشاء فهرس مركب في Firestore. تحقق من الرابط الذي قد يظهر في رسالة الخطأ في الـ Console.");
+                    alert("خطأ في قاعدة البيانات: يتطلب هذا الاستعلام إنشاء فهرس. يرجى التحقق من رسالة الخطأ في وحدة التحكم (F12) واتباع الرابط لإنشاء الفهرس المطلوب.");
+                }
             }
         }
 
-        // --- Start Application ---
         document.addEventListener('DOMContentLoaded', loadPatientRecords);
     </script>
 
