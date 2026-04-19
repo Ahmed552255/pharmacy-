@@ -3,315 +3,390 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>سكون · لوحة الإدارة</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>سكون | لوحة الإدارة</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* ===== تصميم جديد: ألوان محايدة مع لمسات زرقاء هادئة ===== */
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        /* نفس التنسيقات السابقة مع تعديلات بسيطة */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
             font-family: 'Cairo', sans-serif;
-            background: #f4f7fb;
+            background: linear-gradient(125deg, #cfe9df 0%, #b8d9c9 100%);
             min-height: 100vh;
-            padding: 20px;
+            padding: 16px;
             position: relative;
         }
-        /* خلفية ديناميكية ناعمة */
-        body::before {
-            content: '';
-            position: fixed;
-            inset: 0;
-            background: radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.08), transparent 40%),
-                        radial-gradient(circle at 90% 80%, rgba(6, 182, 212, 0.06), transparent 50%);
-            pointer-events: none;
-            z-index: -1;
-        }
-        .container { max-width: 1300px; margin: 0 auto; }
 
-        /* ===== رأس الصفحة ===== */
-        .app-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: rgba(255,255,255,0.7);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border-radius: 60px;
-            padding: 10px 20px;
-            margin-bottom: 28px;
-            border: 1px solid rgba(255,255,255,0.5);
-            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05);
-            flex-wrap: wrap;
-            gap: 15px;
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.35);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 36px;
+            box-shadow: 0 12px 32px rgba(0, 32, 16, 0.08), 0 1px 2px rgba(0,0,0,0.02);
+            border: 1px solid rgba(255,255,240,0.6);
         }
-        .logo h2 {
-            font-size: 1.8rem;
+
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+
+        .mini-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255,255,245,0.6);
+            backdrop-filter: blur(10px);
+            border-radius: 60px;
+            padding: 8px 20px 8px 24px;
+            margin-bottom: 22px;
+            border: 1px solid rgba(100,120,100,0.2);
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .logo-area h2 {
+            font-size: 1.7rem;
             font-weight: 700;
-            background: linear-gradient(145deg, #1e3a8a, #3b82f6);
+            background: linear-gradient(135deg, #1d4d1f, #2b7a3e);
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
+            letter-spacing: -0.5px;
         }
-        .header-actions {
+        .logo-area h2 i {
+            color: #2b7a3e;
+            margin-left: 6px;
+        }
+
+        .controls-mini {
             display: flex;
             gap: 12px;
             align-items: center;
             flex-wrap: wrap;
         }
-        .search-box {
-            background: white;
+
+        .search-glass {
+            background: rgba(255,255,250,0.7);
             border-radius: 60px;
-            padding: 8px 20px;
+            padding: 8px 18px;
             display: flex;
             align-items: center;
             gap: 8px;
-            border: 1px solid #e2e8f0;
+            border: 1px solid rgba(70,100,70,0.2);
         }
-        .search-box i { color: #64748b; }
-        .search-box input {
-            border: none;
-            padding: 8px 0;
-            font-family: 'Cairo', sans-serif;
-            font-size: 0.95rem;
-            width: 200px;
-            outline: none;
+        .search-glass i {
+            color: #2c6e2c;
+        }
+        .search-glass input {
             background: transparent;
-        }
-        .btn {
-            padding: 10px 22px;
-            border-radius: 40px;
             border: none;
+            padding: 6px 0;
+            font-family: 'Cairo', sans-serif;
+            font-size: 0.9rem;
+            width: 160px;
+            outline: none;
+        }
+
+        .btn-glass {
+            background: rgba(46,125,70,0.85);
+            backdrop-filter: blur(4px);
+            border: none;
+            padding: 8px 20px;
+            border-radius: 60px;
+            color: white;
             font-weight: 600;
             font-family: 'Cairo', sans-serif;
             cursor: pointer;
+            transition: 0.2s;
             display: inline-flex;
             align-items: center;
             gap: 8px;
             font-size: 0.9rem;
-            transition: all 0.2s;
-            background: white;
-            color: #1e293b;
-            border: 1px solid #e2e8f0;
         }
-        .btn-primary {
-            background: #2563eb;
-            color: white;
-            border: none;
-            box-shadow: 0 4px 10px rgba(37,99,235,0.2);
+        .btn-glass:hover {
+            background: #2e7d32;
+            transform: scale(0.97);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
         }
-        .btn-primary:hover {
-            background: #1d4ed8;
-            transform: translateY(-2px);
-        }
-        .btn-outline:hover {
-            background: #f8fafc;
-            border-color: #cbd5e1;
-        }
-        .btn-danger {
-            background: #ef4444;
-            color: white;
-            border: none;
-        }
-        .btn-danger:hover { background: #dc2626; }
 
-        /* ===== شبكة المستخدمين ===== */
-        .users-grid {
+        .doctors-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 22px;
-            margin-top: 10px;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 6px;
         }
-        .user-card {
-            background: rgba(255,255,255,0.75);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border-radius: 30px;
-            padding: 22px 18px;
-            border: 1px solid rgba(255,255,255,0.6);
-            box-shadow: 0 8px 20px -6px rgba(0,0,0,0.05);
-            transition: all 0.2s;
+
+        .doctor-card {
+            background: rgba(255, 255, 245, 0.7);
+            backdrop-filter: blur(10px);
+            border-radius: 32px;
+            padding: 18px 16px 20px;
+            transition: all 0.2s ease;
+            border: 1px solid rgba(100,130,100,0.2);
             cursor: pointer;
+            box-shadow: 0 5px 12px rgba(0,0,0,0.02);
         }
-        .user-card:hover {
-            transform: translateY(-6px);
-            background: white;
-            box-shadow: 0 20px 30px -10px rgba(0,0,0,0.1);
-            border-color: #bae6fd;
+        .doctor-card:hover {
+            transform: translateY(-4px);
+            background: rgba(255, 255, 250, 0.85);
+            border-color: #9fcca5;
         }
-        .card-header {
+        .card-avatar {
             display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 16px;
+            justify-content: center;
+            margin-bottom: 12px;
+            position: relative;
         }
-        .avatar {
-            width: 65px;
-            height: 65px;
-            background: linear-gradient(145deg, #38bdf8, #2563eb);
-            border-radius: 20px;
+        .avatar-placeholder {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(145deg, #9bc89b, #6f9e6f);
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
+            font-size: 2.4rem;
             color: white;
-            font-size: 1.8rem;
-            box-shadow: 0 6px 12px rgba(37,99,235,0.2);
         }
-        .user-info h3 {
-            font-size: 1.2rem;
+        .doctor-name {
+            font-size: 1.25rem;
             font-weight: 700;
-            color: #0f172a;
-            margin-bottom: 4px;
+            color: #1a4a1f;
+            text-align: center;
+            margin-bottom: 6px;
         }
-        .role-tag {
+        .role-badge {
             display: inline-block;
             padding: 4px 12px;
-            border-radius: 40px;
-            font-size: 0.7rem;
-            font-weight: 700;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin: 6px auto;
+            text-align: center;
         }
-        .role-doctor { background: #dbeafe; color: #1e40af; }
-        .role-nurse { background: #fef3c7; color: #b45309; }
-        .role-pharmacist { background: #dcfce7; color: #166534; }
-        .role-admin { background: #f1f5f9; color: #334155; }
-        .user-bio {
-            background: #f8fafc;
-            padding: 12px;
-            border-radius: 18px;
-            font-size: 0.85rem;
-            color: #334155;
-            margin: 15px 0;
-            border-right: 3px solid #3b82f6;
+        .role-doctor { background: #d4e6f1; color: #21618c; }
+        .role-nurse { background: #fdebd0; color: #b45f06; }
+        .role-pharmacist { background: #d5f5e3; color: #1e8449; }
+        
+        .quick-note {
+            background: rgba(240,248,235,0.7);
+            border-radius: 20px;
+            padding: 10px 12px;
+            margin: 12px 0;
+            font-size: 0.8rem;
+            color: #2c4b2a;
+            border-right: 3px solid #4caf50;
+            max-height: 60px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .quick-note i {
+            margin-left: 5px;
+            font-size: 0.7rem;
+            color: #558b2f;
+        }
+        .status-badge-sm {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 50px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            background: rgba(200,230,200,0.8);
+            color: #1b5e20;
+        }
+        .status-blocked-sm {
+            background: rgba(255,210,210,0.9);
+            color: #b71c1c;
         }
         .card-footer {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-top: 10px;
-        }
-        .status-badge {
-            padding: 4px 12px;
-            border-radius: 40px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            background: #e2e8f0;
-            color: #475569;
-        }
-        .status-active { background: #bbf7d0; color: #166534; }
-        .status-blocked { background: #fecaca; color: #991b1b; }
-        .email-small {
-            font-size: 0.8rem;
-            color: #64748b;
+            margin-top: 12px;
         }
 
-        /* ===== المودالات ===== */
         .modal {
             display: none;
             position: fixed;
-            inset: 0;
-            background: rgba(15,23,42,0.4);
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(30,40,25,0.6);
             backdrop-filter: blur(8px);
             align-items: center;
             justify-content: center;
             z-index: 1100;
-            padding: 16px;
         }
         .modal-card {
-            background: white;
-            border-radius: 36px;
-            width: 100%;
-            max-width: 580px;
+            background: rgba(255, 255, 248, 0.96);
+            backdrop-filter: blur(16px);
+            border-radius: 40px;
+            width: 90%;
+            max-width: 650px;
             max-height: 85vh;
             overflow-y: auto;
+            padding: 0;
             box-shadow: 0 30px 50px rgba(0,0,0,0.2);
         }
         .modal-header {
-            padding: 22px 28px;
-            background: #f8fafc;
-            border-bottom: 1px solid #e2e8f0;
-            border-radius: 36px 36px 0 0;
+            padding: 20px 25px;
+            background: linear-gradient(110deg, #eaf7ea, #ffffff);
+            border-radius: 40px 40px 0 0;
+            border-bottom: 1px solid #cfe3cf;
         }
-        .modal-body { padding: 24px 28px; }
-        .form-group { margin-bottom: 20px; }
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #334155;
+        .modal-body {
+            padding: 20px 25px;
         }
-        .form-control {
+        .form-group {
+            margin-bottom: 18px;
+        }
+        input, select, textarea {
             width: 100%;
             padding: 12px 16px;
-            border: 1.5px solid #e2e8f0;
-            border-radius: 20px;
+            border-radius: 50px;
+            border: 1px solid #c8e0c8;
+            background: #fefffc;
             font-family: 'Cairo', sans-serif;
-            font-size: 0.95rem;
             transition: 0.2s;
-            background: white;
         }
-        .form-control:focus {
+        textarea {
+            border-radius: 28px;
+            resize: vertical;
+        }
+        input:focus, select:focus, textarea:focus {
             outline: none;
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+            border-color: #4caf50;
+            box-shadow: 0 0 0 2px rgba(76,175,80,0.2);
+        }
+        .btn-secondary {
+            background: #9e9e9e;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 40px;
+            color: white;
+            font-weight: 500;
+            cursor: pointer;
         }
         .row-buttons {
             display: flex;
             gap: 12px;
-            margin-top: 24px;
+            margin-top: 20px;
             flex-wrap: wrap;
         }
+        .btn-success {
+            background: #2e7d32;
+        }
+        
+        .tabs-container {
+            margin-top: 20px;
+            border-top: 1px solid #d4e2d0;
+        }
+        .tabs-buttons {
+            display: flex;
+            gap: 5px;
+            margin-top: 15px;
+            border-bottom: 1px solid #cfe0cf;
+        }
+        .tab-btn {
+            background: transparent;
+            border: none;
+            padding: 10px 18px;
+            font-family: 'Cairo', sans-serif;
+            font-weight: 600;
+            color: #4a6e4a;
+            cursor: pointer;
+            border-radius: 30px 30px 0 0;
+            transition: 0.2s;
+        }
+        .tab-btn.active {
+            background: #eef5ea;
+            color: #1b5e20;
+            border-bottom: 3px solid #4caf50;
+        }
+        .tab-pane {
+            display: none;
+            padding: 15px 0;
+        }
+        .tab-pane.active {
+            display: block;
+        }
+        .notes-list {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-bottom: 12px;
+        }
+        .note-item {
+            background: #f5fbf2;
+            padding: 10px;
+            border-radius: 24px;
+            margin-bottom: 10px;
+            font-size: 0.85rem;
+        }
 
-        /* Toast */
+        @media (max-width: 640px) {
+            body { padding: 12px; }
+            .doctor-card { padding: 14px; }
+            .mini-header { flex-direction: column; align-items: stretch; }
+            .search-glass input { width: 100%; }
+        }
         .toast {
             position: fixed;
-            bottom: 24px;
-            left: 24px;
-            right: 24px;
-            background: #1e293b;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: #1f3b1c;
             color: white;
-            padding: 14px 24px;
+            padding: 12px 20px;
             border-radius: 60px;
             text-align: center;
-            z-index: 1300;
+            z-index: 1200;
             font-weight: 500;
             backdrop-filter: blur(8px);
-            max-width: 500px;
-            margin: 0 auto;
         }
-
         .empty-state {
             text-align: center;
-            padding: 60px;
-            color: #64748b;
+            padding: 50px;
+            color: #4f694a;
         }
-
-        /* Responsive */
-        @media (max-width: 600px) {
-            .app-header { flex-direction: column; align-items: stretch; }
-            .search-box input { width: 100%; }
+        hr {
+            margin: 12px 0;
+        }
+        .assigned-doctor-info {
+            background: #eef2e6;
+            padding: 6px 12px;
+            border-radius: 30px;
+            font-size: 0.8rem;
+            margin-top: 8px;
         }
     </style>
 </head>
 <body>
 <div class="container">
-    <!-- رأس الصفحة -->
-    <header class="app-header">
-        <div class="logo">
-            <h2><i class="fas fa-shield-alt" style="color:#2563eb; margin-left:6px;"></i>سكون · الإدارة</h2>
+    <div class="mini-header glass-panel">
+        <div class="logo-area">
+            <h2><i class="fas fa-spa"></i> سكون | الإدارة</h2>
         </div>
-        <div class="header-actions">
-            <div class="search-box">
+        <div class="controls-mini">
+            <div class="search-glass">
                 <i class="fas fa-search"></i>
-                <input type="text" id="searchInput" placeholder="بحث عن مستخدم...">
+                <input type="text" id="searchInput" placeholder="بحث بالاسم أو البريد">
             </div>
-            <button class="btn btn-primary" id="addUserBtn"><i class="fas fa-plus-circle"></i> مستخدم جديد</button>
-            <button class="btn btn-outline" id="refreshBtn"><i class="fas fa-sync-alt"></i></button>
-            <button class="btn btn-outline" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> خروج</button>
+            <button class="btn-glass" id="addUserBtn"><i class="fas fa-user-plus"></i> مستخدم جديد</button>
+            <button class="btn-glass" id="refreshBtn"><i class="fas fa-sync-alt"></i></button>
+            <button class="btn-glass" id="logoutBtn" style="background:#6c757d;"><i class="fas fa-sign-out-alt"></i> خروج</button>
         </div>
-    </header>
+    </div>
 
-    <!-- شبكة المستخدمين -->
-    <div id="usersGrid" class="users-grid">
-        <div class="empty-state"><i class="fas fa-spinner fa-pulse"></i> جاري التحميل...</div>
+    <div id="usersGrid" class="doctors-grid">
+        <div class="empty-state"><i class="fas fa-leaf"></i> جاري التحميل...</div>
     </div>
 </div>
 
@@ -319,34 +394,45 @@
 <div id="detailModal" class="modal">
     <div class="modal-card">
         <div class="modal-header">
-            <h3><i class="fas fa-id-card"></i> تفاصيل المستخدم</h3>
+            <h3><i class="fas fa-user-md"></i> <span id="detailNameTitle">تفاصيل المستخدم</span></h3>
         </div>
         <div class="modal-body">
-            <div style="display:flex; gap:16px; align-items:center; margin-bottom:20px;">
-                <div class="avatar" id="detailAvatar"><i class="fas fa-user"></i></div>
-                <div>
-                    <h3 id="detailName" style="font-size:1.4rem;">-</h3>
-                    <span id="detailRoleBadge" class="role-tag">-</span>
+            <div style="display: flex; gap: 16px; flex-wrap: wrap; align-items: center; margin-bottom: 20px;">
+                <div id="detailAvatarArea">
+                    <div style="width:70px; height:70px; background:#bcd9aa; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:2rem;"><i class="fas fa-user"></i></div>
+                </div>
+                <div><strong id="detailName">الاسم</strong><br><span id="detailRoleSpan"></span></div>
+            </div>
+            <div><i class="fas fa-envelope"></i> <span id="detailEmail"></span></div>
+            <div><i class="fas fa-phone"></i> <span id="detailPhone"></span></div>
+            <div><i class="fas fa-id-card"></i> <span id="detailUid"></span> <small>(UID)</small></div>
+            <div><i class="fas fa-toggle-on"></i> الحالة: <span id="detailStatusSpan"></span></div>
+            <div id="assignedDoctorSection" style="display:none;"><i class="fas fa-user-md"></i> دكتور مسؤول: <span id="detailAssignedDoctor"></span></div>
+            <hr>
+            <div><strong><i class="fas fa-pen-fancy"></i> لمحة سريعة</strong></div>
+            <div id="quickBlurbDisplay" class="quick-note" style="white-space: normal; background: #eef5e8;"></div>
+            
+            <div class="tabs-container">
+                <div class="tabs-buttons">
+                    <button class="tab-btn active" data-tab="infoTab">📋 المعلومات</button>
+                    <button class="tab-btn" data-tab="notesTab">📝 الملاحظات</button>
+                </div>
+                <div id="infoTab" class="tab-pane active">
+                    <div style="padding: 8px 0; color:#2c5a2a;">جميع البيانات موضحة أعلاه</div>
+                </div>
+                <div id="notesTab" class="tab-pane">
+                    <div id="notesListModal" class="notes-list"></div>
+                    <textarea id="newNoteText" rows="2" placeholder="أضف ملاحظة جديدة..."></textarea>
+                    <button id="addNoteModalBtn" class="btn-glass" style="margin-top: 8px; width:100%;">➕ إضافة ملاحظة</button>
                 </div>
             </div>
-            <div class="form-group"><i class="fas fa-envelope"></i> <strong>البريد:</strong> <span id="detailEmail"></span></div>
-            <div class="form-group"><i class="fas fa-phone"></i> <strong>الهاتف:</strong> <span id="detailPhone"></span></div>
-            <div class="form-group"><i class="fas fa-fingerprint"></i> <strong>المعرف:</strong> <span id="detailUid"></span></div>
-            <div class="form-group"><i class="fas fa-circle"></i> <strong>الحالة:</strong> <span id="detailStatus"></span></div>
-            <div class="form-group" id="assignedDoctorRow" style="display:none;">
-                <i class="fas fa-user-md"></i> <strong>دكتور مسؤول:</strong> <span id="detailAssignedDoctor"></span>
-            </div>
-            <hr style="margin:16px 0;">
-            <div class="form-group">
-                <strong><i class="fas fa-pen"></i> لمحة:</strong>
-                <p id="detailBio" style="margin-top:8px; background:#f1f5f9; padding:12px; border-radius:16px;"></p>
-            </div>
+
             <div class="row-buttons">
-                <button class="btn" id="blockModalBtn" style="background:#fee2e2; color:#b91c1c;"><i class="fas fa-ban"></i> حظر</button>
-                <button class="btn" id="unblockModalBtn" style="background:#dcfce7; color:#166534;"><i class="fas fa-check-circle"></i> إلغاء الحظر</button>
-                <button class="btn btn-primary" id="editModalBtn"><i class="fas fa-edit"></i> تعديل</button>
-                <button class="btn btn-danger" id="deleteModalBtn"><i class="fas fa-trash"></i> حذف</button>
-                <button class="btn btn-outline" id="closeDetailBtn">إغلاق</button>
+                <button id="blockModalBtn" class="btn-glass" style="background:#b85c5c;">🔒 حظر</button>
+                <button id="unblockModalBtn" class="btn-glass" style="background:#4c8b4c;">🔓 إلغاء حظر</button>
+                <button id="editModalBtn" class="btn-glass" style="background:#e68a2e;">✏️ تعديل</button>
+                <button id="deleteModalBtn" class="btn-glass" style="background:#6c757d;">🗑️ حذف</button>
+                <button id="closeDetailBtn" class="btn-secondary">إغلاق</button>
             </div>
         </div>
     </div>
@@ -356,56 +442,51 @@
 <div id="formModal" class="modal">
     <div class="modal-card">
         <div class="modal-header">
-            <h3 id="formModalTitle"><i class="fas fa-user-plus"></i> مستخدم جديد</h3>
+            <h3 id="formModalTitle"><i class="fas fa-plus"></i> مستخدم جديد</h3>
         </div>
         <div class="modal-body">
             <div class="form-group">
-                <label>الاسم الكامل *</label>
-                <input type="text" id="userName" class="form-control" placeholder="مثال: د. أحمد العلوي">
+                <input type="text" id="userName" placeholder="الاسم الكامل *" required>
             </div>
             <div class="form-group">
-                <label>البريد الإلكتروني *</label>
-                <input type="email" id="userEmail" class="form-control" placeholder="doctor@example.com">
+                <input type="email" id="userEmail" placeholder="البريد الإلكتروني *" required>
             </div>
             <div class="form-group">
-                <label>رقم الهاتف</label>
-                <input type="text" id="userPhone" class="form-control" placeholder="05xxxxxxxx">
+                <input type="text" id="userPhone" placeholder="رقم الهاتف">
             </div>
             <div class="form-group">
-                <label>الدور *</label>
-                <select id="userRole" class="form-control">
-                    <option value="">-- اختر --</option>
+                <select id="userRole" required>
+                    <option value="">-- اختر الدور --</option>
                     <option value="doctor">👨‍⚕️ طبيب</option>
                     <option value="nurse">👩‍⚕️ ممرض/ة</option>
                     <option value="pharmacist">💊 صيدلي</option>
                 </select>
             </div>
+            <!-- حقل اختيار الدكتور يظهر فقط عند اختيار ممرض -->
             <div class="form-group" id="assignDoctorGroup" style="display:none;">
-                <label>الدكتور المسؤول *</label>
-                <select id="assignedDoctorSelect" class="form-control"></select>
+                <label>الدكتور المسؤول <span style="color:red;">*</span></label>
+                <select id="assignedDoctorSelect">
+                    <option value="">-- اختر الدكتور --</option>
+                </select>
             </div>
             <div class="form-group">
-                <label>التخصص (للطبيب)</label>
-                <input type="text" id="userSpecialty" class="form-control" placeholder="مثال: طب نفسي">
+                <input type="text" id="userSpecialty" placeholder="التخصص (للطبيب فقط)">
             </div>
             <div class="form-group">
-                <label>لمحة سريعة</label>
-                <textarea id="quickBlurb" class="form-control" rows="2" placeholder="خبرة، ملاحظات..."></textarea>
+                <textarea id="quickBlurb" rows="2" placeholder="لمحة سريعة (خبرة، ملاحظات...)"></textarea>
             </div>
             <div class="form-group">
-                <label>كلمة المرور *</label>
-                <input type="password" id="userPassword" class="form-control" placeholder="••••••••">
+                <input type="password" id="userPassword" placeholder="كلمة المرور *" required>
             </div>
             <div class="form-group">
-                <label>الحالة</label>
-                <select id="userStatus" class="form-control">
+                <select id="userStatus">
                     <option value="active">نشط</option>
                     <option value="blocked">محظور</option>
                 </select>
             </div>
             <div class="row-buttons">
-                <button class="btn btn-primary" id="saveFormBtn"><i class="fas fa-save"></i> حفظ</button>
-                <button class="btn btn-outline" id="closeFormBtn">إلغاء</button>
+                <button id="saveFormBtn" class="btn-glass btn-success">💾 حفظ</button>
+                <button id="closeFormBtn" class="btn-secondary">إلغاء</button>
             </div>
         </div>
     </div>
@@ -413,133 +494,200 @@
 
 <script type="module">
     import { firebaseConfig } from './firebase-config.js';
+    
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
-    import { getDatabase, ref, onValue, set, update, remove } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-database.js";
+    import { getDatabase, ref, onValue, set, update, remove, push, get } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-database.js";
     import { getAuth, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
 
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
     const auth = getAuth(app);
     
+    // مسار المستخدمين
     const usersRef = ref(database, 'users');
+    // مسار الأطباء (للاختيار عند إضافة ممرض)
+    const doctorsRef = ref(database, 'users'); // سنقوم بتصفية الأطباء فقط
+
     let allUsers = [];
-    let doctorsList = [];
+    let doctorsList = []; // قائمة الأطباء فقط
     let currentEditId = null;
     let currentViewId = null;
 
-    // ----- Toast -----
+    // ------ Toast ------
     function showToast(msg, isErr = false) {
         const t = document.createElement('div');
         t.className = 'toast';
-        t.style.background = isErr ? '#b91c1c' : '#1e293b';
+        t.style.background = isErr ? '#aa2e2e' : '#2a5f2a';
         t.innerHTML = `<i class="fas ${isErr ? 'fa-exclamation-triangle' : 'fa-check'}"></i> ${msg}`;
         document.body.appendChild(t);
-        setTimeout(() => t.remove(), 3000);
+        setTimeout(() => t.remove(), 2800);
     }
 
-    // ----- تحميل المستخدمين مع مستمع حي -----
+    // ------ تحميل جميع المستخدمين وعرضهم ------
     function loadUsers() {
         onValue(usersRef, (snap) => {
             const arr = [];
-            const docs = [];
+            const doctorsArr = [];
             snap.forEach(child => {
                 const user = { id: child.key, ...child.val() };
                 arr.push(user);
-                if (user.role === 'doctor') docs.push(user);
+                if (user.role === 'doctor') {
+                    doctorsArr.push(user);
+                }
             });
             allUsers = arr;
-            doctorsList = docs;
+            doctorsList = doctorsArr;
             renderGrid();
-            populateDoctorSelect();
+            populateDoctorSelect(); // تحديث قائمة الأطباء في الفورم
         }, err => showToast('خطأ في تحميل البيانات', true));
     }
 
+    // ------ ملء قائمة الأطباء في نموذج الإضافة ------
     function populateDoctorSelect() {
         const select = document.getElementById('assignedDoctorSelect');
-        if (!select) return;
         select.innerHTML = '<option value="">-- اختر الدكتور --</option>';
         doctorsList.forEach(doc => {
-            const opt = document.createElement('option');
-            opt.value = doc.id;
-            opt.textContent = `${doc.name || 'بدون اسم'} (${doc.email || ''})`;
-            select.appendChild(opt);
+            const option = document.createElement('option');
+            option.value = doc.id;
+            option.textContent = `${doc.name || 'بدون اسم'} (${doc.email || ''})`;
+            select.appendChild(option);
         });
     }
 
+    // ------ عرض الشبكة ------
     function renderGrid() {
         const term = document.getElementById('searchInput').value.toLowerCase();
         let filtered = allUsers.filter(u => 
-            (u.name?.toLowerCase().includes(term) || u.email?.toLowerCase().includes(term) || u.role?.includes(term))
+            (u.name?.toLowerCase().includes(term) || u.email?.toLowerCase().includes(term) || u.role?.toLowerCase().includes(term))
         );
         const grid = document.getElementById('usersGrid');
-        if (filtered.length === 0) {
-            grid.innerHTML = '<div class="empty-state"><i class="fas fa-users-slash"></i> لا يوجد مستخدمون</div>';
+        if(filtered.length === 0) {
+            grid.innerHTML = '<div class="empty-state"><i class="fas fa-seedling"></i> لا يوجد مستخدمون</div>';
             return;
         }
         grid.innerHTML = filtered.map(user => {
             const roleClass = `role-${user.role}`;
-            const roleText = { doctor:'طبيب', nurse:'ممرض', pharmacist:'صيدلي' }[user.role] || user.role;
-            const assignedInfo = (user.role === 'nurse' && user.assignedDoctorName) 
-                ? `<div style="font-size:0.8rem; margin-top:6px;"><i class="fas fa-user-md"></i> د. ${escapeHtml(user.assignedDoctorName)}</div>` : '';
+            const roleText = { doctor: 'طبيب', nurse: 'ممرض', pharmacist: 'صيدلي' }[user.role] || user.role;
+            const assignedInfo = user.role === 'nurse' && user.assignedDoctorName ? 
+                `<div class="assigned-doctor-info"><i class="fas fa-user-md"></i> د. ${escapeHtml(user.assignedDoctorName)}</div>` : '';
+            
             return `
-            <div class="user-card" data-id="${user.id}">
-                <div class="card-header">
-                    <div class="avatar"><i class="fas fa-user-md"></i></div>
-                    <div class="user-info">
-                        <h3>${escapeHtml(user.name || 'بدون اسم')}</h3>
-                        <span class="role-tag ${roleClass}">${roleText}</span>
-                    </div>
+            <div class="doctor-card" data-id="${user.id}">
+                <div class="card-avatar">
+                    <div class="avatar-placeholder"><i class="fas fa-user-md"></i></div>
                 </div>
+                <div class="doctor-name">${escapeHtml(user.name || 'بدون اسم')}</div>
+                <div style="text-align:center"><span class="role-badge ${roleClass}"><i class="fas fa-tag"></i> ${roleText}</span></div>
                 ${assignedInfo}
-                <div class="user-bio"><i class="fas fa-quote-left" style="opacity:0.5;"></i> ${escapeHtml(user.quickBlurb || 'لا توجد لمحة')}</div>
+                <div class="quick-note"><i class="fas fa-quote-right"></i> ${escapeHtml(user.quickBlurb ? user.quickBlurb.substring(0, 55) : 'لا توجد لمحة')}</div>
                 <div class="card-footer">
-                    <span class="status-badge ${user.status === 'active' ? 'status-active' : 'status-blocked'}">${user.status === 'active' ? 'نشط' : 'محظور'}</span>
-                    <span class="email-small"><i class="far fa-envelope"></i> ${escapeHtml(user.email)}</span>
+                    <span class="status-badge-sm ${user.status === 'blocked' ? 'status-blocked-sm' : ''}">${user.status === 'active' ? 'نشط' : 'محظور'}</span>
+                    <small><i class="far fa-envelope"></i> ${escapeHtml(user.email)}</small>
                 </div>
-            </div>`;
+            </div>
+            `;
         }).join('');
-        document.querySelectorAll('.user-card').forEach(c => c.addEventListener('click', e => {
-            if (!e.target.closest('button')) openDetailModal(c.dataset.id);
-        }));
+        
+        document.querySelectorAll('.doctor-card').forEach(card => {
+            card.addEventListener('click', (e) => {
+                const id = card.getAttribute('data-id');
+                openDetailModal(id);
+            });
+        });
     }
 
-    function escapeHtml(s) {
-        if (!s) return '';
-        return s.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'})[m]);
+    function escapeHtml(str) { 
+        if(!str) return ''; 
+        return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'})[m] || m); 
     }
 
-    function openDetailModal(id) {
+    // ------ فتح نافذة التفاصيل ------
+    async function openDetailModal(id) {
         const user = allUsers.find(u => u.id === id);
-        if (!user) return;
+        if(!user) return;
         currentViewId = id;
+        document.getElementById('detailNameTitle').innerText = user.name || 'تفاصيل';
         document.getElementById('detailName').innerText = user.name || '-';
         document.getElementById('detailEmail').innerText = user.email || '-';
         document.getElementById('detailPhone').innerText = user.phone || '-';
-        document.getElementById('detailUid').innerText = user.id;
-        document.getElementById('detailStatus').innerHTML = user.status === 'active' ? '✅ نشط' : '⛔ محظور';
-        document.getElementById('detailBio').innerText = user.quickBlurb || 'لا توجد لمحة';
-        const roleText = { doctor:'طبيب', nurse:'ممرض', pharmacist:'صيدلي' }[user.role] || user.role;
-        document.getElementById('detailRoleBadge').innerHTML = roleText;
-        document.getElementById('detailRoleBadge').className = `role-tag role-${user.role}`;
-        const avatarDiv = document.getElementById('detailAvatar');
-        avatarDiv.innerHTML = '<i class="fas fa-user-md"></i>';
+        const roleText = { doctor: 'طبيب', nurse: 'ممرض', pharmacist: 'صيدلي' }[user.role] || user.role;
+        document.getElementById('detailRoleSpan').innerHTML = `<span class="role-badge role-${user.role}">${roleText}</span>`;
+        document.getElementById('detailUid').innerText = user.id || '-';
+        const statusSpan = document.getElementById('detailStatusSpan');
+        statusSpan.innerHTML = user.status === 'active' ? '<span style="color:#2e7d32;">✅ نشط</span>' : '<span style="color:#c62828;">⛔ محظور</span>';
+        document.getElementById('quickBlurbDisplay').innerHTML = user.quickBlurb ? escapeHtml(user.quickBlurb) : 'لا توجد لمحة';
         
-        const assignedRow = document.getElementById('assignedDoctorRow');
+        // إظهار الدكتور المسؤول إذا كان ممرض
+        const assignedSection = document.getElementById('assignedDoctorSection');
         if (user.role === 'nurse' && user.assignedDoctorName) {
-            assignedRow.style.display = 'block';
+            assignedSection.style.display = 'block';
             document.getElementById('detailAssignedDoctor').innerText = user.assignedDoctorName;
         } else {
-            assignedRow.style.display = 'none';
+            assignedSection.style.display = 'none';
         }
+        
+        await loadNotesForModal(id);
         document.getElementById('detailModal').style.display = 'flex';
+        setupTabs();
     }
 
-    // ---- أحداث الدور ----
-    document.getElementById('userRole').addEventListener('change', e => {
+    function setupTabs() {
+        const btns = document.querySelectorAll('.tab-btn');
+        btns.forEach(btn => {
+            btn.removeEventListener('click', tabHandler);
+            btn.addEventListener('click', tabHandler);
+        });
+        function tabHandler(e) {
+            const tabId = e.currentTarget.getAttribute('data-tab');
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            e.currentTarget.classList.add('active');
+            document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+        }
+    }
+
+    async function loadNotesForModal(userId) {
+        const notesRef = ref(database, `users/${userId}/notes`);
+        const snap = await get(notesRef);
+        let notesHtml = '';
+        const notesArr = [];
+        snap.forEach(c => notesArr.push({id: c.key, ...c.val()}));
+        notesArr.sort((a,b) => new Date(b.date) - new Date(a.date));
+        if(notesArr.length === 0) notesHtml = '<div style="padding:12px; text-align:center;">📭 لا توجد ملاحظات</div>';
+        else {
+            notesHtml = notesArr.map(n => `<div class="note-item"><i class="far fa-calendar-alt"></i> ${new Date(n.date).toLocaleString('ar')}<br>${escapeHtml(n.text)}</div>`).join('');
+        }
+        document.getElementById('notesListModal').innerHTML = notesHtml;
+    }
+
+    async function addNewNote(userId, text) {
+        if(!text.trim()) { showToast('اكتب نص الملاحظة', true); return false; }
+        const notesRef = ref(database, `users/${userId}/notes`);
+        const newRef = push(notesRef);
+        await set(newRef, { text, date: new Date().toISOString(), addedBy: 'admin' });
+        showToast('📌 أُضيفت ملاحظة');
+        return true;
+    }
+
+    // ------ إظهار/إخفاء حقل اختيار الدكتور حسب الدور ------
+    document.getElementById('userRole').addEventListener('change', (e) => {
         const role = e.target.value;
-        document.getElementById('assignDoctorGroup').style.display = role === 'nurse' ? 'block' : 'none';
+        const group = document.getElementById('assignDoctorGroup');
+        const specialtyInput = document.getElementById('userSpecialty');
+        if (role === 'nurse') {
+            group.style.display = 'block';
+            specialtyInput.placeholder = 'التخصص (غير مطلوب للممرض)';
+        } else {
+            group.style.display = 'none';
+            if (role === 'doctor') {
+                specialtyInput.placeholder = 'التخصص (مثال: أمراض نفسية)';
+            } else {
+                specialtyInput.placeholder = 'التخصص';
+            }
+        }
     });
 
+    // ------ فتح نافذة الإضافة ------
     function openAddModal() {
         currentEditId = null;
         document.getElementById('formModalTitle').innerHTML = '<i class="fas fa-user-plus"></i> مستخدم جديد';
@@ -556,6 +704,7 @@
         populateDoctorSelect();
     }
 
+    // ------ فتح نافذة التعديل ------
     function openEditModal(user) {
         currentEditId = user.id;
         document.getElementById('formModalTitle').innerHTML = '<i class="fas fa-edit"></i> تعديل المستخدم';
@@ -565,15 +714,20 @@
         document.getElementById('userRole').value = user.role || '';
         document.getElementById('userSpecialty').value = user.specialty || '';
         document.getElementById('quickBlurb').value = user.quickBlurb || '';
-        document.getElementById('userPassword').value = '';
+        document.getElementById('userPassword').value = ''; // لا نعرض كلمة المرور
         document.getElementById('userStatus').value = user.status || 'active';
+        
+        const role = user.role;
         const group = document.getElementById('assignDoctorGroup');
-        if (user.role === 'nurse') {
+        if (role === 'nurse') {
             group.style.display = 'block';
-            setTimeout(() => {
-                const sel = document.getElementById('assignedDoctorSelect');
-                if (sel) sel.value = user.assignedDoctorId;
-            }, 100);
+            if (user.assignedDoctorId) {
+                // سنقوم بتحديد الخيار المناسب بعد تحميل القائمة
+                setTimeout(() => {
+                    const select = document.getElementById('assignedDoctorSelect');
+                    if (select) select.value = user.assignedDoctorId;
+                }, 200);
+            }
         } else {
             group.style.display = 'none';
         }
@@ -581,9 +735,16 @@
         populateDoctorSelect();
     }
 
-    function closeFormModal() { document.getElementById('formModal').style.display = 'none'; currentEditId = null; }
-    function closeDetailModal() { document.getElementById('detailModal').style.display = 'none'; currentViewId = null; }
+    function closeFormModal() { 
+        document.getElementById('formModal').style.display = 'none'; 
+        currentEditId = null;
+    }
+    function closeDetailModal() { 
+        document.getElementById('detailModal').style.display = 'none'; 
+        currentViewId = null;
+    }
 
+    // ------ حفظ المستخدم (جديد أو تعديل) ------
     async function saveUser() {
         const name = document.getElementById('userName').value.trim();
         const email = document.getElementById('userEmail').value.trim();
@@ -593,65 +754,93 @@
         const quickBlurb = document.getElementById('quickBlurb').value.trim();
         const password = document.getElementById('userPassword').value;
         const status = document.getElementById('userStatus').value;
-
-        if (!name || !email || !role) { showToast('الاسم والبريد والدور مطلوبة', true); return; }
-
-        let assignedDoctorId = null, assignedDoctorName = null;
+        
+        if (!name || !email || !role) {
+            showToast('الاسم والبريد والدور مطلوبة', true);
+            return;
+        }
+        
+        // إذا كان ممرض، تأكد من اختيار دكتور
+        let assignedDoctorId = null;
+        let assignedDoctorName = null;
         if (role === 'nurse') {
             assignedDoctorId = document.getElementById('assignedDoctorSelect').value;
-            if (!assignedDoctorId) { showToast('يجب اختيار الدكتور المسؤول', true); return; }
-            const doc = doctorsList.find(d => d.id === assignedDoctorId);
-            assignedDoctorName = doc ? doc.name : '';
+            if (!assignedDoctorId) {
+                showToast('يجب اختيار الدكتور المسؤول للممرض', true);
+                return;
+            }
+            const selectedDoc = doctorsList.find(d => d.id === assignedDoctorId);
+            assignedDoctorName = selectedDoc ? selectedDoc.name : '';
         }
 
         const userData = {
             name, email, phone, role,
             specialty: role === 'doctor' ? specialty : '',
-            quickBlurb, status,
+            quickBlurb,
+            status,
             lastModified: new Date().toISOString()
         };
-        if (role === 'nurse') { userData.assignedDoctorId = assignedDoctorId; userData.assignedDoctorName = assignedDoctorName; }
+        
+        if (role === 'nurse') {
+            userData.assignedDoctorId = assignedDoctorId;
+            userData.assignedDoctorName = assignedDoctorName;
+        }
 
-        try {
-            if (currentEditId) {
-                await update(ref(database, `users/${currentEditId}`), userData);
-                showToast('تم التعديل');
-                closeFormModal();
-            } else {
-                if (!password) { showToast('كلمة المرور مطلوبة', true); return; }
+        if (currentEditId) {
+            // تعديل مستخدم موجود (لا نغير كلمة المرور هنا، يمكن إضافتها لاحقاً)
+            await update(ref(database, `users/${currentEditId}`), userData);
+            showToast('تم التعديل بنجاح');
+            closeFormModal();
+        } else {
+            // إضافة جديد: نحتاج كلمة مرور
+            if (!password) {
+                showToast('كلمة المرور مطلوبة لحساب جديد', true);
+                return;
+            }
+            try {
+                // إنشاء حساب في Firebase Auth
                 const userCred = await createUserWithEmailAndPassword(auth, email, password);
                 const uid = userCred.user.uid;
+                
                 userData.createdAt = new Date().toISOString();
+                
+                // حفظ في Realtime Database تحت users/uid
                 await set(ref(database, `users/${uid}`), userData);
-                showToast('🎉 تم إضافة المستخدم');
+                
+                showToast('🎉 تم إضافة المستخدم بنجاح');
                 closeFormModal();
+            } catch (err) {
+                console.error(err);
+                if (err.code === 'auth/email-already-in-use') showToast('البريد الإلكتروني مستخدم بالفعل', true);
+                else if (err.code === 'auth/weak-password') showToast('كلمة المرور ضعيفة (6 حروف على الأقل)', true);
+                else showToast(err.message, true);
             }
-        } catch (err) {
-            console.error(err);
-            if (err.code === 'auth/email-already-in-use') showToast('البريد مستخدم', true);
-            else if (err.code === 'auth/weak-password') showToast('كلمة مرور ضعيفة', true);
-            else showToast(err.message, true);
         }
     }
 
-    async function toggleBlock(id, newStatus) {
+    // ------ حظر/إلغاء حظر ------
+    async function toggleBlockUser(id, newStatus) {
         await update(ref(database, `users/${id}`), { status: newStatus });
         showToast(newStatus === 'blocked' ? 'تم الحظر' : 'تم إلغاء الحظر');
         closeDetailModal();
     }
 
     async function deleteUser(id) {
-        if (!confirm('حذف المستخدم نهائياً؟')) return;
-        await remove(ref(database, `users/${id}`));
-        showToast('تم الحذف');
-        closeDetailModal();
+        if (confirm('هل أنت متأكد من حذف هذا المستخدم؟ لا يمكن التراجع.')) {
+            await remove(ref(database, `users/${id}`));
+            showToast('تم الحذف');
+            closeDetailModal();
+        }
     }
 
+    // ------ تسجيل الخروج ------
     async function logout() {
         await signOut(auth);
-        window.location.href = 'index.html';
+        sessionStorage.clear();
+        window.location.href = 'index.html'; // صفحة الدخول
     }
 
+    // ------ ربط الأحداث ------
     function setupEvents() {
         document.getElementById('searchInput').addEventListener('input', renderGrid);
         document.getElementById('addUserBtn').onclick = openAddModal;
@@ -660,22 +849,30 @@
         document.getElementById('saveFormBtn').onclick = saveUser;
         document.getElementById('closeFormBtn').onclick = closeFormModal;
         document.getElementById('closeDetailBtn').onclick = closeDetailModal;
-        document.getElementById('blockModalBtn').onclick = () => currentViewId && toggleBlock(currentViewId, 'blocked');
-        document.getElementById('unblockModalBtn').onclick = () => currentViewId && toggleBlock(currentViewId, 'active');
-        document.getElementById('deleteModalBtn').onclick = () => currentViewId && deleteUser(currentViewId);
+        document.getElementById('blockModalBtn').onclick = () => { if(currentViewId) toggleBlockUser(currentViewId, 'blocked'); };
+        document.getElementById('unblockModalBtn').onclick = () => { if(currentViewId) toggleBlockUser(currentViewId, 'active'); };
+        document.getElementById('deleteModalBtn').onclick = () => { if(currentViewId) deleteUser(currentViewId); };
         document.getElementById('editModalBtn').onclick = () => {
-            const u = allUsers.find(u => u.id === currentViewId);
-            if (u) { closeDetailModal(); openEditModal(u); }
+            const user = allUsers.find(u => u.id === currentViewId);
+            if(user) { closeDetailModal(); openEditModal(user); }
+        };
+        document.getElementById('addNoteModalBtn').onclick = async () => {
+            const txt = document.getElementById('newNoteText').value;
+            if(currentViewId && txt) {
+                await addNewNote(currentViewId, txt);
+                document.getElementById('newNoteText').value = '';
+                await loadNotesForModal(currentViewId);
+            } else showToast('اكتب نص الملاحظة', true);
         };
         window.onclick = (e) => {
-            if (e.target.classList.contains('modal')) {
-                e.target.style.display = 'none';
-            }
+            if(e.target === document.getElementById('detailModal')) closeDetailModal();
+            if(e.target === document.getElementById('formModal')) closeFormModal();
         };
     }
 
-    loadUsers();
+    // ------ بدء التطبيق ------
     setupEvents();
+    loadUsers();
 </script>
 </body>
 </html>
