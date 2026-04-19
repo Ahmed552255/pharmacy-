@@ -4,29 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>سُكُون — بوابة الدخول</title>
-    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
-    
     <script src="https://unpkg.com/feather-icons"></script>
-
     <style>
-        /* ----- ألوان هادئة (أخضر مائي / تيل فاتح) ----- */
         :root {
-            --primary: #7AC5C5;        /* أخضر مائي ناعم */
-            --accent: #5BA3A3;          /* تيل متوسط */
-            --accent-dark: #3F8585;     /* تيل داكن للعناوين */
-            --bg: #ECF9F9;              /* خلفية فاتحة جداً */
+            --primary: #7AC5C5;
+            --accent: #5BA3A3;
+            --accent-dark: #3F8585;
+            --bg: #ECF9F9;
             --white: #FFFFFF;
-            --ink: #2C4A4A;             /* نص داكن متناسق */
-            --text-sec: #6B8E8E;        /* نص ثانوي */
-            --danger: #E57373;           /* أحمر هادئ للأخطاء */
-            --success: #5FA88D;          /* أخضر نعناعي للنجاح */
+            --ink: #2C4A4A;
+            --text-sec: #6B8E8E;
+            --danger: #E57373;
+            --success: #5FA88D;
             --shadow: 0 12px 28px rgba(58, 128, 128, 0.12);
             --border-light: rgba(122, 197, 197, 0.2);
         }
-
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html { font-size: 16px; }
         body {
@@ -40,14 +35,7 @@
             background: var(--bg);
             position: relative;
         }
-
-        /* خلفية ديناميكية ناعمة */
-        .bg-orbs {
-            position: fixed;
-            inset: 0;
-            z-index: -1;
-            overflow: hidden;
-        }
+        .bg-orbs { position: fixed; inset: 0; z-index: -1; overflow: hidden; }
         .orb {
             position: absolute;
             border-radius: 50%;
@@ -70,12 +58,7 @@
             bottom: -15%;
             left: -10%;
         }
-
-        @keyframes float {
-            to { transform: translate(30px, 30px); }
-        }
-
-        /* البطاقة الزجاجية */
+        @keyframes float { to { transform: translate(30px, 30px); } }
         .glass-card {
             background: rgba(255, 255, 255, 0.75);
             backdrop-filter: blur(16px);
@@ -91,10 +74,7 @@
             transform: scale(0.92);
             opacity: 0;
         }
-        @keyframes popIn {
-            to { transform: scale(1); opacity: 1; }
-        }
-
+        @keyframes popIn { to { transform: scale(1); opacity: 1; } }
         .card-header { margin-bottom: 2rem; }
         .card-header h1 {
             font-size: 2.2rem;
@@ -103,12 +83,7 @@
             letter-spacing: -0.5px;
             margin-bottom: 0.4rem;
         }
-        .card-header p {
-            font-size: 1rem;
-            color: var(--text-sec);
-            font-weight: 500;
-        }
-
+        .card-header p { font-size: 1rem; color: var(--text-sec); font-weight: 500; }
         .input-group {
             position: relative;
             margin-bottom: 1.5rem;
@@ -139,11 +114,7 @@
             box-shadow: 0 0 0 4px rgba(122, 197, 197, 0.2);
             background: #ffffff;
         }
-        .input-group input::placeholder {
-            color: #A3C4C4;
-            font-weight: 400;
-        }
-
+        .input-group input::placeholder { color: #A3C4C4; font-weight: 400; }
         .btn {
             width: 100%;
             padding: 1rem;
@@ -168,7 +139,6 @@
             transform: none;
             box-shadow: none;
         }
-
         .error-message {
             color: var(--danger);
             font-weight: 600;
@@ -182,7 +152,6 @@
             border: 1px solid rgba(229, 115, 115, 0.15);
         }
         .error-message.show { opacity: 1; }
-
         .toast-notification {
             position: fixed;
             top: 24px;
@@ -202,7 +171,6 @@
             from { top: -40px; opacity: 0; }
             to { top: 24px; opacity: 1; }
         }
-
         .spinner {
             display: inline-block;
             width: 20px;
@@ -215,8 +183,6 @@
             vertical-align: middle;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
-
-        /* شارة بسيطة (اختياري) */
         .badge-soft {
             background: rgba(122, 197, 197, 0.15);
             color: var(--accent-dark);
@@ -230,20 +196,13 @@
     </style>
 </head>
 <body>
-
-    <div class="bg-orbs">
-        <div class="orb orb1"></div>
-        <div class="orb orb2"></div>
-    </div>
-
+    <div class="bg-orbs"><div class="orb orb1"></div><div class="orb orb2"></div></div>
     <main class="glass-card">
-        <!-- شارة صغيرة للتوضيح -->
         <div class="badge-soft">🔐 دخول آمن</div>
         <header class="card-header">
             <h1>سُكُون</h1>
             <p>منصة إدارة العيادات والصيدليات</p>
         </header>
-        
         <form id="loginForm">
             <div class="input-group">
                 <input type="text" id="username" placeholder="البريد الإلكتروني" required autocomplete="off">
@@ -253,103 +212,95 @@
                 <input type="password" id="password" placeholder="كلمة المرور" required autocomplete="off">
                 <i class="icon" data-feather="lock"></i>
             </div>
-
             <div class="error-message" id="errorMessage"></div>
-
             <button type="submit" class="btn" id="loginButton">تسجيل الدخول</button>
         </form>
     </main>
-
     <script type="module">
         feather.replace();
-
-        // ====================================================
-        // إعدادات Firebase (استيراد من ملف خارجي)
-        // ====================================================
         import { firebaseConfig } from './firebase-config.js';
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
+        import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-database.js";
 
-        // ====================================================
-        // بيانات المدير (ثابتة في الكود - للتجربة الأولية)
-        // ====================================================
-        const ADMIN_CREDENTIALS = {
-            email: "admin@sokoon.com",
-            password: "Admin@2024Secure"    // يمكنك تغييرها كما تريد
-        };
-
-        // استيراد خدمات Firebase
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
-
-        // تهيئة Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
-        const db = getFirestore(app);
-
+        const db = getDatabase(app);
         console.log("✅ Firebase initialized");
 
-        const LOGIN_PAGE = (() => {
-            'use strict';
+        const elements = {
+            errorMessage: document.getElementById('errorMessage'),
+            usernameInput: document.getElementById('username'),
+            passwordInput: document.getElementById('password'),
+            loginButton: document.getElementById('loginButton'),
+            loginForm: document.getElementById('loginForm')
+        };
 
-            // --- DOM Elements ---
-            const elements = {
-                errorMessage: document.getElementById('errorMessage'),
-                usernameInput: document.getElementById('username'),
-                passwordInput: document.getElementById('password'),
-                loginButton: document.getElementById('loginButton'),
-                loginForm: document.getElementById('loginForm')
-            };
+        const showError = (message) => {
+            elements.errorMessage.textContent = message;
+            elements.errorMessage.classList.add('show');
+            setTimeout(() => elements.errorMessage.classList.remove('show'), 5000);
+        };
+        const showToast = (message, isSuccess = true) => {
+            const toast = document.createElement('div');
+            toast.className = 'toast-notification';
+            toast.style.backgroundColor = isSuccess ? '#5FA88D' : '#E57373';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 2000);
+        };
+        const setLoading = (isLoading) => {
+            elements.loginButton.disabled = isLoading;
+            elements.loginButton.innerHTML = isLoading ? '<span class="spinner"></span> جاري التحقق...' : 'تسجيل الدخول';
+        };
 
-            // --- Helper Functions ---
-            const showError = (message) => {
-                elements.errorMessage.textContent = message;
-                elements.errorMessage.classList.add('show');
-                setTimeout(() => elements.errorMessage.classList.remove('show'), 5000);
-            };
-
-            const showToast = (message, isSuccess = true) => {
-                const toast = document.createElement('div');
-                toast.className = 'toast-notification';
-                toast.style.backgroundColor = isSuccess ? '#5FA88D' : '#E57373';
-                toast.textContent = message;
-                document.body.appendChild(toast);
-                setTimeout(() => toast.remove(), 2000);
-            };
-
-            const setLoading = (isLoading) => {
-                elements.loginButton.disabled = isLoading;
-                elements.loginButton.innerHTML = isLoading 
-                    ? '<span class="spinner"></span> جاري التحقق...' 
-                    : 'تسجيل الدخول';
-            };
-
-            // --- جلب دور المستخدم من Firestore ---
-            const fetchUserRole = async (uid) => {
-                try {
-                    const userDocRef = doc(db, "users", uid);
-                    const userSnap = await getDoc(userDocRef);
-                    if (userSnap.exists()) {
-                        return userSnap.data().role || 'doctor';
-                    } else {
-                        console.warn("⚠️ لم يتم العثور على وثيقة المستخدم، افتراض دور 'doctor'");
-                        return 'doctor';
-                    }
-                } catch (error) {
-                    console.error("خطأ في جلب الدور:", error);
-                    throw new Error("تعذر تحديد صلاحيات المستخدم");
+        const fetchUserRole = async (uid) => {
+            try {
+                const userRef = ref(db, `users/${uid}`);
+                const snapshot = await get(userRef);
+                if (snapshot.exists()) {
+                    const userData = snapshot.val();
+                    return userData.role || 'doctor';
+                } else {
+                    console.warn("⚠️ لم يتم العثور على وثيقة المستخدم في Realtime Database");
+                    return null;
                 }
-            };
+            } catch (error) {
+                console.error("خطأ في جلب الدور:", error);
+                throw new Error("تعذر تحديد صلاحيات المستخدم");
+            }
+        };
 
-            // --- تخزين الجلسة والتوجيه ---
-            const storeSessionAndRedirect = (userData) => {
+        const handleLogin = async (e) => {
+            e.preventDefault();
+            const email = elements.usernameInput.value.trim().toLowerCase();
+            const password = elements.passwordInput.value;
+            if (!email || !password) {
+                showError('الرجاء إدخال البريد الإلكتروني وكلمة المرور');
+                return;
+            }
+            setLoading(true);
+            showError('');
+            try {
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+                const role = await fetchUserRole(user.uid);
+                if (!role) {
+                    showError('❌ لم يتم العثور على بيانات المستخدم في قاعدة البيانات.');
+                    setLoading(false);
+                    return;
+                }
+                const userData = {
+                    uid: user.uid,
+                    email: user.email,
+                    name: user.email.split('@')[0],
+                    role: role
+                };
                 sessionStorage.setItem('userRole', userData.role);
                 sessionStorage.setItem('userEmail', userData.email);
                 sessionStorage.setItem('userName', userData.name);
-                if (userData.uid) sessionStorage.setItem('userUid', userData.uid);
-
+                sessionStorage.setItem('userUid', userData.uid);
                 showToast(`مرحباً ${userData.name}!`, true);
-
-                const role = userData.role;
                 let redirectPage;
                 switch (role) {
                     case 'admin': redirectPage = 'admin-panel.html'; break;
@@ -358,119 +309,43 @@
                     case 'pharmacist': redirectPage = 'pharmacy-dashboard.html'; break;
                     default: redirectPage = 'dashboard.html';
                 }
-
                 setTimeout(() => { window.location.href = redirectPage; }, 1500);
-            };
-
-            // --- معالجة تسجيل الدخول ---
-            const handleLogin = async (event) => {
-                event.preventDefault();
-                
-                const email = elements.usernameInput.value.trim().toLowerCase();
-                const password = elements.passwordInput.value;
-                
-                if (!email || !password) {
-                    showError('الرجاء إدخال البريد الإلكتروني وكلمة المرور');
-                    return;
-                }
-                
-                setLoading(true);
-                showError('');
-                
-                // ===== 1. التحقق من بيانات المدير (ثابتة) =====
-                if (email === ADMIN_CREDENTIALS.email && password === ADMIN_CREDENTIALS.password) {
-                    console.log("✅ مدير النظام - تسجيل دخول محلي");
-                    const adminData = {
-                        uid: 'admin-local',
-                        email: ADMIN_CREDENTIALS.email,
-                        name: 'مدير النظام',
-                        role: 'admin'
-                    };
-                    storeSessionAndRedirect(adminData);
-                    return; // خروج من الدالة
-                }
-                
-                // ===== 2. المستخدمين العاديين عبر Firebase =====
-                try {
-                    // تسجيل الدخول عبر Firebase Auth
-                    const userCredential = await signInWithEmailAndPassword(auth, email, password);
-                    const user = userCredential.user;
-                    
-                    // جلب الدور من Firestore
-                    const role = await fetchUserRole(user.uid);
-                    
-                    const userData = {
-                        uid: user.uid,
-                        email: user.email,
-                        name: user.email.split('@')[0], // مؤقتاً، يمكن تحسينه
-                        role: role
-                    };
-                    
-                    storeSessionAndRedirect(userData);
-                    
-                } catch (error) {
-                    console.error("Firebase login error:", error);
-                    let errorMessage = 'بيانات الدخول غير صحيحة';
-                    
-                    if (error.code) {
-                        switch (error.code) {
-                            case 'auth/user-not-found':
-                                errorMessage = '❌ البريد الإلكتروني غير مسجل';
-                                break;
-                            case 'auth/wrong-password':
-                                errorMessage = '❌ كلمة المرور غير صحيحة';
-                                break;
-                            case 'auth/invalid-email':
-                                errorMessage = '❌ صيغة البريد الإلكتروني غير صالحة';
-                                break;
-                            case 'auth/too-many-requests':
-                                errorMessage = '⚠️ تم تعطيل الحساب مؤقتاً، حاول لاحقاً';
-                                break;
-                            case 'auth/network-request-failed':
-                                errorMessage = '⚠️ مشكلة في الاتصال بالإنترنت';
-                                break;
-                            default:
-                                errorMessage = error.message;
-                        }
-                    } else {
-                        errorMessage = error.message;
+            } catch (error) {
+                console.error("Login error:", error);
+                let errorMessage = 'بيانات الدخول غير صحيحة';
+                if (error.code) {
+                    switch (error.code) {
+                        case 'auth/user-not-found': errorMessage = '❌ البريد الإلكتروني غير مسجل'; break;
+                        case 'auth/wrong-password': errorMessage = '❌ كلمة المرور غير صحيحة'; break;
+                        case 'auth/invalid-email': errorMessage = '❌ صيغة البريد الإلكتروني غير صالحة'; break;
+                        case 'auth/too-many-requests': errorMessage = '⚠️ تم تعطيل الحساب مؤقتاً، حاول لاحقاً'; break;
+                        case 'auth/network-request-failed': errorMessage = '⚠️ مشكلة في الاتصال بالإنترنت'; break;
+                        default: errorMessage = error.message;
                     }
-                    
-                    showError(errorMessage);
-                    setLoading(false);
                 }
-            };
-
-            // --- التحقق من وجود جلسة سابقة ---
-            const checkExistingSession = () => {
-                const role = sessionStorage.getItem('userRole');
-                const name = sessionStorage.getItem('userName');
-                if (role && name) {
-                    let redirect;
-                    switch (role) {
-                        case 'admin': redirect = 'admin-panel.html'; break;
-                        case 'doctor': redirect = 'doctor-dashboard.html'; break;
-                        case 'nurse': redirect = 'nurse-dashboard.html'; break;
-                        case 'pharmacist': redirect = 'pharmacy-dashboard.html'; break;
-                        default: redirect = 'dashboard.html';
-                    }
-                    showToast(`أهلاً بعودتك ${name}!`, true);
-                    setTimeout(() => { window.location.href = redirect; }, 1200);
-                }
-            };
-
-            // --- التهيئة ---
-            const init = () => {
+                showError(errorMessage);
                 setLoading(false);
-                elements.loginForm.addEventListener('submit', handleLogin);
-                checkExistingSession();
-                console.log("🚀 صفحة الدخول جاهزة | مدير الاختبار:", ADMIN_CREDENTIALS.email);
-            };
-
-            return { init };
-        })();
-
-        document.addEventListener('DOMContentLoaded', LOGIN_PAGE.init);
+            }
+        };
+        const checkExistingSession = () => {
+            const role = sessionStorage.getItem('userRole');
+            const name = sessionStorage.getItem('userName');
+            if (role && name) {
+                let redirect;
+                switch (role) {
+                    case 'admin': redirect = 'admin-panel.html'; break;
+                    case 'doctor': redirect = 'doctor-dashboard.html'; break;
+                    case 'nurse': redirect = 'nurse-dashboard.html'; break;
+                    case 'pharmacist': redirect = 'pharmacy-dashboard.html'; break;
+                    default: redirect = 'dashboard.html';
+                }
+                showToast(`أهلاً بعودتك ${name}!`, true);
+                setTimeout(() => { window.location.href = redirect; }, 1200);
+            }
+        };
+        elements.loginForm.addEventListener('submit', handleLogin);
+        checkExistingSession();
+        console.log("🚀 صفحة الدخول جاهزة");
     </script>
 </body>
 </html>
