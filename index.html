@@ -12,7 +12,7 @@
     <script src="https://unpkg.com/feather-icons"></script>
 
     <style>
-        /* نفس التنسيقات السابقة */
+        /* نفس التنسيقات السابقة - دون تغيير */
         :root {
             --primary: #7AC5C5; --accent: #5BA3A3; --accent-dark: #3F8585;
             --bg: #ECF9F9; --white: #FFFFFF; --ink: #2C4A4A; --text-sec: #6B8E8E;
@@ -133,7 +133,10 @@
 
     <script type="module">
         feather.replace();
+        
+        // ==================== استيراد الإعدادات من ملف خارجي ====================
         import { firebaseConfig } from './firebase-config.js';
+        
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
         import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
@@ -141,6 +144,56 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+
+        // ==================== IndexedDB للجلسة ====================
+        class SessionCache {
+            constructor() { this.db = null; }
+            async init() {
+                if (this.db) return;
+                return new Promise((resolve, reject) => {
+                    const req = indexedDB.open('SakoonSession', 1);
+                    req.onerror = () => reject(req.error);
+                    req.onsuccess = () => { this.db = req.result; resolve(); };
+                    req.onupgradeneeded = (e) => {
+                        const db = e.target.result;
+                        if (!db.objectStoreNames.contains('session')) {
+                            db.createObjectStore('session', { keyPath: 'key' });
+                        }
+                    };
+                });
+            }
+            async saveSession(data) {
+                await this.init();
+                return new Promise((resolve, reject) => {
+                    const tx = this.db.transaction('session', 'readwrite');
+                    const store = tx.objectStore('session');
+                    store.put({ key: 'current', ...data });
+                    tx.oncomplete = () => resolve();
+                    tx.onerror = () => reject(tx.error);
+                });
+            }
+            async getSession() {
+                await this.init();
+                return new Promise((resolve, reject) => {
+                    const tx = this.db.transaction('session', 'readonly');
+                    const store = tx.objectStore('session');
+                    const req = store.get('current');
+                    req.onsuccess = () => resolve(req.result);
+                    req.onerror = () => reject(req.error);
+                });
+            }
+            async clearSession() {
+                await this.init();
+                return new Promise((resolve, reject) => {
+                    const tx = this.db.transaction('session', 'readwrite');
+                    const store = tx.objectStore('session');
+                    store.delete('current');
+                    tx.oncomplete = () => resolve();
+                    tx.onerror = () => reject(tx.error);
+                });
+            }
+        }
+        const sessionCache = new SessionCache();
 
         // بيانات المدير التجريبية (ثابتة)
         const ADMIN_CREDENTIALS = {
@@ -178,7 +231,6 @@
                 : 'تسجيل الدخول';
         }
 
-        // دالة جلب دور المستخدم مع إعادة المحاولة
         async function fetchUserRole(uid, retries = 3) {
             for (let i = 0; i < retries; i++) {
                 try {
@@ -187,13 +239,9 @@
                     if (userSnap.exists()) {
                         const data = userSnap.data();
                         if (data.role) return data.role;
-                        // إذا لم يوجد حقل role ولكن المستخدم موجود (ربما يكون ممرض مرتبط)
-                        // نبحث عن حقل linkedDoctor لنعرف أنه ممرض
                         if (data.linkedDoctor) return 'nurse';
-                        // افتراضي: طبيب
                         return 'doctor';
                     }
-                    // إذا لم توجد الوثيقة بعد، ننتظر قليلاً ونعيد المحاولة
                     if (i < retries - 1) {
                         await new Promise(resolve => setTimeout(resolve, 800));
                     }
@@ -203,9 +251,7 @@
                     await new Promise(resolve => setTimeout(resolve, 800));
                 }
             }
-            // بعد انتهاء المحاولات، نعطي دور افتراضي آمن (ممرض) إذا كان الحساب موجودًا في Auth
-            // لكننا لا نستطيع التأكد، سنعتمد على وجود linkedDoctor لاحقًا في الصفحات
-            return 'nurse'; // دور افتراضي مؤقت
+            return 'nurse';
         }
 
         async function handleLogin(e) {
@@ -223,9 +269,8 @@
             
             // 1. التحقق من المدير الثابت
             if (email === ADMIN_CREDENTIALS.email && password === ADMIN_CREDENTIALS.password) {
-                sessionStorage.setItem('userRole', 'admin');
-                sessionStorage.setItem('userEmail', email);
-                sessionStorage.setItem('userName', 'مدير النظام');
+                const sessionData = { role: 'admin', email, name: 'مدير النظام' };
+                await sessionCache.saveSession(sessionData);
                 showToast('مرحباً مدير النظام!', true);
                 setTimeout(() => window.location.href = 'admin-panel.html', 1500);
                 return;
@@ -241,27 +286,27 @@
                     role = await fetchUserRole(user.uid);
                 } catch (roleError) {
                     console.error("فشل جلب الدور:", roleError);
-                    // إذا فشل جلب الدور، نخزن دور افتراضي مؤقت
                     role = 'nurse';
                     showToast('تم الدخول، ولكن تعذر تحديد الصلاحيات بدقة. قد تحتاج لمراجعة المدير.', false);
                 }
                 
-                // تخزين الجلسة
-                sessionStorage.setItem('userRole', role);
-                sessionStorage.setItem('userEmail', user.email);
-                sessionStorage.setItem('userName', user.email.split('@')[0]);
-                sessionStorage.setItem('userUid', user.uid);
+                const sessionData = {
+                    role,
+                    email: user.email,
+                    name: user.email.split('@')[0],
+                    uid: user.uid
+                };
+                await sessionCache.saveSession(sessionData);
                 
-                showToast(`مرحباً ${user.email.split('@')[0]}!`, true);
+                showToast(`مرحباً ${sessionData.name}!`, true);
                 
-                // توجيه حسب الدور
                 let redirectPage;
                 switch (role) {
                     case 'admin': redirectPage = 'admin-panel.html'; break;
                     case 'doctor': redirectPage = 'doctor-dashboard.html'; break;
-                    case 'nurse': redirectPage = 'attendant.html'; break;      // صفحة الممرض
+                    case 'nurse': redirectPage = 'attendant.html'; break;
                     case 'pharmacist': redirectPage = 'pharmacy-dashboard.html'; break;
-                    default: redirectPage = 'attendant.html'; // افتراضي للممرض
+                    default: redirectPage = 'attendant.html';
                 }
                 
                 setTimeout(() => window.location.href = redirectPage, 1500);
@@ -277,20 +322,18 @@
             }
         }
 
-        // التحقق من جلسة سابقة
-        function checkExistingSession() {
-            const role = sessionStorage.getItem('userRole');
-            const name = sessionStorage.getItem('userName');
-            if (role && name) {
+        async function checkExistingSession() {
+            const session = await sessionCache.getSession();
+            if (session && session.role && session.name) {
                 let redirect;
-                switch (role) {
+                switch (session.role) {
                     case 'admin': redirect = 'admin-panel.html'; break;
                     case 'doctor': redirect = 'doctor-dashboard.html'; break;
                     case 'nurse': redirect = 'attendant.html'; break;
                     case 'pharmacist': redirect = 'pharmacy-dashboard.html'; break;
                     default: redirect = 'attendant.html';
                 }
-                showToast(`أهلاً بعودتك ${name}!`, true);
+                showToast(`أهلاً بعودتك ${session.name}!`, true);
                 setTimeout(() => window.location.href = redirect, 1200);
             }
         }
