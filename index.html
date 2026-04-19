@@ -2,632 +2,475 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تسجيل الدخول | نظام الإدارة الطبية</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>سُكُون — بوابة الدخول</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <script src="https://unpkg.com/feather-icons"></script>
+
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        /* ----- ألوان هادئة (أخضر مائي / تيل فاتح) ----- */
         :root {
-            --primary: #98D8C8;
-            --secondary: #6BCB77;
-            --dark: #2D6A4F;
-            --light: #F7FFF7;
-            --white: #ffffff;
-            --shadow: rgba(45, 106, 79, 0.15);
+            --primary: #7AC5C5;        /* أخضر مائي ناعم */
+            --accent: #5BA3A3;          /* تيل متوسط */
+            --accent-dark: #3F8585;     /* تيل داكن للعناوين */
+            --bg: #ECF9F9;              /* خلفية فاتحة جداً */
+            --white: #FFFFFF;
+            --ink: #2C4A4A;             /* نص داكن متناسق */
+            --text-sec: #6B8E8E;        /* نص ثانوي */
+            --danger: #E57373;           /* أحمر هادئ للأخطاء */
+            --success: #5FA88D;          /* أخضر نعناعي للنجاح */
+            --shadow: 0 12px 28px rgba(58, 128, 128, 0.12);
+            --border-light: rgba(122, 197, 197, 0.2);
         }
 
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { font-size: 16px; }
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            font-family: 'Cairo', sans-serif;
+            color: var(--ink);
             min-height: 100vh;
             display: flex;
-            align-items: center;
             justify-content: center;
-            padding: 20px;
-        }
-
-        .container {
-            background: var(--white);
-            border-radius: 25px;
-            box-shadow: 0 20px 60px var(--shadow);
-            width: 100%;
-            max-width: 450px;
-            padding: 40px 30px;
-            position: relative;
-            animation: slideUp 0.5s ease;
-        }
-
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .logo {
-            width: 90px;
-            height: 90px;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            border-radius: 50%;
-            display: flex;
             align-items: center;
-            justify-content: center;
-            margin: -70px auto 30px;
-            box-shadow: 0 10px 30px var(--shadow);
-            border: 5px solid var(--white);
-        }
-
-        .logo i {
-            font-size: 40px;
-            color: var(--white);
-        }
-
-        h2 {
-            color: var(--dark);
-            text-align: center;
-            margin-bottom: 10px;
-            font-size: 28px;
-        }
-
-        .subtitle {
-            text-align: center;
-            color: #666;
-            margin-bottom: 30px;
-            font-size: 14px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
+            padding: 1.25rem;
+            background: var(--bg);
             position: relative;
         }
 
-        label {
-            display: block;
-            margin-bottom: 8px;
-            color: var(--dark);
-            font-weight: 600;
-            font-size: 14px;
+        /* خلفية ديناميكية ناعمة */
+        .bg-orbs {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            overflow: hidden;
         }
-
-        .input-wrapper {
-            position: relative;
-        }
-
-        .input-wrapper i {
+        .orb {
             position: absolute;
-            right: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--secondary);
-            font-size: 18px;
+            border-radius: 50%;
+            filter: blur(100px);
+            pointer-events: none;
+            animation: float 35s infinite alternate ease-in-out;
+            opacity: 0.5;
+        }
+        .orb1 {
+            width: 55vw;
+            height: 55vw;
+            background: radial-gradient(circle, rgba(122, 197, 197, 0.25) 0%, transparent 70%);
+            top: -20%;
+            right: -15%;
+        }
+        .orb2 {
+            width: 45vw;
+            height: 45vw;
+            background: radial-gradient(circle, rgba(91, 163, 163, 0.15) 0%, transparent 70%);
+            bottom: -15%;
+            left: -10%;
         }
 
-        input, select {
+        @keyframes float {
+            to { transform: translate(30px, 30px); }
+        }
+
+        /* البطاقة الزجاجية */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border-light);
+            border-radius: 32px;
+            box-shadow: var(--shadow);
             width: 100%;
-            padding: 14px 45px 14px 15px;
-            border: 2px solid #e0e0e0;
-            border-radius: 12px;
-            font-size: 15px;
-            transition: all 0.3s ease;
-            background: var(--light);
-            color: var(--dark);
+            max-width: 440px;
+            padding: 2.5rem 2rem;
+            text-align: center;
+            z-index: 1;
+            animation: popIn 0.7s cubic-bezier(0.2, 0.9, 0.3, 1) forwards;
+            transform: scale(0.92);
+            opacity: 0;
+        }
+        @keyframes popIn {
+            to { transform: scale(1); opacity: 1; }
         }
 
-        input:focus, select:focus {
-            outline: none;
-            border-color: var(--secondary);
+        .card-header { margin-bottom: 2rem; }
+        .card-header h1 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: var(--accent-dark);
+            letter-spacing: -0.5px;
+            margin-bottom: 0.4rem;
+        }
+        .card-header p {
+            font-size: 1rem;
+            color: var(--text-sec);
+            font-weight: 500;
+        }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+        .input-group .icon {
+            position: absolute;
+            top: 50%;
+            right: 1.25rem;
+            transform: translateY(-50%);
+            color: var(--accent);
+            width: 20px;
+            height: 20px;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 1rem 3.5rem 1rem 1.5rem;
             background: var(--white);
-            box-shadow: 0 0 0 4px rgba(107, 203, 119, 0.1);
+            border: 1.5px solid rgba(122, 197, 197, 0.25);
+            border-radius: 20px;
+            outline: none;
+            font-size: 1rem;
+            font-family: 'Cairo', sans-serif;
+            color: var(--ink);
+            transition: all 0.25s ease;
         }
-
-        select {
-            cursor: pointer;
-            appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236BCB77' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: left 15px center;
+        .input-group input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(122, 197, 197, 0.2);
+            background: #ffffff;
         }
-
-        .specialty-group, .doctor-link-group {
-            display: none;
-            animation: fadeIn 0.3s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+        .input-group input::placeholder {
+            color: #A3C4C4;
+            font-weight: 400;
         }
 
         .btn {
             width: 100%;
-            padding: 16px;
-            background: linear-gradient(135deg, var(--secondary), var(--primary));
-            color: var(--white);
+            padding: 1rem;
             border: none;
-            border-radius: 12px;
-            font-size: 18px;
-            font-weight: bold;
+            border-radius: 20px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            font-family: 'Cairo', sans-serif;
             cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 10px;
-            box-shadow: 0 5px 15px rgba(107, 203, 119, 0.3);
+            transition: all 0.25s ease;
+            background: linear-gradient(145deg, var(--primary), var(--accent));
+            color: white;
+            box-shadow: 0 8px 18px rgba(91, 163, 163, 0.25);
         }
-
         .btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(107, 203, 119, 0.4);
+            box-shadow: 0 12px 24px rgba(91, 163, 163, 0.35);
+        }
+        .btn:disabled {
+            opacity: 0.65;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
         }
 
-        .btn:active {
-            transform: translateY(0);
+        .error-message {
+            color: var(--danger);
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-top: 1rem;
+            padding: 0.6rem 1rem;
+            background: rgba(229, 115, 115, 0.08);
+            border-radius: 16px;
+            opacity: 0;
+            transition: opacity 0.25s;
+            border: 1px solid rgba(229, 115, 115, 0.15);
         }
+        .error-message.show { opacity: 1; }
 
-        .toggle-link {
-            text-align: center;
-            margin-top: 20px;
-            color: var(--dark);
-            font-size: 14px;
-        }
-
-        .toggle-link a {
-            color: var(--secondary);
+        .toast-notification {
+            position: fixed;
+            top: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            padding: 12px 28px;
+            border-radius: 40px;
             font-weight: bold;
-            cursor: pointer;
-            text-decoration: none;
-            transition: color 0.3s;
-        }
-
-        .toggle-link a:hover {
-            color: var(--dark);
-        }
-
-        .footer {
-            text-align: center;
-            margin-top: 30px;
-            color: #999;
-            font-size: 12px;
-            line-height: 1.6;
-        }
-
-        .alert {
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            display: none;
+            z-index: 9999;
+            font-family: 'Cairo', sans-serif;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.1);
             animation: slideDown 0.3s ease;
+            background: var(--success);
         }
-
         @keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .alert-error {
-            background: #fee;
-            color: #c33;
-            border: 1px solid #fcc;
-        }
-
-        .alert-success {
-            background: #efe;
-            color: #3c3;
-            border: 1px solid #cfc;
-        }
-
-        @media (max-width: 480px) {
-            .container {
-                padding: 30px 20px;
-            }
-
-            h2 {
-                font-size: 24px;
-            }
-
-            .logo {
-                width: 80px;
-                height: 80px;
-                margin: -60px auto 25px;
-            }
-
-            .logo i {
-                font-size: 35px;
-            }
-
-            input, select {
-                padding: 12px 40px 12px 12px;
-                font-size: 14px;
-            }
-
-            .btn {
-                padding: 14px;
-                font-size: 16px;
-            }
-        }
-
-        .loading {
-            display: none;
-            text-align: center;
-            margin-top: 10px;
-        }
-
-        .loading.active {
-            display: block;
+            from { top: -40px; opacity: 0; }
+            to { top: 24px; opacity: 1; }
         }
 
         .spinner {
-            border: 3px solid var(--light);
-            border-top: 3px solid var(--secondary);
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
             border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto;
+            border-top-color: white;
+            animation: spin 0.7s linear infinite;
+            margin-left: 8px;
+            vertical-align: middle;
         }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        /* شارة بسيطة (اختياري) */
+        .badge-soft {
+            background: rgba(122, 197, 197, 0.15);
+            color: var(--accent-dark);
+            font-size: 0.8rem;
+            padding: 4px 14px;
+            border-radius: 40px;
+            display: inline-block;
+            margin-bottom: 1rem;
+            font-weight: 600;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="logo">
-            <i class="fas fa-heartbeat"></i>
-        </div>
 
-        <h2 id="formTitle">تسجيل الدخول</h2>
-        <p class="subtitle" id="formSubtitle">مرحباً بك في نظام الإدارة الطبية</p>
-
-        <div class="alert alert-error" id="alertBox"></div>
-
-        <form id="authForm">
-            <!-- Name field (only for registration) -->
-            <div class="form-group" id="nameGroup" style="display: none;">
-                <label for="name">الاسم الكامل</label>
-                <div class="input-wrapper">
-                    <i class="fas fa-user"></i>
-                    <input type="text" id="name" placeholder="أدخل اسمك الكامل">
-                </div>
-            </div>
-
-            <!-- Email -->
-            <div class="form-group">
-                <label for="email">البريد الإلكتروني</label>
-                <div class="input-wrapper">
-                    <i class="fas fa-envelope"></i>
-                    <input type="email" id="email" placeholder="example@domain.com" required>
-                </div>
-            </div>
-
-            <!-- Password -->
-            <div class="form-group">
-                <label for="password">كلمة المرور</label>
-                <div class="input-wrapper">
-                    <i class="fas fa-lock"></i>
-                    <input type="password" id="password" placeholder="••••••••" required>
-                </div>
-            </div>
-
-            <!-- Role Selection (only for registration) -->
-            <div class="form-group" id="roleGroup" style="display: none;">
-                <label for="role">المهنة</label>
-                <div class="input-wrapper">
-                    <i class="fas fa-user-tag"></i>
-                    <select id="role">
-                        <option value="" disabled selected>اختر المهنة</option>
-                        <option value="doctor">طبيب</option>
-                        <option value="pharmacist">صيدلي</option>
-                        <option value="attendant">ممرض/تمرجي</option>
-                    </select>
-                </div>
-            </div>
-
-            <!-- Specialty Input (for doctors only) - تم التعديل -->
-            <div class="form-group specialty-group" id="specialtyGroup">
-                <label for="specialty">التخصص الطبي</label>
-                <div class="input-wrapper">
-                    <i class="fas fa-stethoscope"></i>
-                    <input type="text" id="specialty" placeholder="مثال: باطنة، أطفال، إلخ.">
-                </div>
-            </div>
-
-            <!-- Doctor Link (for attendants only) -->
-            <div class="form-group doctor-link-group" id="doctorLinkGroup">
-                <label for="linkedDoctor">الطبيب المشرف</label>
-                <div class="input-wrapper">
-                    <i class="fas fa-user-md"></i>
-                    <select id="linkedDoctor">
-                        <option value="" disabled selected>جاري التحميل...</option>
-                    </select>
-                </div>
-            </div>
-
-            <button type="submit" class="btn" id="submitBtn">تسجيل الدخول</button>
-
-            <div class="loading" id="loadingSpinner">
-                <div class="spinner"></div>
-            </div>
-        </form>
-
-        <div class="toggle-link">
-            <span id="toggleText">ليس لديك حساب؟</span>
-            <a id="toggleLink">سجل الآن</a>
-        </div>
-
-        <div class="footer">
-            © 2025 نظام الإدارة الطبية<br>
-            جميع الحقوق محفوظة
-        </div>
+    <div class="bg-orbs">
+        <div class="orb orb1"></div>
+        <div class="orb orb2"></div>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+    <main class="glass-card">
+        <!-- شارة صغيرة للتوضيح -->
+        <div class="badge-soft">🔐 دخول آمن</div>
+        <header class="card-header">
+            <h1>سُكُون</h1>
+            <p>منصة إدارة العيادات والصيدليات</p>
+        </header>
+        
+        <form id="loginForm">
+            <div class="input-group">
+                <input type="text" id="username" placeholder="البريد الإلكتروني" required autocomplete="off">
+                <i class="icon" data-feather="mail"></i>
+            </div>
+            <div class="input-group">
+                <input type="password" id="password" placeholder="كلمة المرور" required autocomplete="off">
+                <i class="icon" data-feather="lock"></i>
+            </div>
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyDYgPFDWqtaHm9wzKyRtUqJKS2mQrOiJVk",
-            authDomain: "oooooo-ee246.firebaseapp.com",
-            projectId: "oooooo-ee246",
-            storageBucket: "oooooo-ee246.firebasestorage.app",
-            messagingSenderId: "484234388806",
-            appId: "1:484234388806:web:bafc624785ef1cad10b147",
-            measurementId: "G-V8PMYBC290"
+            <div class="error-message" id="errorMessage"></div>
+
+            <button type="submit" class="btn" id="loginButton">تسجيل الدخول</button>
+        </form>
+    </main>
+
+    <script type="module">
+        feather.replace();
+
+        // ====================================================
+        // إعدادات Firebase (استيراد من ملف خارجي)
+        // ====================================================
+        import { firebaseConfig } from './firebase-config.js';
+
+        // ====================================================
+        // بيانات المدير (ثابتة في الكود - للتجربة الأولية)
+        // ====================================================
+        const ADMIN_CREDENTIALS = {
+            email: "admin@sokoon.com",
+            password: "Admin@2024Secure"    // يمكنك تغييرها كما تريد
         };
 
+        // استيراد خدمات Firebase
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+
+        // تهيئة Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        let isRegistering = false;
+        console.log("✅ Firebase initialized");
 
-        const REDIRECT_MAP = {
-            'doctor': 'doctor.html',
-            'pharmacist': 'pharmacy.html',
-            'attendant': 'attendant.html'
-        };
+        const LOGIN_PAGE = (() => {
+            'use strict';
 
-        // UI Elements
-        const formTitle = document.getElementById('formTitle');
-        const formSubtitle = document.getElementById('formSubtitle');
-        const nameGroup = document.getElementById('nameGroup');
-        const roleGroup = document.getElementById('roleGroup');
-        const specialtyGroup = document.getElementById('specialtyGroup');
-        const doctorLinkGroup = document.getElementById('doctorLinkGroup');
-        const submitBtn = document.getElementById('submitBtn');
-        const toggleLink = document.getElementById('toggleLink');
-        const toggleText = document.getElementById('toggleText');
-        const alertBox = document.getElementById('alertBox');
-        const loadingSpinner = document.getElementById('loadingSpinner');
-        const roleSelect = document.getElementById('role');
-        const linkedDoctorSelect = document.getElementById('linkedDoctor');
+            // --- DOM Elements ---
+            const elements = {
+                errorMessage: document.getElementById('errorMessage'),
+                usernameInput: document.getElementById('username'),
+                passwordInput: document.getElementById('password'),
+                loginButton: document.getElementById('loginButton'),
+                loginForm: document.getElementById('loginForm')
+            };
 
-        // Show Alert
-        function showAlert(message, type = 'error') {
-            alertBox.textContent = message;
-            alertBox.className = `alert alert-${type}`;
-            alertBox.style.display = 'block';
-            setTimeout(() => {
-                alertBox.style.display = 'none';
-            }, 5000);
-        }
+            // --- Helper Functions ---
+            const showError = (message) => {
+                elements.errorMessage.textContent = message;
+                elements.errorMessage.classList.add('show');
+                setTimeout(() => elements.errorMessage.classList.remove('show'), 5000);
+            };
 
-        // Toggle between Login and Registration
-        toggleLink.addEventListener('click', () => {
-            isRegistering = !isRegistering;
-            
-            if (isRegistering) {
-                formTitle.textContent = 'إنشاء حساب جديد';
-                formSubtitle.textContent = 'املأ البيانات للتسجيل في النظام';
-                submitBtn.textContent = 'إنشاء الحساب';
-                toggleText.textContent = 'لديك حساب بالفعل؟';
-                toggleLink.textContent = 'سجل الدخول';
-                nameGroup.style.display = 'block';
-                roleGroup.style.display = 'block';
-            } else {
-                formTitle.textContent = 'تسجيل الدخول';
-                formSubtitle.textContent = 'مرحباً بك في نظام الإدارة الطبية';
-                submitBtn.textContent = 'تسجيل الدخول';
-                toggleText.textContent = 'ليس لديك حساب؟';
-                toggleLink.textContent = 'سجل الآن';
-                nameGroup.style.display = 'none';
-                roleGroup.style.display = 'none';
-                specialtyGroup.style.display = 'none';
-                doctorLinkGroup.style.display = 'none';
-            }
-        });
+            const showToast = (message, isSuccess = true) => {
+                const toast = document.createElement('div');
+                toast.className = 'toast-notification';
+                toast.style.backgroundColor = isSuccess ? '#5FA88D' : '#E57373';
+                toast.textContent = message;
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 2000);
+            };
 
-        // Handle Role Change
-        roleSelect.addEventListener('change', async (e) => {
-            const role = e.target.value;
-            
-            specialtyGroup.style.display = 'none';
-            doctorLinkGroup.style.display = 'none';
-            
-            if (role === 'doctor') {
-                specialtyGroup.style.display = 'block';
-            } else if (role === 'attendant') {
-                doctorLinkGroup.style.display = 'block';
-                await loadDoctors();
-            }
-        });
+            const setLoading = (isLoading) => {
+                elements.loginButton.disabled = isLoading;
+                elements.loginButton.innerHTML = isLoading 
+                    ? '<span class="spinner"></span> جاري التحقق...' 
+                    : 'تسجيل الدخول';
+            };
 
-        // Load Doctors from Firestore - تم التعديل
-        async function loadDoctors() {
-            try {
-                linkedDoctorSelect.innerHTML = '<option value="" disabled selected>جاري تحميل الأطباء...</option>';
+            // --- جلب دور المستخدم من Firestore ---
+            const fetchUserRole = async (uid) => {
+                try {
+                    const userDocRef = doc(db, "users", uid);
+                    const userSnap = await getDoc(userDocRef);
+                    if (userSnap.exists()) {
+                        return userSnap.data().role || 'doctor';
+                    } else {
+                        console.warn("⚠️ لم يتم العثور على وثيقة المستخدم، افتراض دور 'doctor'");
+                        return 'doctor';
+                    }
+                } catch (error) {
+                    console.error("خطأ في جلب الدور:", error);
+                    throw new Error("تعذر تحديد صلاحيات المستخدم");
+                }
+            };
+
+            // --- تخزين الجلسة والتوجيه ---
+            const storeSessionAndRedirect = (userData) => {
+                sessionStorage.setItem('userRole', userData.role);
+                sessionStorage.setItem('userEmail', userData.email);
+                sessionStorage.setItem('userName', userData.name);
+                if (userData.uid) sessionStorage.setItem('userUid', userData.uid);
+
+                showToast(`مرحباً ${userData.name}!`, true);
+
+                const role = userData.role;
+                let redirectPage;
+                switch (role) {
+                    case 'admin': redirectPage = 'admin-panel.html'; break;
+                    case 'doctor': redirectPage = 'doctor-dashboard.html'; break;
+                    case 'nurse': redirectPage = 'nurse-dashboard.html'; break;
+                    case 'pharmacist': redirectPage = 'pharmacy-dashboard.html'; break;
+                    default: redirectPage = 'dashboard.html';
+                }
+
+                setTimeout(() => { window.location.href = redirectPage; }, 1500);
+            };
+
+            // --- معالجة تسجيل الدخول ---
+            const handleLogin = async (event) => {
+                event.preventDefault();
                 
-                const q = query(collection(db, "users"), where("role", "==", "doctor"));
-                const querySnapshot = await getDocs(q);
+                const email = elements.usernameInput.value.trim().toLowerCase();
+                const password = elements.passwordInput.value;
                 
-                if (querySnapshot.empty) {
-                    linkedDoctorSelect.innerHTML = '<option value="" disabled selected>لا يوجد أطباء مسجلون حالياً</option>';
+                if (!email || !password) {
+                    showError('الرجاء إدخال البريد الإلكتروني وكلمة المرور');
                     return;
                 }
                 
-                linkedDoctorSelect.innerHTML = '<option value="" disabled selected>اختر الطبيب المشرف</option>';
+                setLoading(true);
+                showError('');
                 
-                querySnapshot.forEach((doc) => {
-                    const data = doc.data();
-                    const option = document.createElement('option');
-                    option.value = doc.id;
-                    option.textContent = `د. ${data.name} - ${data.specialty || 'تخصص غير محدد'}`;
-                    linkedDoctorSelect.appendChild(option);
-                });
-            } catch (error) {
-                console.error('Error loading doctors:', error);
-                linkedDoctorSelect.innerHTML = '<option value="" disabled selected>خطأ في تحميل قائمة الأطباء</option>';
-            }
-        }
-
-        // Form Submission - تم التعديل
-        document.getElementById('authForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const email = document.getElementById('email').value.trim();
-            const password = document.getElementById('password').value;
-            
-            if (password.length < 6) {
-                showAlert('كلمة المرور يجب أن تكون 6 أحرف على الأقل');
-                return;
-            }
-            
-            loadingSpinner.classList.add('active');
-            submitBtn.disabled = true;
-            
-            try {
-                if (isRegistering) {
-                    const name = document.getElementById('name').value.trim();
-                    const role = document.getElementById('role').value;
-                    
-                    if (!name || !role) {
-                        showAlert('الرجاء ملء جميع الحقول المطلوبة');
-                        loadingSpinner.classList.remove('active');
-                        submitBtn.disabled = false;
-                        return;
-                    }
-                    
-                    let specialty = null;
-                    let linkedDoctor = null;
-                    
-                    if (role === 'doctor') {
-                        specialty = document.getElementById('specialty').value.trim();
-                        if (!specialty) {
-                            showAlert('الرجاء كتابة التخصص الطبي');
-                            loadingSpinner.classList.remove('active');
-                            submitBtn.disabled = false;
-                            return;
-                        }
-                    }
-                    
-                    if (role === 'attendant') {
-                        linkedDoctor = document.getElementById('linkedDoctor').value;
-                        if (!linkedDoctor) {
-                            showAlert('الرجاء اختيار الطبيب المشرف');
-                            loadingSpinner.classList.remove('active');
-                            submitBtn.disabled = false;
-                            return;
-                        }
-                    }
-                    
-                    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                    const user = userCredential.user;
-                    
-                    await setDoc(doc(db, "users", user.uid), {
-                        name: name,
-                        email: email,
-                        role: role,
-                        specialty: specialty,
-                        linkedDoctor: linkedDoctor,
-                        createdAt: new Date().toISOString()
-                    });
-                    
-                    showAlert('تم إنشاء الحساب بنجاح! سيتم توجيهك الآن.', 'success');
-                    
-                    // الدخول مباشرة بعد التسجيل
-                    const userDoc = await getDoc(doc(db, "users", user.uid));
-                    const userData = userDoc.data();
-                    localStorage.setItem('userRole', userData.role);
-                    localStorage.setItem('userName', userData.name);
-                    localStorage.setItem('userId', user.uid);
-                    if (userData.specialty) localStorage.setItem('userSpecialty', userData.specialty);
-                    if (userData.linkedDoctor) localStorage.setItem('linkedDoctor', userData.linkedDoctor);
-
-                    setTimeout(() => {
-                        window.location.href = REDIRECT_MAP[role];
-                    }, 1500);
-                    
-                } else {
+                // ===== 1. التحقق من بيانات المدير (ثابتة) =====
+                if (email === ADMIN_CREDENTIALS.email && password === ADMIN_CREDENTIALS.password) {
+                    console.log("✅ مدير النظام - تسجيل دخول محلي");
+                    const adminData = {
+                        uid: 'admin-local',
+                        email: ADMIN_CREDENTIALS.email,
+                        name: 'مدير النظام',
+                        role: 'admin'
+                    };
+                    storeSessionAndRedirect(adminData);
+                    return; // خروج من الدالة
+                }
+                
+                // ===== 2. المستخدمين العاديين عبر Firebase =====
+                try {
+                    // تسجيل الدخول عبر Firebase Auth
                     const userCredential = await signInWithEmailAndPassword(auth, email, password);
                     const user = userCredential.user;
                     
-                    const userDoc = await getDoc(doc(db, "users", user.uid));
+                    // جلب الدور من Firestore
+                    const role = await fetchUserRole(user.uid);
                     
-                    if (!userDoc.exists()) {
-                        showAlert('بيانات الاعتماد غير صحيحة أو الحساب غير موجود.');
-                        loadingSpinner.classList.remove('active');
-                        submitBtn.disabled = false;
-                        return;
+                    const userData = {
+                        uid: user.uid,
+                        email: user.email,
+                        name: user.email.split('@')[0], // مؤقتاً، يمكن تحسينه
+                        role: role
+                    };
+                    
+                    storeSessionAndRedirect(userData);
+                    
+                } catch (error) {
+                    console.error("Firebase login error:", error);
+                    let errorMessage = 'بيانات الدخول غير صحيحة';
+                    
+                    if (error.code) {
+                        switch (error.code) {
+                            case 'auth/user-not-found':
+                                errorMessage = '❌ البريد الإلكتروني غير مسجل';
+                                break;
+                            case 'auth/wrong-password':
+                                errorMessage = '❌ كلمة المرور غير صحيحة';
+                                break;
+                            case 'auth/invalid-email':
+                                errorMessage = '❌ صيغة البريد الإلكتروني غير صالحة';
+                                break;
+                            case 'auth/too-many-requests':
+                                errorMessage = '⚠️ تم تعطيل الحساب مؤقتاً، حاول لاحقاً';
+                                break;
+                            case 'auth/network-request-failed':
+                                errorMessage = '⚠️ مشكلة في الاتصال بالإنترنت';
+                                break;
+                            default:
+                                errorMessage = error.message;
+                        }
+                    } else {
+                        errorMessage = error.message;
                     }
                     
-                    const userData = userDoc.data();
-                    // حفظ البيانات في التخزين المحلي عند تسجيل الدخول
-                    localStorage.setItem('userRole', userData.role);
-                    localStorage.setItem('userName', userData.name);
-                    localStorage.setItem('userId', user.uid);
-                    
-                    if (userData.specialty) {
-                        localStorage.setItem('userSpecialty', userData.specialty);
-                    }
-                    
-                    if (userData.linkedDoctor) {
-                        localStorage.setItem('linkedDoctor', userData.linkedDoctor);
-                    }
-                    
-                    showAlert('تم تسجيل الدخول بنجاح! جاري التوجيه...', 'success');
-                    
-                    setTimeout(() => {
-                        window.location.href = REDIRECT_MAP[userData.role];
-                    }, 1500);
+                    showError(errorMessage);
+                    setLoading(false);
                 }
-            } catch (error) {
-                console.error('Error:', error);
-                let errorMessage = 'حدث خطأ، الرجاء المحاولة مرة أخرى';
-                
-                if (error.code === 'auth/email-already-in-use') {
-                    errorMessage = 'هذا البريد الإلكتروني مسجل بالفعل.';
-                } else if (error.code === 'auth/invalid-email') {
-                    errorMessage = 'صيغة البريد الإلكتروني غير صحيحة.';
-                } else if (error.code === 'auth/weak-password') {
-                    errorMessage = 'كلمة المرور ضعيفة جداً.';
-                } else if (error.code === 'auth/invalid-credential') {
-                    errorMessage = 'البريد الإلكتروني أو كلمة المرور غير صحيحة.';
-                }
-                
-                showAlert(errorMessage);
-            } finally {
-                loadingSpinner.classList.remove('active');
-                submitBtn.disabled = false;
-            }
-        });
+            };
 
-        // تم حذف onAuthStateChanged لمنع الدخول التلقائي
+            // --- التحقق من وجود جلسة سابقة ---
+            const checkExistingSession = () => {
+                const role = sessionStorage.getItem('userRole');
+                const name = sessionStorage.getItem('userName');
+                if (role && name) {
+                    let redirect;
+                    switch (role) {
+                        case 'admin': redirect = 'admin-panel.html'; break;
+                        case 'doctor': redirect = 'doctor-dashboard.html'; break;
+                        case 'nurse': redirect = 'nurse-dashboard.html'; break;
+                        case 'pharmacist': redirect = 'pharmacy-dashboard.html'; break;
+                        default: redirect = 'dashboard.html';
+                    }
+                    showToast(`أهلاً بعودتك ${name}!`, true);
+                    setTimeout(() => { window.location.href = redirect; }, 1200);
+                }
+            };
+
+            // --- التهيئة ---
+            const init = () => {
+                setLoading(false);
+                elements.loginForm.addEventListener('submit', handleLogin);
+                checkExistingSession();
+                console.log("🚀 صفحة الدخول جاهزة | مدير الاختبار:", ADMIN_CREDENTIALS.email);
+            };
+
+            return { init };
+        })();
+
+        document.addEventListener('DOMContentLoaded', LOGIN_PAGE.init);
     </script>
 </body>
 </html>
