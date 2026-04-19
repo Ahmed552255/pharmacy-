@@ -246,11 +246,12 @@
 </div>
 
 <script type="module">
+    // ==================== استيراد الإعدادات من ملف خارجي ====================
     import { firebaseConfig } from './firebase-config.js';
     
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
-    import { getDatabase, ref, onValue, set, update, remove, get } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-database.js";
-    import { getAuth, createUserWithEmailAndPassword, signOut, updateEmail, updatePassword } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
+    import { getDatabase, ref, onValue, set, update, remove } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-database.js";
+    import { getAuth, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
 
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
@@ -262,6 +263,47 @@
     let currentEditId = null;
     let currentViewId = null;
 
+    // ==================== IndexedDB للتخزين المحلي ====================
+    class UserCache {
+        constructor() { this.db = null; }
+        async init() {
+            if (this.db) return;
+            return new Promise((resolve, reject) => {
+                const req = indexedDB.open('SakoonAdminCache', 1);
+                req.onerror = () => reject(req.error);
+                req.onsuccess = () => { this.db = req.result; resolve(); };
+                req.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains('users')) {
+                        db.createObjectStore('users', { keyPath: 'id' });
+                    }
+                };
+            });
+        }
+        async saveUsers(users) {
+            await this.init();
+            return new Promise((resolve, reject) => {
+                const tx = this.db.transaction('users', 'readwrite');
+                const store = tx.objectStore('users');
+                store.clear();
+                users.forEach(u => store.put(u));
+                tx.oncomplete = () => resolve();
+                tx.onerror = () => reject(tx.error);
+            });
+        }
+        async loadUsers() {
+            await this.init();
+            return new Promise((resolve, reject) => {
+                const tx = this.db.transaction('users', 'readonly');
+                const store = tx.objectStore('users');
+                const req = store.getAll();
+                req.onsuccess = () => resolve(req.result || []);
+                req.onerror = () => reject(req.error);
+            });
+        }
+    }
+    const userCache = new UserCache();
+
     function showToast(msg, isErr = false) {
         const t = document.createElement('div');
         t.className = 'toast';
@@ -271,9 +313,8 @@
         setTimeout(() => t.remove(), 3000);
     }
 
-    // تحميل جميع المستخدمين من Realtime Database
     function loadUsers() {
-        onValue(usersRef, (snap) => {
+        onValue(usersRef, async (snap) => {
             const arr = [];
             const doctorsArr = [];
             snap.forEach(child => {
@@ -283,13 +324,25 @@
             });
             allUsers = arr;
             doctorsList = doctorsArr;
+            await userCache.saveUsers(arr);
             renderGrid();
             populateDoctorSelect();
         }, err => showToast('خطأ في تحميل البيانات', true));
     }
 
+    async function loadCachedUsersFirst() {
+        const cached = await userCache.loadUsers();
+        if (cached.length) {
+            allUsers = cached;
+            doctorsList = cached.filter(u => u.role === 'doctor');
+            renderGrid();
+            populateDoctorSelect();
+        }
+    }
+
     function populateDoctorSelect() {
         const select = document.getElementById('assignedDoctorSelect');
+        if (!select) return;
         select.innerHTML = '<option value="">-- اختر الدكتور --</option>';
         doctorsList.forEach(doc => {
             const option = document.createElement('option');
@@ -368,7 +421,6 @@
         document.getElementById('detailModal').style.display = 'flex';
     }
 
-    // إظهار/إخفاء حقل الدكتور المسؤول حسب الدور
     document.getElementById('userRole').addEventListener('change', (e) => {
         const role = e.target.value;
         const group = document.getElementById('assignDoctorGroup');
@@ -411,7 +463,7 @@
         document.getElementById('userRole').value = user.role || '';
         document.getElementById('userSpecialty').value = user.specialty || '';
         document.getElementById('quickBlurb').value = user.quickBlurb || '';
-        document.getElementById('userPassword').value = ''; // لا نعرض كلمة المرور
+        document.getElementById('userPassword').value = '';
         document.getElementById('userStatus').value = user.status || 'active';
         
         const role = user.role;
@@ -438,7 +490,6 @@
         currentViewId = null;
     }
 
-    // حفظ المستخدم (جديد أو تعديل) مع إنشاء حساب Auth
     async function saveUser() {
         const name = document.getElementById('userName').value.trim();
         const email = document.getElementById('userEmail').value.trim();
@@ -481,9 +532,7 @@
 
         try {
             if (currentEditId) {
-                // تعديل مستخدم موجود (لا نغير كلمة المرور هنا)
                 await update(ref(database, `users/${currentEditId}`), userData);
-                // يمكن تحديث البريد الإلكتروني في Auth إذا تغير (يتطلب reauthentication)
                 showToast('تم التعديل بنجاح');
                 closeFormModal();
             } else {
@@ -491,16 +540,10 @@
                     showToast('كلمة المرور مطلوبة لحساب جديد', true);
                     return;
                 }
-                // 1. إنشاء حساب في Firebase Auth
                 const userCred = await createUserWithEmailAndPassword(auth, email, password);
                 const uid = userCred.user.uid;
-                
-                // 2. إضافة uid و createdAt إلى البيانات
                 userData.createdAt = new Date().toISOString();
-                
-                // 3. حفظ البيانات في Realtime Database تحت users/uid
                 await set(ref(database, `users/${uid}`), userData);
-                
                 showToast('🎉 تم إضافة المستخدم بنجاح');
                 closeFormModal();
             }
@@ -522,7 +565,6 @@
         if (!confirm('هل أنت متأكد من حذف هذا المستخدم؟ لا يمكن التراجع.')) return;
         try {
             await remove(ref(database, `users/${id}`));
-            // ملاحظة: لا نحذف حساب Auth هنا، يمكن إضافته لاحقاً
             showToast('تم الحذف');
             closeDetailModal();
         } catch (error) {
@@ -557,8 +599,10 @@
         };
     }
 
-    setupEvents();
+    // بدء التطبيق: تحميل الكاش أولاً ثم المزامنة الحية
+    loadCachedUsersFirst();
     loadUsers();
+    setupEvents();
 </script>
 </body>
 </html>
