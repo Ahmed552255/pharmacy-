@@ -1,881 +1,525 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>سُكُون | تسجيل الدخول الآمن</title>
-  
-  <!-- Google Fonts - Cairo -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  
-  <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>سُكُون — بوابة الشركاء</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <script src="https://unpkg.com/feather-icons"></script>
 
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    <style>
+        /* نفس الـ CSS السابق بدون تغيير */
+        :root {
+            --primary: #98D8D8;
+            --accent: #5aabab;
+            --accent-dark: #3d8a8a;
+            --admin-primary: #4a69bd;
+            --admin-accent: #1e3799;
+            --bg: #eef6f6;
+            --white: #fff;
+            --ink: #2c3e50;
+            --text-sec: #7f8c8d;
+            --danger: #e74c3c;
+            --success: #2ecc71;
+            --grad: linear-gradient(135deg, var(--primary), var(--accent));
+            --admin-grad: linear-gradient(135deg, var(--admin-primary), var(--admin-accent));
+            --shadow: 0 8px 32px rgba(90, 171, 171, 0.15);
+        }
 
-    body {
-      font-family: 'Cairo', sans-serif;
-      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 1.5rem;
-      position: relative;
-      overflow-x: hidden;
-      color: #ffffff;
-    }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { font-size: 16px; }
+        body {
+            font-family: 'Cairo', sans-serif;
+            color: var(--ink);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+            background: var(--bg);
+            position: relative;
+            transition: background-color 0.5s ease;
+        }
+        body.admin-mode { background: #dfe4ea; }
 
-    /* شبكة متحركة */
-    .bg-pattern {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-image: 
-        linear-gradient(rgba(56, 189, 248, 0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(56, 189, 248, 0.03) 1px, transparent 1px);
-      background-size: 50px 50px;
-      pointer-events: none;
-      z-index: 0;
-      animation: gridMove 20s linear infinite;
-    }
+        .bg-orbs { position: fixed; inset: 0; z-index: -1; overflow: hidden; }
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(90px);
+            pointer-events: none;
+            animation: float 40s infinite alternate;
+        }
+        .orb1 {
+            width: 50vw;
+            height: 50vw;
+            background: radial-gradient(circle, rgba(152, 216, 216, 0.25) 0%, transparent 70%);
+            top: -15%;
+            right: -15%;
+        }
+        .orb2 {
+            width: 40vw;
+            height: 40vw;
+            background: radial-gradient(circle, rgba(90, 171, 171, 0.15) 0%, transparent 70%);
+            bottom: -10%;
+            left: -10%;
+        }
+        body.admin-mode .orb1 { background: radial-gradient(circle, rgba(74, 105, 189, 0.15) 0%, transparent 70%); }
+        body.admin-mode .orb2 { background: radial-gradient(circle, rgba(30, 55, 153, 0.1) 0%, transparent 70%); }
 
-    @keyframes gridMove {
-      0% { transform: translate(0, 0); }
-      100% { transform: translate(50px, 50px); }
-    }
+        @keyframes float {
+            to { transform: translate(20px, 20px); }
+        }
 
-    /* كرات ضوئية */
-    .glow {
-      position: fixed;
-      border-radius: 50%;
-      filter: blur(80px);
-      opacity: 0.4;
-      pointer-events: none;
-      z-index: 0;
-      animation: pulseGlow 8s ease-in-out infinite alternate;
-    }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(18px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 24px;
+            box-shadow: var(--shadow);
+            width: 100%;
+            max-width: 420px;
+            padding: 2.5rem;
+            text-align: center;
+            z-index: 1;
+            animation: popIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            transform: scale(0.9);
+            opacity: 0;
+        }
+        @keyframes popIn {
+            to { transform: scale(1); opacity: 1; }
+        }
 
-    .glow1 {
-      width: 400px;
-      height: 400px;
-      background: #3b82f6;
-      top: -150px;
-      right: -100px;
-      animation-delay: 0s;
-    }
+        .card-header { margin-bottom: 2rem; }
+        .card-header h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--accent-dark);
+            margin-bottom: 0.5rem;
+            transition: color 0.5s ease;
+        }
+        .card-header p {
+            font-size: 0.9rem;
+            color: var(--text-sec);
+            line-height: 1.6;
+        }
+        body.admin-mode .card-header h1 { color: var(--admin-accent); }
 
-    .glow2 {
-      width: 350px;
-      height: 350px;
-      background: #06b6d4;
-      bottom: -100px;
-      left: -80px;
-      animation-delay: 2s;
-    }
+        .input-group {
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+        .input-group .icon {
+            position: absolute;
+            top: 50%;
+            right: 1.25rem;
+            transform: translateY(-50%);
+            color: var(--accent);
+            transition: color 0.5s ease;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 1rem 4rem 1rem 1.5rem;
+            background: rgba(255, 255, 255, 0.7);
+            border: 1.5px solid transparent;
+            border-radius: 16px;
+            outline: none;
+            font-size: 1rem;
+            font-family: 'Cairo', sans-serif;
+            color: var(--ink);
+            transition: all 0.3s ease;
+        }
+        .input-group input:focus {
+            border-color: var(--primary);
+            background: var(--white);
+            box-shadow: 0 0 0 4px rgba(152, 216, 216, 0.2);
+        }
+        body.admin-mode .input-group input:focus {
+            border-color: var(--admin-primary);
+            box-shadow: 0 0 0 4px rgba(74, 105, 189, 0.2);
+        }
+        body.admin-mode .input-group .icon { color: var(--admin-primary); }
 
-    @keyframes pulseGlow {
-      0% { opacity: 0.2; transform: scale(1); }
-      100% { opacity: 0.5; transform: scale(1.1); }
-    }
+        .btn {
+            width: 100%;
+            padding: 1rem;
+            border: none;
+            border-radius: 16px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            font-family: 'Cairo', sans-serif;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .btn-primary {
+            background: var(--grad);
+            color: white;
+            box-shadow: 0 6px 20px rgba(90, 171, 171, 0.35);
+        }
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(90, 171, 171, 0.45);
+        }
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        body.admin-mode .btn-primary {
+            background: var(--admin-grad);
+            box-shadow: 0 6px 20px rgba(74, 105, 189, 0.35);
+        }
+        body.admin-mode .btn-primary:hover {
+            box-shadow: 0 10px 25px rgba(74, 105, 189, 0.45);
+        }
 
-    /* البطاقة الزجاجية الرئيسية */
-    .glass-card {
-      background: rgba(255, 255, 255, 0.08);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border-radius: 40px;
-      padding: 2.5rem 2rem;
-      width: 100%;
-      max-width: 480px;
-      box-shadow: 0 30px 50px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      z-index: 10;
-      animation: cardFloat 0.6s cubic-bezier(0.23, 1, 0.32, 1);
-      transition: transform 0.3s ease;
-    }
+        .error-message {
+            color: var(--danger);
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-top: 1rem;
+            padding: 0.5rem;
+            background: rgba(231, 76, 60, 0.1);
+            border-radius: 12px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .error-message.show { opacity: 1; }
 
-    @keyframes cardFloat {
-      0% { opacity: 0; transform: scale(0.95) translateY(20px); }
-      100% { opacity: 1; transform: scale(1) translateY(0); }
-    }
+        .toast-notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: bold;
+            z-index: 9999;
+            font-family: 'Cairo', sans-serif;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            animation: slideDown 0.3s ease;
+        }
+        @keyframes slideDown {
+            from { top: -50px; opacity: 0; }
+            to { top: 20px; opacity: 1; }
+        }
 
-    /* شارة الأمان */
-    .secure-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: rgba(255, 255, 255, 0.15);
-      padding: 6px 16px;
-      border-radius: 40px;
-      font-size: 0.85rem;
-      font-weight: 500;
-      margin-bottom: 1.5rem;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      backdrop-filter: blur(5px);
-      width: fit-content;
-    }
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
 
-    .secure-badge svg {
-      width: 16px;
-      height: 16px;
-      fill: #10b981;
-    }
-
-    /* أيقونة التطبيق */
-    .app-icon {
-      width: 70px;
-      height: 70px;
-      margin: 0 auto 1.2rem;
-      background: linear-gradient(135deg, #0ea5e9, #3b82f6);
-      border-radius: 20px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 10px 20px rgba(14, 165, 233, 0.3);
-      border: 1px solid rgba(255, 255, 255, 0.3);
-    }
-
-    .app-icon svg {
-      width: 40px;
-      height: 40px;
-      fill: white;
-      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
-    }
-
-    h1 {
-      font-size: 2.5rem;
-      font-weight: 800;
-      margin-bottom: 0.25rem;
-      letter-spacing: -0.5px;
-      background: linear-gradient(to right, #fff, #e2e8f0);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      text-shadow: 0 2px 10px rgba(0,0,0,0.2);
-    }
-
-    .subtitle {
-      color: rgba(255, 255, 255, 0.7);
-      margin-bottom: 2rem;
-      font-size: 0.95rem;
-    }
-
-    /* حقول الإدخال */
-    .input-group {
-      margin-bottom: 1.25rem;
-      position: relative;
-    }
-
-    .input-field {
-      width: 100%;
-      background: rgba(255, 255, 255, 0.1);
-      border: 1.5px solid rgba(255, 255, 255, 0.15);
-      border-radius: 20px;
-      padding: 0.9rem 1.2rem;
-      font-size: 1rem;
-      color: white;
-      font-family: 'Cairo', sans-serif;
-      transition: all 0.2s ease;
-      backdrop-filter: blur(5px);
-      padding-left: 3rem; /* مكان للأيقونة */
-    }
-
-    .input-field::placeholder {
-      color: rgba(255, 255, 255, 0.5);
-      font-weight: 400;
-    }
-
-    .input-field:focus {
-      outline: none;
-      border-color: rgba(255, 255, 255, 0.8);
-      background: rgba(255, 255, 255, 0.15);
-      box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.1);
-    }
-
-    .input-icon {
-      position: absolute;
-      right: 1.2rem;
-      top: 50%;
-      transform: translateY(-50%);
-      color: rgba(255, 255, 255, 0.7);
-      width: 20px;
-      height: 20px;
-      pointer-events: none;
-    }
-
-    .toggle-password {
-      position: absolute;
-      left: 1.2rem;
-      top: 50%;
-      transform: translateY(-50%);
-      background: none;
-      border: none;
-      cursor: pointer;
-      padding: 5px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: rgba(255, 255, 255, 0.7);
-      transition: color 0.2s;
-      border-radius: 50%;
-    }
-
-    .toggle-password:hover {
-      color: white;
-      background: rgba(255, 255, 255, 0.1);
-    }
-
-    /* خيارات إضافية */
-    .options-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin: 1rem 0 1.5rem;
-      font-size: 0.9rem;
-    }
-
-    .remember-me {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      cursor: pointer;
-      color: rgba(255, 255, 255, 0.8);
-    }
-
-    .remember-me input {
-      accent-color: #3b82f6;
-      width: 18px;
-      height: 18px;
-      cursor: pointer;
-    }
-
-    .forgot-link {
-      color: rgba(255, 255, 255, 0.7);
-      text-decoration: none;
-      transition: color 0.2s;
-      font-weight: 500;
-    }
-
-    .forgot-link:hover {
-      color: white;
-      text-decoration: underline;
-    }
-
-    /* زر تسجيل الدخول */
-    .login-btn {
-      width: 100%;
-      background: white;
-      color: #0f172a;
-      border: none;
-      padding: 1rem;
-      border-radius: 40px;
-      font-size: 1.1rem;
-      font-weight: 700;
-      font-family: 'Cairo', sans-serif;
-      cursor: pointer;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-      transition: all 0.2s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      border: 1px solid rgba(255, 255, 255, 0.3);
-    }
-
-    .login-btn:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 15px 25px rgba(0, 0, 0, 0.3);
-      background: #f8fafc;
-    }
-
-    .login-btn:active {
-      transform: translateY(0);
-    }
-
-    .login-btn:disabled {
-      opacity: 0.7;
-      cursor: not-allowed;
-      transform: none;
-      box-shadow: none;
-    }
-
-    .spinner {
-      width: 20px;
-      height: 20px;
-      border: 2px solid rgba(15, 23, 42, 0.3);
-      border-top-color: #0f172a;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      display: inline-block;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    /* صندوق الخطأ */
-    .error-box {
-      background: rgba(239, 68, 68, 0.15);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(239, 68, 68, 0.4);
-      color: #fee2e2;
-      padding: 0.8rem 1.2rem;
-      border-radius: 16px;
-      margin-top: 1.2rem;
-      font-size: 0.9rem;
-      display: none;
-      align-items: center;
-      gap: 10px;
-      animation: shake 0.4s ease;
-    }
-
-    .error-box.show {
-      display: flex;
-    }
-
-    @keyframes shake {
-      0%,100% { transform: translateX(0); }
-      20% { transform: translateX(-5px); }
-      40% { transform: translateX(5px); }
-      60% { transform: translateX(-3px); }
-      80% { transform: translateX(3px); }
-    }
-
-    /* Toast Container */
-    .toast-container {
-      position: fixed;
-      top: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 9999;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      width: auto;
-      max-width: 90%;
-      pointer-events: none;
-    }
-
-    .toast {
-      background: rgba(15, 23, 42, 0.9);
-      backdrop-filter: blur(16px);
-      color: white;
-      padding: 14px 24px;
-      border-radius: 60px;
-      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      font-weight: 500;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      animation: toastIn 0.3s ease;
-      pointer-events: auto;
-    }
-
-    .toast.success {
-      border-right: 5px solid #10b981;
-    }
-
-    .toast.error {
-      border-right: 5px solid #ef4444;
-    }
-
-    @keyframes toastIn {
-      from { opacity: 0; transform: translateY(-20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    /* تذييل */
-    .footer-note {
-      margin-top: 2rem;
-      text-align: center;
-      color: rgba(255, 255, 255, 0.4);
-      font-size: 0.8rem;
-    }
-
-    /* تصميم متجاوب */
-    @media (max-width: 480px) {
-      .glass-card {
-        padding: 2rem 1.5rem;
-        border-radius: 30px;
-      }
-      h1 {
-        font-size: 2rem;
-      }
-    }
-
-    /* حقل به خطأ */
-    .input-field.error {
-      border-color: #ef4444;
-      box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
-    }
-  </style>
+        .mode-badge {
+            position: absolute;
+            top: -10px;
+            left: 20px;
+            background: var(--accent);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+        body.admin-mode .mode-badge {
+            background: var(--admin-primary);
+        }
+        .glass-card {
+            position: relative;
+        }
+    </style>
 </head>
 <body>
-  <!-- الخلفيات المتحركة -->
-  <div class="bg-pattern"></div>
-  <div class="glow glow1"></div>
-  <div class="glow glow2"></div>
 
-  <!-- حاوية الإشعارات -->
-  <div class="toast-container" id="toastContainer"></div>
-
-  <!-- البطاقة الرئيسية -->
-  <div class="glass-card">
-    <!-- شارة دخول آمن -->
-    <div class="secure-badge">
-      <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
-      <span>دخول آمن بتشفير كامل</span>
+    <div class="bg-orbs">
+        <div class="orb orb1"></div>
+        <div class="orb orb2"></div>
     </div>
 
-    <!-- أيقونة التطبيق -->
-    <div class="app-icon">
-      <svg viewBox="0 0 24 24">
-        <path d="M12 2L2 7v10l10 5 10-5V7l-10-5z"/>
-        <path d="M12 12l4-2v4l-4 2-4-2v-4l4 2z" fill="rgba(255,255,255,0.9)"/>
-      </svg>
-    </div>
-
-    <h1>سُكُون</h1>
-    <div class="subtitle">منصة الإدارة الطبية المتكاملة</div>
-
-    <!-- نموذج تسجيل الدخول -->
-    <form id="loginForm" novalidate>
-      <!-- حقل البريد الإلكتروني -->
-      <div class="input-group">
-        <input type="email" id="email" class="input-field" placeholder="البريد الإلكتروني" dir="ltr" required autocomplete="email">
-        <span class="input-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-            <polyline points="22,6 12,13 2,6"/>
-          </svg>
-        </span>
-      </div>
-
-      <!-- حقل كلمة المرور -->
-      <div class="input-group">
-        <input type="password" id="password" class="input-field" placeholder="كلمة المرور" dir="ltr" required autocomplete="current-password">
-        <span class="input-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-          </svg>
-        </span>
-        <button type="button" class="toggle-password" id="togglePassword" aria-label="إظهار/إخفاء كلمة المرور">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-            <circle cx="12" cy="12" r="3"/>
-          </svg>
-        </button>
-      </div>
-
-      <!-- خيارات إضافية -->
-      <div class="options-row">
-        <label class="remember-me">
-          <input type="checkbox" id="rememberMe"> تذكرني
-        </label>
-        <a href="#" class="forgot-link" id="forgotPassword">نسيت كلمة المرور؟</a>
-      </div>
-
-      <!-- زر تسجيل الدخول -->
-      <button type="submit" class="login-btn" id="loginButton">
-        <span id="buttonText">تسجيل الدخول</span>
-        <span id="buttonSpinner" style="display: none;" class="spinner"></span>
-      </button>
-
-      <!-- صندوق رسائل الخطأ -->
-      <div class="error-box" id="errorBox">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="10"/>
-          <line x1="12" y1="8" x2="12" y2="12"/>
-          <line x1="12" y1="16" x2="12.01" y2="16"/>
-        </svg>
-        <span id="errorMessage">بيانات الدخول غير صحيحة</span>
-      </div>
-    </form>
-
-    <div class="footer-note">
-      © 2026 سُكُون - جميع الحقوق محفوظة
-    </div>
-  </div>
-
-  <script type="module">
-    // ===================== إعدادات Firebase =====================
-    // (يفضل وضعها في ملف منفصل، ولكن تم تضمينها هنا للتوضيح)
-    const firebaseConfig = {
-      apiKey: "AIzaSyBPM2CwR4ffR4_5KSm1K3GnPvqTJFxK4tE",
-      authDomain: "sokoon-medical.firebaseapp.com",
-      projectId: "sokoon-medical",
-      storageBucket: "sokoon-medical.appspot.com",
-      messagingSenderId: "1089654321234",
-      appId: "1:1089654321234:web:abc123def456ghi789jkl"
-    };
-
-    // تهيئة Firebase
-    const app = firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.firestore();
-
-    // ===================== المتغيرات العامة =====================
-    const form = document.getElementById('loginForm');
-    const emailInput = document.getElementById('email');
-    const passwordInput = document.getElementById('password');
-    const togglePasswordBtn = document.getElementById('togglePassword');
-    const loginButton = document.getElementById('loginButton');
-    const buttonText = document.getElementById('buttonText');
-    const buttonSpinner = document.getElementById('buttonSpinner');
-    const errorBox = document.getElementById('errorBox');
-    const errorMessage = document.getElementById('errorMessage');
-    const rememberMeCheck = document.getElementById('rememberMe');
-    const forgotLink = document.getElementById('forgotPassword');
-
-    // بيانات المدير الثابت
-    const HARDCODED_ADMIN = {
-      email: 'admin@sokoon.com',
-      password: 'Admin@2024Secure',
-      role: 'admin'
-    };
-
-    // ===================== وظائف مساعدة =====================
-    
-    // إظهار إشعار Toast
-    function showToast(message, type = 'info') {
-      const container = document.getElementById('toastContainer');
-      const toast = document.createElement('div');
-      toast.className = `toast ${type}`;
-      
-      const icon = type === 'success' 
-        ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>'
-        : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
-      
-      toast.innerHTML = `${icon} <span>${message}</span>`;
-      container.appendChild(toast);
-      
-      setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transform = 'translateY(-20px)';
-        toast.style.transition = 'all 0.3s ease';
-        setTimeout(() => toast.remove(), 300);
-      }, 4000);
-    }
-
-    // إظهار / إخفاء الخطأ
-    function showError(message) {
-      errorMessage.textContent = message;
-      errorBox.classList.add('show');
-      emailInput.classList.add('error');
-      passwordInput.classList.add('error');
-    }
-
-    function hideError() {
-      errorBox.classList.remove('show');
-      emailInput.classList.remove('error');
-      passwordInput.classList.remove('error');
-    }
-
-    // ضبط حالة التحميل
-    function setLoading(isLoading) {
-      if (isLoading) {
-        loginButton.disabled = true;
-        buttonText.style.display = 'none';
-        buttonSpinner.style.display = 'inline-block';
-      } else {
-        loginButton.disabled = false;
-        buttonText.style.display = 'inline';
-        buttonSpinner.style.display = 'none';
-      }
-    }
-
-    // حفظ البريد في LocalStorage (إذا اختار تذكرني)
-    function saveEmailToStorage(email) {
-      if (rememberMeCheck.checked) {
-        localStorage.setItem('savedEmail', email);
-      } else {
-        localStorage.removeItem('savedEmail');
-      }
-    }
-
-    // تحميل البريد المحفوظ
-    function loadSavedEmail() {
-      const saved = localStorage.getItem('savedEmail');
-      if (saved) {
-        emailInput.value = saved;
-        rememberMeCheck.checked = true;
-      }
-    }
-
-    // تخزين الجلسة في IndexedDB
-    async function storeSession(userData) {
-      return new Promise((resolve, reject) => {
-        const request = indexedDB.open('SakoonSession', 1);
+    <main class="glass-card">
+        <div class="mode-badge" id="modeBadge">👨‍⚕️ تسجيل الدخول</div>
+        <header class="card-header">
+            <h1 id="formTitle">بوابة سُكُون</h1>
+            <p id="formSubtitle">تسجيل الدخول للموظفين والأطباء</p>
+        </header>
         
-        request.onerror = () => reject(request.error);
-        request.onsuccess = () => {
-          const db = request.result;
-          const tx = db.transaction('session', 'readwrite');
-          const store = tx.objectStore('session');
-          store.put({ id: 'current', ...userData, timestamp: Date.now() });
-          tx.oncomplete = () => resolve();
-          tx.onerror = () => reject(tx.error);
-        };
-        
-        request.onupgradeneeded = (e) => {
-          const db = e.target.result;
-          if (!db.objectStoreNames.contains('session')) {
-            db.createObjectStore('session', { keyPath: 'id' });
-          }
-        };
-      });
-    }
+        <form id="loginForm">
+            <div class="input-group">
+                <input type="text" id="username" placeholder="البريد الإلكتروني" required autocomplete="off">
+                <i class="icon" data-feather="user"></i>
+            </div>
+            <div class="input-group">
+                <input type="password" id="password" placeholder="كلمة المرور" required autocomplete="off">
+                <i class="icon" data-feather="lock"></i>
+            </div>
 
-    // جلب دور المستخدم من Firestore مع إعادة المحاولة
-    async function fetchUserRole(uid, retries = 3) {
-      for (let i = 0; i < retries; i++) {
-        try {
-          const docRef = db.collection('users').doc(uid);
-          const docSnap = await docRef.get();
-          
-          if (docSnap.exists) {
-            const data = docSnap.data();
-            let role = data.role;
-            
-            // إذا لم يوجد حقل role ولكن يوجد linkedDoctor نعتبره ممرض
-            if (!role && data.linkedDoctor) {
-              role = 'nurse';
-            }
-            
-            return {
-              name: data.name || 'مستخدم',
-              email: data.email,
-              role: role || 'staff', // دور افتراضي
-              uid: uid
+            <div class="error-message" id="errorMessage"></div>
+
+            <button type="submit" class="btn btn-primary" id="loginButton">تسجيل الدخول</button>
+        </form>
+    </main>
+
+    <script type="module">
+        feather.replace();
+
+        // استيراد إعدادات Firebase
+        import { firebaseConfig } from './firebase-config.js';
+
+        // استيراد Firebase Services
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+
+        // تهيئة Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        console.log("✅ Firebase initialized successfully");
+
+        const LOGIN_PAGE = (() => {
+            'use strict';
+
+            // --- DOM Elements ---
+            const elements = {
+                body: document.body,
+                formTitle: document.getElementById('formTitle'),
+                formSubtitle: document.getElementById('formSubtitle'),
+                errorMessage: document.getElementById('errorMessage'),
+                usernameInput: document.getElementById('username'),
+                passwordInput: document.getElementById('password'),
+                loginButton: document.getElementById('loginButton'),
+                loginForm: document.getElementById('loginForm'),
+                modeBadge: document.getElementById('modeBadge')
             };
-          } else {
-            // المستخدم موجود في Auth لكن ليس في Firestore - ننشئ مستند افتراضي
-            console.warn('User document not found, creating basic profile');
-            const user = auth.currentUser;
-            const basicData = {
-              name: user.displayName || 'مستخدم جديد',
-              email: user.email,
-              role: 'staff',
-              createdAt: firebase.firestore.FieldValue.serverTimestamp()
+
+            // --- Helper Functions ---
+            const showError = (message) => {
+                elements.errorMessage.textContent = message;
+                elements.errorMessage.classList.add('show');
+                setTimeout(() => {
+                    elements.errorMessage.classList.remove('show');
+                }, 5000);
             };
-            await db.collection('users').doc(uid).set(basicData, { merge: true });
-            return { ...basicData, uid };
-          }
-        } catch (error) {
-          console.warn(`Retry ${i+1} failed:`, error);
-          if (i === retries - 1) throw error;
-          await new Promise(r => setTimeout(r, 800));
-        }
-      }
-    }
 
-    // توجيه المستخدم حسب الدور
-    function redirectBasedOnRole(role) {
-      const routes = {
-        'admin': 'admin-panel.html',
-        'doctor': 'doctor-dashboard.html',
-        'nurse': 'attendant.html',
-        'pharmacist': 'pharmacy-dashboard.html',
-        'staff': 'dashboard.html' // صفحة افتراضية
-      };
-      
-      const target = routes[role] || routes.staff;
-      showToast(`مرحباً بعودتك! جاري تحويلك إلى لوحة التحكم...`, 'success');
-      setTimeout(() => {
-        window.location.href = target;
-      }, 800);
-    }
+            const showToast = (message, isSuccess = true) => {
+                const toast = document.createElement('div');
+                toast.className = 'toast-notification';
+                toast.style.backgroundColor = isSuccess ? '#2ecc71' : '#e74c3c';
+                toast.textContent = message;
+                document.body.appendChild(toast);
+                setTimeout(() => {
+                    toast.remove();
+                }, 2000);
+            };
 
-    // ===================== معالجة تسجيل الدخول =====================
-    async function handleLogin(e) {
-      e.preventDefault();
-      hideError();
-      
-      const email = emailInput.value.trim();
-      const password = passwordInput.value;
-      
-      // التحقق من صحة الحقول
-      if (!email || !password) {
-        showError('الرجاء إدخال البريد الإلكتروني وكلمة المرور');
-        return;
-      }
-      
-      if (!/^\S+@\S+\.\S+$/.test(email)) {
-        showError('صيغة البريد الإلكتروني غير صحيحة');
-        return;
-      }
-      
-      setLoading(true);
-      
-      try {
-        // 1. التحقق من المدير الثابت أولاً
-        if (email === HARDCODED_ADMIN.email && password === HARDCODED_ADMIN.password) {
-          saveEmailToStorage(email);
-          
-          const sessionData = {
-            name: 'المدير النظام',
-            email: email,
-            role: 'admin',
-            uid: 'admin-hardcoded'
-          };
-          
-          await storeSession(sessionData);
-          showToast('تم تسجيل الدخول كمدير النظام', 'success');
-          redirectBasedOnRole('admin');
-          return;
-        }
-        
-        // 2. محاولة تسجيل الدخول عبر Firebase Auth
-        const userCredential = await auth.signInWithEmailAndPassword(email, password);
-        const user = userCredential.user;
-        
-        saveEmailToStorage(email);
-        
-        // 3. جلب بيانات المستخدم والدور من Firestore
-        const userData = await fetchUserRole(user.uid);
-        
-        // 4. تخزين الجلسة في IndexedDB
-        await storeSession({
-          name: userData.name,
-          email: userData.email,
-          role: userData.role,
-          uid: user.uid
-        });
-        
-        // 5. التوجيه
-        redirectBasedOnRole(userData.role);
-        
-      } catch (error) {
-        console.error('Login error:', error);
-        setLoading(false);
-        
-        // ترجمة أخطاء Firebase الشائعة
-        let message = 'حدث خطأ أثناء تسجيل الدخول';
-        if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-          message = 'البريد الإلكتروني أو كلمة المرور غير صحيحة';
-        } else if (error.code === 'auth/invalid-email') {
-          message = 'صيغة البريد الإلكتروني غير صالحة';
-        } else if (error.code === 'auth/too-many-requests') {
-          message = 'تم تعطيل الحساب مؤقتاً بسبب محاولات كثيرة. الرجاء المحاولة لاحقاً.';
-        } else if (error.code === 'auth/network-request-failed') {
-          message = 'فشل الاتصال بالشبكة. تحقق من اتصالك بالإنترنت.';
-        } else if (error.message) {
-          message = error.message;
-        }
-        
-        showError(message);
-        showToast(message, 'error');
-      } finally {
-        if (!errorBox.classList.contains('show')) {
-          setLoading(false);
-        }
-      }
-    }
+            const setLoading = (isLoading) => {
+                if (isLoading) {
+                    elements.loginButton.disabled = true;
+                    elements.loginButton.innerHTML = '<span class="spinner"></span> جاري التحقق...';
+                } else {
+                    elements.loginButton.disabled = false;
+                    elements.loginButton.innerHTML = 'تسجيل الدخول';
+                }
+            };
 
-    // ===================== تحسينات تجربة المستخدم =====================
-    
-    // إظهار/إخفاء كلمة المرور
-    function togglePasswordVisibility() {
-      const type = passwordInput.type === 'password' ? 'text' : 'password';
-      passwordInput.type = type;
-      
-      // تغيير أيقونة العين
-      const eyeIcon = togglePasswordBtn.querySelector('svg');
-      if (type === 'text') {
-        eyeIcon.innerHTML = `
-          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
-          <line x1="1" y1="1" x2="23" y2="23"/>
-        `;
-      } else {
-        eyeIcon.innerHTML = `
-          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-          <circle cx="12" cy="12" r="3"/>
-        `;
-      }
-    }
+            // --- جلب دور المستخدم من Firestore ---
+            const fetchUserRole = async (uid) => {
+                try {
+                    const userDocRef = doc(db, "users", uid);
+                    const userDocSnap = await getDoc(userDocRef);
+                    
+                    if (userDocSnap.exists()) {
+                        const userData = userDocSnap.data();
+                        return userData.role || 'doctor'; // الدور الافتراضي طبيب إذا لم يوجد
+                    } else {
+                        console.warn("No user document found in Firestore for uid:", uid);
+                        // يمكنك هنا إنشاء وثيقة افتراضية أو إرجاع دور معين
+                        return 'doctor'; // نفترض أنه طبيب إذا لم توجد وثيقة
+                    }
+                } catch (error) {
+                    console.error("Error fetching user role:", error);
+                    throw new Error("تعذر تحديد صلاحيات المستخدم");
+                }
+            };
 
-    // تحقق تلقائي من وجود جلسة سابقة (توجيه ذكي)
-    async function checkExistingSession() {
-      try {
-        const request = indexedDB.open('SakoonSession', 1);
-        request.onsuccess = async () => {
-          const db = request.result;
-          const tx = db.transaction('session', 'readonly');
-          const store = tx.objectStore('session');
-          const getReq = store.get('current');
-          
-          getReq.onsuccess = () => {
-            const session = getReq.result;
-            if (session && session.role) {
-              // التحقق من أن الجلسة ليست قديمة جداً (أقل من 24 ساعة)
-              const hoursSince = (Date.now() - (session.timestamp || 0)) / (1000 * 60 * 60);
-              if (hoursSince < 24) {
-                showToast('تم اكتشاف جلسة سابقة، جاري تسجيل الدخول تلقائياً...', 'success');
-                setTimeout(() => redirectBasedOnRole(session.role), 500);
-              }
-            }
-          };
-        };
-      } catch (e) {
-        // تجاهل الأخطاء
-      }
-    }
+            // --- التحقق من بيانات المدير (محلي فقط للتبديل التلقائي) ---
+            // (اختياري: يمكن إزالته بالكامل إذا لم ترد التبديل التلقائي)
+            // لكننا سنحتفظ به للتبديل التلقائي للـ UI فقط
+            const ADMIN_EMAIL_HINT = "admin@sokoon.com"; // البريد الذي يغير شكل الصفحة فقط
 
-    // معالجة "نسيت كلمة المرور"
-    async function handleForgotPassword(e) {
-      e.preventDefault();
-      const email = emailInput.value.trim();
-      
-      if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
-        showError('الرجاء إدخال بريد إلكتروني صحيح لإعادة تعيين كلمة المرور');
-        return;
-      }
-      
-      try {
-        await auth.sendPasswordResetEmail(email);
-        showToast(`تم إرسال رابط إعادة تعيين كلمة المرور إلى ${email}`, 'success');
-        hideError();
-      } catch (error) {
-        showToast('فشل إرسال رابط إعادة التعيين. تأكد من البريد الإلكتروني.', 'error');
-      }
-    }
+            // --- كشف وضع المدير (لتغيير التصميم فقط) ---
+            const handleUsernameInput = (event) => {
+                const value = event.target.value.trim().toLowerCase();
+                
+                if (value === ADMIN_EMAIL_HINT) {
+                    elements.body.classList.add('admin-mode');
+                    elements.modeBadge.innerHTML = '👑 المدير';
+                    elements.modeBadge.style.background = 'var(--admin-primary)';
+                    elements.formTitle.textContent = 'لوحة تحكم المدير';
+                    elements.formSubtitle.textContent = 'الرجاء إدخال بيانات اعتماد المدير';
+                } else {
+                    elements.body.classList.remove('admin-mode');
+                    elements.modeBadge.innerHTML = '👨‍⚕️ تسجيل الدخول';
+                    elements.modeBadge.style.background = 'var(--accent)';
+                    elements.formTitle.textContent = 'بوابة سُكُون';
+                    elements.formSubtitle.textContent = 'تسجيل الدخول للموظفين والأطباء';
+                }
+                feather.replace();
+            };
 
-    // ===================== تهيئة الصفحة =====================
-    function init() {
-      loadSavedEmail();
-      checkExistingSession(); // توجيه ذكي إذا وجدت جلسة
-      
-      // مستمعات الأحداث
-      form.addEventListener('submit', handleLogin);
-      togglePasswordBtn.addEventListener('click', togglePasswordVisibility);
-      forgotLink.addEventListener('click', handleForgotPassword);
-      
-      // إزالة علامات الخطأ عند الكتابة
-      emailInput.addEventListener('input', hideError);
-      passwordInput.addEventListener('input', hideError);
-      
-      // منع إرسال النموذج عند الضغط على Enter في أي حقل (يتم التعامل معه عبر submit)
-    }
+            // --- معالج تسجيل الدخول الرئيسي ---
+            const handleLogin = async (event) => {
+                event.preventDefault();
+                
+                const email = elements.usernameInput.value.trim().toLowerCase();
+                const password = elements.passwordInput.value;
+                
+                if (!email || !password) {
+                    showError('الرجاء إدخال البريد الإلكتروني وكلمة المرور');
+                    return;
+                }
+                
+                setLoading(true);
+                showError('');
+                
+                try {
+                    // 1. التحقق من صحة بيانات الدخول عبر Firebase Auth
+                    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                    const user = userCredential.user;
+                    
+                    // 2. جلب دور المستخدم من Firestore
+                    const role = await fetchUserRole(user.uid);
+                    
+                    // 3. تجهيز بيانات الجلسة
+                    const userData = {
+                        uid: user.uid,
+                        email: user.email,
+                        name: user.email.split('@')[0], // يمكن تحسينه لاحقاً بجلب الاسم من Firestore
+                        role: role
+                    };
+                    
+                    // تخزين في sessionStorage
+                    sessionStorage.setItem('userRole', userData.role);
+                    sessionStorage.setItem('userEmail', userData.email);
+                    sessionStorage.setItem('userName', userData.name);
+                    sessionStorage.setItem('userUid', userData.uid);
+                    
+                    showToast(`✓ مرحباً ${userData.name}! جاري التوجيه...`, true);
+                    
+                    // 4. تحديد صفحة التوجيه بناءً على الدور
+                    let redirectPage;
+                    switch (role) {
+                        case 'admin':
+                            redirectPage = 'admin-panel.html';
+                            break;
+                        case 'doctor':
+                            redirectPage = 'doctor-dashboard.html';
+                            break;
+                        case 'nurse':
+                            redirectPage = 'nurse-dashboard.html';
+                            break;
+                        case 'pharmacist':
+                            redirectPage = 'pharmacy-dashboard.html';
+                            break;
+                        default:
+                            redirectPage = 'dashboard.html'; // صفحة افتراضية
+                    }
+                    
+                    setTimeout(() => {
+                        window.location.href = redirectPage;
+                    }, 1500);
+                    
+                } catch (error) {
+                    console.error("Login error:", error);
+                    
+                    let errorMessage = 'بيانات الدخول غير صحيحة';
+                    if (error.code) {
+                        switch (error.code) {
+                            case 'auth/user-not-found':
+                                errorMessage = '❌ البريد الإلكتروني غير مسجل في النظام';
+                                break;
+                            case 'auth/wrong-password':
+                                errorMessage = '❌ كلمة المرور غير صحيحة';
+                                break;
+                            case 'auth/invalid-email':
+                                errorMessage = '❌ البريد الإلكتروني غير صالح';
+                                break;
+                            case 'auth/too-many-requests':
+                                errorMessage = '⚠️ تم تعطيل الحساب مؤقتاً. حاول لاحقاً';
+                                break;
+                            case 'auth/network-request-failed':
+                                errorMessage = '⚠️ مشكلة في الاتصال بالإنترنت';
+                                break;
+                            default:
+                                errorMessage = error.message || 'حدث خطأ أثناء تسجيل الدخول';
+                        }
+                    } else {
+                        errorMessage = error.message;
+                    }
+                    
+                    showError(errorMessage);
+                    setLoading(false);
+                }
+            };
 
-    // بدء التطبيق
-    init();
+            // --- التحقق من جلسة سابقة ---
+            const checkExistingSession = () => {
+                const userRole = sessionStorage.getItem('userRole');
+                const userName = sessionStorage.getItem('userName');
+                
+                if (userRole && userName) {
+                    let redirectPage;
+                    switch (userRole) {
+                        case 'admin': redirectPage = 'admin-panel.html'; break;
+                        case 'doctor': redirectPage = 'doctor-dashboard.html'; break;
+                        case 'nurse': redirectPage = 'nurse-dashboard.html'; break;
+                        case 'pharmacist': redirectPage = 'pharmacy-dashboard.html'; break;
+                        default: redirectPage = 'dashboard.html';
+                    }
+                    
+                    showToast(`مرحباً بعودتك ${userName}!`, true);
+                    setTimeout(() => {
+                        window.location.href = redirectPage;
+                    }, 1500);
+                }
+            };
 
-    // تصدير للاستخدام في وحدة التحكم (اختياري)
-    window.debug = { auth, db, showToast };
-  </script>
+            // --- Initialize ---
+            const init = () => {
+                setLoading(false);
+                
+                // إضافة مستمعي الأحداث
+                elements.loginForm.addEventListener('submit', handleLogin);
+                elements.usernameInput.addEventListener('input', handleUsernameInput);
+                
+                // التحقق من جلسة سابقة
+                checkExistingSession();
+                
+                console.log("✅ Login page initialized");
+                console.log("🔥 Firebase connected to project: sakina-937c4");
+                console.log("👑 Admin email hint (UI only): " + ADMIN_EMAIL_HINT);
+            };
+
+            return { init };
+        })();
+
+        // بدء التطبيق
+        document.addEventListener('DOMContentLoaded', LOGIN_PAGE.init);
+    </script>
 </body>
 </html>
