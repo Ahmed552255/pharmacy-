@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>سُكُون — بوابة الشركاء</title>
+    <title>سُكُون — بوابة الدخول</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,22 +12,19 @@
     <script src="https://unpkg.com/feather-icons"></script>
 
     <style>
-        /* نفس الـ CSS السابق بدون تغيير */
+        /* ----- ألوان هادئة (أخضر مائي / تيل فاتح) ----- */
         :root {
-            --primary: #98D8D8;
-            --accent: #5aabab;
-            --accent-dark: #3d8a8a;
-            --admin-primary: #4a69bd;
-            --admin-accent: #1e3799;
-            --bg: #eef6f6;
-            --white: #fff;
-            --ink: #2c3e50;
-            --text-sec: #7f8c8d;
-            --danger: #e74c3c;
-            --success: #2ecc71;
-            --grad: linear-gradient(135deg, var(--primary), var(--accent));
-            --admin-grad: linear-gradient(135deg, var(--admin-primary), var(--admin-accent));
-            --shadow: 0 8px 32px rgba(90, 171, 171, 0.15);
+            --primary: #7AC5C5;        /* أخضر مائي ناعم */
+            --accent: #5BA3A3;          /* تيل متوسط */
+            --accent-dark: #3F8585;     /* تيل داكن للعناوين */
+            --bg: #ECF9F9;              /* خلفية فاتحة جداً */
+            --white: #FFFFFF;
+            --ink: #2C4A4A;             /* نص داكن متناسق */
+            --text-sec: #6B8E8E;        /* نص ثانوي */
+            --danger: #E57373;           /* أحمر هادئ للأخطاء */
+            --success: #5FA88D;          /* أخضر نعناعي للنجاح */
+            --shadow: 0 12px 28px rgba(58, 128, 128, 0.12);
+            --border-light: rgba(122, 197, 197, 0.2);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -39,55 +36,59 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 1rem;
+            padding: 1.25rem;
             background: var(--bg);
             position: relative;
-            transition: background-color 0.5s ease;
         }
-        body.admin-mode { background: #dfe4ea; }
 
-        .bg-orbs { position: fixed; inset: 0; z-index: -1; overflow: hidden; }
+        /* خلفية ديناميكية ناعمة */
+        .bg-orbs {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            overflow: hidden;
+        }
         .orb {
             position: absolute;
             border-radius: 50%;
-            filter: blur(90px);
+            filter: blur(100px);
             pointer-events: none;
-            animation: float 40s infinite alternate;
+            animation: float 35s infinite alternate ease-in-out;
+            opacity: 0.5;
         }
         .orb1 {
-            width: 50vw;
-            height: 50vw;
-            background: radial-gradient(circle, rgba(152, 216, 216, 0.25) 0%, transparent 70%);
-            top: -15%;
+            width: 55vw;
+            height: 55vw;
+            background: radial-gradient(circle, rgba(122, 197, 197, 0.25) 0%, transparent 70%);
+            top: -20%;
             right: -15%;
         }
         .orb2 {
-            width: 40vw;
-            height: 40vw;
-            background: radial-gradient(circle, rgba(90, 171, 171, 0.15) 0%, transparent 70%);
-            bottom: -10%;
+            width: 45vw;
+            height: 45vw;
+            background: radial-gradient(circle, rgba(91, 163, 163, 0.15) 0%, transparent 70%);
+            bottom: -15%;
             left: -10%;
         }
-        body.admin-mode .orb1 { background: radial-gradient(circle, rgba(74, 105, 189, 0.15) 0%, transparent 70%); }
-        body.admin-mode .orb2 { background: radial-gradient(circle, rgba(30, 55, 153, 0.1) 0%, transparent 70%); }
 
         @keyframes float {
-            to { transform: translate(20px, 20px); }
+            to { transform: translate(30px, 30px); }
         }
 
+        /* البطاقة الزجاجية */
         .glass-card {
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(18px);
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            border-radius: 24px;
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border-light);
+            border-radius: 32px;
             box-shadow: var(--shadow);
             width: 100%;
-            max-width: 420px;
-            padding: 2.5rem;
+            max-width: 440px;
+            padding: 2.5rem 2rem;
             text-align: center;
             z-index: 1;
-            animation: popIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-            transform: scale(0.9);
+            animation: popIn 0.7s cubic-bezier(0.2, 0.9, 0.3, 1) forwards;
+            transform: scale(0.92);
             opacity: 0;
         }
         @keyframes popIn {
@@ -96,18 +97,17 @@
 
         .card-header { margin-bottom: 2rem; }
         .card-header h1 {
-            font-size: 2rem;
+            font-size: 2.2rem;
             font-weight: 800;
             color: var(--accent-dark);
-            margin-bottom: 0.5rem;
-            transition: color 0.5s ease;
+            letter-spacing: -0.5px;
+            margin-bottom: 0.4rem;
         }
         .card-header p {
-            font-size: 0.9rem;
+            font-size: 1rem;
             color: var(--text-sec);
-            line-height: 1.6;
+            font-weight: 500;
         }
-        body.admin-mode .card-header h1 { color: var(--admin-accent); }
 
         .input-group {
             position: relative;
@@ -119,62 +119,54 @@
             right: 1.25rem;
             transform: translateY(-50%);
             color: var(--accent);
-            transition: color 0.5s ease;
+            width: 20px;
+            height: 20px;
         }
         .input-group input {
             width: 100%;
-            padding: 1rem 4rem 1rem 1.5rem;
-            background: rgba(255, 255, 255, 0.7);
-            border: 1.5px solid transparent;
-            border-radius: 16px;
+            padding: 1rem 3.5rem 1rem 1.5rem;
+            background: var(--white);
+            border: 1.5px solid rgba(122, 197, 197, 0.25);
+            border-radius: 20px;
             outline: none;
             font-size: 1rem;
             font-family: 'Cairo', sans-serif;
             color: var(--ink);
-            transition: all 0.3s ease;
+            transition: all 0.25s ease;
         }
         .input-group input:focus {
             border-color: var(--primary);
-            background: var(--white);
-            box-shadow: 0 0 0 4px rgba(152, 216, 216, 0.2);
+            box-shadow: 0 0 0 4px rgba(122, 197, 197, 0.2);
+            background: #ffffff;
         }
-        body.admin-mode .input-group input:focus {
-            border-color: var(--admin-primary);
-            box-shadow: 0 0 0 4px rgba(74, 105, 189, 0.2);
+        .input-group input::placeholder {
+            color: #A3C4C4;
+            font-weight: 400;
         }
-        body.admin-mode .input-group .icon { color: var(--admin-primary); }
 
         .btn {
             width: 100%;
             padding: 1rem;
             border: none;
-            border-radius: 16px;
-            font-size: 1.1rem;
+            border-radius: 20px;
+            font-size: 1.2rem;
             font-weight: 700;
             font-family: 'Cairo', sans-serif;
             cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        .btn-primary {
-            background: var(--grad);
+            transition: all 0.25s ease;
+            background: linear-gradient(145deg, var(--primary), var(--accent));
             color: white;
-            box-shadow: 0 6px 20px rgba(90, 171, 171, 0.35);
+            box-shadow: 0 8px 18px rgba(91, 163, 163, 0.25);
         }
-        .btn-primary:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 25px rgba(90, 171, 171, 0.45);
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(91, 163, 163, 0.35);
         }
-        .btn-primary:disabled {
-            opacity: 0.6;
+        .btn:disabled {
+            opacity: 0.65;
             cursor: not-allowed;
             transform: none;
-        }
-        body.admin-mode .btn-primary {
-            background: var(--admin-grad);
-            box-shadow: 0 6px 20px rgba(74, 105, 189, 0.35);
-        }
-        body.admin-mode .btn-primary:hover {
-            box-shadow: 0 10px 25px rgba(74, 105, 189, 0.45);
+            box-shadow: none;
         }
 
         .error-message {
@@ -182,31 +174,33 @@
             font-weight: 600;
             font-size: 0.9rem;
             margin-top: 1rem;
-            padding: 0.5rem;
-            background: rgba(231, 76, 60, 0.1);
-            border-radius: 12px;
+            padding: 0.6rem 1rem;
+            background: rgba(229, 115, 115, 0.08);
+            border-radius: 16px;
             opacity: 0;
-            transition: opacity 0.3s;
+            transition: opacity 0.25s;
+            border: 1px solid rgba(229, 115, 115, 0.15);
         }
         .error-message.show { opacity: 1; }
 
         .toast-notification {
             position: fixed;
-            top: 20px;
+            top: 24px;
             left: 50%;
             transform: translateX(-50%);
             color: white;
-            padding: 12px 24px;
-            border-radius: 12px;
+            padding: 12px 28px;
+            border-radius: 40px;
             font-weight: bold;
             z-index: 9999;
             font-family: 'Cairo', sans-serif;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.1);
             animation: slideDown 0.3s ease;
+            background: var(--success);
         }
         @keyframes slideDown {
-            from { top: -50px; opacity: 0; }
-            to { top: 20px; opacity: 1; }
+            from { top: -40px; opacity: 0; }
+            to { top: 24px; opacity: 1; }
         }
 
         .spinner {
@@ -216,30 +210,22 @@
             border: 2px solid rgba(255,255,255,0.3);
             border-radius: 50%;
             border-top-color: white;
-            animation: spin 0.8s linear infinite;
+            animation: spin 0.7s linear infinite;
             margin-left: 8px;
             vertical-align: middle;
         }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
-        .mode-badge {
-            position: absolute;
-            top: -10px;
-            left: 20px;
-            background: var(--accent);
-            color: white;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.7rem;
-            font-weight: bold;
-        }
-        body.admin-mode .mode-badge {
-            background: var(--admin-primary);
-        }
-        .glass-card {
-            position: relative;
+        /* شارة بسيطة (اختياري) */
+        .badge-soft {
+            background: rgba(122, 197, 197, 0.15);
+            color: var(--accent-dark);
+            font-size: 0.8rem;
+            padding: 4px 14px;
+            border-radius: 40px;
+            display: inline-block;
+            margin-bottom: 1rem;
+            font-weight: 600;
         }
     </style>
 </head>
@@ -251,16 +237,17 @@
     </div>
 
     <main class="glass-card">
-        <div class="mode-badge" id="modeBadge">👨‍⚕️ تسجيل الدخول</div>
+        <!-- شارة صغيرة للتوضيح -->
+        <div class="badge-soft">🔐 دخول آمن</div>
         <header class="card-header">
-            <h1 id="formTitle">بوابة سُكُون</h1>
-            <p id="formSubtitle">تسجيل الدخول للموظفين والأطباء</p>
+            <h1>سُكُون</h1>
+            <p>منصة إدارة العيادات والصيدليات</p>
         </header>
         
         <form id="loginForm">
             <div class="input-group">
                 <input type="text" id="username" placeholder="البريد الإلكتروني" required autocomplete="off">
-                <i class="icon" data-feather="user"></i>
+                <i class="icon" data-feather="mail"></i>
             </div>
             <div class="input-group">
                 <input type="password" id="password" placeholder="كلمة المرور" required autocomplete="off">
@@ -269,19 +256,29 @@
 
             <div class="error-message" id="errorMessage"></div>
 
-            <button type="submit" class="btn btn-primary" id="loginButton">تسجيل الدخول</button>
+            <button type="submit" class="btn" id="loginButton">تسجيل الدخول</button>
         </form>
     </main>
 
     <script type="module">
         feather.replace();
 
-        // استيراد إعدادات Firebase
+        // ====================================================
+        // إعدادات Firebase (استيراد من ملف خارجي)
+        // ====================================================
         import { firebaseConfig } from './firebase-config.js';
 
-        // استيراد Firebase Services
+        // ====================================================
+        // بيانات المدير (ثابتة في الكود - للتجربة الأولية)
+        // ====================================================
+        const ADMIN_CREDENTIALS = {
+            email: "admin@sokoon.com",
+            password: "Admin@2024Secure"    // يمكنك تغييرها كما تريد
+        };
+
+        // استيراد خدمات Firebase
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
         import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
         // تهيئة Firebase
@@ -289,100 +286,83 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        console.log("✅ Firebase initialized successfully");
+        console.log("✅ Firebase initialized");
 
         const LOGIN_PAGE = (() => {
             'use strict';
 
             // --- DOM Elements ---
             const elements = {
-                body: document.body,
-                formTitle: document.getElementById('formTitle'),
-                formSubtitle: document.getElementById('formSubtitle'),
                 errorMessage: document.getElementById('errorMessage'),
                 usernameInput: document.getElementById('username'),
                 passwordInput: document.getElementById('password'),
                 loginButton: document.getElementById('loginButton'),
-                loginForm: document.getElementById('loginForm'),
-                modeBadge: document.getElementById('modeBadge')
+                loginForm: document.getElementById('loginForm')
             };
 
             // --- Helper Functions ---
             const showError = (message) => {
                 elements.errorMessage.textContent = message;
                 elements.errorMessage.classList.add('show');
-                setTimeout(() => {
-                    elements.errorMessage.classList.remove('show');
-                }, 5000);
+                setTimeout(() => elements.errorMessage.classList.remove('show'), 5000);
             };
 
             const showToast = (message, isSuccess = true) => {
                 const toast = document.createElement('div');
                 toast.className = 'toast-notification';
-                toast.style.backgroundColor = isSuccess ? '#2ecc71' : '#e74c3c';
+                toast.style.backgroundColor = isSuccess ? '#5FA88D' : '#E57373';
                 toast.textContent = message;
                 document.body.appendChild(toast);
-                setTimeout(() => {
-                    toast.remove();
-                }, 2000);
+                setTimeout(() => toast.remove(), 2000);
             };
 
             const setLoading = (isLoading) => {
-                if (isLoading) {
-                    elements.loginButton.disabled = true;
-                    elements.loginButton.innerHTML = '<span class="spinner"></span> جاري التحقق...';
-                } else {
-                    elements.loginButton.disabled = false;
-                    elements.loginButton.innerHTML = 'تسجيل الدخول';
-                }
+                elements.loginButton.disabled = isLoading;
+                elements.loginButton.innerHTML = isLoading 
+                    ? '<span class="spinner"></span> جاري التحقق...' 
+                    : 'تسجيل الدخول';
             };
 
             // --- جلب دور المستخدم من Firestore ---
             const fetchUserRole = async (uid) => {
                 try {
                     const userDocRef = doc(db, "users", uid);
-                    const userDocSnap = await getDoc(userDocRef);
-                    
-                    if (userDocSnap.exists()) {
-                        const userData = userDocSnap.data();
-                        return userData.role || 'doctor'; // الدور الافتراضي طبيب إذا لم يوجد
+                    const userSnap = await getDoc(userDocRef);
+                    if (userSnap.exists()) {
+                        return userSnap.data().role || 'doctor';
                     } else {
-                        console.warn("No user document found in Firestore for uid:", uid);
-                        // يمكنك هنا إنشاء وثيقة افتراضية أو إرجاع دور معين
-                        return 'doctor'; // نفترض أنه طبيب إذا لم توجد وثيقة
+                        console.warn("⚠️ لم يتم العثور على وثيقة المستخدم، افتراض دور 'doctor'");
+                        return 'doctor';
                     }
                 } catch (error) {
-                    console.error("Error fetching user role:", error);
+                    console.error("خطأ في جلب الدور:", error);
                     throw new Error("تعذر تحديد صلاحيات المستخدم");
                 }
             };
 
-            // --- التحقق من بيانات المدير (محلي فقط للتبديل التلقائي) ---
-            // (اختياري: يمكن إزالته بالكامل إذا لم ترد التبديل التلقائي)
-            // لكننا سنحتفظ به للتبديل التلقائي للـ UI فقط
-            const ADMIN_EMAIL_HINT = "admin@sokoon.com"; // البريد الذي يغير شكل الصفحة فقط
+            // --- تخزين الجلسة والتوجيه ---
+            const storeSessionAndRedirect = (userData) => {
+                sessionStorage.setItem('userRole', userData.role);
+                sessionStorage.setItem('userEmail', userData.email);
+                sessionStorage.setItem('userName', userData.name);
+                if (userData.uid) sessionStorage.setItem('userUid', userData.uid);
 
-            // --- كشف وضع المدير (لتغيير التصميم فقط) ---
-            const handleUsernameInput = (event) => {
-                const value = event.target.value.trim().toLowerCase();
-                
-                if (value === ADMIN_EMAIL_HINT) {
-                    elements.body.classList.add('admin-mode');
-                    elements.modeBadge.innerHTML = '👑 المدير';
-                    elements.modeBadge.style.background = 'var(--admin-primary)';
-                    elements.formTitle.textContent = 'لوحة تحكم المدير';
-                    elements.formSubtitle.textContent = 'الرجاء إدخال بيانات اعتماد المدير';
-                } else {
-                    elements.body.classList.remove('admin-mode');
-                    elements.modeBadge.innerHTML = '👨‍⚕️ تسجيل الدخول';
-                    elements.modeBadge.style.background = 'var(--accent)';
-                    elements.formTitle.textContent = 'بوابة سُكُون';
-                    elements.formSubtitle.textContent = 'تسجيل الدخول للموظفين والأطباء';
+                showToast(`مرحباً ${userData.name}!`, true);
+
+                const role = userData.role;
+                let redirectPage;
+                switch (role) {
+                    case 'admin': redirectPage = 'admin-panel.html'; break;
+                    case 'doctor': redirectPage = 'doctor-dashboard.html'; break;
+                    case 'nurse': redirectPage = 'nurse-dashboard.html'; break;
+                    case 'pharmacist': redirectPage = 'pharmacy-dashboard.html'; break;
+                    default: redirectPage = 'dashboard.html';
                 }
-                feather.replace();
+
+                setTimeout(() => { window.location.href = redirectPage; }, 1500);
             };
 
-            // --- معالج تسجيل الدخول الرئيسي ---
+            // --- معالجة تسجيل الدخول ---
             const handleLogin = async (event) => {
                 event.preventDefault();
                 
@@ -397,76 +377,60 @@
                 setLoading(true);
                 showError('');
                 
+                // ===== 1. التحقق من بيانات المدير (ثابتة) =====
+                if (email === ADMIN_CREDENTIALS.email && password === ADMIN_CREDENTIALS.password) {
+                    console.log("✅ مدير النظام - تسجيل دخول محلي");
+                    const adminData = {
+                        uid: 'admin-local',
+                        email: ADMIN_CREDENTIALS.email,
+                        name: 'مدير النظام',
+                        role: 'admin'
+                    };
+                    storeSessionAndRedirect(adminData);
+                    return; // خروج من الدالة
+                }
+                
+                // ===== 2. المستخدمين العاديين عبر Firebase =====
                 try {
-                    // 1. التحقق من صحة بيانات الدخول عبر Firebase Auth
+                    // تسجيل الدخول عبر Firebase Auth
                     const userCredential = await signInWithEmailAndPassword(auth, email, password);
                     const user = userCredential.user;
                     
-                    // 2. جلب دور المستخدم من Firestore
+                    // جلب الدور من Firestore
                     const role = await fetchUserRole(user.uid);
                     
-                    // 3. تجهيز بيانات الجلسة
                     const userData = {
                         uid: user.uid,
                         email: user.email,
-                        name: user.email.split('@')[0], // يمكن تحسينه لاحقاً بجلب الاسم من Firestore
+                        name: user.email.split('@')[0], // مؤقتاً، يمكن تحسينه
                         role: role
                     };
                     
-                    // تخزين في sessionStorage
-                    sessionStorage.setItem('userRole', userData.role);
-                    sessionStorage.setItem('userEmail', userData.email);
-                    sessionStorage.setItem('userName', userData.name);
-                    sessionStorage.setItem('userUid', userData.uid);
-                    
-                    showToast(`✓ مرحباً ${userData.name}! جاري التوجيه...`, true);
-                    
-                    // 4. تحديد صفحة التوجيه بناءً على الدور
-                    let redirectPage;
-                    switch (role) {
-                        case 'admin':
-                            redirectPage = 'admin-panel.html';
-                            break;
-                        case 'doctor':
-                            redirectPage = 'doctor-dashboard.html';
-                            break;
-                        case 'nurse':
-                            redirectPage = 'nurse-dashboard.html';
-                            break;
-                        case 'pharmacist':
-                            redirectPage = 'pharmacy-dashboard.html';
-                            break;
-                        default:
-                            redirectPage = 'dashboard.html'; // صفحة افتراضية
-                    }
-                    
-                    setTimeout(() => {
-                        window.location.href = redirectPage;
-                    }, 1500);
+                    storeSessionAndRedirect(userData);
                     
                 } catch (error) {
-                    console.error("Login error:", error);
-                    
+                    console.error("Firebase login error:", error);
                     let errorMessage = 'بيانات الدخول غير صحيحة';
+                    
                     if (error.code) {
                         switch (error.code) {
                             case 'auth/user-not-found':
-                                errorMessage = '❌ البريد الإلكتروني غير مسجل في النظام';
+                                errorMessage = '❌ البريد الإلكتروني غير مسجل';
                                 break;
                             case 'auth/wrong-password':
                                 errorMessage = '❌ كلمة المرور غير صحيحة';
                                 break;
                             case 'auth/invalid-email':
-                                errorMessage = '❌ البريد الإلكتروني غير صالح';
+                                errorMessage = '❌ صيغة البريد الإلكتروني غير صالحة';
                                 break;
                             case 'auth/too-many-requests':
-                                errorMessage = '⚠️ تم تعطيل الحساب مؤقتاً. حاول لاحقاً';
+                                errorMessage = '⚠️ تم تعطيل الحساب مؤقتاً، حاول لاحقاً';
                                 break;
                             case 'auth/network-request-failed':
                                 errorMessage = '⚠️ مشكلة في الاتصال بالإنترنت';
                                 break;
                             default:
-                                errorMessage = error.message || 'حدث خطأ أثناء تسجيل الدخول';
+                                errorMessage = error.message;
                         }
                     } else {
                         errorMessage = error.message;
@@ -477,48 +441,35 @@
                 }
             };
 
-            // --- التحقق من جلسة سابقة ---
+            // --- التحقق من وجود جلسة سابقة ---
             const checkExistingSession = () => {
-                const userRole = sessionStorage.getItem('userRole');
-                const userName = sessionStorage.getItem('userName');
-                
-                if (userRole && userName) {
-                    let redirectPage;
-                    switch (userRole) {
-                        case 'admin': redirectPage = 'admin-panel.html'; break;
-                        case 'doctor': redirectPage = 'doctor-dashboard.html'; break;
-                        case 'nurse': redirectPage = 'nurse-dashboard.html'; break;
-                        case 'pharmacist': redirectPage = 'pharmacy-dashboard.html'; break;
-                        default: redirectPage = 'dashboard.html';
+                const role = sessionStorage.getItem('userRole');
+                const name = sessionStorage.getItem('userName');
+                if (role && name) {
+                    let redirect;
+                    switch (role) {
+                        case 'admin': redirect = 'admin-panel.html'; break;
+                        case 'doctor': redirect = 'doctor-dashboard.html'; break;
+                        case 'nurse': redirect = 'nurse-dashboard.html'; break;
+                        case 'pharmacist': redirect = 'pharmacy-dashboard.html'; break;
+                        default: redirect = 'dashboard.html';
                     }
-                    
-                    showToast(`مرحباً بعودتك ${userName}!`, true);
-                    setTimeout(() => {
-                        window.location.href = redirectPage;
-                    }, 1500);
+                    showToast(`أهلاً بعودتك ${name}!`, true);
+                    setTimeout(() => { window.location.href = redirect; }, 1200);
                 }
             };
 
-            // --- Initialize ---
+            // --- التهيئة ---
             const init = () => {
                 setLoading(false);
-                
-                // إضافة مستمعي الأحداث
                 elements.loginForm.addEventListener('submit', handleLogin);
-                elements.usernameInput.addEventListener('input', handleUsernameInput);
-                
-                // التحقق من جلسة سابقة
                 checkExistingSession();
-                
-                console.log("✅ Login page initialized");
-                console.log("🔥 Firebase connected to project: sakina-937c4");
-                console.log("👑 Admin email hint (UI only): " + ADMIN_EMAIL_HINT);
+                console.log("🚀 صفحة الدخول جاهزة | مدير الاختبار:", ADMIN_CREDENTIALS.email);
             };
 
             return { init };
         })();
 
-        // بدء التطبيق
         document.addEventListener('DOMContentLoaded', LOGIN_PAGE.init);
     </script>
 </body>
