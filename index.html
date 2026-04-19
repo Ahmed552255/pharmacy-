@@ -1,609 +1,881 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>سُكُون | دخول هادئ</title>
-    <!-- Google Fonts: Cairo -->
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>سُكُون | تسجيل الدخول الآمن</title>
+  
+  <!-- Google Fonts - Cairo -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js"></script>
 
-        body {
-            font-family: 'Cairo', sans-serif;
-            background: radial-gradient(circle at 20% 30%, #0b1a2a 0%, #0a1120 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 1.5rem;
-            position: relative;
-            overflow-x: hidden;
-        }
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-        /* ----- خلفية هادئة: نقاط مبعثرة وحركة بطيئة جداً ----- */
-        .bg-pattern {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: 
-                radial-gradient(circle at 30% 40%, rgba(180, 220, 255, 0.03) 1px, transparent 1px),
-                radial-gradient(circle at 70% 80%, rgba(200, 230, 255, 0.02) 1px, transparent 1px);
-            background-size: 80px 80px;
-            animation: slowDrift 40s linear infinite;
-            pointer-events: none;
-            z-index: 0;
-        }
+    body {
+      font-family: 'Cairo', sans-serif;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      position: relative;
+      overflow-x: hidden;
+      color: #ffffff;
+    }
 
-        @keyframes slowDrift {
-            0% { background-position: 0 0; }
-            100% { background-position: 80px 80px; }
-        }
+    /* شبكة متحركة */
+    .bg-pattern {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: 
+        linear-gradient(rgba(56, 189, 248, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(56, 189, 248, 0.03) 1px, transparent 1px);
+      background-size: 50px 50px;
+      pointer-events: none;
+      z-index: 0;
+      animation: gridMove 20s linear infinite;
+    }
 
-        /* كرات ضوئية ناعمة جداً تعكس السكون */
-        .glow {
-            position: fixed;
-            border-radius: 50%;
-            filter: blur(100px);
-            opacity: 0.25;
-            z-index: 0;
-            pointer-events: none;
-        }
+    @keyframes gridMove {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(50px, 50px); }
+    }
 
-        .glow1 {
-            width: 45vw;
-            height: 45vw;
-            background: #4a7c9b;
-            top: -15vh;
-            left: -10vw;
-            animation: breathe 14s ease-in-out infinite alternate;
-        }
+    /* كرات ضوئية */
+    .glow {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.4;
+      pointer-events: none;
+      z-index: 0;
+      animation: pulseGlow 8s ease-in-out infinite alternate;
+    }
 
-        .glow2 {
-            width: 40vw;
-            height: 40vw;
-            background: #3e6b8c;
-            bottom: -10vh;
-            right: -8vw;
-            animation: breathe 12s ease-in-out infinite alternate-reverse;
-        }
+    .glow1 {
+      width: 400px;
+      height: 400px;
+      background: #3b82f6;
+      top: -150px;
+      right: -100px;
+      animation-delay: 0s;
+    }
 
-        @keyframes breathe {
-            0% { opacity: 0.2; transform: scale(1); }
-            100% { opacity: 0.4; transform: scale(1.1); }
-        }
+    .glow2 {
+      width: 350px;
+      height: 350px;
+      background: #06b6d4;
+      bottom: -100px;
+      left: -80px;
+      animation-delay: 2s;
+    }
 
-        /* ----- بطاقة زجاجية هادئة ----- */
-        .glass-card {
-            position: relative;
-            z-index: 10;
-            width: 100%;
-            max-width: 440px;
-            background: rgba(20, 40, 55, 0.25);
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px);
-            border-radius: 48px;
-            padding: 2.8rem 2.2rem;
-            box-shadow: 0 30px 50px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.03) inset;
-            border: 1px solid rgba(220, 240, 255, 0.08);
-            animation: gentleRise 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-            transform-origin: center;
-        }
+    @keyframes pulseGlow {
+      0% { opacity: 0.2; transform: scale(1); }
+      100% { opacity: 0.5; transform: scale(1.1); }
+    }
 
-        @keyframes gentleRise {
-            0% { opacity: 0; transform: translateY(30px) scale(0.96); }
-            100% { opacity: 1; transform: translateY(0) scale(1); }
-        }
+    /* البطاقة الزجاجية الرئيسية */
+    .glass-card {
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 40px;
+      padding: 2.5rem 2rem;
+      width: 100%;
+      max-width: 480px;
+      box-shadow: 0 30px 50px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      z-index: 10;
+      animation: cardFloat 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+      transition: transform 0.3s ease;
+    }
 
-        /* شارة دخول آمن */
-        .secure-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            background: rgba(255, 255, 255, 0.05);
-            padding: 0.4rem 1.5rem;
-            border-radius: 40px;
-            font-size: 0.9rem;
-            font-weight: 400;
-            color: #d4e6f5;
-            margin-bottom: 2rem;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(5px);
-            letter-spacing: 0.3px;
-        }
+    @keyframes cardFloat {
+      0% { opacity: 0; transform: scale(0.95) translateY(20px); }
+      100% { opacity: 1; transform: scale(1) translateY(0); }
+    }
 
-        /* أيقونة التطبيق - تعبر عن الهدوء */
-        .app-icon {
-            width: 80px;
-            height: 80px;
-            margin: 0 auto 1.5rem;
-            background: linear-gradient(145deg, #3a6073, #16222e);
-            border-radius: 28px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 15px 25px -8px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(200, 225, 240, 0.1) inset;
-        }
+    /* شارة الأمان */
+    .secure-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.15);
+      padding: 6px 16px;
+      border-radius: 40px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      margin-bottom: 1.5rem;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(5px);
+      width: fit-content;
+    }
 
-        .app-icon svg {
-            width: 44px;
-            height: 44px;
-            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2));
-            opacity: 0.9;
-        }
+    .secure-badge svg {
+      width: 16px;
+      height: 16px;
+      fill: #10b981;
+    }
 
-        h1 {
-            color: #f0f7fc;
-            font-size: 2.8rem;
-            font-weight: 300;
-            text-align: center;
-            letter-spacing: 2px;
-            margin-bottom: 2.2rem;
-            text-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
-            word-spacing: 6px;
-        }
+    /* أيقونة التطبيق */
+    .app-icon {
+      width: 70px;
+      height: 70px;
+      margin: 0 auto 1.2rem;
+      background: linear-gradient(135deg, #0ea5e9, #3b82f6);
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 10px 20px rgba(14, 165, 233, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
 
-        /* حقول الإدخال بتصميم ناعم */
-        .input-group {
-            margin-bottom: 1.8rem;
-            position: relative;
-        }
+    .app-icon svg {
+      width: 40px;
+      height: 40px;
+      fill: white;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+    }
 
-        .input-wrapper {
-            position: relative;
-            display: flex;
-            align-items: center;
-        }
+    h1 {
+      font-size: 2.5rem;
+      font-weight: 800;
+      margin-bottom: 0.25rem;
+      letter-spacing: -0.5px;
+      background: linear-gradient(to right, #fff, #e2e8f0);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    }
 
-        .input-icon {
-            position: absolute;
-            right: 18px;
-            color: rgba(200, 220, 240, 0.7);
-            font-size: 1.1rem;
-            pointer-events: none;
-        }
+    .subtitle {
+      color: rgba(255, 255, 255, 0.7);
+      margin-bottom: 2rem;
+      font-size: 0.95rem;
+    }
 
-        .toggle-password {
-            position: absolute;
-            left: 18px;
-            background: none;
-            border: none;
-            color: rgba(200, 220, 240, 0.6);
-            font-size: 1.1rem;
-            cursor: pointer;
-            padding: 5px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: color 0.2s;
-            z-index: 5;
-        }
+    /* حقول الإدخال */
+    .input-group {
+      margin-bottom: 1.25rem;
+      position: relative;
+    }
 
-        .toggle-password:hover {
-            color: #eef4ff;
-        }
+    .input-field {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1.5px solid rgba(255, 255, 255, 0.15);
+      border-radius: 20px;
+      padding: 0.9rem 1.2rem;
+      font-size: 1rem;
+      color: white;
+      font-family: 'Cairo', sans-serif;
+      transition: all 0.2s ease;
+      backdrop-filter: blur(5px);
+      padding-left: 3rem; /* مكان للأيقونة */
+    }
 
-        input {
-            width: 100%;
-            background: rgba(10, 25, 35, 0.4);
-            border: 1.5px solid rgba(180, 210, 230, 0.15);
-            border-radius: 24px;
-            padding: 1rem 3rem 1rem 1.2rem;
-            font-size: 1rem;
-            font-family: 'Cairo', sans-serif;
-            font-weight: 400;
-            color: #ecf3f9;
-            outline: none;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(5px);
-        }
+    .input-field::placeholder {
+      color: rgba(255, 255, 255, 0.5);
+      font-weight: 400;
+    }
 
-        input::placeholder {
-            color: rgba(190, 215, 235, 0.45);
-            font-weight: 300;
-        }
+    .input-field:focus {
+      outline: none;
+      border-color: rgba(255, 255, 255, 0.8);
+      background: rgba(255, 255, 255, 0.15);
+      box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.1);
+    }
 
-        input:focus {
-            border-color: #a0c8e0;
-            box-shadow: 0 0 0 4px rgba(150, 200, 230, 0.08);
-            background: rgba(15, 35, 48, 0.5);
-        }
+    .input-icon {
+      position: absolute;
+      right: 1.2rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: rgba(255, 255, 255, 0.7);
+      width: 20px;
+      height: 20px;
+      pointer-events: none;
+    }
 
-        /* زر تسجيل الدخول - هادئ وأنيق */
-        .login-btn {
-            width: 100%;
-            background: #e2edf5;
-            color: #0f1e28;
-            border: none;
-            border-radius: 24px;
-            padding: 1rem;
-            font-size: 1.2rem;
-            font-weight: 500;
-            font-family: 'Cairo', sans-serif;
-            cursor: pointer;
-            box-shadow: 0 8px 20px -5px rgba(0, 0, 0, 0.3);
-            transition: all 0.3s ease;
-            margin-top: 0.8rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            letter-spacing: 0.5px;
-        }
+    .toggle-password {
+      position: absolute;
+      left: 1.2rem;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: rgba(255, 255, 255, 0.7);
+      transition: color 0.2s;
+      border-radius: 50%;
+    }
 
-        .login-btn:hover {
-            background: #f5faff;
-            transform: translateY(-2px);
-            box-shadow: 0 15px 25px -8px rgba(0, 0, 0, 0.4);
-        }
+    .toggle-password:hover {
+      color: white;
+      background: rgba(255, 255, 255, 0.1);
+    }
 
-        .login-btn:disabled {
-            opacity: 0.7;
-            cursor: not-allowed;
-            transform: none;
-        }
+    /* خيارات إضافية */
+    .options-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 1rem 0 1.5rem;
+      font-size: 0.9rem;
+    }
 
-        .spinner {
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(15, 30, 40, 0.2);
-            border-radius: 50%;
-            border-top-color: #1e3a4d;
-            animation: spin 0.8s linear infinite;
-            display: inline-block;
-        }
+    .remember-me {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      color: rgba(255, 255, 255, 0.8);
+    }
 
-        @keyframes spin { to { transform: rotate(360deg); } }
+    .remember-me input {
+      accent-color: #3b82f6;
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
 
-        /* صندوق الخطأ */
-        .error-box {
-            margin-top: 1.5rem;
-            padding: 1rem;
-            background: rgba(150, 40, 40, 0.15);
-            backdrop-filter: blur(8px);
-            border: 1px solid rgba(200, 80, 80, 0.25);
-            border-radius: 20px;
-            color: #fcd4d4;
-            font-size: 0.95rem;
-            text-align: center;
-            display: none;
-        }
+    .forgot-link {
+      color: rgba(255, 255, 255, 0.7);
+      text-decoration: none;
+      transition: color 0.2s;
+      font-weight: 500;
+    }
 
-        .error-box.show {
-            display: block;
-            animation: softShake 0.4s ease;
-        }
+    .forgot-link:hover {
+      color: white;
+      text-decoration: underline;
+    }
 
-        @keyframes softShake {
-            0%,100% { transform: translateX(0); }
-            20% { transform: translateX(-4px); }
-            40% { transform: translateX(4px); }
-            60% { transform: translateX(-2px); }
-            80% { transform: translateX(2px); }
-        }
+    /* زر تسجيل الدخول */
+    .login-btn {
+      width: 100%;
+      background: white;
+      color: #0f172a;
+      border: none;
+      padding: 1rem;
+      border-radius: 40px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      font-family: 'Cairo', sans-serif;
+      cursor: pointer;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
 
-        /* تذييل بسيط */
-        .footer-note {
-            margin-top: 2rem;
-            text-align: center;
-            color: rgba(190, 215, 235, 0.35);
-            font-size: 0.8rem;
-            font-weight: 300;
-        }
+    .login-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 15px 25px rgba(0, 0, 0, 0.3);
+      background: #f8fafc;
+    }
 
-        /* Toast Notifications */
-        .toast-container {
-            position: fixed;
-            top: 24px;
-            left: 0;
-            right: 0;
-            display: flex;
-            justify-content: center;
-            pointer-events: none;
-            z-index: 9999;
-        }
+    .login-btn:active {
+      transform: translateY(0);
+    }
 
-        .toast {
-            background: rgba(12, 28, 38, 0.9);
-            backdrop-filter: blur(16px);
-            color: #e3f0fa;
-            padding: 1rem 2rem;
-            border-radius: 60px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-            border: 1px solid rgba(180, 215, 240, 0.15);
-            font-weight: 400;
-            pointer-events: none;
-            animation: toastIn 0.3s ease;
-            max-width: 90%;
-        }
+    .login-btn:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
 
-        .toast.success { border-right: 6px solid #5fa8b3; }
-        .toast.error { border-right: 6px solid #b55a5a; }
+    .spinner {
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(15, 23, 42, 0.3);
+      border-top-color: #0f172a;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      display: inline-block;
+    }
 
-        @keyframes toastIn {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
 
-        /* تجاوب */
-        @media (max-width: 480px) {
-            .glass-card { padding: 2.2rem 1.6rem; }
-            h1 { font-size: 2.4rem; }
-        }
-    </style>
+    /* صندوق الخطأ */
+    .error-box {
+      background: rgba(239, 68, 68, 0.15);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: #fee2e2;
+      padding: 0.8rem 1.2rem;
+      border-radius: 16px;
+      margin-top: 1.2rem;
+      font-size: 0.9rem;
+      display: none;
+      align-items: center;
+      gap: 10px;
+      animation: shake 0.4s ease;
+    }
+
+    .error-box.show {
+      display: flex;
+    }
+
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      20% { transform: translateX(-5px); }
+      40% { transform: translateX(5px); }
+      60% { transform: translateX(-3px); }
+      80% { transform: translateX(3px); }
+    }
+
+    /* Toast Container */
+    .toast-container {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      width: auto;
+      max-width: 90%;
+      pointer-events: none;
+    }
+
+    .toast {
+      background: rgba(15, 23, 42, 0.9);
+      backdrop-filter: blur(16px);
+      color: white;
+      padding: 14px 24px;
+      border-radius: 60px;
+      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      animation: toastIn 0.3s ease;
+      pointer-events: auto;
+    }
+
+    .toast.success {
+      border-right: 5px solid #10b981;
+    }
+
+    .toast.error {
+      border-right: 5px solid #ef4444;
+    }
+
+    @keyframes toastIn {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* تذييل */
+    .footer-note {
+      margin-top: 2rem;
+      text-align: center;
+      color: rgba(255, 255, 255, 0.4);
+      font-size: 0.8rem;
+    }
+
+    /* تصميم متجاوب */
+    @media (max-width: 480px) {
+      .glass-card {
+        padding: 2rem 1.5rem;
+        border-radius: 30px;
+      }
+      h1 {
+        font-size: 2rem;
+      }
+    }
+
+    /* حقل به خطأ */
+    .input-field.error {
+      border-color: #ef4444;
+      box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
+    }
+  </style>
 </head>
 <body>
-    <!-- خلفية هادئة -->
-    <div class="bg-pattern"></div>
-    <div class="glow glow1"></div>
-    <div class="glow glow2"></div>
+  <!-- الخلفيات المتحركة -->
+  <div class="bg-pattern"></div>
+  <div class="glow glow1"></div>
+  <div class="glow glow2"></div>
 
-    <!-- Toast container -->
-    <div class="toast-container" id="toastContainer"></div>
+  <!-- حاوية الإشعارات -->
+  <div class="toast-container" id="toastContainer"></div>
 
-    <!-- البطاقة الرئيسية -->
-    <div class="glass-card">
-        <div style="text-align: center;">
-            <span class="secure-badge">
-                <span style="font-size:1.1rem;">🌙</span> مساحة هادئة وآمنة
-            </span>
-        </div>
-
-        <div class="app-icon">
-            <!-- أيقونة تعبر عن السكون (ورقة شجر أو قطرة) -->
-            <svg viewBox="0 0 24 24" fill="none" stroke="#d6e9f5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 2v20M12 2C8 6 4 10 4 14c0 4 3 6 8 6s8-2 8-6c0-4-4-8-8-12z"/>
-                <path d="M12 2c4 4 8 8 8 12 0 4-3 6-8 6"/>
-            </svg>
-        </div>
-
-        <h1>سُكُون</h1>
-
-        <form id="loginForm" onsubmit="return false;">
-            <!-- حقل البريد الإلكتروني -->
-            <div class="input-group">
-                <div class="input-wrapper">
-                    <span class="input-icon">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                            <polyline points="22,6 12,13 2,6"/>
-                        </svg>
-                    </span>
-                    <input type="email" id="email" placeholder="البريد الإلكتروني" dir="ltr" required autocomplete="email">
-                </div>
-            </div>
-
-            <!-- حقل كلمة المرور -->
-            <div class="input-group">
-                <div class="input-wrapper">
-                    <span class="input-icon">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                        </svg>
-                    </span>
-                    <input type="password" id="password" placeholder="كلمة المرور" dir="ltr" required autocomplete="current-password">
-                    <button type="button" class="toggle-password" id="togglePassword" aria-label="إظهار كلمة المرور">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                            <circle cx="12" cy="12" r="3"/>
-                        </svg>
-                    </button>
-                </div>
-            </div>
-
-            <!-- رسالة الخطأ -->
-            <div class="error-box" id="errorBox"></div>
-
-            <!-- زر تسجيل الدخول -->
-            <button type="submit" class="login-btn" id="loginBtn">
-                <span id="btnText">دخول هادئ</span>
-                <span id="btnSpinner" class="spinner" style="display:none;"></span>
-            </button>
-
-            <!-- تذييل هادئ بدل رابط نسيت كلمة المرور -->
-            <div class="footer-note">
-                <span>⚘ سكينة وراحة بال ⚘</span>
-            </div>
-        </form>
+  <!-- البطاقة الرئيسية -->
+  <div class="glass-card">
+    <!-- شارة دخول آمن -->
+    <div class="secure-badge">
+      <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
+      <span>دخول آمن بتشفير كامل</span>
     </div>
 
-    <!-- Firebase SDKs و Script التطبيق (بدون تخزين محلي) -->
-    <script type="module">
-        // ==================== استيراد التكوين ====================
-        import { firebaseConfig } from './firebase-config.js';
+    <!-- أيقونة التطبيق -->
+    <div class="app-icon">
+      <svg viewBox="0 0 24 24">
+        <path d="M12 2L2 7v10l10 5 10-5V7l-10-5z"/>
+        <path d="M12 12l4-2v4l-4 2-4-2v-4l4 2z" fill="rgba(255,255,255,0.9)"/>
+      </svg>
+    </div>
+
+    <h1>سُكُون</h1>
+    <div class="subtitle">منصة الإدارة الطبية المتكاملة</div>
+
+    <!-- نموذج تسجيل الدخول -->
+    <form id="loginForm" novalidate>
+      <!-- حقل البريد الإلكتروني -->
+      <div class="input-group">
+        <input type="email" id="email" class="input-field" placeholder="البريد الإلكتروني" dir="ltr" required autocomplete="email">
+        <span class="input-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+            <polyline points="22,6 12,13 2,6"/>
+          </svg>
+        </span>
+      </div>
+
+      <!-- حقل كلمة المرور -->
+      <div class="input-group">
+        <input type="password" id="password" class="input-field" placeholder="كلمة المرور" dir="ltr" required autocomplete="current-password">
+        <span class="input-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+        </span>
+        <button type="button" class="toggle-password" id="togglePassword" aria-label="إظهار/إخفاء كلمة المرور">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- خيارات إضافية -->
+      <div class="options-row">
+        <label class="remember-me">
+          <input type="checkbox" id="rememberMe"> تذكرني
+        </label>
+        <a href="#" class="forgot-link" id="forgotPassword">نسيت كلمة المرور؟</a>
+      </div>
+
+      <!-- زر تسجيل الدخول -->
+      <button type="submit" class="login-btn" id="loginButton">
+        <span id="buttonText">تسجيل الدخول</span>
+        <span id="buttonSpinner" style="display: none;" class="spinner"></span>
+      </button>
+
+      <!-- صندوق رسائل الخطأ -->
+      <div class="error-box" id="errorBox">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        <span id="errorMessage">بيانات الدخول غير صحيحة</span>
+      </div>
+    </form>
+
+    <div class="footer-note">
+      © 2026 سُكُون - جميع الحقوق محفوظة
+    </div>
+  </div>
+
+  <script type="module">
+    // ===================== إعدادات Firebase =====================
+    // (يفضل وضعها في ملف منفصل، ولكن تم تضمينها هنا للتوضيح)
+    const firebaseConfig = {
+      apiKey: "AIzaSyBPM2CwR4ffR4_5KSm1K3GnPvqTJFxK4tE",
+      authDomain: "sokoon-medical.firebaseapp.com",
+      projectId: "sokoon-medical",
+      storageBucket: "sokoon-medical.appspot.com",
+      messagingSenderId: "1089654321234",
+      appId: "1:1089654321234:web:abc123def456ghi789jkl"
+    };
+
+    // تهيئة Firebase
+    const app = firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    // ===================== المتغيرات العامة =====================
+    const form = document.getElementById('loginForm');
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+    const togglePasswordBtn = document.getElementById('togglePassword');
+    const loginButton = document.getElementById('loginButton');
+    const buttonText = document.getElementById('buttonText');
+    const buttonSpinner = document.getElementById('buttonSpinner');
+    const errorBox = document.getElementById('errorBox');
+    const errorMessage = document.getElementById('errorMessage');
+    const rememberMeCheck = document.getElementById('rememberMe');
+    const forgotLink = document.getElementById('forgotPassword');
+
+    // بيانات المدير الثابت
+    const HARDCODED_ADMIN = {
+      email: 'admin@sokoon.com',
+      password: 'Admin@2024Secure',
+      role: 'admin'
+    };
+
+    // ===================== وظائف مساعدة =====================
+    
+    // إظهار إشعار Toast
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      
+      const icon = type === 'success' 
+        ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>'
+        : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
+      
+      toast.innerHTML = `${icon} <span>${message}</span>`;
+      container.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(-20px)';
+        toast.style.transition = 'all 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+      }, 4000);
+    }
+
+    // إظهار / إخفاء الخطأ
+    function showError(message) {
+      errorMessage.textContent = message;
+      errorBox.classList.add('show');
+      emailInput.classList.add('error');
+      passwordInput.classList.add('error');
+    }
+
+    function hideError() {
+      errorBox.classList.remove('show');
+      emailInput.classList.remove('error');
+      passwordInput.classList.remove('error');
+    }
+
+    // ضبط حالة التحميل
+    function setLoading(isLoading) {
+      if (isLoading) {
+        loginButton.disabled = true;
+        buttonText.style.display = 'none';
+        buttonSpinner.style.display = 'inline-block';
+      } else {
+        loginButton.disabled = false;
+        buttonText.style.display = 'inline';
+        buttonSpinner.style.display = 'none';
+      }
+    }
+
+    // حفظ البريد في LocalStorage (إذا اختار تذكرني)
+    function saveEmailToStorage(email) {
+      if (rememberMeCheck.checked) {
+        localStorage.setItem('savedEmail', email);
+      } else {
+        localStorage.removeItem('savedEmail');
+      }
+    }
+
+    // تحميل البريد المحفوظ
+    function loadSavedEmail() {
+      const saved = localStorage.getItem('savedEmail');
+      if (saved) {
+        emailInput.value = saved;
+        rememberMeCheck.checked = true;
+      }
+    }
+
+    // تخزين الجلسة في IndexedDB
+    async function storeSession(userData) {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open('SakoonSession', 1);
         
-        // استيراد دوال Firebase
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js';
-        import { 
-            getAuth, 
-            signInWithEmailAndPassword
-        } from 'https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js';
-        import { 
-            getFirestore, 
-            doc, 
-            getDoc 
-        } from 'https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js';
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => {
+          const db = request.result;
+          const tx = db.transaction('session', 'readwrite');
+          const store = tx.objectStore('session');
+          store.put({ id: 'current', ...userData, timestamp: Date.now() });
+          tx.oncomplete = () => resolve();
+          tx.onerror = () => reject(tx.error);
+        };
+        
+        request.onupgradeneeded = (e) => {
+          const db = e.target.result;
+          if (!db.objectStoreNames.contains('session')) {
+            db.createObjectStore('session', { keyPath: 'id' });
+          }
+        };
+      });
+    }
 
-        // تهيئة Firebase
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-
-        // ==================== دوال مساعدة (بدون IndexedDB) ====================
-        function showToast(message, type = 'info') {
-            const container = document.getElementById('toastContainer');
-            const toast = document.createElement('div');
-            toast.className = `toast ${type}`;
-            toast.textContent = message;
-            container.appendChild(toast);
-            setTimeout(() => toast.remove(), 4000);
-        }
-
-        function showError(message) {
-            const errorBox = document.getElementById('errorBox');
-            errorBox.textContent = message;
-            errorBox.classList.add('show');
-        }
-
-        function hideError() {
-            document.getElementById('errorBox').classList.remove('show');
-        }
-
-        function setLoading(isLoading) {
-            const btn = document.getElementById('loginBtn');
-            const btnText = document.getElementById('btnText');
-            const spinner = document.getElementById('btnSpinner');
-            btn.disabled = isLoading;
-            btnText.style.display = isLoading ? 'none' : 'inline';
-            spinner.style.display = isLoading ? 'inline-block' : 'none';
-            if (isLoading) hideError();
-        }
-
-        // توجيه حسب الدور (بدون تخزين محلي)
-        function redirectBasedOnRole(role, name = '') {
-            const routes = {
-                'admin': 'admin-panel.html',
-                'doctor': 'doctor-dashboard.html',
-                'nurse': 'attendant.html',
-                'pharmacist': 'pharmacy-dashboard.html'
+    // جلب دور المستخدم من Firestore مع إعادة المحاولة
+    async function fetchUserRole(uid, retries = 3) {
+      for (let i = 0; i < retries; i++) {
+        try {
+          const docRef = db.collection('users').doc(uid);
+          const docSnap = await docRef.get();
+          
+          if (docSnap.exists) {
+            const data = docSnap.data();
+            let role = data.role;
+            
+            // إذا لم يوجد حقل role ولكن يوجد linkedDoctor نعتبره ممرض
+            if (!role && data.linkedDoctor) {
+              role = 'nurse';
+            }
+            
+            return {
+              name: data.name || 'مستخدم',
+              email: data.email,
+              role: role || 'staff', // دور افتراضي
+              uid: uid
             };
-            const target = routes[role] || 'index.html';
-            if (name) showToast(`أهلاً ${name} ، نتمنى لك وقتاً هادئاً 🌿`, 'success');
-            setTimeout(() => window.location.href = target, 1000);
+          } else {
+            // المستخدم موجود في Auth لكن ليس في Firestore - ننشئ مستند افتراضي
+            console.warn('User document not found, creating basic profile');
+            const user = auth.currentUser;
+            const basicData = {
+              name: user.displayName || 'مستخدم جديد',
+              email: user.email,
+              role: 'staff',
+              createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            await db.collection('users').doc(uid).set(basicData, { merge: true });
+            return { ...basicData, uid };
+          }
+        } catch (error) {
+          console.warn(`Retry ${i+1} failed:`, error);
+          if (i === retries - 1) throw error;
+          await new Promise(r => setTimeout(r, 800));
         }
+      }
+    }
 
-        // جلب الدور من Firestore مع إعادة المحاولة (بدون تخزين)
-        async function fetchUserRole(uid, retries = 3) {
-            for (let i = 0; i < retries; i++) {
-                try {
-                    const userDocRef = doc(db, 'users', uid);
-                    const userSnap = await getDoc(userDocRef);
-                    
-                    if (userSnap.exists()) {
-                        const data = userSnap.data();
-                        let role = data.role;
-                        if (!role && data.linkedDoctor) role = 'nurse';
-                        if (!role) role = 'doctor';
-                        
-                        return { role, name: data.name || data.displayName || '' };
-                    }
-                    if (i < retries - 1) {
-                        await new Promise(r => setTimeout(r, 800));
-                    }
-                } catch (e) {
-                    console.warn(`محاولة ${i+1} فشلت:`, e);
-                    if (i === retries - 1) throw e;
-                    await new Promise(r => setTimeout(r, 800));
-                }
-            }
-            return { role: 'doctor', name: '' };
+    // توجيه المستخدم حسب الدور
+    function redirectBasedOnRole(role) {
+      const routes = {
+        'admin': 'admin-panel.html',
+        'doctor': 'doctor-dashboard.html',
+        'nurse': 'attendant.html',
+        'pharmacist': 'pharmacy-dashboard.html',
+        'staff': 'dashboard.html' // صفحة افتراضية
+      };
+      
+      const target = routes[role] || routes.staff;
+      showToast(`مرحباً بعودتك! جاري تحويلك إلى لوحة التحكم...`, 'success');
+      setTimeout(() => {
+        window.location.href = target;
+      }, 800);
+    }
+
+    // ===================== معالجة تسجيل الدخول =====================
+    async function handleLogin(e) {
+      e.preventDefault();
+      hideError();
+      
+      const email = emailInput.value.trim();
+      const password = passwordInput.value;
+      
+      // التحقق من صحة الحقول
+      if (!email || !password) {
+        showError('الرجاء إدخال البريد الإلكتروني وكلمة المرور');
+        return;
+      }
+      
+      if (!/^\S+@\S+\.\S+$/.test(email)) {
+        showError('صيغة البريد الإلكتروني غير صحيحة');
+        return;
+      }
+      
+      setLoading(true);
+      
+      try {
+        // 1. التحقق من المدير الثابت أولاً
+        if (email === HARDCODED_ADMIN.email && password === HARDCODED_ADMIN.password) {
+          saveEmailToStorage(email);
+          
+          const sessionData = {
+            name: 'المدير النظام',
+            email: email,
+            role: 'admin',
+            uid: 'admin-hardcoded'
+          };
+          
+          await storeSession(sessionData);
+          showToast('تم تسجيل الدخول كمدير النظام', 'success');
+          redirectBasedOnRole('admin');
+          return;
         }
-
-        // معالجة تسجيل الدخول (بدون حفظ جلسة)
-        async function handleLogin(email, password) {
-            hideError();
-            
-            // 1. المدير الثابت (لا تخزين)
-            if (email === 'admin@sokoon.com' && password === 'Admin@2024Secure') {
-                showToast('مرحباً بالمدير ، أجواء هادئة 👑', 'success');
-                redirectBasedOnRole('admin', 'المدير العام');
-                return;
-            }
-
-            // 2. مستخدم Firebase
-            try {
-                const userCredential = await signInWithEmailAndPassword(auth, email, password);
-                const user = userCredential.user;
-                
-                const { role, name } = await fetchUserRole(user.uid);
-                
-                // لا نقوم بتخزين أي شيء، فقط توجيه مباشر
-                redirectBasedOnRole(role, name || user.displayName || '');
-                
-            } catch (error) {
-                console.error('خطأ تسجيل الدخول:', error);
-                let errorMsg = 'حدث خطأ أثناء تسجيل الدخول';
-                
-                switch (error.code) {
-                    case 'auth/invalid-email':
-                        errorMsg = 'صيغة البريد الإلكتروني غير صحيحة';
-                        break;
-                    case 'auth/user-disabled':
-                        errorMsg = 'هذا الحساب معطل، يرجى التواصل مع الإدارة';
-                        break;
-                    case 'auth/user-not-found':
-                        errorMsg = 'البريد الإلكتروني غير مسجل';
-                        break;
-                    case 'auth/wrong-password':
-                        errorMsg = 'كلمة المرور غير صحيحة';
-                        break;
-                    case 'auth/too-many-requests':
-                        errorMsg = 'محاولات كثيرة جداً، حاول لاحقاً';
-                        break;
-                    case 'auth/network-request-failed':
-                        errorMsg = 'انقطع الاتصال بالإنترنت، تحقق من الشبكة';
-                        break;
-                    default:
-                        errorMsg = `خطأ: ${error.message}`;
-                }
-                
-                showError(errorMsg);
-                showToast(errorMsg, 'error');
-                throw error;
-            }
-        }
-
-        // ==================== تهيئة الصفحة (بدون توجيه تلقائي) ====================
-        document.addEventListener('DOMContentLoaded', () => {
-            // إظهار/إخفاء كلمة المرور
-            const toggleBtn = document.getElementById('togglePassword');
-            const passwordInput = document.getElementById('password');
-            toggleBtn.addEventListener('click', () => {
-                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-                passwordInput.setAttribute('type', type);
-                toggleBtn.innerHTML = type === 'password' 
-                    ? `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`
-                    : `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`;
-            });
-
-            // معالجة تقديم النموذج
-            const form = document.getElementById('loginForm');
-            const emailInput = document.getElementById('email');
-            
-            form.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const email = emailInput.value.trim();
-                const pwd = passwordInput.value;
-                
-                if (!email || !pwd) {
-                    showError('يرجى إدخال البريد وكلمة المرور');
-                    return;
-                }
-                
-                setLoading(true);
-                try {
-                    await handleLogin(email, pwd);
-                } catch (err) {
-                    // الخطأ معروض بالفعل
-                } finally {
-                    setLoading(false);
-                }
-            });
-
-            // إخفاء الخطأ عند الكتابة
-            emailInput.addEventListener('input', hideError);
-            passwordInput.addEventListener('input', hideError);
+        
+        // 2. محاولة تسجيل الدخول عبر Firebase Auth
+        const userCredential = await auth.signInWithEmailAndPassword(email, password);
+        const user = userCredential.user;
+        
+        saveEmailToStorage(email);
+        
+        // 3. جلب بيانات المستخدم والدور من Firestore
+        const userData = await fetchUserRole(user.uid);
+        
+        // 4. تخزين الجلسة في IndexedDB
+        await storeSession({
+          name: userData.name,
+          email: userData.email,
+          role: userData.role,
+          uid: user.uid
         });
+        
+        // 5. التوجيه
+        redirectBasedOnRole(userData.role);
+        
+      } catch (error) {
+        console.error('Login error:', error);
+        setLoading(false);
+        
+        // ترجمة أخطاء Firebase الشائعة
+        let message = 'حدث خطأ أثناء تسجيل الدخول';
+        if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+          message = 'البريد الإلكتروني أو كلمة المرور غير صحيحة';
+        } else if (error.code === 'auth/invalid-email') {
+          message = 'صيغة البريد الإلكتروني غير صالحة';
+        } else if (error.code === 'auth/too-many-requests') {
+          message = 'تم تعطيل الحساب مؤقتاً بسبب محاولات كثيرة. الرجاء المحاولة لاحقاً.';
+        } else if (error.code === 'auth/network-request-failed') {
+          message = 'فشل الاتصال بالشبكة. تحقق من اتصالك بالإنترنت.';
+        } else if (error.message) {
+          message = error.message;
+        }
+        
+        showError(message);
+        showToast(message, 'error');
+      } finally {
+        if (!errorBox.classList.contains('show')) {
+          setLoading(false);
+        }
+      }
+    }
 
-        export {};
-    </script>
-    <!-- ملاحظة: يجب أن يكون ملف firebase-config.js موجوداً في نفس المجلد ويصدر firebaseConfig -->
+    // ===================== تحسينات تجربة المستخدم =====================
+    
+    // إظهار/إخفاء كلمة المرور
+    function togglePasswordVisibility() {
+      const type = passwordInput.type === 'password' ? 'text' : 'password';
+      passwordInput.type = type;
+      
+      // تغيير أيقونة العين
+      const eyeIcon = togglePasswordBtn.querySelector('svg');
+      if (type === 'text') {
+        eyeIcon.innerHTML = `
+          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+          <line x1="1" y1="1" x2="23" y2="23"/>
+        `;
+      } else {
+        eyeIcon.innerHTML = `
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+          <circle cx="12" cy="12" r="3"/>
+        `;
+      }
+    }
+
+    // تحقق تلقائي من وجود جلسة سابقة (توجيه ذكي)
+    async function checkExistingSession() {
+      try {
+        const request = indexedDB.open('SakoonSession', 1);
+        request.onsuccess = async () => {
+          const db = request.result;
+          const tx = db.transaction('session', 'readonly');
+          const store = tx.objectStore('session');
+          const getReq = store.get('current');
+          
+          getReq.onsuccess = () => {
+            const session = getReq.result;
+            if (session && session.role) {
+              // التحقق من أن الجلسة ليست قديمة جداً (أقل من 24 ساعة)
+              const hoursSince = (Date.now() - (session.timestamp || 0)) / (1000 * 60 * 60);
+              if (hoursSince < 24) {
+                showToast('تم اكتشاف جلسة سابقة، جاري تسجيل الدخول تلقائياً...', 'success');
+                setTimeout(() => redirectBasedOnRole(session.role), 500);
+              }
+            }
+          };
+        };
+      } catch (e) {
+        // تجاهل الأخطاء
+      }
+    }
+
+    // معالجة "نسيت كلمة المرور"
+    async function handleForgotPassword(e) {
+      e.preventDefault();
+      const email = emailInput.value.trim();
+      
+      if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
+        showError('الرجاء إدخال بريد إلكتروني صحيح لإعادة تعيين كلمة المرور');
+        return;
+      }
+      
+      try {
+        await auth.sendPasswordResetEmail(email);
+        showToast(`تم إرسال رابط إعادة تعيين كلمة المرور إلى ${email}`, 'success');
+        hideError();
+      } catch (error) {
+        showToast('فشل إرسال رابط إعادة التعيين. تأكد من البريد الإلكتروني.', 'error');
+      }
+    }
+
+    // ===================== تهيئة الصفحة =====================
+    function init() {
+      loadSavedEmail();
+      checkExistingSession(); // توجيه ذكي إذا وجدت جلسة
+      
+      // مستمعات الأحداث
+      form.addEventListener('submit', handleLogin);
+      togglePasswordBtn.addEventListener('click', togglePasswordVisibility);
+      forgotLink.addEventListener('click', handleForgotPassword);
+      
+      // إزالة علامات الخطأ عند الكتابة
+      emailInput.addEventListener('input', hideError);
+      passwordInput.addEventListener('input', hideError);
+      
+      // منع إرسال النموذج عند الضغط على Enter في أي حقل (يتم التعامل معه عبر submit)
+    }
+
+    // بدء التطبيق
+    init();
+
+    // تصدير للاستخدام في وحدة التحكم (اختياري)
+    window.debug = { auth, db, showToast };
+  </script>
 </body>
 </html>
