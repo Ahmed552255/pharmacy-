@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
+        /* نفس التصميم السابق - لم يتغير */
         :root {
             --primary: #3b82f6;
             --primary-dark: #2563eb;
@@ -48,7 +49,6 @@
         }
         .container { max-width: 1300px; margin: 0 auto; }
 
-        /* ===== رأس الصفحة ===== */
         .app-header {
             display: flex;
             align-items: center;
@@ -108,7 +108,6 @@
         }
         .btn-danger:hover { background: #dc2626; }
 
-        /* شريط التاريخ والوقت */
         .datetime-bar {
             background: white;
             border-radius: 20px;
@@ -123,7 +122,6 @@
         }
         .datetime-bar i { color: var(--primary); margin-left: 8px; }
 
-        /* جدول الحجوزات */
         .table-wrapper {
             background: rgba(255,255,255,0.8);
             backdrop-filter: blur(8px);
@@ -190,7 +188,6 @@
         .icon-btn.danger:hover { background: var(--danger); border-color: var(--danger); }
         .icon-btn.success:hover { background: var(--success); border-color: var(--success); }
 
-        /* مودال */
         .modal {
             display: none;
             position: fixed;
@@ -291,6 +288,14 @@
             max-width: 500px;
             margin: 0 auto;
         }
+        .error-box {
+            text-align: center;
+            padding: 40px;
+            background: white;
+            border-radius: 24px;
+            margin: 20px 0;
+        }
+        .error-box i { font-size: 48px; color: var(--danger); margin-bottom: 16px; }
         .empty-state { text-align: center; padding: 40px; color: var(--text-sec); }
     </style>
 </head>
@@ -313,24 +318,27 @@
         <div><i class="fas fa-user-md"></i> <span id="doctorNameLabel">د. ---</span></div>
     </div>
 
-    <div class="table-wrapper">
-        <table>
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>المريض</th>
-                    <th>العمر</th>
-                    <th>الهاتف</th>
-                    <th>التاريخ</th>
-                    <th>الوقت</th>
-                    <th>الحالة</th>
-                    <th>إجراءات</th>
-                </tr>
-            </thead>
-            <tbody id="bookingsBody">
-                <tr><td colspan="8" class="empty-state"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</td></tr>
-            </tbody>
-        </table>
+    <!-- منطقة عرض الأخطاء أو بيانات التحميل -->
+    <div id="contentArea">
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>المريض</th>
+                        <th>العمر</th>
+                        <th>الهاتف</th>
+                        <th>التاريخ</th>
+                        <th>الوقت</th>
+                        <th>الحالة</th>
+                        <th>إجراءات</th>
+                    </tr>
+                </thead>
+                <tbody id="bookingsBody">
+                    <tr><td colspan="8" class="empty-state"><i class="fas fa-spinner fa-spin"></i> جاري تحميل الحجوزات...</td></tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
@@ -380,6 +388,7 @@
 </div>
 
 <script type="module">
+    // ==================== استيراد الإعدادات ====================
     import { firebaseConfig } from './firebase-config.js';
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
@@ -394,6 +403,7 @@
     let linkedDoctor = null;
     let unsubscribeBookings = null;
     let selectedPatientId = null;
+    let userDataLoaded = false;
 
     // ========== عناصر DOM ==========
     const ui = {
@@ -417,10 +427,10 @@
         historyList: document.getElementById('historyList'),
         submitBtn: document.getElementById('submitBtn'),
         formAlert: document.getElementById('formAlert'),
-        bookingForm: document.getElementById('bookingForm')
+        bookingForm: document.getElementById('bookingForm'),
+        contentArea: document.getElementById('contentArea')
     };
 
-    // ضبط التاريخ الافتراضي لليوم
     const today = new Date().toISOString().split('T')[0];
     ui.appointmentDate.value = today;
 
@@ -441,28 +451,54 @@
         setTimeout(() => t.remove(), 3000);
     }
 
-    // ========== تحميل بيانات الممرض والطبيب ==========
+    // عرض خطأ في واجهة المستخدم بدلاً من التوجيه
+    function showFatalError(title, message) {
+        ui.contentArea.innerHTML = `
+            <div class="error-box">
+                <i class="fas fa-exclamation-triangle"></i>
+                <h3>${title}</h3>
+                <p style="margin: 16px 0; color: var(--text-sec);">${message}</p>
+                <button class="btn btn-primary" id="retryBtn"><i class="fas fa-sync-alt"></i> إعادة المحاولة</button>
+                <button class="btn btn-outline" id="goToLoginBtn" style="margin-right: 12px;">العودة للدخول</button>
+            </div>
+        `;
+        document.getElementById('retryBtn').addEventListener('click', () => window.location.reload());
+        document.getElementById('goToLoginBtn').addEventListener('click', async () => {
+            await signOut(auth);
+            window.location.href = 'index.html';
+        });
+    }
+
+    // ========== تحميل بيانات الممرض والطبيب (مع معالجة محسنة) ==========
     async function loadUserData(user) {
-        const cached = localStorage.getItem(`attendant_${user.uid}`);
-        if (cached) {
-            try {
+        try {
+            // محاولة القراءة من localStorage أولاً
+            const cached = localStorage.getItem(`attendant_${user.uid}`);
+            if (cached) {
                 const data = JSON.parse(cached);
                 linkedDoctor = data.linkedDoctor;
                 ui.welcomeMessage.textContent = `أهلاً، ${data.userName || 'موظف الاستقبال'}`;
                 ui.doctorNameLabel.textContent = `د. ${linkedDoctor.name}`;
+                userDataLoaded = true;
                 return true;
-            } catch (e) {}
-        }
+            }
 
-        try {
+            // جلب من Firestore
             const userDoc = await getDoc(doc(db, "users", user.uid));
-            if (!userDoc.exists()) throw new Error("User not found");
+            if (!userDoc.exists()) {
+                throw new Error("لم يتم العثور على بيانات المستخدم. يرجى التواصل مع المدير.");
+            }
+            
             const userData = userDoc.data();
             const doctorId = userData.assignedDoctorId || userData.linkedDoctor;
-            if (!doctorId) throw new Error("No linked doctor");
+            if (!doctorId) {
+                throw new Error("لم يتم ربطك بطبيب. يرجى التواصل مع المدير لربط حسابك.");
+            }
 
             const doctorDoc = await getDoc(doc(db, "users", doctorId));
-            if (!doctorDoc.exists()) throw new Error("Doctor not found");
+            if (!doctorDoc.exists()) {
+                throw new Error("الطبيب المرتبط غير موجود. يرجى التواصل مع المدير.");
+            }
 
             linkedDoctor = { id: doctorId, name: doctorDoc.data().name };
             const cacheData = {
@@ -473,17 +509,18 @@
             
             ui.welcomeMessage.textContent = `أهلاً، ${cacheData.userName}`;
             ui.doctorNameLabel.textContent = `د. ${linkedDoctor.name}`;
+            userDataLoaded = true;
             return true;
         } catch (error) {
-            console.error(error);
-            ui.bookingsBody.innerHTML = '<tr><td colspan="8" class="empty-state">تعذر تحميل البيانات. تأكد من ربطك بطبيب.</td></tr>';
+            console.error("خطأ في تحميل بيانات المستخدم:", error);
+            showFatalError("تعذر تحميل البيانات", error.message);
             return false;
         }
     }
 
     // ========== تحميل حجوزات الدكتور ==========
     function loadBookings() {
-        if (!linkedDoctor) return;
+        if (!linkedDoctor || !userDataLoaded) return;
         if (unsubscribeBookings) unsubscribeBookings();
 
         const q = query(
@@ -494,6 +531,7 @@
         );
 
         unsubscribeBookings = onSnapshot(q, (snapshot) => {
+            if (!ui.bookingsBody) return;
             ui.bookingsBody.innerHTML = '';
             if (snapshot.empty) {
                 ui.bookingsBody.innerHTML = '<tr><td colspan="8" class="empty-state">لا توجد حجوزات بعد.</td></tr>';
@@ -544,7 +582,9 @@
             });
         }, (error) => {
             console.error(error);
-            ui.bookingsBody.innerHTML = '<tr><td colspan="8" class="empty-state">خطأ في تحميل الحجوزات. تأكد من تفعيل الفهارس المطلوبة.</td></tr>';
+            if (ui.bookingsBody) {
+                ui.bookingsBody.innerHTML = '<tr><td colspan="8" class="empty-state">خطأ في تحميل الحجوزات. تأكد من وجود الفهرس المطلوب.</td></tr>';
+            }
         });
     }
 
@@ -617,7 +657,6 @@
         ui.patientSearch.value = '';
         ui.searchResults.style.display = 'none';
         
-        // عرض تاريخ المريض
         if (id) {
             const historyQ = query(collection(db, "appointments"), where("patientId", "==", id), orderBy("date", "desc"), orderBy("time", "desc"), limit(3));
             const snap = await getDocs(historyQ);
@@ -655,7 +694,6 @@
 
         try {
             const phone = ui.patientPhone.value.trim();
-            // حفظ أو تحديث بيانات المريض
             if (phone) {
                 await setDoc(doc(db, "patients", phone), {
                     name, age: ui.patientAge.value || null, phone,
@@ -696,6 +734,10 @@
     }
 
     ui.openModalBtn.addEventListener('click', () => {
+        if (!userDataLoaded || !linkedDoctor) {
+            showToast('بيانات الطبيب غير محملة بعد، انتظر قليلاً', true);
+            return;
+        }
         resetForm();
         ui.modal.style.display = 'flex';
     });
@@ -723,7 +765,9 @@
         }
         currentUser = user;
         const success = await loadUserData(user);
-        if (success) loadBookings();
+        if (success) {
+            loadBookings();
+        }
     });
 </script>
 </body>
