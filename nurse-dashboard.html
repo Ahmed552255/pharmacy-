@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>سُكُون · لوحة الاستقبال</title>
+    <title>سُكُون · لوحة الممرض</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -11,21 +11,22 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
-        /* نفس التصميم السابق - لم يتغير */
+        /* ألوان متناسقة مع هوية سُكُون */
         :root {
-            --primary: #3b82f6;
-            --primary-dark: #2563eb;
-            --accent: #06b6d4;
-            --bg: #f4f7fb;
-            --white: #ffffff;
-            --ink: #1e293b;
-            --text-sec: #64748b;
-            --danger: #ef4444;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --border-light: #e2e8f0;
-            --shadow-sm: 0 4px 6px -2px rgba(0,0,0,0.05);
-            --shadow-md: 0 10px 25px -5px rgba(0,0,0,0.08);
+            --primary: #7AC5C5;
+            --primary-dark: #5BA3A3;
+            --accent: #5BA3A3;
+            --accent-dark: #3F8585;
+            --bg: #ECF9F9;
+            --white: #FFFFFF;
+            --ink: #2C4A4A;
+            --text-sec: #6B8E8E;
+            --danger: #E57373;
+            --success: #5FA88D;
+            --warning: #F4B886;
+            --border-light: #C5E0E0;
+            --shadow-sm: 0 4px 6px -2px rgba(58, 128, 128, 0.08);
+            --shadow-md: 0 10px 25px -5px rgba(58, 128, 128, 0.12);
             --radius-card: 24px;
             --radius-element: 14px;
         }
@@ -42,8 +43,8 @@
             content: '';
             position: fixed;
             inset: 0;
-            background: radial-gradient(circle at 0% 0%, rgba(59,130,246,0.05), transparent 50%),
-                        radial-gradient(circle at 100% 100%, rgba(6,182,212,0.05), transparent 50%);
+            background: radial-gradient(circle at 0% 0%, rgba(122,197,197,0.08), transparent 50%),
+                        radial-gradient(circle at 100% 100%, rgba(91,163,163,0.08), transparent 50%);
             pointer-events: none;
             z-index: -1;
         }
@@ -67,7 +68,7 @@
         .logo h2 {
             font-size: 1.8rem;
             font-weight: 700;
-            background: linear-gradient(145deg, #1e3a8a, #3b82f6);
+            background: linear-gradient(145deg, var(--accent-dark), var(--primary));
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
@@ -97,7 +98,7 @@
             background: var(--primary);
             color: white;
             border: none;
-            box-shadow: 0 4px 10px rgba(59,130,246,0.2);
+            box-shadow: 0 4px 10px rgba(91,163,163,0.25);
         }
         .btn-primary:hover { background: var(--primary-dark); transform: translateY(-2px); }
         .btn-outline:hover { background: #f8fafc; }
@@ -109,7 +110,8 @@
         .btn-danger:hover { background: #dc2626; }
 
         .datetime-bar {
-            background: white;
+            background: rgba(255,255,255,0.8);
+            backdrop-filter: blur(8px);
             border-radius: 20px;
             padding: 16px 24px;
             margin-bottom: 24px;
@@ -139,7 +141,7 @@
         }
         th, td { padding: 16px 12px; }
         thead tr {
-            background: #f8fafc;
+            background: #f0f7f7;
             border-bottom: 2px solid var(--border-light);
         }
         th {
@@ -153,17 +155,17 @@
             border-bottom: 1px solid var(--border-light);
             transition: background 0.15s;
         }
-        tbody tr:hover { background: rgba(59,130,246,0.03); }
+        tbody tr:hover { background: rgba(122,197,197,0.05); }
         .status-badge {
             padding: 6px 14px;
             border-radius: 40px;
             font-size: 0.75rem;
             font-weight: 700;
         }
-        .status-waiting { background: #fef3c7; color: #92400e; }
-        .status-inprogress { background: #dbeafe; color: #1e40af; }
-        .status-done { background: #dcfce7; color: #166534; }
-        .status-cancelled { background: #fee2e2; color: #991b1b; }
+        .status-waiting { background: #FEF9E7; color: #9A6E1A; }
+        .status-inprogress { background: #D6F0F0; color: #1A5C5C; }
+        .status-done { background: #DCF5E8; color: #1E6F4C; }
+        .status-cancelled { background: #FDE2E2; color: #B23B3B; }
 
         .action-btns {
             display: flex;
@@ -192,7 +194,7 @@
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(15,23,42,0.4);
+            background: rgba(30,50,50,0.3);
             backdrop-filter: blur(6px);
             align-items: center;
             justify-content: center;
@@ -206,11 +208,11 @@
             max-width: 600px;
             max-height: 85vh;
             overflow-y: auto;
-            box-shadow: 0 30px 60px rgba(0,0,0,0.2);
+            box-shadow: 0 30px 60px rgba(0,40,40,0.15);
         }
         .modal-header {
             padding: 22px 28px;
-            background: #f8fafc;
+            background: #F0F7F7;
             border-bottom: 1px solid var(--border-light);
             border-radius: 32px 32px 0 0;
             display: flex;
@@ -244,7 +246,7 @@
         .form-control:focus {
             outline: none;
             border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+            box-shadow: 0 0 0 3px rgba(122,197,197,0.15);
         }
         .search-results {
             background: white;
@@ -260,9 +262,9 @@
             cursor: pointer;
             border-bottom: 1px solid var(--border-light);
         }
-        .search-item:hover { background: #f8fafc; }
+        .search-item:hover { background: #F0F7F7; }
         .patient-history {
-            background: #f8fafc;
+            background: #F0F7F7;
             border-radius: 16px;
             padding: 16px;
             margin-top: 16px;
@@ -303,7 +305,7 @@
 <div class="container">
     <header class="app-header">
         <div class="logo">
-            <h2><i class="fas fa-calendar-check" style="color:var(--primary); margin-left:8px;"></i>سكون · الاستقبال</h2>
+            <h2><i class="fas fa-calendar-check" style="color:var(--primary); margin-left:8px;"></i>سُكُون · الممرض</h2>
         </div>
         <div class="header-actions">
             <span id="welcomeMessage" style="font-weight:600;">جاري التحميل...</span>
@@ -313,12 +315,11 @@
     </header>
 
     <div class="datetime-bar">
-        <div><i class="fas fa-clock"></i> <span id="liveTime">--:--:--</span></div>
+        <div><i class="fas fa-clock"></i> <span id="liveTime">--:--</span></div>
         <div><i class="fas fa-calendar-alt"></i> <span id="liveDate">----/--/--</span></div>
         <div><i class="fas fa-user-md"></i> <span id="doctorNameLabel">د. ---</span></div>
     </div>
 
-    <!-- منطقة عرض الأخطاء أو بيانات التحميل -->
     <div id="contentArea">
         <div class="table-wrapper">
             <table>
@@ -346,14 +347,14 @@
 <div id="bookingModal" class="modal">
     <div class="modal-card">
         <div class="modal-header">
-            <h3><i class="fas fa-calendar-plus"></i> حجز موعد جديد</h3>
+            <h3><i class="fas fa-calendar-plus" style="color:var(--primary);"></i> حجز موعد جديد</h3>
             <button class="close-btn" id="closeModalBtn">&times;</button>
         </div>
         <div class="modal-body">
             <form id="bookingForm">
                 <div class="form-group">
                     <label>البحث عن مريض (بالاسم أو الهاتف)</label>
-                    <input type="text" id="patientSearch" class="form-control" placeholder="اكتب للبحث...">
+                    <input type="text" id="patientSearch" class="form-control" placeholder="اكتب للبحث..." autocomplete="off">
                     <div id="searchResults" class="search-results"></div>
                 </div>
                 <div class="form-group">
@@ -362,7 +363,7 @@
                 </div>
                 <div class="form-group">
                     <label>العمر</label>
-                    <input type="number" id="patientAge" class="form-control">
+                    <input type="number" id="patientAge" class="form-control" min="0" max="150">
                 </div>
                 <div class="form-group">
                     <label>رقم الهاتف</label>
@@ -434,9 +435,10 @@
     const today = new Date().toISOString().split('T')[0];
     ui.appointmentDate.value = today;
 
+    // تحديث الوقت بدون ثواني
     function updateDateTime() {
         const now = new Date();
-        ui.liveTime.textContent = now.toLocaleTimeString('ar-EG');
+        ui.liveTime.textContent = now.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
         ui.liveDate.textContent = now.toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
     }
     updateDateTime();
@@ -445,13 +447,12 @@
     function showToast(msg, isErr = false) {
         const t = document.createElement('div');
         t.className = 'toast';
-        t.style.background = isErr ? '#b91c1c' : '#1e293b';
+        t.style.background = isErr ? '#B23B3B' : '#2C4A4A';
         t.innerHTML = `<i class="fas ${isErr ? 'fa-exclamation-triangle' : 'fa-check'}"></i> ${msg}`;
         document.body.appendChild(t);
         setTimeout(() => t.remove(), 3000);
     }
 
-    // عرض خطأ في واجهة المستخدم بدلاً من التوجيه
     function showFatalError(title, message) {
         ui.contentArea.innerHTML = `
             <div class="error-box">
@@ -469,21 +470,19 @@
         });
     }
 
-    // ========== تحميل بيانات الممرض والطبيب (مع معالجة محسنة) ==========
+    // ========== تحميل بيانات الممرض والطبيب ==========
     async function loadUserData(user) {
         try {
-            // محاولة القراءة من localStorage أولاً
-            const cached = localStorage.getItem(`attendant_${user.uid}`);
+            const cached = localStorage.getItem(`nurse_${user.uid}`);
             if (cached) {
                 const data = JSON.parse(cached);
                 linkedDoctor = data.linkedDoctor;
-                ui.welcomeMessage.textContent = `أهلاً، ${data.userName || 'موظف الاستقبال'}`;
+                ui.welcomeMessage.textContent = `أهلاً، ${data.userName || 'ممرض'}`;
                 ui.doctorNameLabel.textContent = `د. ${linkedDoctor.name}`;
                 userDataLoaded = true;
                 return true;
             }
 
-            // جلب من Firestore
             const userDoc = await getDoc(doc(db, "users", user.uid));
             if (!userDoc.exists()) {
                 throw new Error("لم يتم العثور على بيانات المستخدم. يرجى التواصل مع المدير.");
@@ -503,9 +502,9 @@
             linkedDoctor = { id: doctorId, name: doctorDoc.data().name };
             const cacheData = {
                 linkedDoctor,
-                userName: userData.name || 'موظف الاستقبال'
+                userName: userData.name || 'ممرض'
             };
-            localStorage.setItem(`attendant_${user.uid}`, JSON.stringify(cacheData));
+            localStorage.setItem(`nurse_${user.uid}`, JSON.stringify(cacheData));
             
             ui.welcomeMessage.textContent = `أهلاً، ${cacheData.userName}`;
             ui.doctorNameLabel.textContent = `د. ${linkedDoctor.name}`;
@@ -620,33 +619,37 @@
     });
 
     // ========== البحث عن مريض ==========
+    let searchTimeout;
     async function searchPatients(term) {
         if (term.length < 2) {
             ui.searchResults.style.display = 'none';
             return;
         }
-        try {
-            const nameQ = query(collection(db, "patients"), where("name", ">=", term), where("name", "<=", term + '\uf8ff'), limit(5));
-            const phoneQ = query(collection(db, "patients"), where("phone", ">=", term), where("phone", "<=", term + '\uf8ff'), limit(5));
-            const [nameSnap, phoneSnap] = await Promise.all([getDocs(nameQ), getDocs(phoneQ)]);
-            const results = new Map();
-            nameSnap.forEach(d => results.set(d.id, d.data()));
-            phoneSnap.forEach(d => results.set(d.id, d.data()));
-            
-            ui.searchResults.innerHTML = '';
-            if (results.size === 0) {
-                ui.searchResults.innerHTML = '<div class="search-item">لا توجد نتائج</div>';
-            } else {
-                results.forEach((data, id) => {
-                    const div = document.createElement('div');
-                    div.className = 'search-item';
-                    div.innerHTML = `<b>${data.name}</b><br><small>${data.phone || 'بدون رقم'}</small>`;
-                    div.onclick = () => selectPatient(id, data);
-                    ui.searchResults.appendChild(div);
-                });
-            }
-            ui.searchResults.style.display = 'block';
-        } catch (e) { console.error(e); }
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(async () => {
+            try {
+                const nameQ = query(collection(db, "patients"), where("name", ">=", term), where("name", "<=", term + '\uf8ff'), limit(5));
+                const phoneQ = query(collection(db, "patients"), where("phone", ">=", term), where("phone", "<=", term + '\uf8ff'), limit(5));
+                const [nameSnap, phoneSnap] = await Promise.all([getDocs(nameQ), getDocs(phoneQ)]);
+                const results = new Map();
+                nameSnap.forEach(d => results.set(d.id, d.data()));
+                phoneSnap.forEach(d => results.set(d.id, d.data()));
+                
+                ui.searchResults.innerHTML = '';
+                if (results.size === 0) {
+                    ui.searchResults.innerHTML = '<div class="search-item">لا توجد نتائج</div>';
+                } else {
+                    results.forEach((data, id) => {
+                        const div = document.createElement('div');
+                        div.className = 'search-item';
+                        div.innerHTML = `<b>${data.name}</b><br><small>${data.phone || 'بدون رقم'}</small>`;
+                        div.onclick = () => selectPatient(id, data);
+                        ui.searchResults.appendChild(div);
+                    });
+                }
+                ui.searchResults.style.display = 'block';
+            } catch (e) { console.error(e); }
+        }, 300);
     }
 
     async function selectPatient(id, data) {
@@ -700,11 +703,13 @@
                     updatedAt: serverTimestamp()
                 }, { merge: true });
                 selectedPatientId = phone;
+            } else {
+                selectedPatientId = null;
             }
 
             await addDoc(collection(db, "appointments"), {
                 patientName: name,
-                patientId: selectedPatientId || null,
+                patientId: selectedPatientId,
                 age: ui.patientAge.value || null,
                 phone: phone || null,
                 doctorId: linkedDoctor.id,
@@ -718,7 +723,7 @@
             resetForm();
         } catch (err) {
             console.error(err);
-            ui.formAlert.textContent = 'حدث خطأ أثناء الحفظ';
+            ui.formAlert.textContent = 'حدث خطأ أثناء الحفظ: ' + err.message;
         } finally {
             ui.submitBtn.disabled = false;
             ui.submitBtn.innerHTML = 'تأكيد الحجز';
@@ -752,7 +757,7 @@
     // خروج
     ui.logoutBtn.addEventListener('click', async () => {
         if (unsubscribeBookings) unsubscribeBookings();
-        localStorage.removeItem(`attendant_${currentUser?.uid}`);
+        localStorage.removeItem(`nurse_${currentUser?.uid}`);
         await signOut(auth);
         window.location.href = 'index.html';
     });
