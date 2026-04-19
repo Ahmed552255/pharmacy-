@@ -9,107 +9,260 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
     
-    <script src="https://unpkg.com/feather-icons"></script>
-
     <style>
-        /* نفس التنسيقات السابقة - دون تغيير */
+        /* ===== إعدادات التصميم الإبداعي ===== */
         :root {
-            --primary: #7AC5C5; --accent: #5BA3A3; --accent-dark: #3F8585;
-            --bg: #ECF9F9; --white: #FFFFFF; --ink: #2C4A4A; --text-sec: #6B8E8E;
-            --danger: #E57373; --success: #5FA88D; --shadow: 0 12px 28px rgba(58, 128, 128, 0.12);
-            --border-light: rgba(122, 197, 197, 0.2);
+            --primary: #3b82f6;
+            --primary-dark: #2563eb;
+            --accent: #06b6d4;
+            --bg: #f0f4f8;
+            --white: #ffffff;
+            --ink: #1e293b;
+            --text-sec: #64748b;
+            --danger: #ef4444;
+            --success: #10b981;
+            --shadow: 0 25px 50px -12px rgba(0,0,0,0.15);
+            --border-light: rgba(255,255,255,0.2);
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html { font-size: 16px; }
         body {
-            font-family: 'Cairo', sans-serif; color: var(--ink);
-            min-height: 100vh; display: flex; justify-content: center; align-items: center;
-            padding: 1.25rem; background: var(--bg); position: relative;
+            font-family: 'Cairo', sans-serif;
+            color: var(--ink);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1.5rem;
+            background: linear-gradient(145deg, #0f172a, #1e293b);
+            position: relative;
+            overflow-x: hidden;
         }
-        .bg-orbs { position: fixed; inset: 0; z-index: -1; overflow: hidden; }
-        .orb {
-            position: absolute; border-radius: 50%; filter: blur(100px);
-            pointer-events: none; animation: float 35s infinite alternate ease-in-out; opacity: 0.5;
+        /* خلفية تفاعلية: شبكة وخطوط متوهجة */
+        .bg-pattern {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            background-image: 
+                linear-gradient(rgba(59,130,246,0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(59,130,246,0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: drift 30s linear infinite;
         }
-        .orb1 {
-            width: 55vw; height: 55vw; background: radial-gradient(circle, rgba(122,197,197,0.25) 0%, transparent 70%);
-            top: -20%; right: -15%;
+        @keyframes drift {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
         }
-        .orb2 {
-            width: 45vw; height: 45vw; background: radial-gradient(circle, rgba(91,163,163,0.15) 0%, transparent 70%);
-            bottom: -15%; left: -10%;
+        .glow {
+            position: fixed;
+            width: 80vw;
+            height: 80vw;
+            max-width: 800px;
+            max-height: 800px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(59,130,246,0.3) 0%, transparent 70%);
+            filter: blur(80px);
+            animation: pulse 8s infinite alternate;
+            z-index: 0;
         }
-        @keyframes float { to { transform: translate(30px, 30px); } }
+        .glow1 { top: -20%; left: -20%; }
+        .glow2 { bottom: -20%; right: -20%; background: radial-gradient(circle, rgba(6,182,212,0.25) 0%, transparent 70%); }
+        @keyframes pulse {
+            0% { opacity: 0.5; transform: scale(1); }
+            100% { opacity: 1; transform: scale(1.1); }
+        }
+
+        /* بطاقة زجاجية متطورة */
         .glass-card {
-            background: rgba(255,255,255,0.75); backdrop-filter: blur(16px);
-            border: 1px solid var(--border-light); border-radius: 32px;
-            box-shadow: var(--shadow); width: 100%; max-width: 440px; padding: 2.5rem 2rem;
-            text-align: center; z-index: 1; animation: popIn 0.7s cubic-bezier(0.2,0.9,0.3,1) forwards;
-            transform: scale(0.92); opacity: 0;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 40px;
+            box-shadow: var(--shadow);
+            width: 100%;
+            max-width: 460px;
+            padding: 2.8rem 2.2rem;
+            text-align: center;
+            z-index: 2;
+            animation: cardFloat 0.8s cubic-bezier(0.2, 0.9, 0.3, 1) forwards;
+            transform: scale(0.9);
+            opacity: 0;
         }
-        @keyframes popIn { to { transform: scale(1); opacity: 1; } }
-        .card-header { margin-bottom: 2rem; }
-        .card-header h1 { font-size: 2.2rem; font-weight: 800; color: var(--accent-dark); }
-        .card-header p { font-size: 1rem; color: var(--text-sec); font-weight: 500; }
-        .input-group { position: relative; margin-bottom: 1.5rem; }
-        .input-group .icon {
-            position: absolute; top: 50%; right: 1.25rem; transform: translateY(-50%);
-            color: var(--accent); width: 20px; height: 20px;
+        @keyframes cardFloat {
+            to { transform: scale(1); opacity: 1; }
+        }
+        .logo-icon {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(145deg, var(--primary), var(--accent));
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            box-shadow: 0 10px 20px rgba(59,130,246,0.3);
+        }
+        .card-header h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: white;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .card-header p {
+            color: rgba(255,255,255,0.8);
+            font-weight: 500;
+            margin-top: 0.25rem;
+        }
+
+        /* حقول الإدخال */
+        .input-group {
+            position: relative;
+            margin-bottom: 1.8rem;
         }
         .input-group input {
-            width: 100%; padding: 1rem 3.5rem 1rem 1.5rem; background: var(--white);
-            border: 1.5px solid rgba(122,197,197,0.25); border-radius: 20px;
-            outline: none; font-size: 1rem; font-family: 'Cairo', sans-serif; color: var(--ink);
-            transition: all 0.25s ease;
+            width: 100%;
+            padding: 1rem 3rem 1rem 1.5rem;
+            background: rgba(255, 255, 255, 0.15);
+            border: 1.5px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            outline: none;
+            font-size: 1rem;
+            font-family: 'Cairo', sans-serif;
+            color: white;
+            transition: all 0.3s ease;
+        }
+        .input-group input::placeholder {
+            color: rgba(255,255,255,0.6);
         }
         .input-group input:focus {
-            border-color: var(--primary); box-shadow: 0 0 0 4px rgba(122,197,197,0.2);
+            border-color: white;
+            background: rgba(255, 255, 255, 0.25);
+            box-shadow: 0 0 0 4px rgba(255,255,255,0.1);
         }
+        .input-group .icon {
+            position: absolute;
+            top: 50%;
+            right: 1.2rem;
+            transform: translateY(-50%);
+            color: rgba(255,255,255,0.8);
+            width: 22px;
+            height: 22px;
+        }
+        .toggle-password {
+            position: absolute;
+            top: 50%;
+            left: 1.2rem;
+            transform: translateY(-50%);
+            color: rgba(255,255,255,0.8);
+            cursor: pointer;
+            width: 22px;
+            height: 22px;
+            transition: opacity 0.2s;
+        }
+        .toggle-password:hover { opacity: 1; }
+
+        /* زر الدخول */
         .btn {
-            width: 100%; padding: 1rem; border: none; border-radius: 20px;
-            font-size: 1.2rem; font-weight: 700; font-family: 'Cairo', sans-serif;
-            cursor: pointer; transition: all 0.25s ease;
-            background: linear-gradient(145deg, var(--primary), var(--accent));
-            color: white; box-shadow: 0 8px 18px rgba(91,163,163,0.25);
+            width: 100%;
+            padding: 1rem;
+            border: none;
+            border-radius: 20px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            font-family: 'Cairo', sans-serif;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+            color: var(--primary-dark);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
         }
-        .btn:hover { transform: translateY(-2px); box-shadow: 0 12px 24px rgba(91,163,163,0.35); }
-        .btn:disabled { opacity: 0.65; cursor: not-allowed; transform: none; }
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+            background: #f8fafc;
+        }
+        .btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* رسالة الخطأ */
         .error-message {
-            color: var(--danger); font-weight: 600; font-size: 0.9rem; margin-top: 1rem;
-            padding: 0.6rem 1rem; background: rgba(229,115,115,0.08);
-            border-radius: 16px; opacity: 0; transition: opacity 0.25s;
-            border: 1px solid rgba(229,115,115,0.15);
+            color: white;
+            background: rgba(239, 68, 68, 0.8);
+            backdrop-filter: blur(8px);
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-top: 1.2rem;
+            padding: 0.8rem 1.2rem;
+            border-radius: 20px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            border: 1px solid rgba(255,255,255,0.2);
         }
         .error-message.show { opacity: 1; }
+
+        /* Toast */
         .toast-notification {
-            position: fixed; top: 24px; left: 50%; transform: translateX(-50%);
-            color: white; padding: 12px 28px; border-radius: 40px; font-weight: bold;
-            z-index: 9999; box-shadow: 0 6px 16px rgba(0,0,0,0.1);
-            animation: slideDown 0.3s ease; background: var(--success);
+            position: fixed;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            padding: 14px 30px;
+            border-radius: 60px;
+            font-weight: bold;
+            z-index: 9999;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            animation: slideDown 0.3s ease;
+            background: var(--success);
+            backdrop-filter: blur(8px);
         }
-        @keyframes slideDown { from { top: -40px; opacity: 0; } to { top: 24px; opacity: 1; } }
+        @keyframes slideDown { from { top: -50px; opacity: 0; } to { top: 30px; opacity: 1; } }
+
+        /* مؤشر التحميل */
         .spinner {
-            display: inline-block; width: 20px; height: 20px;
-            border: 2px solid rgba(255,255,255,0.3); border-radius: 50%;
-            border-top-color: white; animation: spin 0.7s linear infinite;
-            margin-left: 8px; vertical-align: middle;
+            display: inline-block;
+            width: 22px;
+            height: 22px;
+            border: 2px solid rgba(37,99,235,0.3);
+            border-radius: 50%;
+            border-top-color: var(--primary-dark);
+            animation: spin 0.7s linear infinite;
+            margin-left: 10px;
+            vertical-align: middle;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* نص التبويب */
         .badge-soft {
-            background: rgba(122,197,197,0.15); color: var(--accent-dark);
-            font-size: 0.8rem; padding: 4px 14px; border-radius: 40px;
-            display: inline-block; margin-bottom: 1rem; font-weight: 600;
+            background: rgba(255,255,255,0.15);
+            color: white;
+            font-size: 0.85rem;
+            padding: 6px 18px;
+            border-radius: 40px;
+            display: inline-block;
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+            backdrop-filter: blur(4px);
         }
     </style>
 </head>
 <body>
-    <div class="bg-orbs">
-        <div class="orb orb1"></div>
-        <div class="orb orb2"></div>
-    </div>
+    <div class="bg-pattern"></div>
+    <div class="glow glow1"></div>
+    <div class="glow glow2"></div>
 
     <main class="glass-card">
         <div class="badge-soft">🔐 دخول آمن</div>
+        <div class="logo-icon">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                <path d="M12 2L2 7v10l10 5 10-5V7l-10-5z"/>
+                <path d="M12 12l4-2v6l-4 2-4-2v-6l4 2z"/>
+            </svg>
+        </div>
         <header class="card-header">
             <h1>سُكُون</h1>
             <p>منصة إدارة العيادات والصيدليات</p>
@@ -117,12 +270,21 @@
         
         <form id="loginForm">
             <div class="input-group">
-                <input type="text" id="username" placeholder="البريد الإلكتروني" required autocomplete="off">
-                <i class="icon" data-feather="mail"></i>
+                <input type="email" id="username" placeholder="البريد الإلكتروني" required autocomplete="off">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 6L12 13 2 6M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/>
+                </svg>
             </div>
             <div class="input-group">
                 <input type="password" id="password" placeholder="كلمة المرور" required autocomplete="off">
-                <i class="icon" data-feather="lock"></i>
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+                <svg class="toggle-password" id="togglePassword" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                </svg>
             </div>
 
             <div class="error-message" id="errorMessage"></div>
@@ -132,9 +294,7 @@
     </main>
 
     <script type="module">
-        feather.replace();
-        
-        // ==================== استيراد الإعدادات من ملف خارجي ====================
+        // ==================== استيراد الإعدادات ====================
         import { firebaseConfig } from './firebase-config.js';
         
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
@@ -182,20 +342,10 @@
                     req.onerror = () => reject(req.error);
                 });
             }
-            async clearSession() {
-                await this.init();
-                return new Promise((resolve, reject) => {
-                    const tx = this.db.transaction('session', 'readwrite');
-                    const store = tx.objectStore('session');
-                    store.delete('current');
-                    tx.oncomplete = () => resolve();
-                    tx.onerror = () => reject(tx.error);
-                });
-            }
         }
         const sessionCache = new SessionCache();
 
-        // بيانات المدير التجريبية (ثابتة)
+        // بيانات المدير التجريبية
         const ADMIN_CREDENTIALS = {
             email: "admin@sokoon.com",
             password: "Admin@2024Secure"
@@ -206,8 +356,15 @@
             usernameInput: document.getElementById('username'),
             passwordInput: document.getElementById('password'),
             loginButton: document.getElementById('loginButton'),
-            loginForm: document.getElementById('loginForm')
+            loginForm: document.getElementById('loginForm'),
+            togglePassword: document.getElementById('togglePassword')
         };
+
+        // إظهار/إخفاء كلمة المرور
+        elements.togglePassword.addEventListener('click', () => {
+            const type = elements.passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            elements.passwordInput.setAttribute('type', type);
+        });
 
         function showError(msg) {
             elements.errorMessage.textContent = msg;
@@ -218,7 +375,7 @@
         function showToast(msg, isSuccess = true) {
             const toast = document.createElement('div');
             toast.className = 'toast-notification';
-            toast.style.backgroundColor = isSuccess ? '#5FA88D' : '#E57373';
+            toast.style.backgroundColor = isSuccess ? '#10b981' : '#ef4444';
             toast.textContent = msg;
             document.body.appendChild(toast);
             setTimeout(() => toast.remove(), 2000);
@@ -238,17 +395,12 @@
                     const userSnap = await getDoc(userDocRef);
                     if (userSnap.exists()) {
                         const data = userSnap.data();
-                        if (data.role) return data.role;
-                        if (data.linkedDoctor) return 'nurse';
-                        return 'doctor';
+                        return data.role || (data.linkedDoctor ? 'nurse' : 'doctor');
                     }
-                    if (i < retries - 1) {
-                        await new Promise(resolve => setTimeout(resolve, 800));
-                    }
+                    if (i < retries - 1) await new Promise(r => setTimeout(r, 800));
                 } catch (error) {
-                    console.warn(`محاولة ${i+1} فشلت:`, error);
                     if (i === retries - 1) throw error;
-                    await new Promise(resolve => setTimeout(resolve, 800));
+                    await new Promise(r => setTimeout(r, 800));
                 }
             }
             return 'nurse';
@@ -267,52 +419,36 @@
             setLoading(true);
             showError('');
             
-            // 1. التحقق من المدير الثابت
+            // مدير ثابت
             if (email === ADMIN_CREDENTIALS.email && password === ADMIN_CREDENTIALS.password) {
-                const sessionData = { role: 'admin', email, name: 'مدير النظام' };
-                await sessionCache.saveSession(sessionData);
+                await sessionCache.saveSession({ role: 'admin', email, name: 'مدير النظام' });
                 showToast('مرحباً مدير النظام!', true);
                 setTimeout(() => window.location.href = 'admin-panel.html', 1500);
                 return;
             }
             
-            // 2. المستخدمون العاديون عبر Firebase
+            // مستخدمون Firebase
             try {
                 const userCred = await signInWithEmailAndPassword(auth, email, password);
                 const user = userCred.user;
                 
-                let role;
-                try {
-                    role = await fetchUserRole(user.uid);
-                } catch (roleError) {
-                    console.error("فشل جلب الدور:", roleError);
-                    role = 'nurse';
-                    showToast('تم الدخول، ولكن تعذر تحديد الصلاحيات بدقة. قد تحتاج لمراجعة المدير.', false);
-                }
+                let role = await fetchUserRole(user.uid).catch(() => 'nurse');
                 
-                const sessionData = {
-                    role,
-                    email: user.email,
-                    name: user.email.split('@')[0],
-                    uid: user.uid
+                await sessionCache.saveSession({
+                    role, email: user.email, name: user.email.split('@')[0], uid: user.uid
+                });
+                
+                showToast(`مرحباً ${user.email.split('@')[0]}!`, true);
+                
+                const redirectMap = {
+                    admin: 'admin-panel.html',
+                    doctor: 'doctor-dashboard.html',
+                    nurse: 'attendant.html',
+                    pharmacist: 'pharmacy-dashboard.html'
                 };
-                await sessionCache.saveSession(sessionData);
-                
-                showToast(`مرحباً ${sessionData.name}!`, true);
-                
-                let redirectPage;
-                switch (role) {
-                    case 'admin': redirectPage = 'admin-panel.html'; break;
-                    case 'doctor': redirectPage = 'doctor-dashboard.html'; break;
-                    case 'nurse': redirectPage = 'attendant.html'; break;
-                    case 'pharmacist': redirectPage = 'pharmacy-dashboard.html'; break;
-                    default: redirectPage = 'attendant.html';
-                }
-                
-                setTimeout(() => window.location.href = redirectPage, 1500);
+                setTimeout(() => window.location.href = redirectMap[role] || 'attendant.html', 1500);
                 
             } catch (error) {
-                console.error("Login error:", error);
                 let msg = 'بيانات الدخول غير صحيحة';
                 if (error.code === 'auth/user-not-found') msg = '❌ البريد غير مسجل';
                 else if (error.code === 'auth/wrong-password') msg = '❌ كلمة مرور خاطئة';
@@ -324,17 +460,15 @@
 
         async function checkExistingSession() {
             const session = await sessionCache.getSession();
-            if (session && session.role && session.name) {
-                let redirect;
-                switch (session.role) {
-                    case 'admin': redirect = 'admin-panel.html'; break;
-                    case 'doctor': redirect = 'doctor-dashboard.html'; break;
-                    case 'nurse': redirect = 'attendant.html'; break;
-                    case 'pharmacist': redirect = 'pharmacy-dashboard.html'; break;
-                    default: redirect = 'attendant.html';
-                }
+            if (session?.role && session?.name) {
+                const redirectMap = {
+                    admin: 'admin-panel.html',
+                    doctor: 'doctor-dashboard.html',
+                    nurse: 'attendant.html',
+                    pharmacist: 'pharmacy-dashboard.html'
+                };
                 showToast(`أهلاً بعودتك ${session.name}!`, true);
-                setTimeout(() => window.location.href = redirect, 1200);
+                setTimeout(() => window.location.href = redirectMap[session.role] || 'attendant.html', 1200);
             }
         }
 
