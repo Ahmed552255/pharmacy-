@@ -1,13 +1,13 @@
 // firebase-config.js
-// إعدادات Firebase لمشروع "the-final-e012c"
+// إعدادات Firebase لمشروع "i-excelled"
 
 export const firebaseConfig = {
-    apiKey: "AIzaSyBg0CcRmfjE_AFGHa4miGEJ5ffTKDPuK-Y",
-    authDomain: "the-final-e012c.firebaseapp.com",
-    databaseURL: "https://the-final-e012c-default-rtdb.firebaseio.com",
-    projectId: "the-final-e012c",
-    storageBucket: "the-final-e012c.firebasestorage.app",
-    messagingSenderId: "291006056527",
-    appId: "1:291006056527:web:660f1b24d984b276e3c23a",
-    measurementId: "G-DSSNFXDKJJ"
+    apiKey: "AIzaSyCjCLdv6QWfJieZQO7Qt_U5W0UgxNx8TXQ",
+    authDomain: "i-excelled.firebaseapp.com",
+    databaseURL: "https://i-excelled-default-rtdb.firebaseio.com",
+    projectId: "i-excelled",
+    storageBucket: "i-excelled.firebasestorage.app",
+    messagingSenderId: "872523261091",
+    appId: "1:872523261091:web:77f465166d877b96b84b16",
+    measurementId: "G-DJBW60TWCF"
 };
