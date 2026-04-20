@@ -7,7 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* الألوان والتنسيقات كما هي - لم تتغير */
+        /* التنسيقات كما هي دون تغيير */
         :root {
             --primary: #7AC5C5;
             --primary-dark: #5BA3A3;
@@ -367,7 +367,7 @@
     </div>
 </div>
 
-<!-- مودال تفاصيل المستخدم -->
+<!-- مودال التفاصيل -->
 <div id="detailModal" class="modal">
     <div class="modal-card">
         <div class="modal-header">
@@ -389,7 +389,6 @@
             <hr>
             <div><strong><i class="fas fa-pen-fancy"></i> لمحة سريعة</strong></div>
             <div id="quickBlurbDisplay" class="quick-note" style="white-space: normal; background: #eef5e8;"></div>
-            
             <div class="tabs-container">
                 <div class="tabs-buttons">
                     <button class="tab-btn active" data-tab="infoTab">📋 المعلومات</button>
@@ -404,7 +403,6 @@
                     <button id="addNoteModalBtn" class="btn-glass" style="margin-top: 8px; width:100%;">➕ إضافة ملاحظة</button>
                 </div>
             </div>
-
             <div class="row-buttons">
                 <button id="blockModalBtn" class="btn-glass" style="background:#b85c5c;">🔒 حظر</button>
                 <button id="unblockModalBtn" class="btn-glass" style="background:#4c8b4c;">🔓 إلغاء حظر</button>
@@ -415,7 +413,7 @@
     </div>
 </div>
 
-<!-- مودال إضافة / تعديل مستخدم -->
+<!-- مودال إضافة / تعديل -->
 <div id="formModal" class="modal">
     <div class="modal-card">
         <div class="modal-header">
@@ -471,39 +469,20 @@
 <script type="module">
     import { firebaseConfig } from './firebase-config.js';
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
-    import { 
-        getFirestore, 
-        collection, 
-        query, 
-        where, 
-        onSnapshot, 
-        doc, 
-        setDoc, 
-        updateDoc, 
-        deleteDoc, 
-        getDoc, 
-        getDocs,
-        serverTimestamp,
-        addDoc,
-        orderBy,
-        limit
-    } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+    import { getDatabase, ref, onValue, set, update, remove, push, get } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-database.js";
     import { getAuth, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
 
     const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+    const db = getDatabase(app);
     const auth = getAuth(app);
-    
-    // مراجع Firestore
-    const usersCol = collection(db, "users");
-    
+    const usersRef = ref(db, 'users');
+
     let allUsers = [];
     let doctorsList = [];
     let currentEditId = null;
     let currentViewId = null;
     let unsubscribeUsers = null;
 
-    // ========== دوال مساعدة ==========
     function showToast(msg, isErr = false) {
         const t = document.createElement('div');
         t.className = 'toast';
@@ -513,33 +492,25 @@
         setTimeout(() => t.remove(), 2800);
     }
 
-    function escapeHtml(str) { 
-        if(!str) return ''; 
-        return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'})[m] || m); 
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'})[m] || m);
     }
 
-    // ========== تحميل المستخدمين (Firestore) ==========
     function loadUsers() {
         if (unsubscribeUsers) unsubscribeUsers();
-        
-        const q = query(usersCol);
-        unsubscribeUsers = onSnapshot(q, (snapshot) => {
+        unsubscribeUsers = onValue(usersRef, (snap) => {
             const arr = [];
             const docs = [];
-            snapshot.forEach(docSnap => {
-                const user = { id: docSnap.id, ...docSnap.data() };
+            snap.forEach(child => {
+                const user = { id: child.key, ...child.val() };
                 arr.push(user);
-                if (user.role === 'doctor') {
-                    docs.push(user);
-                }
+                if (user.role === 'doctor') docs.push(user);
             });
             allUsers = arr;
             doctorsList = docs;
             renderGrid();
             populateDoctorSelect();
-        }, (error) => {
-            console.error("خطأ في تحميل المستخدمين:", error);
-            showToast("فشل تحميل البيانات، تأكد من قواعد الأمان", true);
         });
     }
 
@@ -547,22 +518,21 @@
         const select = document.getElementById('assignedDoctorSelect');
         select.innerHTML = '<option value="">-- اختر الدكتور --</option>';
         doctorsList.forEach(doc => {
-            const option = document.createElement('option');
-            option.value = doc.id;
-            option.textContent = `${doc.name || 'بدون اسم'} (${doc.email || ''})`;
-            select.appendChild(option);
+            const opt = document.createElement('option');
+            opt.value = doc.id;
+            opt.textContent = `${doc.name || 'بدون اسم'} (${doc.email || ''})`;
+            select.appendChild(opt);
         });
     }
 
     function renderGrid() {
         const term = document.getElementById('searchInput')?.value.toLowerCase() || '';
-        let filtered = allUsers.filter(u => 
-            (u.name?.toLowerCase().includes(term) || u.email?.toLowerCase().includes(term) || u.role?.toLowerCase().includes(term))
+        const filtered = allUsers.filter(u => 
+            (u.name?.toLowerCase().includes(term) || u.email?.toLowerCase().includes(term) || u.role?.includes(term))
         );
         const grid = document.getElementById('usersGrid');
         if (!grid) return;
-        
-        if(filtered.length === 0) {
+        if (filtered.length === 0) {
             grid.innerHTML = '<div class="empty-state"><i class="fas fa-seedling"></i> لا يوجد مستخدمون</div>';
             return;
         }
@@ -571,7 +541,6 @@
             const roleText = { doctor: 'طبيب', nurse: 'ممرض', pharmacist: 'صيدلي' }[user.role] || user.role;
             const assignedInfo = user.role === 'nurse' && user.assignedDoctorName ? 
                 `<div class="assigned-doctor-info"><i class="fas fa-user-md"></i> د. ${escapeHtml(user.assignedDoctorName)}</div>` : '';
-            
             return `
             <div class="doctor-card" data-id="${user.id}">
                 <div class="card-avatar">
@@ -585,22 +554,16 @@
                     <span class="status-badge-sm ${user.status === 'blocked' ? 'status-blocked-sm' : ''}">${user.status === 'active' ? 'نشط' : 'محظور'}</span>
                     <small><i class="far fa-envelope"></i> ${escapeHtml(user.email)}</small>
                 </div>
-            </div>
-            `;
+            </div>`;
         }).join('');
-        
         document.querySelectorAll('.doctor-card').forEach(card => {
-            card.addEventListener('click', (e) => {
-                const id = card.getAttribute('data-id');
-                openDetailModal(id);
-            });
+            card.addEventListener('click', () => openDetailModal(card.dataset.id));
         });
     }
 
-    // ========== تفاصيل المستخدم ==========
     async function openDetailModal(id) {
         const user = allUsers.find(u => u.id === id);
-        if(!user) return;
+        if (!user) return;
         currentViewId = id;
         document.getElementById('detailNameTitle').innerText = user.name || 'تفاصيل';
         document.getElementById('detailName').innerText = user.name || '-';
@@ -609,8 +572,7 @@
         const roleText = { doctor: 'طبيب', nurse: 'ممرض', pharmacist: 'صيدلي' }[user.role] || user.role;
         document.getElementById('detailRoleSpan').innerHTML = `<span class="role-badge role-${user.role}">${roleText}</span>`;
         document.getElementById('detailUid').innerText = user.id || '-';
-        const statusSpan = document.getElementById('detailStatusSpan');
-        statusSpan.innerHTML = user.status === 'active' ? '<span style="color:#2e7d32;">✅ نشط</span>' : '<span style="color:#c62828;">⛔ محظور</span>';
+        document.getElementById('detailStatusSpan').innerHTML = user.status === 'active' ? '<span style="color:#2e7d32;">✅ نشط</span>' : '<span style="color:#c62828;">⛔ محظور</span>';
         document.getElementById('quickBlurbDisplay').innerHTML = user.quickBlurb ? escapeHtml(user.quickBlurb) : 'لا توجد لمحة';
         
         const assignedSection = document.getElementById('assignedDoctorSection');
@@ -627,49 +589,41 @@
     }
 
     function setupTabs() {
-        const btns = document.querySelectorAll('.tab-btn');
-        btns.forEach(btn => {
-            btn.removeEventListener('click', tabHandler);
-            btn.addEventListener('click', tabHandler);
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const tabId = btn.dataset.tab;
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+                document.getElementById(tabId).classList.add('active');
+            });
         });
-        function tabHandler(e) {
-            const tabId = e.currentTarget.getAttribute('data-tab');
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            e.currentTarget.classList.add('active');
-            document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active');
-        }
     }
 
     async function loadNotesForModal(userId) {
-        const notesCol = collection(db, "users", userId, "notes");
-        const q = query(notesCol, orderBy("date", "desc"));
-        const snap = await getDocs(q);
-        let notesHtml = '';
-        if (snap.empty) {
-            notesHtml = '<div style="padding:12px; text-align:center;">📭 لا توجد ملاحظات</div>';
-        } else {
-            snap.forEach(doc => {
-                const n = doc.data();
-                notesHtml += `<div class="note-item"><i class="far fa-calendar-alt"></i> ${n.date ? new Date(n.date.toDate()).toLocaleString('ar') : ''}<br>${escapeHtml(n.text)}</div>`;
-            });
+        const notesRef = ref(db, `users/${userId}/notes`);
+        const snap = await get(notesRef);
+        const notesList = document.getElementById('notesListModal');
+        if (!snap.exists()) {
+            notesList.innerHTML = '<div style="padding:12px; text-align:center;">📭 لا توجد ملاحظات</div>';
+            return;
         }
-        document.getElementById('notesListModal').innerHTML = notesHtml;
+        let html = '';
+        snap.forEach(child => {
+            const n = child.val();
+            html += `<div class="note-item"><i class="far fa-calendar-alt"></i> ${new Date(n.date).toLocaleString('ar')}<br>${escapeHtml(n.text)}</div>`;
+        });
+        notesList.innerHTML = html;
     }
 
     async function addNewNote(userId, text) {
-        if(!text.trim()) { showToast('اكتب نص الملاحظة', true); return; }
-        const notesCol = collection(db, "users", userId, "notes");
-        await addDoc(notesCol, {
-            text,
-            date: serverTimestamp(),
-            addedBy: 'admin'
-        });
+        if (!text.trim()) { showToast('اكتب نص الملاحظة', true); return; }
+        const notesRef = ref(db, `users/${userId}/notes`);
+        await push(notesRef, { text, date: new Date().toISOString(), addedBy: 'admin' });
         showToast('📌 أُضيفت ملاحظة');
         await loadNotesForModal(userId);
     }
 
-    // ========== فتح / إغلاق المودالات ==========
     function openAddModal() {
         currentEditId = null;
         document.getElementById('formModalTitle').innerHTML = '<i class="fas fa-user-plus"></i> مستخدم جديد';
@@ -695,19 +649,14 @@
         document.getElementById('userRole').value = user.role || '';
         document.getElementById('userSpecialty').value = user.specialty || '';
         document.getElementById('quickBlurb').value = user.quickBlurb || '';
-        document.getElementById('userPassword').value = ''; // لا نعرض كلمة المرور
+        document.getElementById('userPassword').value = '';
         document.getElementById('userStatus').value = user.status || 'active';
-        
-        const role = user.role;
         const group = document.getElementById('assignDoctorGroup');
-        if (role === 'nurse') {
+        if (user.role === 'nurse') {
             group.style.display = 'block';
-            if (user.assignedDoctorId) {
-                setTimeout(() => {
-                    const select = document.getElementById('assignedDoctorSelect');
-                    if (select) select.value = user.assignedDoctorId;
-                }, 200);
-            }
+            setTimeout(() => {
+                document.getElementById('assignedDoctorSelect').value = user.assignedDoctorId || '';
+            }, 100);
         } else {
             group.style.display = 'none';
         }
@@ -715,24 +664,18 @@
         populateDoctorSelect();
     }
 
-    function closeFormModal() { 
-        document.getElementById('formModal').style.display = 'none'; 
+    function closeFormModal() {
+        document.getElementById('formModal').style.display = 'none';
         currentEditId = null;
     }
-    function closeDetailModal() { 
-        document.getElementById('detailModal').style.display = 'none'; 
+
+    function closeDetailModal() {
+        document.getElementById('detailModal').style.display = 'none';
         currentViewId = null;
     }
 
-    // ========== حفظ المستخدم (Firestore + Auth) ==========
     document.getElementById('userRole').addEventListener('change', (e) => {
-        const role = e.target.value;
-        const group = document.getElementById('assignDoctorGroup');
-        if (role === 'nurse') {
-            group.style.display = 'block';
-        } else {
-            group.style.display = 'none';
-        }
+        document.getElementById('assignDoctorGroup').style.display = e.target.value === 'nurse' ? 'block' : 'none';
     });
 
     async function saveUser() {
@@ -744,32 +687,23 @@
         const quickBlurb = document.getElementById('quickBlurb').value.trim();
         const password = document.getElementById('userPassword').value;
         const status = document.getElementById('userStatus').value;
-        
-        if (!name || !email || !role) {
-            showToast('الاسم والبريد والدور مطلوبة', true);
-            return;
-        }
-        
-        let assignedDoctorId = null;
-        let assignedDoctorName = null;
+
+        if (!name || !email || !role) { showToast('الاسم والبريد والدور مطلوبة', true); return; }
+
+        let assignedDoctorId = null, assignedDoctorName = null;
         if (role === 'nurse') {
             assignedDoctorId = document.getElementById('assignedDoctorSelect').value;
-            if (!assignedDoctorId) {
-                showToast('يجب اختيار الدكتور المسؤول للممرض', true);
-                return;
-            }
-            const selectedDoc = doctorsList.find(d => d.id === assignedDoctorId);
-            assignedDoctorName = selectedDoc ? selectedDoc.name : '';
+            if (!assignedDoctorId) { showToast('يجب اختيار الدكتور المسؤول', true); return; }
+            const doc = doctorsList.find(d => d.id === assignedDoctorId);
+            assignedDoctorName = doc ? doc.name : '';
         }
 
         const userData = {
             name, email, phone, role,
             specialty: role === 'doctor' ? specialty : '',
-            quickBlurb,
-            status,
-            lastModified: serverTimestamp()
+            quickBlurb, status,
+            lastModified: new Date().toISOString()
         };
-        
         if (role === 'nurse') {
             userData.assignedDoctorId = assignedDoctorId;
             userData.assignedDoctorName = assignedDoctorName;
@@ -777,94 +711,69 @@
 
         try {
             if (currentEditId) {
-                // تعديل مستخدم موجود (بدون تغيير كلمة المرور)
-                await updateDoc(doc(db, "users", currentEditId), userData);
+                await update(ref(db, `users/${currentEditId}`), userData);
                 showToast('تم التعديل بنجاح');
                 closeFormModal();
             } else {
-                // مستخدم جديد
-                if (!password) {
-                    showToast('كلمة المرور مطلوبة لحساب جديد', true);
-                    return;
-                }
-                // 1. إنشاء حساب في Auth
-                const userCred = await createUserWithEmailAndPassword(auth, email, password);
-                const uid = userCred.user.uid;
-                
-                // 2. إضافة بيانات إضافية
-                userData.createdAt = serverTimestamp();
-                
-                // 3. حفظ في Firestore
-                await setDoc(doc(db, "users", uid), userData);
-                
-                showToast('🎉 تم إضافة المستخدم بنجاح');
+                if (!password) { showToast('كلمة المرور مطلوبة', true); return; }
+                const cred = await createUserWithEmailAndPassword(auth, email, password);
+                userData.createdAt = new Date().toISOString();
+                await set(ref(db, `users/${cred.user.uid}`), userData);
+                showToast('🎉 تم إضافة المستخدم');
                 closeFormModal();
             }
         } catch (err) {
-            console.error(err);
-            if (err.code === 'auth/email-already-in-use') showToast('البريد الإلكتروني مستخدم بالفعل', true);
-            else if (err.code === 'auth/weak-password') showToast('كلمة المرور ضعيفة (6 حروف على الأقل)', true);
+            if (err.code === 'auth/email-already-in-use') showToast('البريد مستخدم بالفعل', true);
             else showToast(err.message, true);
         }
     }
 
-    // ========== حظر / حذف ==========
     async function toggleBlockUser(id, newStatus) {
-        await updateDoc(doc(db, "users", id), { status: newStatus });
+        await update(ref(db, `users/${id}`), { status: newStatus });
         showToast(newStatus === 'blocked' ? 'تم الحظر' : 'تم إلغاء الحظر');
         closeDetailModal();
     }
 
     async function deleteUser(id) {
-        if (!confirm('هل أنت متأكد من حذف هذا المستخدم؟ لا يمكن التراجع.')) return;
-        try {
-            // حذف من Firestore (يمكن أيضًا حذف من Auth لكن هذا يتطلب Cloud Function أو Admin SDK)
-            await deleteDoc(doc(db, "users", id));
-            showToast('تم حذف المستخدم من قاعدة البيانات');
-            closeDetailModal();
-        } catch (err) {
-            showToast('فشل الحذف: ' + err.message, true);
-        }
+        if (!confirm('حذف نهائي؟')) return;
+        await remove(ref(db, `users/${id}`));
+        showToast('تم الحذف');
+        closeDetailModal();
     }
 
-    // ========== تسجيل الخروج ==========
     async function logout() {
         if (unsubscribeUsers) unsubscribeUsers();
         await signOut(auth);
         window.location.href = 'index.html';
     }
 
-    // ========== ربط الأحداث ==========
-    function setupEvents() {
-        document.getElementById('searchInput').addEventListener('input', renderGrid);
-        document.getElementById('addUserBtn').onclick = openAddModal;
-        document.getElementById('refreshBtn').onclick = () => { loadUsers(); showToast('تم التحديث'); };
-        document.getElementById('logoutBtn').onclick = logout;
-        document.getElementById('saveFormBtn').onclick = saveUser;
-        document.getElementById('closeFormBtn').onclick = closeFormModal;
-        document.getElementById('closeDetailBtn').onclick = closeDetailModal;
-        document.getElementById('blockModalBtn').onclick = () => { if(currentViewId) toggleBlockUser(currentViewId, 'blocked'); };
-        document.getElementById('unblockModalBtn').onclick = () => { if(currentViewId) toggleBlockUser(currentViewId, 'active'); };
-        document.getElementById('deleteModalBtn').onclick = () => { if(currentViewId) deleteUser(currentViewId); };
-        document.getElementById('editModalBtn').onclick = () => {
-            const user = allUsers.find(u => u.id === currentViewId);
-            if(user) { closeDetailModal(); openEditModal(user); }
-        };
-        document.getElementById('addNoteModalBtn').onclick = async () => {
-            const txt = document.getElementById('newNoteText').value;
-            if(currentViewId && txt) {
-                await addNewNote(currentViewId, txt);
-                document.getElementById('newNoteText').value = '';
-            } else showToast('اكتب نص الملاحظة', true);
-        };
-        window.onclick = (e) => {
-            if(e.target === document.getElementById('detailModal')) closeDetailModal();
-            if(e.target === document.getElementById('formModal')) closeFormModal();
-        };
-    }
+    // ربط الأحداث
+    document.getElementById('searchInput').addEventListener('input', renderGrid);
+    document.getElementById('addUserBtn').onclick = openAddModal;
+    document.getElementById('refreshBtn').onclick = () => { loadUsers(); showToast('تم التحديث'); };
+    document.getElementById('logoutBtn').onclick = logout;
+    document.getElementById('saveFormBtn').onclick = saveUser;
+    document.getElementById('closeFormBtn').onclick = closeFormModal;
+    document.getElementById('closeDetailBtn').onclick = closeDetailModal;
+    document.getElementById('blockModalBtn').onclick = () => currentViewId && toggleBlockUser(currentViewId, 'blocked');
+    document.getElementById('unblockModalBtn').onclick = () => currentViewId && toggleBlockUser(currentViewId, 'active');
+    document.getElementById('deleteModalBtn').onclick = () => currentViewId && deleteUser(currentViewId);
+    document.getElementById('editModalBtn').onclick = () => {
+        const user = allUsers.find(u => u.id === currentViewId);
+        if (user) { closeDetailModal(); openEditModal(user); }
+    };
+    document.getElementById('addNoteModalBtn').onclick = async () => {
+        const txt = document.getElementById('newNoteText').value;
+        if (currentViewId && txt) {
+            await addNewNote(currentViewId, txt);
+            document.getElementById('newNoteText').value = '';
+        } else showToast('اكتب نص الملاحظة', true);
+    };
+    window.onclick = (e) => {
+        if (e.target === document.getElementById('detailModal')) closeDetailModal();
+        if (e.target === document.getElementById('formModal')) closeFormModal();
+    };
 
-    // ========== بدء التشغيل ==========
-    setupEvents();
     loadUsers();
 </script>
 </body>
