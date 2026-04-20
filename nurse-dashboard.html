@@ -625,9 +625,11 @@
             ui.searchResults.style.display = 'none';
             return;
         }
+        // debounce بسيط
         clearTimeout(searchTimeout);
         searchTimeout = setTimeout(async () => {
             try {
+                // البحث بالاسم أو الهاتف (نظراً لعدم وجود فهرس مركب نستخدم طريقتين)
                 const nameQ = query(collection(db, "patients"), where("name", ">=", term), where("name", "<=", term + '\uf8ff'), limit(5));
                 const phoneQ = query(collection(db, "patients"), where("phone", ">=", term), where("phone", "<=", term + '\uf8ff'), limit(5));
                 const [nameSnap, phoneSnap] = await Promise.all([getDocs(nameQ), getDocs(phoneQ)]);
@@ -697,6 +699,7 @@
 
         try {
             const phone = ui.patientPhone.value.trim();
+            // حفظ بيانات المريض إذا كان هناك هاتف
             if (phone) {
                 await setDoc(doc(db, "patients", phone), {
                     name, age: ui.patientAge.value || null, phone,
