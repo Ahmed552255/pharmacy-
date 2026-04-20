@@ -4,14 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>سُكُون · لوحة الممرض</title>
-    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
     <style>
-        /* ألوان متناسقة مع هوية سُكُون */
         :root {
             --primary: #7AC5C5;
             --primary-dark: #5BA3A3;
@@ -28,7 +25,6 @@
             --shadow-sm: 0 4px 6px -2px rgba(58, 128, 128, 0.08);
             --shadow-md: 0 10px 25px -5px rgba(58, 128, 128, 0.12);
             --radius-card: 24px;
-            --radius-element: 14px;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -49,14 +45,12 @@
             z-index: -1;
         }
         .container { max-width: 1300px; margin: 0 auto; }
-
         .app-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
             background: rgba(255,255,255,0.7);
             backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
             border-radius: 60px;
             padding: 12px 24px;
             margin-bottom: 24px;
@@ -102,13 +96,6 @@
         }
         .btn-primary:hover { background: var(--primary-dark); transform: translateY(-2px); }
         .btn-outline:hover { background: #f8fafc; }
-        .btn-danger {
-            background: var(--danger);
-            color: white;
-            border: none;
-        }
-        .btn-danger:hover { background: #dc2626; }
-
         .datetime-bar {
             background: rgba(255,255,255,0.8);
             backdrop-filter: blur(8px);
@@ -123,7 +110,35 @@
             border: 1px solid var(--border-light);
         }
         .datetime-bar i { color: var(--primary); margin-left: 8px; }
-
+        .stats-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: rgba(255,255,255,0.7);
+            backdrop-filter: blur(8px);
+            border-radius: 20px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border: 1px solid var(--border-light);
+        }
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--primary);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.4rem;
+        }
+        .stat-info h4 { font-size: 1.5rem; font-weight: 800; }
+        .stat-info p { color: var(--text-sec); font-size: 0.8rem; }
         .table-wrapper {
             background: rgba(255,255,255,0.8);
             backdrop-filter: blur(8px);
@@ -166,7 +181,6 @@
         .status-inprogress { background: #D6F0F0; color: #1A5C5C; }
         .status-done { background: #DCF5E8; color: #1E6F4C; }
         .status-cancelled { background: #FDE2E2; color: #B23B3B; }
-
         .action-btns {
             display: flex;
             gap: 8px;
@@ -189,7 +203,6 @@
         .icon-btn:hover { background: var(--primary); color: white; border-color: var(--primary); }
         .icon-btn.danger:hover { background: var(--danger); border-color: var(--danger); }
         .icon-btn.success:hover { background: var(--success); border-color: var(--success); }
-
         .modal {
             display: none;
             position: fixed;
@@ -290,6 +303,7 @@
             max-width: 500px;
             margin: 0 auto;
         }
+        .empty-state { text-align: center; padding: 40px; color: var(--text-sec); }
         .error-box {
             text-align: center;
             padding: 40px;
@@ -298,7 +312,6 @@
             margin: 20px 0;
         }
         .error-box i { font-size: 48px; color: var(--danger); margin-bottom: 16px; }
-        .empty-state { text-align: center; padding: 40px; color: var(--text-sec); }
     </style>
 </head>
 <body>
@@ -320,19 +333,31 @@
         <div><i class="fas fa-user-md"></i> <span id="doctorNameLabel">د. ---</span></div>
     </div>
 
+    <div class="stats-cards">
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-calendar-check"></i></div>
+            <div class="stat-info"><h4 id="totalBookings">0</h4><p>إجمالي الحجوزات</p></div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-clock"></i></div>
+            <div class="stat-info"><h4 id="waitingCount">0</h4><p>في الانتظار</p></div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-play-circle"></i></div>
+            <div class="stat-info"><h4 id="inProgressCount">0</h4><p>قيد الكشف</p></div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+            <div class="stat-info"><h4 id="doneCount">0</h4><p>منتهي</p></div>
+        </div>
+    </div>
+
     <div id="contentArea">
         <div class="table-wrapper">
             <table>
                 <thead>
                     <tr>
-                        <th>#</th>
-                        <th>المريض</th>
-                        <th>العمر</th>
-                        <th>الهاتف</th>
-                        <th>التاريخ</th>
-                        <th>الوقت</th>
-                        <th>الحالة</th>
-                        <th>إجراءات</th>
+                        <th>#</th><th>المريض</th><th>العمر</th><th>الهاتف</th><th>التاريخ</th><th>الوقت</th><th>الحالة</th><th>إجراءات</th>
                     </tr>
                 </thead>
                 <tbody id="bookingsBody">
@@ -389,24 +414,21 @@
 </div>
 
 <script type="module">
-    // ==================== استيراد الإعدادات ====================
     import { firebaseConfig } from './firebase-config.js';
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
-    import { getFirestore, collection, query, where, onSnapshot, doc, getDoc, setDoc, addDoc, updateDoc, serverTimestamp, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+    import { getDatabase, ref, onValue, set, push, update, get, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-database.js";
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
-    const db = getFirestore(app);
+    const db = getDatabase(app);
 
-    // ========== المتغيرات ==========
     let currentUser = null;
     let linkedDoctor = null;
     let unsubscribeBookings = null;
     let selectedPatientId = null;
-    let userDataLoaded = false;
+    let allBookings = [];
 
-    // ========== عناصر DOM ==========
     const ui = {
         welcomeMessage: document.getElementById('welcomeMessage'),
         doctorNameLabel: document.getElementById('doctorNameLabel'),
@@ -429,13 +451,15 @@
         submitBtn: document.getElementById('submitBtn'),
         formAlert: document.getElementById('formAlert'),
         bookingForm: document.getElementById('bookingForm'),
-        contentArea: document.getElementById('contentArea')
+        totalBookings: document.getElementById('totalBookings'),
+        waitingCount: document.getElementById('waitingCount'),
+        inProgressCount: document.getElementById('inProgressCount'),
+        doneCount: document.getElementById('doneCount')
     };
 
     const today = new Date().toISOString().split('T')[0];
     ui.appointmentDate.value = today;
 
-    // تحديث الوقت بدون ثواني
     function updateDateTime() {
         const now = new Date();
         ui.liveTime.textContent = now.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
@@ -454,143 +478,125 @@
     }
 
     function showFatalError(title, message) {
-        ui.contentArea.innerHTML = `
+        document.getElementById('contentArea').innerHTML = `
             <div class="error-box">
                 <i class="fas fa-exclamation-triangle"></i>
                 <h3>${title}</h3>
                 <p style="margin: 16px 0; color: var(--text-sec);">${message}</p>
-                <button class="btn btn-primary" id="retryBtn"><i class="fas fa-sync-alt"></i> إعادة المحاولة</button>
-                <button class="btn btn-outline" id="goToLoginBtn" style="margin-right: 12px;">العودة للدخول</button>
+                <button class="btn btn-primary" onclick="window.location.reload()"><i class="fas fa-sync-alt"></i> إعادة المحاولة</button>
             </div>
         `;
-        document.getElementById('retryBtn').addEventListener('click', () => window.location.reload());
-        document.getElementById('goToLoginBtn').addEventListener('click', async () => {
-            await signOut(auth);
-            window.location.href = 'index.html';
-        });
     }
 
-    // ========== تحميل بيانات الممرض والطبيب ==========
     async function loadUserData(user) {
         try {
-            const cached = localStorage.getItem(`nurse_${user.uid}`);
-            if (cached) {
-                const data = JSON.parse(cached);
+            const cache = localStorage.getItem(`nurse_${user.uid}`);
+            if (cache) {
+                const data = JSON.parse(cache);
                 linkedDoctor = data.linkedDoctor;
                 ui.welcomeMessage.textContent = `أهلاً، ${data.userName || 'ممرض'}`;
                 ui.doctorNameLabel.textContent = `د. ${linkedDoctor.name}`;
-                userDataLoaded = true;
                 return true;
             }
 
-            const userDoc = await getDoc(doc(db, "users", user.uid));
-            if (!userDoc.exists()) {
-                throw new Error("لم يتم العثور على بيانات المستخدم. يرجى التواصل مع المدير.");
-            }
-            
-            const userData = userDoc.data();
-            const doctorId = userData.assignedDoctorId || userData.linkedDoctor;
-            if (!doctorId) {
-                throw new Error("لم يتم ربطك بطبيب. يرجى التواصل مع المدير لربط حسابك.");
-            }
+            const snap = await get(ref(db, `users/${user.uid}`));
+            if (!snap.exists()) throw new Error("بيانات المستخدم غير موجودة");
+            const userData = snap.val();
+            const doctorId = userData.assignedDoctorId;
+            if (!doctorId) throw new Error("لم يتم ربطك بطبيب");
 
-            const doctorDoc = await getDoc(doc(db, "users", doctorId));
-            if (!doctorDoc.exists()) {
-                throw new Error("الطبيب المرتبط غير موجود. يرجى التواصل مع المدير.");
-            }
+            const docSnap = await get(ref(db, `users/${doctorId}`));
+            if (!docSnap.exists()) throw new Error("الطبيب غير موجود");
 
-            linkedDoctor = { id: doctorId, name: doctorDoc.data().name };
-            const cacheData = {
+            linkedDoctor = { id: doctorId, name: docSnap.val().name };
+            localStorage.setItem(`nurse_${user.uid}`, JSON.stringify({
                 linkedDoctor,
                 userName: userData.name || 'ممرض'
-            };
-            localStorage.setItem(`nurse_${user.uid}`, JSON.stringify(cacheData));
-            
-            ui.welcomeMessage.textContent = `أهلاً، ${cacheData.userName}`;
+            }));
+            ui.welcomeMessage.textContent = `أهلاً، ${userData.name || 'ممرض'}`;
             ui.doctorNameLabel.textContent = `د. ${linkedDoctor.name}`;
-            userDataLoaded = true;
             return true;
-        } catch (error) {
-            console.error("خطأ في تحميل بيانات المستخدم:", error);
-            showFatalError("تعذر تحميل البيانات", error.message);
+        } catch (err) {
+            showFatalError("تعذر تحميل البيانات", err.message);
             return false;
         }
     }
 
-    // ========== تحميل حجوزات الدكتور ==========
     function loadBookings() {
-        if (!linkedDoctor || !userDataLoaded) return;
+        if (!linkedDoctor) return;
         if (unsubscribeBookings) unsubscribeBookings();
 
-        const q = query(
-            collection(db, "appointments"),
-            where("doctorId", "==", linkedDoctor.id),
-            orderBy("date", "desc"),
-            orderBy("time", "desc")
-        );
-
-        unsubscribeBookings = onSnapshot(q, (snapshot) => {
-            if (!ui.bookingsBody) return;
-            ui.bookingsBody.innerHTML = '';
-            if (snapshot.empty) {
-                ui.bookingsBody.innerHTML = '<tr><td colspan="8" class="empty-state">لا توجد حجوزات بعد.</td></tr>';
-                return;
-            }
-            let counter = 1;
-            snapshot.forEach(docSnap => {
-                const b = docSnap.data();
-                const row = ui.bookingsBody.insertRow();
-                const statusClass = {
-                    'انتظار': 'status-waiting',
-                    'قيد الكشف': 'status-inprogress',
-                    'منتهي': 'status-done',
-                    'ملغي': 'status-cancelled'
-                }[b.status] || 'status-waiting';
-                
-                row.innerHTML = `
-                    <td>${counter++}</td>
-                    <td><b>${b.patientName || '-'}</b></td>
-                    <td>${b.age || '-'}</td>
-                    <td>${b.phone || '-'}</td>
-                    <td>${b.date || '-'}</td>
-                    <td>${b.time || '-'}</td>
-                    <td><span class="status-badge ${statusClass}">${b.status || 'انتظار'}</span></td>
-                    <td>
-                        <div class="action-btns">
-                            ${b.status === 'انتظار' ? `
-                                <button class="icon-btn success" data-id="${docSnap.id}" data-action="start" title="بدء الكشف">
-                                    <i class="fas fa-play"></i>
-                                </button>
-                            ` : ''}
-                            ${b.status === 'قيد الكشف' ? `
-                                <button class="icon-btn" data-id="${docSnap.id}" data-action="finish" title="إنهاء الكشف" style="background:var(--success); color:white;">
-                                    <i class="fas fa-check"></i>
-                                </button>
-                            ` : ''}
-                            ${b.status !== 'ملغي' && b.status !== 'منتهي' ? `
-                                <button class="icon-btn danger" data-id="${docSnap.id}" data-action="cancel" title="إلغاء">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            ` : ''}
-                            <button class="icon-btn danger" data-id="${docSnap.id}" data-action="delete" title="حذف">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </td>
-                `;
-            });
-        }, (error) => {
-            console.error(error);
-            if (ui.bookingsBody) {
-                ui.bookingsBody.innerHTML = '<tr><td colspan="8" class="empty-state">خطأ في تحميل الحجوزات. تأكد من وجود الفهرس المطلوب.</td></tr>';
-            }
+        const bookingsRef = ref(db, 'appointments');
+        const doctorQuery = query(bookingsRef, orderByChild('doctorId'), equalTo(linkedDoctor.id));
+        
+        unsubscribeBookings = onValue(doctorQuery, (snap) => {
+            const bookings = [];
+            snap.forEach(child => bookings.push({ id: child.key, ...child.val() }));
+            allBookings = bookings.sort((a, b) => (b.date + b.time).localeCompare(a.date + a.time));
+            renderTable();
+            updateStats();
         });
     }
 
-    // ========== إجراءات الحجز ==========
-    async function updateBookingStatus(id, status) {
+    function updateStats() {
+        const waiting = allBookings.filter(b => b.status === 'انتظار').length;
+        const inProgress = allBookings.filter(b => b.status === 'قيد الكشف').length;
+        const done = allBookings.filter(b => b.status === 'منتهي').length;
+        ui.totalBookings.textContent = allBookings.length;
+        ui.waitingCount.textContent = waiting;
+        ui.inProgressCount.textContent = inProgress;
+        ui.doneCount.textContent = done;
+    }
+
+    function renderTable() {
+        if (!ui.bookingsBody) return;
+        if (allBookings.length === 0) {
+            ui.bookingsBody.innerHTML = '<tr><td colspan="8" class="empty-state">لا توجد حجوزات اليوم</td></tr>';
+            return;
+        }
+        let html = '';
+        allBookings.forEach((b, idx) => {
+            const statusClass = {
+                'انتظار': 'status-waiting',
+                'قيد الكشف': 'status-inprogress',
+                'منتهي': 'status-done',
+                'ملغي': 'status-cancelled'
+            }[b.status] || 'status-waiting';
+            html += `<tr>
+                <td>${idx + 1}</td>
+                <td><b>${b.patientName || '-'}</b></td>
+                <td>${b.age || '-'}</td>
+                <td>${b.phone || '-'}</td>
+                <td>${b.date || '-'}</td>
+                <td>${b.time || '-'}</td>
+                <td><span class="status-badge ${statusClass}">${b.status || 'انتظار'}</span></td>
+                <td>
+                    <div class="action-btns">
+                        ${b.status === 'انتظار' ? `<button class="icon-btn success" data-id="${b.id}" data-action="start"><i class="fas fa-play"></i></button>` : ''}
+                        ${b.status === 'قيد الكشف' ? `<button class="icon-btn" data-id="${b.id}" data-action="finish" style="background:var(--success); color:white;"><i class="fas fa-check"></i></button>` : ''}
+                        ${b.status !== 'ملغي' && b.status !== 'منتهي' ? `<button class="icon-btn danger" data-id="${b.id}" data-action="cancel"><i class="fas fa-times"></i></button>` : ''}
+                        <button class="icon-btn danger" data-id="${b.id}" data-action="delete"><i class="fas fa-trash"></i></button>
+                    </div>
+                </td>
+            </tr>`;
+        });
+        ui.bookingsBody.innerHTML = html;
+    }
+
+    ui.bookingsBody.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-action]');
+        if (!btn) return;
+        const id = btn.dataset.id;
+        const action = btn.dataset.action;
+        if (action === 'start') updateStatus(id, 'قيد الكشف');
+        else if (action === 'finish') updateStatus(id, 'منتهي');
+        else if (action === 'cancel') updateStatus(id, 'ملغي');
+        else if (action === 'delete') deleteBooking(id);
+    });
+
+    async function updateStatus(id, status) {
         try {
-            await updateDoc(doc(db, "appointments", id), { status });
+            await update(ref(db, `appointments/${id}`), { status });
             showToast(status === 'منتهي' ? '✅ تم إنهاء الكشف' : status === 'قيد الكشف' ? '🩺 بدأ الكشف' : '❌ تم الإلغاء');
         } catch (e) {
             showToast('فشل التحديث', true);
@@ -600,90 +606,75 @@
     async function deleteBooking(id) {
         if (!confirm('حذف الحجز نهائياً؟')) return;
         try {
-            await setDoc(doc(db, "appointments", id), { status: 'ملغي' }, { merge: true });
+            await set(ref(db, `appointments/${id}`), null);
             showToast('تم الحذف');
         } catch (e) {
             showToast('فشل الحذف', true);
         }
     }
 
-    ui.bookingsBody.addEventListener('click', (e) => {
-        const btn = e.target.closest('[data-action]');
-        if (!btn) return;
-        const id = btn.dataset.id;
-        const action = btn.dataset.action;
-        if (action === 'start') updateBookingStatus(id, 'قيد الكشف');
-        else if (action === 'finish') updateBookingStatus(id, 'منتهي');
-        else if (action === 'cancel') updateBookingStatus(id, 'ملغي');
-        else if (action === 'delete') deleteBooking(id);
-    });
-
-    // ========== البحث عن مريض ==========
+    // البحث عن مريض (من جدول patients)
     let searchTimeout;
-    async function searchPatients(term) {
+    ui.patientSearch.addEventListener('input', (e) => {
+        const term = e.target.value.trim();
         if (term.length < 2) {
             ui.searchResults.style.display = 'none';
             return;
         }
-        // debounce بسيط
         clearTimeout(searchTimeout);
         searchTimeout = setTimeout(async () => {
-            try {
-                // البحث بالاسم أو الهاتف (نظراً لعدم وجود فهرس مركب نستخدم طريقتين)
-                const nameQ = query(collection(db, "patients"), where("name", ">=", term), where("name", "<=", term + '\uf8ff'), limit(5));
-                const phoneQ = query(collection(db, "patients"), where("phone", ">=", term), where("phone", "<=", term + '\uf8ff'), limit(5));
-                const [nameSnap, phoneSnap] = await Promise.all([getDocs(nameQ), getDocs(phoneQ)]);
-                const results = new Map();
-                nameSnap.forEach(d => results.set(d.id, d.data()));
-                phoneSnap.forEach(d => results.set(d.id, d.data()));
-                
-                ui.searchResults.innerHTML = '';
-                if (results.size === 0) {
-                    ui.searchResults.innerHTML = '<div class="search-item">لا توجد نتائج</div>';
-                } else {
-                    results.forEach((data, id) => {
-                        const div = document.createElement('div');
-                        div.className = 'search-item';
-                        div.innerHTML = `<b>${data.name}</b><br><small>${data.phone || 'بدون رقم'}</small>`;
-                        div.onclick = () => selectPatient(id, data);
-                        ui.searchResults.appendChild(div);
-                    });
+            const patientsRef = ref(db, 'patients');
+            const snap = await get(patientsRef);
+            const results = [];
+            snap.forEach(child => {
+                const p = child.val();
+                if (p.name?.includes(term) || p.phone?.includes(term)) {
+                    results.push({ id: child.key, ...p });
                 }
-                ui.searchResults.style.display = 'block';
-            } catch (e) { console.error(e); }
+            });
+            ui.searchResults.innerHTML = '';
+            if (results.length === 0) {
+                ui.searchResults.innerHTML = '<div class="search-item">لا توجد نتائج</div>';
+            } else {
+                results.forEach(p => {
+                    const div = document.createElement('div');
+                    div.className = 'search-item';
+                    div.innerHTML = `<b>${p.name}</b><br><small>${p.phone || 'بدون رقم'}</small>`;
+                    div.onclick = () => selectPatient(p);
+                    ui.searchResults.appendChild(div);
+                });
+            }
+            ui.searchResults.style.display = 'block';
         }, 300);
-    }
+    });
 
-    async function selectPatient(id, data) {
-        ui.patientName.value = data.name || '';
-        ui.patientAge.value = data.age || '';
-        ui.patientPhone.value = data.phone || '';
-        selectedPatientId = id;
+    async function selectPatient(patient) {
+        ui.patientName.value = patient.name || '';
+        ui.patientAge.value = patient.age || '';
+        ui.patientPhone.value = patient.phone || '';
+        selectedPatientId = patient.id;
         ui.patientSearch.value = '';
         ui.searchResults.style.display = 'none';
         
-        if (id) {
-            const historyQ = query(collection(db, "appointments"), where("patientId", "==", id), orderBy("date", "desc"), orderBy("time", "desc"), limit(3));
-            const snap = await getDocs(historyQ);
-            ui.historyList.innerHTML = '';
-            if (!snap.empty) {
-                snap.forEach(doc => {
-                    const h = doc.data();
-                    const div = document.createElement('div');
-                    div.className = 'history-item';
-                    div.innerHTML = `${h.date} ${h.time} - ${h.status || 'انتظار'}`;
-                    ui.historyList.appendChild(div);
-                });
-                ui.patientHistoryBox.style.display = 'block';
-            } else {
-                ui.patientHistoryBox.style.display = 'none';
-            }
+        const historyQuery = query(ref(db, 'appointments'), orderByChild('patientId'), equalTo(patient.id));
+        const snap = await get(historyQuery);
+        ui.historyList.innerHTML = '';
+        if (snap.exists()) {
+            const visits = [];
+            snap.forEach(c => visits.push(c.val()));
+            visits.sort((a,b) => (b.date+b.time).localeCompare(a.date+a.time));
+            visits.slice(0,3).forEach(v => {
+                const div = document.createElement('div');
+                div.className = 'history-item';
+                div.innerHTML = `${v.date} ${v.time} - ${v.status || 'انتظار'}`;
+                ui.historyList.appendChild(div);
+            });
+            ui.patientHistoryBox.style.display = 'block';
+        } else {
+            ui.patientHistoryBox.style.display = 'none';
         }
     }
 
-    ui.patientSearch.addEventListener('input', (e) => searchPatients(e.target.value.trim()));
-
-    // ========== إضافة حجز ==========
     ui.bookingForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const name = ui.patientName.value.trim();
@@ -693,40 +684,32 @@
             ui.formAlert.textContent = 'الرجاء إدخال الاسم والتاريخ والوقت';
             return;
         }
-
         ui.submitBtn.disabled = true;
         ui.submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
-
         try {
             const phone = ui.patientPhone.value.trim();
-            // حفظ بيانات المريض إذا كان هناك هاتف
             if (phone) {
-                await setDoc(doc(db, "patients", phone), {
+                await set(ref(db, `patients/${phone}`), {
                     name, age: ui.patientAge.value || null, phone,
-                    updatedAt: serverTimestamp()
-                }, { merge: true });
+                    updatedAt: new Date().toISOString()
+                });
                 selectedPatientId = phone;
-            } else {
-                selectedPatientId = null;
             }
-
-            await addDoc(collection(db, "appointments"), {
+            await push(ref(db, 'appointments'), {
                 patientName: name,
-                patientId: selectedPatientId,
+                patientId: selectedPatientId || null,
                 age: ui.patientAge.value || null,
                 phone: phone || null,
                 doctorId: linkedDoctor.id,
                 date, time,
                 status: 'انتظار',
-                createdAt: serverTimestamp()
+                createdAt: new Date().toISOString()
             });
-
             showToast('✅ تم حجز الموعد');
             ui.modal.style.display = 'none';
             resetForm();
         } catch (err) {
-            console.error(err);
-            ui.formAlert.textContent = 'حدث خطأ أثناء الحفظ: ' + err.message;
+            ui.formAlert.textContent = 'حدث خطأ: ' + err.message;
         } finally {
             ui.submitBtn.disabled = false;
             ui.submitBtn.innerHTML = 'تأكيد الحجز';
@@ -741,41 +724,31 @@
         ui.formAlert.textContent = '';
     }
 
-    ui.openModalBtn.addEventListener('click', () => {
-        if (!userDataLoaded || !linkedDoctor) {
-            showToast('بيانات الطبيب غير محملة بعد، انتظر قليلاً', true);
-            return;
-        }
+    ui.openModalBtn.onclick = () => {
+        if (!linkedDoctor) { showToast('بيانات الطبيب غير محملة', true); return; }
         resetForm();
         ui.modal.style.display = 'flex';
-    });
-    ui.closeModalBtn.addEventListener('click', () => ui.modal.style.display = 'none');
-    window.addEventListener('click', (e) => { if (e.target === ui.modal) ui.modal.style.display = 'none'; });
+    };
+    ui.closeModalBtn.onclick = () => ui.modal.style.display = 'none';
+    window.onclick = (e) => { if (e.target === ui.modal) ui.modal.style.display = 'none'; };
     document.addEventListener('click', (e) => {
         if (!ui.patientSearch.contains(e.target) && !ui.searchResults.contains(e.target)) {
             ui.searchResults.style.display = 'none';
         }
     });
 
-    // خروج
-    ui.logoutBtn.addEventListener('click', async () => {
+    ui.logoutBtn.onclick = async () => {
         if (unsubscribeBookings) unsubscribeBookings();
         localStorage.removeItem(`nurse_${currentUser?.uid}`);
         await signOut(auth);
         window.location.href = 'index.html';
-    });
+    };
 
-    // ========== بدء التشغيل ==========
     onAuthStateChanged(auth, async (user) => {
-        if (!user) {
-            window.location.href = 'index.html';
-            return;
-        }
+        if (!user) { window.location.href = 'index.html'; return; }
         currentUser = user;
-        const success = await loadUserData(user);
-        if (success) {
-            loadBookings();
-        }
+        const ok = await loadUserData(user);
+        if (ok) loadBookings();
     });
 </script>
 </body>
