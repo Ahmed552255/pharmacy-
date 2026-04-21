@@ -337,6 +337,10 @@
             font-size: 1.2rem;
         }
         .highlight { color: var(--accent); }
+        /* تحسينات إضافية */
+        .password-section { position: relative; }
+        .password-toggle { position: absolute; left: 16px; top: 38px; cursor: pointer; color: var(--text-sec); }
+        .field-hint { font-size: 0.8rem; color: var(--text-sec); margin-top: 4px; }
     </style>
 </head>
 <body>
@@ -361,7 +365,7 @@
     </div>
 </div>
 
-<!-- مودال تفاصيل المستخدم (بدون ملاحظات) -->
+<!-- مودال تفاصيل المستخدم -->
 <div id="detailModal" class="modal">
     <div class="modal-card">
         <div class="modal-header">
@@ -425,15 +429,18 @@
             <div class="form-group" id="assignDoctorsGroup" style="display:none;">
                 <label>الأطباء المسؤولون (يمكن اختيار أكثر من طبيب)</label>
                 <div class="multi-select" id="assignedDoctorsCheckboxGroup"></div>
+                <div class="field-hint">اختر طبيبًا واحدًا على الأقل</div>
             </div>
-            <div class="form-group">
-                <input type="text" id="userSpecialty" placeholder="التخصص (للطبيب فقط)">
+            <div class="form-group" id="specialtyGroup" style="display:none;">
+                <input type="text" id="userSpecialty" placeholder="التخصص (للطبيب)">
             </div>
             <div class="form-group">
                 <textarea id="quickBlurb" rows="2" placeholder="لمحة سريعة (خبرة، ملاحظات...)"></textarea>
             </div>
-            <div class="form-group">
+            <div class="form-group password-section" id="passwordFieldGroup">
                 <input type="password" id="userPassword" placeholder="كلمة المرور *" required>
+                <i class="far fa-eye password-toggle" id="togglePassword"></i>
+                <div class="field-hint" id="passwordHint">أدخل كلمة مرور قوية</div>
             </div>
             <div class="form-group">
                 <select id="userStatus">
@@ -452,12 +459,16 @@
     import { firebaseConfig } from './firebase-config.js';
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
     import { getDatabase, ref, onValue, set, update, remove, get } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-database.js";
-    import { getAuth, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
+    import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
     const auth = getAuth(app);
     const usersRef = ref(db, 'users');
+
+    const API_KEY = firebaseConfig.apiKey;
+    const SIGN_UP_URL = `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${API_KEY}`;
+    const DELETE_ACCOUNT_URL = `https://identitytoolkit.googleapis.com/v1/accounts:delete?key=${API_KEY}`;
 
     let allUsers = [];
     let doctorsList = [];
@@ -499,10 +510,11 @@
 
     function populateDoctorsCheckboxes() {
         const container = document.getElementById('assignedDoctorsCheckboxGroup');
+        if (!container) return;
         container.innerHTML = '';
         doctorsList.forEach(doc => {
             const label = document.createElement('label');
-            label.innerHTML = `<input type="checkbox" value="${doc.id}"> ${doc.name || 'بدون اسم'} (${doc.email || ''})`;
+            label.innerHTML = `<input type="checkbox" value="${doc.id}"> ${escapeHtml(doc.name || 'بدون اسم')} (${escapeHtml(doc.email || '')})`;
             container.appendChild(label);
         });
     }
@@ -523,11 +535,13 @@
             const roleText = { doctor: 'طبيب', nurse: 'ممرض', pharmacist: 'صيدلي' }[user.role] || user.role;
             let assignedInfo = '';
             if (user.role === 'nurse' && user.assignedDoctors) {
-                const doctorNames = Object.values(user.assignedDoctors).map(id => {
-                    const doc = doctorsList.find(d => d.id === id);
-                    return doc ? doc.name : '';
-                }).filter(Boolean).join('، ');
+                const doctorNames = Object.keys(user.assignedDoctors)  // تم التصحيح: استخدام keys
+                    .map(id => {
+                        const doc = doctorsList.find(d => d.id === id);
+                        return doc ? doc.name : '';
+                    }).filter(Boolean).join('، ');
                 if (doctorNames) assignedInfo = `<div class="assigned-doctors"><i class="fas fa-user-md"></i> ${doctorNames}</div>`;
+                else assignedInfo = `<div class="assigned-doctors" style="color:#a00;"><i class="fas fa-exclamation-triangle"></i> لا يوجد أطباء مسؤولين</div>`;
             }
             return `
             <div class="user-card" data-id="${user.id}">
@@ -565,10 +579,11 @@
         
         const assignedSection = document.getElementById('detailAssignedDoctorsSection');
         if (user.role === 'nurse' && user.assignedDoctors) {
-            const names = Object.values(user.assignedDoctors).map(id => {
-                const doc = doctorsList.find(d => d.id === id);
-                return doc ? doc.name : '';
-            }).filter(Boolean).join('، ');
+            const names = Object.keys(user.assignedDoctors)  // تم التصحيح
+                .map(id => {
+                    const doc = doctorsList.find(d => d.id === id);
+                    return doc ? doc.name : '';
+                }).filter(Boolean).join('، ');
             document.getElementById('detailAssignedDoctors').innerText = names || 'غير محدد';
             assignedSection.style.display = 'block';
         } else {
@@ -589,8 +604,16 @@
         document.getElementById('quickBlurb').value = '';
         document.getElementById('userPassword').value = '';
         document.getElementById('userStatus').value = 'active';
+        
+        // إظهار حقول كلمة المرور بشكل طبيعي
+        document.getElementById('passwordFieldGroup').style.display = 'block';
+        document.getElementById('userPassword').required = true;
+        document.getElementById('passwordHint').innerText = 'أدخل كلمة مرور قوية';
+        
         document.getElementById('assignDoctorsGroup').style.display = 'none';
-        // uncheck all
+        document.getElementById('specialtyGroup').style.display = 'none';
+        
+        // إلغاء تحديد جميع الأطباء
         document.querySelectorAll('#assignedDoctorsCheckboxGroup input[type=checkbox]').forEach(cb => cb.checked = false);
         document.getElementById('formModal').style.display = 'flex';
     }
@@ -604,21 +627,27 @@
         document.getElementById('userRole').value = user.role || '';
         document.getElementById('userSpecialty').value = user.specialty || '';
         document.getElementById('quickBlurb').value = user.quickBlurb || '';
-        document.getElementById('userPassword').value = ''; // لا نعيد تعبئة كلمة المرور
         document.getElementById('userStatus').value = user.status || 'active';
         
-        const group = document.getElementById('assignDoctorsGroup');
-        if (user.role === 'nurse') {
-            group.style.display = 'block';
+        // في التعديل: إخفاء حقل كلمة المرور (لا حاجة لتغييرها هنا)
+        document.getElementById('passwordFieldGroup').style.display = 'none';
+        document.getElementById('userPassword').required = false;
+        document.getElementById('userPassword').value = '';
+        
+        // إظهار/إخفاء المجموعات حسب الدور
+        const role = user.role;
+        document.getElementById('assignDoctorsGroup').style.display = role === 'nurse' ? 'block' : 'none';
+        document.getElementById('specialtyGroup').style.display = role === 'doctor' ? 'block' : 'none';
+        
+        // إذا كانت ممرضة، حدد الأطباء المختارين سابقاً
+        if (role === 'nurse') {
             const checkboxes = document.querySelectorAll('#assignedDoctorsCheckboxGroup input[type=checkbox]');
             checkboxes.forEach(cb => cb.checked = false);
             if (user.assignedDoctors) {
-                Object.values(user.assignedDoctors).forEach(docId => {
+                Object.keys(user.assignedDoctors).forEach(docId => {
                     checkboxes.forEach(cb => { if (cb.value === docId) cb.checked = true; });
                 });
             }
-        } else {
-            group.style.display = 'none';
         }
         document.getElementById('formModal').style.display = 'flex';
     }
@@ -626,8 +655,20 @@
     function closeFormModal() { document.getElementById('formModal').style.display = 'none'; currentEditId = null; }
     function closeDetailModal() { document.getElementById('detailModal').style.display = 'none'; currentViewId = null; }
 
+    // تحديث ظهور الحقول بناءً على الدور المختار
     document.getElementById('userRole').addEventListener('change', (e) => {
-        document.getElementById('assignDoctorsGroup').style.display = e.target.value === 'nurse' ? 'block' : 'none';
+        const role = e.target.value;
+        document.getElementById('assignDoctorsGroup').style.display = role === 'nurse' ? 'block' : 'none';
+        document.getElementById('specialtyGroup').style.display = role === 'doctor' ? 'block' : 'none';
+    });
+
+    // زر إظهار/إخفاء كلمة المرور
+    document.getElementById('togglePassword').addEventListener('click', function() {
+        const pwdField = document.getElementById('userPassword');
+        const type = pwdField.type === 'password' ? 'text' : 'password';
+        pwdField.type = type;
+        this.classList.toggle('fa-eye');
+        this.classList.toggle('fa-eye-slash');
     });
 
     async function saveUser() {
@@ -637,8 +678,8 @@
         const role = document.getElementById('userRole').value;
         const specialty = document.getElementById('userSpecialty').value.trim();
         const quickBlurb = document.getElementById('quickBlurb').value.trim();
-        const password = document.getElementById('userPassword').value;
         const status = document.getElementById('userStatus').value;
+        const password = document.getElementById('userPassword').value;
 
         if (!name || !email || !role) { showToast('الاسم والبريد والدور مطلوبة', true); return; }
 
@@ -662,20 +703,36 @@
 
         try {
             if (currentEditId) {
+                // تعديل: تحديث البيانات فقط (بدون تغيير كلمة المرور أو البريد في المصادقة)
                 await update(ref(db, `users/${currentEditId}`), userData);
                 showToast('تم التعديل بنجاح');
                 closeFormModal();
             } else {
+                // إضافة جديدة: نحتاج كلمة مرور
                 if (!password) { showToast('كلمة المرور مطلوبة', true); return; }
-                const cred = await createUserWithEmailAndPassword(auth, email, password);
+                if (password.length < 6) { showToast('كلمة المرور يجب أن تكون 6 أحرف على الأقل', true); return; }
+
+                // إنشاء حساب في Firebase Auth باستخدام REST API (حتى لا يتغير المسؤول)
+                const signUpRes = await fetch(SIGN_UP_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password, returnSecureToken: false })
+                });
+                const signUpData = await signUpRes.json();
+                if (!signUpRes.ok) {
+                    if (signUpData.error?.message === 'EMAIL_EXISTS') throw new Error('البريد الإلكتروني مستخدم بالفعل');
+                    else throw new Error(signUpData.error?.message || 'فشل إنشاء الحساب');
+                }
+                const uid = signUpData.localId;
+                
+                // إضافة بيانات المستخدم في Realtime Database
                 userData.createdAt = new Date().toISOString();
-                await set(ref(db, `users/${cred.user.uid}`), userData);
-                showToast('🎉 تم إضافة المستخدم');
+                await set(ref(db, `users/${uid}`), userData);
+                showToast('🎉 تم إضافة المستخدم بنجاح');
                 closeFormModal();
             }
         } catch (err) {
-            if (err.code === 'auth/email-already-in-use') showToast('البريد مستخدم بالفعل', true);
-            else showToast(err.message, true);
+            showToast(err.message, true);
         }
     }
 
@@ -686,10 +743,31 @@
     }
 
     async function deleteUser(id) {
-        if (!confirm('حذف نهائي؟')) return;
-        await remove(ref(db, `users/${id}`));
-        showToast('تم الحذف');
-        closeDetailModal();
+        if (!confirm('حذف نهائي؟ سيتم حذف الحساب بالكامل من النظام.')) return;
+        try {
+            // الحصول على idToken للمسؤول الحالي
+            const currentUser = auth.currentUser;
+            if (!currentUser) throw new Error('يجب أن تكون مسجل الدخول كمسؤول');
+            const idToken = await currentUser.getIdToken();
+            
+            // حذف حساب المصادقة باستخدام REST API
+            const deleteRes = await fetch(DELETE_ACCOUNT_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ idToken })
+            });
+            const deleteData = await deleteRes.json();
+            if (!deleteRes.ok) {
+                throw new Error(deleteData.error?.message || 'فشل حذف حساب المستخدم');
+            }
+            
+            // حذف بيانات المستخدم من Realtime Database
+            await remove(ref(db, `users/${id}`));
+            showToast('تم حذف المستخدم بالكامل');
+            closeDetailModal();
+        } catch (err) {
+            showToast('خطأ في الحذف: ' + err.message, true);
+        }
     }
 
     async function logout() {
