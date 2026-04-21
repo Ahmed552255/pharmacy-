@@ -9,20 +9,17 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* ----- ألوان برتقالية دافئة (مشمش / كراميل) ----- */
         :root {
             --primary: #F8C471;
             --primary-light: #FDEBD0;
             --primary-dark: #E59866;
             --accent: #E67E22;
-            --accent-soft: #FAD7A1;
             --bg: #FFF8F0;
             --white: #FFFFFF;
             --ink: #4A3B2C;
             --text-sec: #8B7A66;
             --danger: #E57373;
             --success: #5FA88D;
-            --warning: #F4B886;
             --border-light: #F0E0D0;
             --shadow-sm: 0 6px 12px -4px rgba(230, 126, 34, 0.08);
             --shadow-md: 0 12px 28px -6px rgba(230, 126, 34, 0.12);
@@ -35,288 +32,95 @@
             color: var(--ink);
             min-height: 100vh;
             padding: 16px;
-            position: relative;
-        }
-        body::before {
-            content: '';
-            position: fixed;
-            inset: 0;
-            background: radial-gradient(circle at 0% 0%, rgba(248, 196, 113, 0.08), transparent 50%),
-                        radial-gradient(circle at 100% 100%, rgba(230, 126, 34, 0.06), transparent 50%);
-            pointer-events: none;
-            z-index: -1;
         }
         .container { max-width: 1400px; margin: 0 auto; }
-
-        /* الهيدر */
         .app-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            background: rgba(255, 255, 255, 0.6);
-            backdrop-filter: blur(18px);
+            background: rgba(255,255,255,0.7);
+            backdrop-filter: blur(16px);
             border-radius: 60px;
-            padding: 12px 20px;
+            padding: 12px 24px;
             margin-bottom: 24px;
             border: 1px solid rgba(255,255,255,0.6);
             box-shadow: var(--shadow-md);
             flex-wrap: wrap;
             gap: 12px;
         }
-        .logo h2 {
-            font-size: clamp(1.4rem, 5vw, 1.9rem);
-            font-weight: 800;
-            background: linear-gradient(145deg, #D35400, #E67E22);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            white-space: nowrap;
-        }
-        .header-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .logo h2 { font-size: 1.8rem; font-weight: 800; color: var(--accent); }
+        .header-actions { display: flex; gap: 12px; align-items: center; }
         .btn {
-            padding: 10px 18px;
-            border-radius: 40px;
-            border: none;
-            font-weight: 600;
-            font-family: 'Cairo', sans-serif;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 0.9rem;
-            transition: all 0.2s;
-            background: white;
-            color: var(--ink);
-            border: 1px solid var(--border-light);
-            white-space: nowrap;
+            padding: 10px 22px; border-radius: 40px; border: none; font-weight: 600;
+            display: inline-flex; align-items: center; gap: 8px; font-size: 0.9rem;
+            transition: 0.2s; background: white; color: var(--ink);
+            border: 1px solid var(--border-light); cursor: pointer;
         }
-        .btn-primary {
-            background: var(--primary);
-            color: #4A3B2C;
-            border: none;
-            box-shadow: 0 6px 14px rgba(230, 126, 34, 0.2);
-            font-weight: 700;
-        }
-        .btn-primary:hover { background: var(--primary-dark); color: white; transform: translateY(-2px); }
-        .btn-outline:hover { background: var(--primary-light); border-color: var(--primary); }
-
-        /* شريط الأطباء */
-        .doctors-toolbar {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            margin-bottom: 24px;
-        }
+        .btn-primary { background: var(--primary); color: #4A3B2C; border: none; }
+        .btn-primary:hover { background: var(--primary-dark); color: white; }
+        .doctors-toolbar { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 24px; }
         .doctor-tab-btn {
-            background: white;
-            border: 1px solid var(--border-light);
-            border-radius: 60px;
-            padding: 8px 20px;
-            font-weight: 600;
-            color: var(--ink);
-            transition: 0.2s;
-            cursor: pointer;
-            box-shadow: var(--shadow-sm);
-            font-size: 0.9rem;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
+            background: white; border: 1px solid var(--border-light); border-radius: 60px;
+            padding: 8px 20px; font-weight: 600; cursor: pointer;
         }
-        .doctor-tab-btn i { color: var(--accent); }
-        .doctor-tab-btn.active {
-            background: var(--primary);
-            color: #4A3B2C;
-            border-color: var(--primary);
-            box-shadow: 0 8px 16px rgba(230, 126, 34, 0.15);
-        }
-
-        /* تبويبات الحالة مع عداد */
+        .doctor-tab-btn.active { background: var(--primary); color: #4A3B2C; }
         .tabs-container {
-            background: rgba(255,255,255,0.6);
-            backdrop-filter: blur(8px);
-            border-radius: 60px;
-            padding: 6px;
-            display: inline-flex;
-            margin-bottom: 24px;
-            border: 1px solid var(--border-light);
-            flex-wrap: wrap;
-            justify-content: center;
+            background: rgba(255,255,255,0.6); backdrop-filter: blur(8px); border-radius: 60px;
+            padding: 6px; display: inline-flex; margin-bottom: 24px;
         }
         .tab-btn {
-            background: transparent;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 40px;
-            font-weight: 600;
-            color: var(--text-sec);
-            cursor: pointer;
-            transition: 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.95rem;
+            background: transparent; border: none; padding: 10px 20px; border-radius: 40px;
+            font-weight: 600; color: var(--text-sec); cursor: pointer; display: flex; align-items: center; gap: 8px;
         }
-        .tab-btn i { font-size: 1rem; }
-        .tab-btn .count {
-            background: rgba(0,0,0,0.05);
-            border-radius: 30px;
-            padding: 2px 10px;
-            font-size: 0.8rem;
-            margin-right: 4px;
-        }
-        .tab-btn.active {
-            background: white;
-            color: var(--accent);
-            box-shadow: var(--shadow-sm);
-        }
-        .tab-btn.active .count {
-            background: var(--primary-light);
-            color: var(--ink);
-        }
-
-        /* جدول الحجوزات */
+        .tab-btn.active { background: white; color: var(--accent); }
+        .tab-btn .count { background: rgba(0,0,0,0.05); padding: 2px 10px; border-radius: 30px; }
         .table-wrapper {
-            background: rgba(255, 255, 255, 0.75);
-            backdrop-filter: blur(12px);
-            border-radius: var(--radius-card);
-            padding: 6px;
-            box-shadow: var(--shadow-md);
-            border: 1px solid rgba(255,255,255,0.6);
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
+            background: rgba(255,255,255,0.75); backdrop-filter: blur(12px); border-radius: var(--radius-card);
+            padding: 6px; box-shadow: var(--shadow-md); overflow-x: auto;
         }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            text-align: center;
-            min-width: 900px;
-            font-size: 0.9rem;
-        }
-        th, td { padding: 14px 8px; }
-        thead tr { background: #FEF5EC; border-bottom: 2px solid var(--border-light); }
-        th {
-            font-weight: 700;
-            color: var(--ink);
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        tbody tr { border-bottom: 1px solid var(--border-light); transition: background 0.15s; }
-        tbody tr:hover { background: rgba(248, 196, 113, 0.08); }
-
-        .status-badge {
-            padding: 5px 12px;
-            border-radius: 60px;
-            font-size: 0.7rem;
-            font-weight: 700;
-            white-space: nowrap;
-        }
+        table { width: 100%; border-collapse: collapse; min-width: 900px; }
+        th, td { padding: 14px 8px; text-align: center; }
+        th { background: #FEF5EC; font-weight: 700; }
+        .status-badge { padding: 5px 12px; border-radius: 60px; font-size: 0.7rem; font-weight: 700; }
         .status-waiting { background: #FEF9E7; color: #9A6E1A; }
         .status-inprogress { background: #D6F0F0; color: #1A5C5C; }
         .status-done { background: #DCF5E8; color: #1E6F4C; }
-        .status-cancelled { background: #FDE2E2; color: #B23B3B; }
-
-        .action-btns { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
         .icon-btn {
-            width: 34px; height: 34px; border-radius: 12px; border: none;
-            background: white; color: var(--text-sec); cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            transition: all 0.15s; border: 1px solid var(--border-light);
-            font-size: 0.9rem;
+            width: 34px; height: 34px; border-radius: 12px; border: 1px solid var(--border-light);
+            background: white; color: var(--text-sec); cursor: pointer; display: inline-flex;
+            align-items: center; justify-content: center;
         }
-        .icon-btn:hover { background: var(--primary); color: #4A3B2C; border-color: var(--primary); }
-        .icon-btn.danger:hover { background: var(--danger); color: white; border-color: var(--danger); }
-        .icon-btn.success:hover { background: var(--success); color: white; border-color: var(--success); }
-        .icon-btn.warning:hover { background: var(--warning); color: white; border-color: var(--warning); }
-
-        /* مودال */
+        .icon-btn:hover { background: var(--primary); }
         .modal {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(60, 40, 20, 0.25);
-            backdrop-filter: blur(8px);
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            padding: 16px;
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.2); backdrop-filter: blur(6px);
+            align-items: center; justify-content: center; z-index: 1000; padding: 16px;
         }
         .modal-card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(16px);
-            border-radius: 40px;
-            width: 100%;
-            max-width: 600px;
-            max-height: 85vh;
-            overflow-y: auto;
-            box-shadow: 0 30px 50px rgba(160, 100, 40, 0.2);
-            border: 1px solid rgba(255,255,255,0.6);
+            background: white; border-radius: 40px; width: 100%; max-width: 600px;
+            max-height: 85vh; overflow-y: auto;
         }
-        .modal-header {
-            padding: 20px 24px;
-            background: #FEF5EC;
-            border-bottom: 1px solid var(--border-light);
-            border-radius: 40px 40px 0 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+        .modal-header { padding: 20px 24px; background: #FEF5EC; border-radius: 40px 40px 0 0; }
         .modal-body { padding: 20px 24px; }
-        .close-btn { background: none; border: none; font-size: 28px; color: var(--text-sec); cursor: pointer; }
         .form-group { margin-bottom: 18px; }
-        .form-group label { display: block; margin-bottom: 6px; font-weight: 600; }
         .form-control {
-            width: 100%;
-            padding: 12px 16px;
-            border-radius: 18px;
-            border: 1.5px solid var(--border-light);
-            background: white;
+            width: 100%; padding: 12px 16px; border-radius: 18px; border: 1.5px solid var(--border-light);
             font-family: 'Cairo', sans-serif;
-            font-size: 0.95rem;
         }
-        .form-control:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(248, 196, 113, 0.2); }
         .search-results {
-            background: white;
-            border: 1px solid var(--border-light);
-            border-radius: 18px;
-            margin-top: 8px;
-            max-height: 200px;
-            overflow-y: auto;
-            display: none;
+            background: white; border: 1px solid var(--border-light); border-radius: 18px;
+            margin-top: 8px; max-height: 200px; overflow-y: auto; display: none;
         }
-        .search-item { padding: 10px 16px; cursor: pointer; border-bottom: 1px solid var(--border-light); }
+        .search-item { padding: 10px 16px; cursor: pointer; }
         .search-item:hover { background: #FEF5EC; }
-
         .toast {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            right: 20px;
-            background: #4A3B2C;
-            color: white;
-            padding: 12px 24px;
-            border-radius: 60px;
-            text-align: center;
-            z-index: 1300;
-            font-weight: 500;
-            max-width: 500px;
-            margin: 0 auto;
-            box-shadow: 0 12px 28px rgba(0,0,0,0.2);
+            position: fixed; bottom: 20px; left: 20px; right: 20px; background: #4A3B2C;
+            color: white; padding: 12px 24px; border-radius: 60px; text-align: center;
+            z-index: 1300; max-width: 500px; margin: 0 auto;
         }
         .empty-state { text-align: center; padding: 40px; color: var(--text-sec); }
-
-        /* Responsive */
         @media (max-width: 640px) {
             body { padding: 10px; }
-            .app-header { padding: 10px 16px; }
-            .logo h2 { font-size: 1.5rem; }
-            .btn { padding: 8px 14px; font-size: 0.8rem; }
-            .doctor-tab-btn { padding: 6px 14px; font-size: 0.8rem; }
-            .tab-btn { padding: 8px 12px; font-size: 0.8rem; }
-            .tab-btn .count { padding: 2px 6px; }
-            table { min-width: 700px; font-size: 0.8rem; }
-            th, td { padding: 10px 4px; }
-            .icon-btn { width: 30px; height: 30px; }
+            .btn { padding: 8px 14px; }
         }
     </style>
 </head>
@@ -328,33 +132,28 @@
         </div>
         <div class="header-actions">
             <span id="welcomeMessage" style="font-weight:600;"></span>
-            <button class="btn btn-primary" id="openModalBtn"><i class="fas fa-plus"></i> حجز</button>
+            <button class="btn btn-primary" id="openModalBtn"><i class="fas fa-plus"></i> حجز جديد</button>
             <button class="btn btn-outline" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> خروج</button>
         </div>
     </header>
 
-    <!-- أزرار الأطباء -->
     <div id="doctorsToolbar" class="doctors-toolbar"></div>
 
-    <!-- تبويبات مع عداد -->
     <div class="tabs-container">
         <button class="tab-btn active" data-tab="waiting"><i class="fas fa-hourglass-half"></i> قيد الانتظار <span id="waitingTabCount" class="count">0</span></button>
         <button class="tab-btn" data-tab="inprogress"><i class="fas fa-stethoscope"></i> قيد الكشف <span id="inProgressTabCount" class="count">0</span></button>
         <button class="tab-btn" data-tab="done"><i class="fas fa-check-circle"></i> منتهي <span id="doneTabCount" class="count">0</span></button>
     </div>
 
-    <!-- جدول الحجوزات -->
     <div class="table-wrapper">
         <table>
-            <thead>
-                <tr><th>#</th><th>المريض</th><th>العمر</th><th>الهاتف</th><th>التاريخ</th><th>الوقت</th><th>الحالة</th><th>إجراءات</th></tr>
-            </thead>
-            <tbody id="bookingsBody"><tr><td colspan="8" class="empty-state"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</td></tr>
+            <thead><tr><th>#</th><th>المريض</th><th>العمر</th><th>الهاتف</th><th>التاريخ</th><th>الوقت</th><th>الحالة</th><th>إجراءات</th></tr></thead>
+            <tbody id="bookingsBody"><tr><td colspan="8" class="empty-state">جاري التحميل...</td></tr>
         </table>
     </div>
 </div>
 
-<!-- مودال حجز / تعديل -->
+<!-- مودال الحجز -->
 <div id="bookingModal" class="modal">
     <div class="modal-card">
         <div class="modal-header">
@@ -370,7 +169,7 @@
                 </div>
                 <div class="form-group">
                     <label>البحث عن مريض</label>
-                    <input type="text" id="patientSearch" class="form-control" placeholder="اكتب اسم أو رقم الهاتف..." autocomplete="off">
+                    <input type="text" id="patientSearch" class="form-control" placeholder="الاسم أو رقم الهاتف..." autocomplete="off">
                     <div id="searchResults" class="search-results"></div>
                 </div>
                 <div class="form-group">
@@ -393,7 +192,7 @@
                     <label>الوقت *</label>
                     <input type="time" id="appointmentTime" class="form-control" required>
                 </div>
-                <button type="submit" class="btn btn-primary" style="width:100%;" id="submitBtn">تأكيد الحجز</button>
+                <button type="submit" class="btn btn-primary" style="width:100%;">تأكيد الحجز</button>
                 <p id="formAlert" style="color:var(--danger); text-align:center; margin-top:12px;"></p>
             </form>
         </div>
@@ -410,9 +209,16 @@
     const auth = getAuth(app);
     const db = getDatabase(app);
 
+    // دالة التاريخ المحلي الصحيحة
+    function getLocalDateString() {
+        const d = new Date();
+        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    }
+
+    const today = getLocalDateString();
+
     let currentUser = null, nurseInfo = null, assignedDoctorsList = [], currentDoctorId = null;
     let allBookings = [], unsubscribeBookings = null, selectedPatientId = null, currentTab = 'waiting';
-    const today = new Date().toISOString().split('T')[0];
 
     const ui = {
         welcomeMessage: document.getElementById('welcomeMessage'),
@@ -433,13 +239,15 @@
         patientPhone: document.getElementById('patientPhone'),
         appointmentDate: document.getElementById('appointmentDate'),
         appointmentTime: document.getElementById('appointmentTime'),
-        submitBtn: document.getElementById('submitBtn'),
+        submitBtn: document.querySelector('#bookingForm button[type=submit]'),
         formAlert: document.getElementById('formAlert'),
         bookingForm: document.getElementById('bookingForm'),
         editBookingId: document.getElementById('editBookingId'),
         logoutBtn: document.getElementById('logoutBtn'),
         tabBtns: document.querySelectorAll('.tab-btn')
     };
+
+    ui.appointmentDate.value = today;
 
     function showToast(msg, isErr = false) {
         const t = document.createElement('div');
@@ -453,27 +261,44 @@
     async function loadNurseData(uid) {
         try {
             const snap = await get(ref(db, `users/${uid}`));
-            if (!snap.exists()) throw new Error("بيانات الممرض غير موجودة");
+            if (!snap.exists()) {
+                showToast('بيانات الممرض غير موجودة', true);
+                return false;
+            }
             nurseInfo = snap.val();
             ui.welcomeMessage.textContent = `أهلاً، ${nurseInfo.name || 'ممرض'}`;
+            
             const assignedDoctors = nurseInfo.assignedDoctors || {};
             const doctorIds = Object.keys(assignedDoctors);
             assignedDoctorsList = [];
+            
             for (const docId of doctorIds) {
                 const docSnap = await get(ref(db, `users/${docId}`));
-                if (docSnap.exists()) assignedDoctorsList.push({ id: docId, name: docSnap.val().name || 'دكتور' });
+                if (docSnap.exists()) {
+                    assignedDoctorsList.push({ id: docId, name: docSnap.val().name || 'دكتور' });
+                }
             }
+            
+            if (assignedDoctorsList.length === 0) {
+                ui.doctorsToolbar.innerHTML = '<div class="empty-state">لا يوجد أطباء مرتبطين بك. تواصل مع المدير.</div>';
+                ui.bookingDoctorSelect.innerHTML = '<option value="">لا يوجد أطباء</option>';
+                ui.bookingsBody.innerHTML = '<tr><td colspan="8" class="empty-state">لا يمكن عرض الحجوزات</td></tr>';
+                return false;
+            }
+            
             renderDoctorsToolbar();
-            ui.bookingDoctorSelect.innerHTML = assignedDoctorsList.map(d => `<option value="${d.id}">د. ${d.name}</option>`).join('');
-            if (assignedDoctorsList.length > 0) {
-                currentDoctorId = assignedDoctorsList[0].id;
-                highlightDoctorButton(currentDoctorId);
-                loadBookingsForDoctor(currentDoctorId);
-            } else {
-                ui.bookingsBody.innerHTML = '<tr><td colspan="8" class="empty-state">لا يوجد أطباء مرتبطين بك</td></tr>';
-            }
+            ui.bookingDoctorSelect.innerHTML = assignedDoctorsList.map(d => 
+                `<option value="${d.id}">د. ${d.name}</option>`
+            ).join('');
+            
+            currentDoctorId = assignedDoctorsList[0].id;
+            highlightDoctorButton(currentDoctorId);
+            loadBookingsForDoctor(currentDoctorId);
             return true;
-        } catch (err) { showToast(err.message, true); return false; }
+        } catch (err) {
+            showToast('فشل تحميل البيانات: ' + err.message, true);
+            return false;
+        }
     }
 
     function renderDoctorsToolbar() {
@@ -488,12 +313,15 @@
     }
 
     function highlightDoctorButton(docId) {
-        document.querySelectorAll('.doctor-tab-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.doctorId === docId));
+        document.querySelectorAll('.doctor-tab-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.doctorId === docId);
+        });
     }
 
     function loadBookingsForDoctor(doctorId) {
         if (unsubscribeBookings) unsubscribeBookings();
         if (!doctorId) return;
+        
         const q = query(ref(db, 'appointments'), orderByChild('doctorId'), equalTo(doctorId));
         unsubscribeBookings = onValue(q, (snap) => {
             const bookings = [];
@@ -509,25 +337,23 @@
     }
 
     function updateTabCounts() {
-        const waiting = allBookings.filter(b => b.status === 'انتظار').length;
-        const inProgress = allBookings.filter(b => b.status === 'قيد الكشف').length;
-        const done = allBookings.filter(b => b.status === 'منتهي').length;
-        ui.waitingTabCount.textContent = waiting;
-        ui.inProgressTabCount.textContent = inProgress;
-        ui.doneTabCount.textContent = done;
+        ui.waitingTabCount.textContent = allBookings.filter(b => b.status === 'انتظار').length;
+        ui.inProgressTabCount.textContent = allBookings.filter(b => b.status === 'قيد الكشف').length;
+        ui.doneTabCount.textContent = allBookings.filter(b => b.status === 'منتهي').length;
     }
 
     function filterAndRenderByTab() {
-        let filtered = [];
-        if (currentTab === 'waiting') filtered = allBookings.filter(b => b.status === 'انتظار');
-        else if (currentTab === 'inprogress') filtered = allBookings.filter(b => b.status === 'قيد الكشف');
-        else if (currentTab === 'done') filtered = allBookings.filter(b => b.status === 'منتهي');
+        let filtered = allBookings.filter(b => {
+            if (currentTab === 'waiting') return b.status === 'انتظار';
+            if (currentTab === 'inprogress') return b.status === 'قيد الكشف';
+            return b.status === 'منتهي';
+        });
         renderTable(filtered);
     }
 
     function renderTable(bookings) {
         if (bookings.length === 0) {
-            ui.bookingsBody.innerHTML = `<tr><td colspan="8" class="empty-state">لا توجد حجوزات في هذا القسم</td></tr>`;
+            ui.bookingsBody.innerHTML = `<tr><td colspan="8" class="empty-state">لا توجد حجوزات</td></tr>`;
             return;
         }
         let html = '';
@@ -536,27 +362,16 @@
                 'انتظار': 'status-waiting', 'قيد الكشف': 'status-inprogress', 'منتهي': 'status-done', 'ملغي': 'status-cancelled'
             }[b.status] || 'status-waiting';
             
-            let actions = '';
-            if (currentTab === 'waiting') {
-                actions = `
-                    <button class="icon-btn success" data-id="${b.id}" data-action="start"><i class="fas fa-play"></i></button>
-                    <button class="icon-btn warning" data-id="${b.id}" data-action="edit"><i class="fas fa-edit"></i></button>
-                    <button class="icon-btn danger" data-id="${b.id}" data-action="cancel"><i class="fas fa-times"></i></button>
-                `;
-            } else {
-                // لا توجد إجراءات في التبويبات الأخرى
-                actions = '<span style="opacity:0.5;">—</span>';
-            }
+            let actions = currentTab === 'waiting' ? `
+                <button class="icon-btn success" data-id="${b.id}" data-action="start"><i class="fas fa-play"></i></button>
+                <button class="icon-btn warning" data-id="${b.id}" data-action="edit"><i class="fas fa-edit"></i></button>
+                <button class="icon-btn danger" data-id="${b.id}" data-action="cancel"><i class="fas fa-times"></i></button>
+            ` : '<span style="opacity:0.5;">—</span>';
             
             html += `<tr>
-                <td>${idx + 1}</td>
-                <td><b>${b.patientName || '-'}</b></td>
-                <td>${b.age || '-'}</td>
-                <td>${b.phone || '-'}</td>
-                <td>${b.date || '-'}</td>
-                <td>${b.time || '-'}</td>
-                <td><span class="status-badge ${statusClass}">${b.status || 'انتظار'}</span></td>
-                <td><div class="action-btns">${actions}</div></td>
+                <td>${idx+1}</td><td><b>${b.patientName||'-'}</b></td><td>${b.age||'-'}</td><td>${b.phone||'-'}</td>
+                <td>${b.date||'-'}</td><td>${b.time||'-'}</td><td><span class="status-badge ${statusClass}">${b.status||'انتظار'}</span></td>
+                <td><div class="action-btns" style="display:flex;gap:6px;justify-content:center;">${actions}</div></td>
             </tr>`;
         });
         ui.bookingsBody.innerHTML = html;
@@ -615,26 +430,34 @@
     ui.closeModalBtn.onclick = () => ui.modal.style.display = 'none';
     window.onclick = (e) => { if (e.target === ui.modal) ui.modal.style.display = 'none'; };
 
+    // البحث عن مريض (بالاسم أو الهاتف) وإنشاء معرف فريد
     let searchTimeout;
     ui.patientSearch.addEventListener('input', (e) => {
         const term = e.target.value.trim();
         if (term.length < 2) { ui.searchResults.style.display = 'none'; return; }
         clearTimeout(searchTimeout);
         searchTimeout = setTimeout(async () => {
-            const snap = await get(ref(db, 'patients'));
+            const patientsRef = ref(db, 'patients');
+            const snap = await get(patientsRef);
             const results = [];
             snap.forEach(child => {
                 const p = child.val();
-                if (p.name?.includes(term) || p.phone?.includes(term)) results.push({ id: child.key, ...p });
+                if (p.name?.includes(term) || p.phone?.includes(term)) {
+                    results.push({ id: child.key, ...p });
+                }
             });
-            ui.searchResults.innerHTML = results.length === 0 ? '<div class="search-item">لا توجد نتائج</div>' : '';
-            results.forEach(p => {
-                const div = document.createElement('div');
-                div.className = 'search-item';
-                div.innerHTML = `<b>${p.name}</b><br><small>${p.phone || 'بدون رقم'}</small>`;
-                div.onclick = () => selectPatient(p);
-                ui.searchResults.appendChild(div);
-            });
+            ui.searchResults.innerHTML = '';
+            if (results.length === 0) {
+                ui.searchResults.innerHTML = '<div class="search-item">لا توجد نتائج. اضغط Enter لإنشاء مريض جديد.</div>';
+            } else {
+                results.forEach(p => {
+                    const div = document.createElement('div');
+                    div.className = 'search-item';
+                    div.innerHTML = `<b>${p.name}</b> - ${p.phone || 'بدون رقم'}`;
+                    div.addEventListener('click', () => selectPatient(p));
+                    ui.searchResults.appendChild(div);
+                });
+            }
             ui.searchResults.style.display = 'block';
         }, 300);
     });
@@ -649,9 +472,12 @@
     }
 
     document.addEventListener('click', (e) => {
-        if (!ui.patientSearch.contains(e.target) && !ui.searchResults.contains(e.target)) ui.searchResults.style.display = 'none';
+        if (!ui.patientSearch.contains(e.target) && !ui.searchResults.contains(e.target)) {
+            ui.searchResults.style.display = 'none';
+        }
     });
 
+    // عند تقديم النموذج
     ui.bookingForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const editId = ui.editBookingId.value;
@@ -659,27 +485,63 @@
         const name = ui.patientName.value.trim();
         const date = ui.appointmentDate.value;
         const time = ui.appointmentTime.value;
-        if (!doctorId || !name || !date || !time) { ui.formAlert.textContent = 'جميع الحقول المطلوبة'; return; }
+        
+        if (!doctorId || !name || !date || !time) {
+            ui.formAlert.textContent = 'جميع الحقول المطلوبة';
+            return;
+        }
+        
         ui.submitBtn.disabled = true;
         ui.submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
+        
         try {
             const phone = ui.patientPhone.value.trim();
-            if (phone) {
-                await set(ref(db, `patients/${phone}`), { name, age: ui.patientAge.value || null, phone, updatedAt: new Date().toISOString() });
-                selectedPatientId = phone;
+            let patientId = selectedPatientId;
+            
+            // إنشاء أو تحديث المريض
+            if (!patientId) {
+                // إنشاء معرف جديد
+                const newPatientRef = push(ref(db, 'patients'));
+                patientId = newPatientRef.key;
             }
+            
+            const patientData = {
+                name,
+                age: ui.patientAge.value || null,
+                phone: phone || null,
+                updatedAt: new Date().toISOString()
+            };
+            
+            await set(ref(db, `patients/${patientId}`), patientData);
+            
             const bookingData = {
-                patientName: name, patientId: selectedPatientId || null, age: ui.patientAge.value || null, phone: phone || null,
-                doctorId, date, time, status: 'انتظار',
+                patientName: name,
+                patientId: patientId,
+                age: ui.patientAge.value || null,
+                phone: phone || null,
+                doctorId: doctorId,
+                date: date,
+                time: time,
+                status: 'انتظار',
                 createdAt: editId ? (await get(ref(db, `appointments/${editId}`))).val().createdAt : new Date().toISOString()
             };
-            if (editId) await update(ref(db, `appointments/${editId}`), bookingData);
-            else await push(ref(db, 'appointments'), bookingData);
-            showToast(editId ? '✅ تم تعديل الحجز' : '✅ تم حجز الموعد');
+            
+            if (editId) {
+                await update(ref(db, `appointments/${editId}`), bookingData);
+                showToast('✅ تم تعديل الحجز');
+            } else {
+                await push(ref(db, 'appointments'), bookingData);
+                showToast('✅ تم حجز الموعد');
+            }
+            
             ui.modal.style.display = 'none';
             resetForm();
-        } catch (err) { ui.formAlert.textContent = 'خطأ: ' + err.message; } 
-        finally { ui.submitBtn.disabled = false; ui.submitBtn.innerHTML = 'تأكيد الحجز'; }
+        } catch (err) {
+            ui.formAlert.textContent = 'خطأ: ' + err.message;
+        } finally {
+            ui.submitBtn.disabled = false;
+            ui.submitBtn.innerHTML = 'تأكيد الحجز';
+        }
     });
 
     ui.tabBtns.forEach(btn => btn.addEventListener('click', () => {
