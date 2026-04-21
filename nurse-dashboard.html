@@ -34,7 +34,7 @@
             background: var(--bg);
             color: var(--ink);
             min-height: 100vh;
-            padding: 24px;
+            padding: 16px;
             position: relative;
         }
         body::before {
@@ -56,24 +56,25 @@
             background: rgba(255, 255, 255, 0.6);
             backdrop-filter: blur(18px);
             border-radius: 60px;
-            padding: 12px 24px;
-            margin-bottom: 28px;
+            padding: 12px 20px;
+            margin-bottom: 24px;
             border: 1px solid rgba(255,255,255,0.6);
             box-shadow: var(--shadow-md);
             flex-wrap: wrap;
-            gap: 16px;
+            gap: 12px;
         }
         .logo h2 {
-            font-size: 1.9rem;
+            font-size: clamp(1.4rem, 5vw, 1.9rem);
             font-weight: 800;
             background: linear-gradient(145deg, #D35400, #E67E22);
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
+            white-space: nowrap;
         }
-        .header-actions { display: flex; gap: 12px; align-items: center; }
+        .header-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
         .btn {
-            padding: 10px 22px;
+            padding: 10px 18px;
             border-radius: 40px;
             border: none;
             font-weight: 600;
@@ -81,12 +82,13 @@
             cursor: pointer;
             display: inline-flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
             font-size: 0.9rem;
             transition: all 0.2s;
             background: white;
             color: var(--ink);
             border: 1px solid var(--border-light);
+            white-space: nowrap;
         }
         .btn-primary {
             background: var(--primary);
@@ -95,17 +97,13 @@
             box-shadow: 0 6px 14px rgba(230, 126, 34, 0.2);
             font-weight: 700;
         }
-        .btn-primary:hover {
-            background: var(--primary-dark);
-            color: white;
-            transform: translateY(-2px);
-        }
+        .btn-primary:hover { background: var(--primary-dark); color: white; transform: translateY(-2px); }
         .btn-outline:hover { background: var(--primary-light); border-color: var(--primary); }
 
         /* شريط الأطباء */
         .doctors-toolbar {
             display: flex;
-            gap: 12px;
+            gap: 10px;
             flex-wrap: wrap;
             margin-bottom: 24px;
         }
@@ -113,14 +111,18 @@
             background: white;
             border: 1px solid var(--border-light);
             border-radius: 60px;
-            padding: 10px 24px;
+            padding: 8px 20px;
             font-weight: 600;
             color: var(--ink);
             transition: 0.2s;
             cursor: pointer;
             box-shadow: var(--shadow-sm);
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
         }
-        .doctor-tab-btn i { color: var(--accent); margin-left: 6px; }
+        .doctor-tab-btn i { color: var(--accent); }
         .doctor-tab-btn.active {
             background: var(--primary);
             color: #4A3B2C;
@@ -128,7 +130,7 @@
             box-shadow: 0 8px 16px rgba(230, 126, 34, 0.15);
         }
 
-        /* تبويبات الحالة */
+        /* تبويبات الحالة مع عداد */
         .tabs-container {
             background: rgba(255,255,255,0.6);
             backdrop-filter: blur(8px);
@@ -137,55 +139,40 @@
             display: inline-flex;
             margin-bottom: 24px;
             border: 1px solid var(--border-light);
+            flex-wrap: wrap;
+            justify-content: center;
         }
         .tab-btn {
             background: transparent;
             border: none;
-            padding: 10px 28px;
+            padding: 10px 20px;
             border-radius: 40px;
             font-weight: 600;
             color: var(--text-sec);
             cursor: pointer;
             transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.95rem;
         }
-        .tab-btn i { margin-left: 6px; }
+        .tab-btn i { font-size: 1rem; }
+        .tab-btn .count {
+            background: rgba(0,0,0,0.05);
+            border-radius: 30px;
+            padding: 2px 10px;
+            font-size: 0.8rem;
+            margin-right: 4px;
+        }
         .tab-btn.active {
             background: white;
             color: var(--accent);
             box-shadow: var(--shadow-sm);
         }
-
-        /* بطاقات الإحصائيات */
-        .stats-cards {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 16px;
-            margin-bottom: 24px;
+        .tab-btn.active .count {
+            background: var(--primary-light);
+            color: var(--ink);
         }
-        .stat-card {
-            background: rgba(255,255,255,0.7);
-            backdrop-filter: blur(8px);
-            border-radius: 20px;
-            padding: 18px 16px;
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            border: 1px solid var(--border-light);
-            box-shadow: var(--shadow-sm);
-        }
-        .stat-icon {
-            width: 52px;
-            height: 52px;
-            background: var(--primary);
-            border-radius: 18px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #4A3B2C;
-            font-size: 1.6rem;
-        }
-        .stat-info h4 { font-size: 1.8rem; font-weight: 800; color: var(--ink); }
-        .stat-info p { color: var(--text-sec); font-size: 0.85rem; }
 
         /* جدول الحجوزات */
         .table-wrapper {
@@ -196,14 +183,21 @@
             box-shadow: var(--shadow-md);
             border: 1px solid rgba(255,255,255,0.6);
             overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
         }
-        table { width: 100%; border-collapse: collapse; text-align: center; min-width: 1100px; }
-        th, td { padding: 18px 12px; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: center;
+            min-width: 900px;
+            font-size: 0.9rem;
+        }
+        th, td { padding: 14px 8px; }
         thead tr { background: #FEF5EC; border-bottom: 2px solid var(--border-light); }
         th {
             font-weight: 700;
             color: var(--ink);
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
@@ -211,23 +205,24 @@
         tbody tr:hover { background: rgba(248, 196, 113, 0.08); }
 
         .status-badge {
-            padding: 6px 16px;
+            padding: 5px 12px;
             border-radius: 60px;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             font-weight: 700;
+            white-space: nowrap;
         }
         .status-waiting { background: #FEF9E7; color: #9A6E1A; }
         .status-inprogress { background: #D6F0F0; color: #1A5C5C; }
         .status-done { background: #DCF5E8; color: #1E6F4C; }
         .status-cancelled { background: #FDE2E2; color: #B23B3B; }
 
-        .action-btns { display: flex; gap: 8px; justify-content: center; }
+        .action-btns { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
         .icon-btn {
-            width: 38px; height: 38px; border-radius: 14px; border: none;
+            width: 34px; height: 34px; border-radius: 12px; border: none;
             background: white; color: var(--text-sec); cursor: pointer;
             display: flex; align-items: center; justify-content: center;
             transition: all 0.15s; border: 1px solid var(--border-light);
-            font-size: 1rem;
+            font-size: 0.9rem;
         }
         .icon-btn:hover { background: var(--primary); color: #4A3B2C; border-color: var(--primary); }
         .icon-btn.danger:hover { background: var(--danger); color: white; border-color: var(--danger); }
@@ -250,15 +245,15 @@
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(16px);
             border-radius: 40px;
-            width: 90%;
-            max-width: 650px;
+            width: 100%;
+            max-width: 600px;
             max-height: 85vh;
             overflow-y: auto;
             box-shadow: 0 30px 50px rgba(160, 100, 40, 0.2);
             border: 1px solid rgba(255,255,255,0.6);
         }
         .modal-header {
-            padding: 24px 28px;
+            padding: 20px 24px;
             background: #FEF5EC;
             border-bottom: 1px solid var(--border-light);
             border-radius: 40px 40px 0 0;
@@ -266,40 +261,40 @@
             justify-content: space-between;
             align-items: center;
         }
-        .modal-body { padding: 24px 28px; }
-        .close-btn { background: none; border: none; font-size: 30px; color: var(--text-sec); cursor: pointer; }
-        .form-group { margin-bottom: 22px; }
-        .form-group label { display: block; margin-bottom: 8px; font-weight: 600; }
+        .modal-body { padding: 20px 24px; }
+        .close-btn { background: none; border: none; font-size: 28px; color: var(--text-sec); cursor: pointer; }
+        .form-group { margin-bottom: 18px; }
+        .form-group label { display: block; margin-bottom: 6px; font-weight: 600; }
         .form-control {
             width: 100%;
-            padding: 14px 18px;
-            border-radius: 20px;
+            padding: 12px 16px;
+            border-radius: 18px;
             border: 1.5px solid var(--border-light);
             background: white;
             font-family: 'Cairo', sans-serif;
-            font-size: 1rem;
+            font-size: 0.95rem;
         }
         .form-control:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(248, 196, 113, 0.2); }
         .search-results {
             background: white;
             border: 1px solid var(--border-light);
-            border-radius: 20px;
+            border-radius: 18px;
             margin-top: 8px;
-            max-height: 220px;
+            max-height: 200px;
             overflow-y: auto;
             display: none;
         }
-        .search-item { padding: 12px 18px; cursor: pointer; border-bottom: 1px solid var(--border-light); }
+        .search-item { padding: 10px 16px; cursor: pointer; border-bottom: 1px solid var(--border-light); }
         .search-item:hover { background: #FEF5EC; }
 
         .toast {
             position: fixed;
-            bottom: 30px;
-            left: 30px;
-            right: 30px;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
             background: #4A3B2C;
             color: white;
-            padding: 14px 28px;
+            padding: 12px 24px;
             border-radius: 60px;
             text-align: center;
             z-index: 1300;
@@ -308,19 +303,32 @@
             margin: 0 auto;
             box-shadow: 0 12px 28px rgba(0,0,0,0.2);
         }
-        .empty-state { text-align: center; padding: 50px; color: var(--text-sec); }
-        .highlight { color: var(--accent); }
+        .empty-state { text-align: center; padding: 40px; color: var(--text-sec); }
+
+        /* Responsive */
+        @media (max-width: 640px) {
+            body { padding: 10px; }
+            .app-header { padding: 10px 16px; }
+            .logo h2 { font-size: 1.5rem; }
+            .btn { padding: 8px 14px; font-size: 0.8rem; }
+            .doctor-tab-btn { padding: 6px 14px; font-size: 0.8rem; }
+            .tab-btn { padding: 8px 12px; font-size: 0.8rem; }
+            .tab-btn .count { padding: 2px 6px; }
+            table { min-width: 700px; font-size: 0.8rem; }
+            th, td { padding: 10px 4px; }
+            .icon-btn { width: 30px; height: 30px; }
+        }
     </style>
 </head>
 <body>
 <div class="container">
     <header class="app-header">
         <div class="logo">
-            <h2><i class="fas fa-calendar-check" style="color:var(--primary); margin-left:10px;"></i>سُكُون · الممرض</h2>
+            <h2><i class="fas fa-calendar-check" style="color:var(--primary); margin-left:8px;"></i>سُكُون · الممرض</h2>
         </div>
         <div class="header-actions">
             <span id="welcomeMessage" style="font-weight:600;"></span>
-            <button class="btn btn-primary" id="openModalBtn"><i class="fas fa-plus"></i> حجز جديد</button>
+            <button class="btn btn-primary" id="openModalBtn"><i class="fas fa-plus"></i> حجز</button>
             <button class="btn btn-outline" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> خروج</button>
         </div>
     </header>
@@ -328,19 +336,11 @@
     <!-- أزرار الأطباء -->
     <div id="doctorsToolbar" class="doctors-toolbar"></div>
 
-    <!-- تبويبات -->
+    <!-- تبويبات مع عداد -->
     <div class="tabs-container">
-        <button class="tab-btn active" data-tab="waiting"><i class="fas fa-hourglass-half"></i> قيد الانتظار</button>
-        <button class="tab-btn" data-tab="inprogress"><i class="fas fa-stethoscope"></i> قيد الكشف</button>
-        <button class="tab-btn" data-tab="done"><i class="fas fa-check-circle"></i> منتهي</button>
-    </div>
-
-    <!-- إحصائيات -->
-    <div class="stats-cards">
-        <div class="stat-card"><div class="stat-icon"><i class="fas fa-calendar-check"></i></div><div class="stat-info"><h4 id="totalBookings">0</h4><p>إجمالي الحجوزات</p></div></div>
-        <div class="stat-card"><div class="stat-icon"><i class="fas fa-clock"></i></div><div class="stat-info"><h4 id="waitingCount">0</h4><p>في الانتظار</p></div></div>
-        <div class="stat-card"><div class="stat-icon"><i class="fas fa-play-circle"></i></div><div class="stat-info"><h4 id="inProgressCount">0</h4><p>قيد الكشف</p></div></div>
-        <div class="stat-card"><div class="stat-icon"><i class="fas fa-check-circle"></i></div><div class="stat-info"><h4 id="doneCount">0</h4><p>منتهي</p></div></div>
+        <button class="tab-btn active" data-tab="waiting"><i class="fas fa-hourglass-half"></i> قيد الانتظار <span id="waitingTabCount" class="count">0</span></button>
+        <button class="tab-btn" data-tab="inprogress"><i class="fas fa-stethoscope"></i> قيد الكشف <span id="inProgressTabCount" class="count">0</span></button>
+        <button class="tab-btn" data-tab="done"><i class="fas fa-check-circle"></i> منتهي <span id="doneTabCount" class="count">0</span></button>
     </div>
 
     <!-- جدول الحجوزات -->
@@ -410,26 +410,17 @@
     const auth = getAuth(app);
     const db = getDatabase(app);
 
-    // --- State ---
-    let currentUser = null;
-    let nurseInfo = null;
-    let assignedDoctorsList = [];
-    let currentDoctorId = null;
-    let allBookings = [];
-    let unsubscribeBookings = null;
-    let selectedPatientId = null;
-    let currentTab = 'waiting';
+    let currentUser = null, nurseInfo = null, assignedDoctorsList = [], currentDoctorId = null;
+    let allBookings = [], unsubscribeBookings = null, selectedPatientId = null, currentTab = 'waiting';
     const today = new Date().toISOString().split('T')[0];
 
-    // --- DOM Elements ---
     const ui = {
         welcomeMessage: document.getElementById('welcomeMessage'),
         doctorsToolbar: document.getElementById('doctorsToolbar'),
         bookingsBody: document.getElementById('bookingsBody'),
-        totalBookings: document.getElementById('totalBookings'),
-        waitingCount: document.getElementById('waitingCount'),
-        inProgressCount: document.getElementById('inProgressCount'),
-        doneCount: document.getElementById('doneCount'),
+        waitingTabCount: document.getElementById('waitingTabCount'),
+        inProgressTabCount: document.getElementById('inProgressTabCount'),
+        doneTabCount: document.getElementById('doneTabCount'),
         openModalBtn: document.getElementById('openModalBtn'),
         closeModalBtn: document.getElementById('closeModalBtn'),
         modal: document.getElementById('bookingModal'),
@@ -450,7 +441,6 @@
         tabBtns: document.querySelectorAll('.tab-btn')
     };
 
-    // --- Helper Functions ---
     function showToast(msg, isErr = false) {
         const t = document.createElement('div');
         t.className = 'toast';
@@ -460,30 +450,21 @@
         setTimeout(() => t.remove(), 3000);
     }
 
-    // --- Load Nurse Data & Assigned Doctors ---
     async function loadNurseData(uid) {
         try {
             const snap = await get(ref(db, `users/${uid}`));
             if (!snap.exists()) throw new Error("بيانات الممرض غير موجودة");
             nurseInfo = snap.val();
             ui.welcomeMessage.textContent = `أهلاً، ${nurseInfo.name || 'ممرض'}`;
-
             const assignedDoctors = nurseInfo.assignedDoctors || {};
             const doctorIds = Object.keys(assignedDoctors);
             assignedDoctorsList = [];
-            
             for (const docId of doctorIds) {
                 const docSnap = await get(ref(db, `users/${docId}`));
-                if (docSnap.exists()) {
-                    assignedDoctorsList.push({ id: docId, name: docSnap.val().name || 'دكتور' });
-                }
+                if (docSnap.exists()) assignedDoctorsList.push({ id: docId, name: docSnap.val().name || 'دكتور' });
             }
-            
             renderDoctorsToolbar();
-            ui.bookingDoctorSelect.innerHTML = assignedDoctorsList.map(d => 
-                `<option value="${d.id}">د. ${d.name}</option>`
-            ).join('');
-            
+            ui.bookingDoctorSelect.innerHTML = assignedDoctorsList.map(d => `<option value="${d.id}">د. ${d.name}</option>`).join('');
             if (assignedDoctorsList.length > 0) {
                 currentDoctorId = assignedDoctorsList[0].id;
                 highlightDoctorButton(currentDoctorId);
@@ -492,53 +473,48 @@
                 ui.bookingsBody.innerHTML = '<tr><td colspan="8" class="empty-state">لا يوجد أطباء مرتبطين بك</td></tr>';
             }
             return true;
-        } catch (err) {
-            showToast(err.message, true);
-            return false;
-        }
+        } catch (err) { showToast(err.message, true); return false; }
     }
 
     function renderDoctorsToolbar() {
         ui.doctorsToolbar.innerHTML = assignedDoctorsList.map(doc => `
-            <button class="doctor-tab-btn" data-doctor-id="${doc.id}">
-                <i class="fas fa-user-md"></i> د. ${doc.name}
-            </button>
+            <button class="doctor-tab-btn" data-doctor-id="${doc.id}"><i class="fas fa-user-md"></i> د. ${doc.name}</button>
         `).join('');
-        
-        document.querySelectorAll('.doctor-tab-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const docId = btn.dataset.doctorId;
-                currentDoctorId = docId;
-                highlightDoctorButton(docId);
-                loadBookingsForDoctor(docId);
-            });
-        });
+        document.querySelectorAll('.doctor-tab-btn').forEach(btn => btn.addEventListener('click', () => {
+            currentDoctorId = btn.dataset.doctorId;
+            highlightDoctorButton(currentDoctorId);
+            loadBookingsForDoctor(currentDoctorId);
+        }));
     }
 
     function highlightDoctorButton(docId) {
-        document.querySelectorAll('.doctor-tab-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.doctorId === docId);
-        });
+        document.querySelectorAll('.doctor-tab-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.doctorId === docId));
     }
 
     function loadBookingsForDoctor(doctorId) {
         if (unsubscribeBookings) unsubscribeBookings();
         if (!doctorId) return;
-
         const q = query(ref(db, 'appointments'), orderByChild('doctorId'), equalTo(doctorId));
         unsubscribeBookings = onValue(q, (snap) => {
             const bookings = [];
             snap.forEach(child => {
                 const apt = child.val();
-                if (apt.date === today) {
-                    bookings.push({ id: child.key, ...apt });
-                }
+                if (apt.date === today) bookings.push({ id: child.key, ...apt });
             });
             bookings.sort((a, b) => (a.time || '').localeCompare(b.time || ''));
             allBookings = bookings;
+            updateTabCounts();
             filterAndRenderByTab();
-            updateStats();
         });
+    }
+
+    function updateTabCounts() {
+        const waiting = allBookings.filter(b => b.status === 'انتظار').length;
+        const inProgress = allBookings.filter(b => b.status === 'قيد الكشف').length;
+        const done = allBookings.filter(b => b.status === 'منتهي').length;
+        ui.waitingTabCount.textContent = waiting;
+        ui.inProgressTabCount.textContent = inProgress;
+        ui.doneTabCount.textContent = done;
     }
 
     function filterAndRenderByTab() {
@@ -557,13 +533,9 @@
         let html = '';
         bookings.forEach((b, idx) => {
             const statusClass = {
-                'انتظار': 'status-waiting',
-                'قيد الكشف': 'status-inprogress',
-                'منتهي': 'status-done',
-                'ملغي': 'status-cancelled'
+                'انتظار': 'status-waiting', 'قيد الكشف': 'status-inprogress', 'منتهي': 'status-done', 'ملغي': 'status-cancelled'
             }[b.status] || 'status-waiting';
             
-            // إجراءات مختلفة حسب التبويب
             let actions = '';
             if (currentTab === 'waiting') {
                 actions = `
@@ -571,13 +543,9 @@
                     <button class="icon-btn warning" data-id="${b.id}" data-action="edit"><i class="fas fa-edit"></i></button>
                     <button class="icon-btn danger" data-id="${b.id}" data-action="cancel"><i class="fas fa-times"></i></button>
                 `;
-            } else if (currentTab === 'inprogress') {
-                actions = `
-                    <button class="icon-btn" data-id="${b.id}" data-action="finish" style="background:var(--success); color:white;"><i class="fas fa-check"></i></button>
-                    <button class="icon-btn danger" data-id="${b.id}" data-action="cancel"><i class="fas fa-times"></i></button>
-                `;
-            } else if (currentTab === 'done') {
-                actions = `<button class="icon-btn danger" data-id="${b.id}" data-action="delete"><i class="fas fa-trash"></i></button>`;
+            } else {
+                // لا توجد إجراءات في التبويبات الأخرى
+                actions = '<span style="opacity:0.5;">—</span>';
             }
             
             html += `<tr>
@@ -594,17 +562,6 @@
         ui.bookingsBody.innerHTML = html;
     }
 
-    function updateStats() {
-        const waiting = allBookings.filter(b => b.status === 'انتظار').length;
-        const inProgress = allBookings.filter(b => b.status === 'قيد الكشف').length;
-        const done = allBookings.filter(b => b.status === 'منتهي').length;
-        ui.totalBookings.textContent = allBookings.length;
-        ui.waitingCount.textContent = waiting;
-        ui.inProgressCount.textContent = inProgress;
-        ui.doneCount.textContent = done;
-    }
-
-    // --- Actions ---
     ui.bookingsBody.addEventListener('click', (e) => {
         const btn = e.target.closest('[data-action]');
         if (!btn) return;
@@ -612,30 +569,18 @@
         const action = btn.dataset.action;
         const booking = allBookings.find(b => b.id === id);
         if (!booking) return;
-
         if (action === 'start') updateStatus(id, 'قيد الكشف');
-        else if (action === 'finish') updateStatus(id, 'منتهي');
         else if (action === 'cancel') updateStatus(id, 'ملغي');
-        else if (action === 'delete') deleteBooking(id);
         else if (action === 'edit') openEditModal(booking);
     });
 
     async function updateStatus(id, status) {
         try {
             await update(ref(db, `appointments/${id}`), { status });
-            showToast(status === 'منتهي' ? '✅ تم إنهاء الكشف' : status === 'قيد الكشف' ? '🩺 بدأ الكشف' : '❌ تم الإلغاء');
+            showToast(status === 'قيد الكشف' ? '🩺 بدأ الكشف' : '❌ تم الإلغاء');
         } catch (e) { showToast('فشل التحديث', true); }
     }
 
-    async function deleteBooking(id) {
-        if (!confirm('حذف الحجز نهائياً؟')) return;
-        try {
-            await set(ref(db, `appointments/${id}`), null);
-            showToast('تم الحذف');
-        } catch (e) { showToast('فشل الحذف', true); }
-    }
-
-    // --- Modal Handling (Add/Edit) ---
     function openAddModal() {
         ui.modalTitle.innerHTML = '<i class="fas fa-calendar-plus"></i> حجز موعد جديد';
         ui.editBookingId.value = '';
@@ -664,16 +609,12 @@
     }
 
     ui.openModalBtn.onclick = () => {
-        if (assignedDoctorsList.length === 0) {
-            showToast('لا يوجد أطباء مرتبطين', true);
-            return;
-        }
+        if (assignedDoctorsList.length === 0) { showToast('لا يوجد أطباء مرتبطين', true); return; }
         openAddModal();
     };
     ui.closeModalBtn.onclick = () => ui.modal.style.display = 'none';
     window.onclick = (e) => { if (e.target === ui.modal) ui.modal.style.display = 'none'; };
 
-    // --- Patient Search ---
     let searchTimeout;
     ui.patientSearch.addEventListener('input', (e) => {
         const term = e.target.value.trim();
@@ -684,22 +625,16 @@
             const results = [];
             snap.forEach(child => {
                 const p = child.val();
-                if (p.name?.includes(term) || p.phone?.includes(term)) {
-                    results.push({ id: child.key, ...p });
-                }
+                if (p.name?.includes(term) || p.phone?.includes(term)) results.push({ id: child.key, ...p });
             });
-            ui.searchResults.innerHTML = '';
-            if (results.length === 0) {
-                ui.searchResults.innerHTML = '<div class="search-item">لا توجد نتائج</div>';
-            } else {
-                results.forEach(p => {
-                    const div = document.createElement('div');
-                    div.className = 'search-item';
-                    div.innerHTML = `<b>${p.name}</b><br><small>${p.phone || 'بدون رقم'}</small>`;
-                    div.onclick = () => selectPatient(p);
-                    ui.searchResults.appendChild(div);
-                });
-            }
+            ui.searchResults.innerHTML = results.length === 0 ? '<div class="search-item">لا توجد نتائج</div>' : '';
+            results.forEach(p => {
+                const div = document.createElement('div');
+                div.className = 'search-item';
+                div.innerHTML = `<b>${p.name}</b><br><small>${p.phone || 'بدون رقم'}</small>`;
+                div.onclick = () => selectPatient(p);
+                ui.searchResults.appendChild(div);
+            });
             ui.searchResults.style.display = 'block';
         }, 300);
     });
@@ -714,12 +649,9 @@
     }
 
     document.addEventListener('click', (e) => {
-        if (!ui.patientSearch.contains(e.target) && !ui.searchResults.contains(e.target)) {
-            ui.searchResults.style.display = 'none';
-        }
+        if (!ui.patientSearch.contains(e.target) && !ui.searchResults.contains(e.target)) ui.searchResults.style.display = 'none';
     });
 
-    // --- Submit Form (Add/Edit) ---
     ui.bookingForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const editId = ui.editBookingId.value;
@@ -727,66 +659,42 @@
         const name = ui.patientName.value.trim();
         const date = ui.appointmentDate.value;
         const time = ui.appointmentTime.value;
-        if (!doctorId || !name || !date || !time) {
-            ui.formAlert.textContent = 'جميع الحقول المطلوبة';
-            return;
-        }
+        if (!doctorId || !name || !date || !time) { ui.formAlert.textContent = 'جميع الحقول المطلوبة'; return; }
         ui.submitBtn.disabled = true;
         ui.submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
         try {
             const phone = ui.patientPhone.value.trim();
             if (phone) {
-                await set(ref(db, `patients/${phone}`), {
-                    name, age: ui.patientAge.value || null, phone,
-                    updatedAt: new Date().toISOString()
-                });
+                await set(ref(db, `patients/${phone}`), { name, age: ui.patientAge.value || null, phone, updatedAt: new Date().toISOString() });
                 selectedPatientId = phone;
             }
             const bookingData = {
-                patientName: name,
-                patientId: selectedPatientId || null,
-                age: ui.patientAge.value || null,
-                phone: phone || null,
-                doctorId: doctorId,
-                date, time,
-                status: 'انتظار',
+                patientName: name, patientId: selectedPatientId || null, age: ui.patientAge.value || null, phone: phone || null,
+                doctorId, date, time, status: 'انتظار',
                 createdAt: editId ? (await get(ref(db, `appointments/${editId}`))).val().createdAt : new Date().toISOString()
             };
-            if (editId) {
-                await update(ref(db, `appointments/${editId}`), bookingData);
-                showToast('✅ تم تعديل الحجز');
-            } else {
-                await push(ref(db, 'appointments'), bookingData);
-                showToast('✅ تم حجز الموعد');
-            }
+            if (editId) await update(ref(db, `appointments/${editId}`), bookingData);
+            else await push(ref(db, 'appointments'), bookingData);
+            showToast(editId ? '✅ تم تعديل الحجز' : '✅ تم حجز الموعد');
             ui.modal.style.display = 'none';
             resetForm();
-        } catch (err) {
-            ui.formAlert.textContent = 'خطأ: ' + err.message;
-        } finally {
-            ui.submitBtn.disabled = false;
-            ui.submitBtn.innerHTML = 'تأكيد الحجز';
-        }
+        } catch (err) { ui.formAlert.textContent = 'خطأ: ' + err.message; } 
+        finally { ui.submitBtn.disabled = false; ui.submitBtn.innerHTML = 'تأكيد الحجز'; }
     });
 
-    // --- Tabs ---
-    ui.tabBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            ui.tabBtns.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            currentTab = btn.dataset.tab;
-            filterAndRenderByTab();
-        });
-    });
+    ui.tabBtns.forEach(btn => btn.addEventListener('click', () => {
+        ui.tabBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentTab = btn.dataset.tab;
+        filterAndRenderByTab();
+    }));
 
-    // --- Logout ---
     ui.logoutBtn.onclick = async () => {
         if (unsubscribeBookings) unsubscribeBookings();
         await signOut(auth);
         window.location.href = 'index.html';
     };
 
-    // --- Auth ---
     onAuthStateChanged(auth, async (user) => {
         if (!user) { window.location.href = 'index.html'; return; }
         currentUser = user;
