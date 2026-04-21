@@ -96,6 +96,7 @@
             color: var(--accent);
             width: 20px;
             height: 20px;
+            pointer-events: none;
         }
         .input-group input {
             width: 100%;
@@ -115,6 +116,20 @@
             background: #ffffff;
         }
         .input-group input::placeholder { color: #A3C4C4; font-weight: 400; }
+        .password-toggle {
+            position: absolute;
+            top: 50%;
+            left: 1.25rem;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--accent);
+            cursor: pointer;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
         .btn {
             width: 100%;
             padding: 1rem;
@@ -205,19 +220,25 @@
         </header>
         <form id="loginForm">
             <div class="input-group">
-                <input type="text" id="username" placeholder="البريد الإلكتروني" required autocomplete="off">
+                <input type="text" id="username" placeholder="البريد الإلكتروني" required autocomplete="email">
                 <i class="icon" data-feather="mail"></i>
             </div>
             <div class="input-group">
-                <input type="password" id="password" placeholder="كلمة المرور" required autocomplete="off">
+                <input type="password" id="password" placeholder="كلمة المرور" required autocomplete="current-password">
                 <i class="icon" data-feather="lock"></i>
+                <button type="button" class="password-toggle" id="togglePasswordBtn" title="إظهار/إخفاء كلمة المرور">
+                    <i data-feather="eye"></i>
+                </button>
             </div>
             <div class="error-message" id="errorMessage"></div>
             <button type="submit" class="btn" id="loginButton">تسجيل الدخول</button>
         </form>
     </main>
+
     <script type="module">
         feather.replace();
+
+        // استيراد الإعدادات
         import { firebaseConfig } from './firebase-config.js';
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
@@ -227,24 +248,29 @@
         const auth = getAuth(app);
         const db = getDatabase(app);
 
+        // بيانات المدير الثابتة (للتجربة)
         const ADMIN_CREDENTIALS = {
             email: "admin@sokoon.com",
             password: "Admin@2024Secure"
         };
 
+        // عناصر DOM
         const elements = {
             errorMessage: document.getElementById('errorMessage'),
             usernameInput: document.getElementById('username'),
             passwordInput: document.getElementById('password'),
             loginButton: document.getElementById('loginButton'),
-            loginForm: document.getElementById('loginForm')
+            loginForm: document.getElementById('loginForm'),
+            togglePasswordBtn: document.getElementById('togglePasswordBtn')
         };
 
+        // ---------- دوال مساعدة ----------
         const showError = (msg) => {
             elements.errorMessage.textContent = msg;
             elements.errorMessage.classList.add('show');
             setTimeout(() => elements.errorMessage.classList.remove('show'), 5000);
         };
+
         const showToast = (msg, ok = true) => {
             const toast = document.createElement('div');
             toast.className = 'toast-notification';
@@ -253,11 +279,27 @@
             document.body.appendChild(toast);
             setTimeout(() => toast.remove(), 2000);
         };
+
         const setLoading = (loading) => {
             elements.loginButton.disabled = loading;
             elements.loginButton.innerHTML = loading ? '<span class="spinner"></span> جاري التحقق...' : 'تسجيل الدخول';
         };
 
+        // ---------- إظهار/إخفاء كلمة المرور ----------
+        elements.togglePasswordBtn.addEventListener('click', () => {
+            const input = elements.passwordInput;
+            const icon = elements.togglePasswordBtn.querySelector('i');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.setAttribute('data-feather', 'eye-off');
+            } else {
+                input.type = 'password';
+                icon.setAttribute('data-feather', 'eye');
+            }
+            feather.replace();
+        });
+
+        // ---------- جلب دور المستخدم من Realtime Database ----------
         const fetchUserRole = async (uid) => {
             const snap = await get(ref(db, `users/${uid}`));
             if (snap.exists()) {
@@ -266,59 +308,131 @@
             return null;
         };
 
-        const storeAndRedirect = (userData) => {
+        // ---------- جلب اسم المستخدم من قاعدة البيانات (إذا وُجد) ----------
+        const fetchUserName = async (uid) => {
+            const snap = await get(ref(db, `users/${uid}`));
+            if (snap.exists()) {
+                return snap.val().name || null;
+            }
+            return null;
+        };
+
+        // ---------- تخزين الجلسة والتوجيه ----------
+        const storeSessionAndRedirect = (userData) => {
+            // تخزين جميع المعلومات المهمة في sessionStorage
             sessionStorage.setItem('userRole', userData.role);
             sessionStorage.setItem('userEmail', userData.email);
             sessionStorage.setItem('userName', userData.name);
-            if (userData.uid) sessionStorage.setItem('userUid', userData.uid);
+            sessionStorage.setItem('userUid', userData.uid);
+            
             showToast(`مرحباً ${userData.name}!`, true);
-            const pages = { admin: 'admin-panel.html', doctor: 'doctor-dashboard.html', nurse: 'nurse-dashboard.html', pharmacist: 'pharmacy-dashboard.html' };
+
+            const pages = {
+                admin: 'admin-panel.html',
+                doctor: 'doctor-dashboard.html',
+                nurse: 'nurse-dashboard.html',
+                pharmacist: 'pharmacy-dashboard.html'
+            };
             const redirect = pages[userData.role] || 'dashboard.html';
-            setTimeout(() => { window.location.href = redirect; }, 1500);
+            
+            setTimeout(() => {
+                window.location.href = redirect;
+            }, 1500);
         };
 
+        // ---------- معالجة تسجيل الدخول ----------
         const handleLogin = async (e) => {
             e.preventDefault();
             const email = elements.usernameInput.value.trim().toLowerCase();
             const pwd = elements.passwordInput.value;
-            if (!email || !pwd) { showError('البريد وكلمة المرور مطلوبان'); return; }
-            setLoading(true);
-            showError('');
-            
-            if (email === ADMIN_CREDENTIALS.email && pwd === ADMIN_CREDENTIALS.password) {
-                storeAndRedirect({ uid: 'admin-local', email, name: 'مدير النظام', role: 'admin' });
+
+            if (!email || !pwd) {
+                showError('الرجاء إدخال البريد الإلكتروني وكلمة المرور');
                 return;
             }
-            
+
+            setLoading(true);
+            showError('');
+
+            // 1. التحقق من المدير المحلي (اختباري)
+            if (email === ADMIN_CREDENTIALS.email && pwd === ADMIN_CREDENTIALS.password) {
+                storeSessionAndRedirect({
+                    uid: 'admin-local',
+                    email: email,
+                    name: 'مدير النظام',
+                    role: 'admin'
+                });
+                return;
+            }
+
+            // 2. التحقق عبر Firebase Auth
             try {
-                const cred = await signInWithEmailAndPassword(auth, email, pwd);
-                const user = cred.user;
+                const userCredential = await signInWithEmailAndPassword(auth, email, pwd);
+                const user = userCredential.user;
+                
+                // جلب الدور من قاعدة البيانات
                 const role = await fetchUserRole(user.uid);
-                if (!role) { showError('المستخدم غير موجود في قاعدة البيانات'); setLoading(false); return; }
-                storeAndRedirect({ uid: user.uid, email: user.email, name: user.email.split('@')[0], role });
+                if (!role) {
+                    showError('❌ المستخدم غير موجود في قاعدة البيانات. تواصل مع المدير.');
+                    setLoading(false);
+                    return;
+                }
+
+                // محاولة جلب الاسم الحقيقي من قاعدة البيانات
+                const dbName = await fetchUserName(user.uid);
+                const displayName = dbName || user.email.split('@')[0];
+
+                storeSessionAndRedirect({
+                    uid: user.uid,
+                    email: user.email,
+                    name: displayName,
+                    role: role
+                });
+
             } catch (err) {
+                console.error("Login error:", err);
                 let msg = 'بيانات الدخول غير صحيحة';
-                if (err.code === 'auth/user-not-found') msg = 'البريد غير مسجل';
-                else if (err.code === 'auth/wrong-password') msg = 'كلمة مرور خاطئة';
-                else if (err.code === 'auth/too-many-requests') msg = 'تم تعطيل الحساب مؤقتاً';
+                if (err.code === 'auth/user-not-found') msg = '❌ البريد الإلكتروني غير مسجل';
+                else if (err.code === 'auth/wrong-password') msg = '❌ كلمة مرور غير صحيحة';
+                else if (err.code === 'auth/too-many-requests') msg = '⚠️ تم تعطيل الحساب مؤقتاً، حاول لاحقاً';
+                else if (err.code === 'auth/network-request-failed') msg = '⚠️ مشكلة في الاتصال بالإنترنت';
                 showError(msg);
                 setLoading(false);
             }
         };
 
-        const checkSession = () => {
+        // ---------- التحقق من وجود جلسة سابقة ----------
+        const checkExistingSession = () => {
             const role = sessionStorage.getItem('userRole');
             const name = sessionStorage.getItem('userName');
             if (role && name) {
-                const pages = { admin: 'admin-panel.html', doctor: 'doctor-dashboard.html', nurse: 'nurse-dashboard.html', pharmacist: 'pharmacy-dashboard.html' };
+                const pages = {
+                    admin: 'admin-panel.html',
+                    doctor: 'doctor-dashboard.html',
+                    nurse: 'nurse-dashboard.html',
+                    pharmacist: 'pharmacy-dashboard.html'
+                };
                 const redirect = pages[role] || 'dashboard.html';
                 showToast(`أهلاً بعودتك ${name}!`, true);
-                setTimeout(() => { window.location.href = redirect; }, 1200);
+                setTimeout(() => {
+                    window.location.href = redirect;
+                }, 1200);
             }
         };
 
+        // ---------- ربط الأحداث ----------
         elements.loginForm.addEventListener('submit', handleLogin);
-        checkSession();
+        
+        // السماح بتسجيل الدخول بالضغط على Enter من أي حقل
+        elements.usernameInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') elements.loginForm.dispatchEvent(new Event('submit'));
+        });
+        elements.passwordInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') elements.loginForm.dispatchEvent(new Event('submit'));
+        });
+
+        // بدء التحقق من الجلسة
+        checkExistingSession();
     </script>
 </body>
 </html>
