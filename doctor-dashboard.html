@@ -403,7 +403,7 @@
     let currentAppointment = null;
     let currentPrescription = [];
     let drugList = [];
-    let favoriteDrugs = new Set(); // من localStorage
+    let favoriteDrugs = new Set();
     let doseState = {
         drug: null,
         form: 'tablet',
@@ -525,7 +525,7 @@
         }
     }
 
-    // ---------- قائمة الانتظار ----------
+    // ---------- قائمة الانتظار (من جدول appointments) ----------
     function loadAppointments() {
         const q = query(ref(db, 'appointments'), orderByChild('doctorId'), equalTo(currentUser.uid));
         onValue(q, (snap) => {
@@ -577,7 +577,7 @@
         }
         currentAppointment = apt;
         currentPrescription = [];
-        UI.diagnosisTextarea.value = ''; // مسح التشخيص السابق
+        UI.diagnosisTextarea.value = '';
         updateCurrentPatientUI();
         UI.emptyPrescriptionMsg.style.display = 'none';
         UI.prescriptionContent.style.display = 'block';
@@ -642,7 +642,6 @@
         if (term.length < 1) { UI.drugSuggestions.style.display = 'none'; return; }
         let matches = drugList.filter(d => d.name && d.name.includes(term));
         
-        // ترتيب: المفضلة أولاً
         matches.sort((a,b) => {
             const aFav = favoriteDrugs.has(a.name) ? 1 : 0;
             const bFav = favoriteDrugs.has(b.name) ? 1 : 0;
@@ -703,13 +702,11 @@
         
         let suggestions = [];
         
-        // 1. تحميل التفضيلات السابقة
         if (drug && currentUser) {
             const prefs = loadDosePreferences(drug, form);
             suggestions = prefs.map(p => ({ text: p, isPref: true }));
         }
         
-        // 2. إذا كان هناك رقم مدخل، أضف اقتراحات مبنية عليه
         if (quantity && !isNaN(parseInt(quantity))) {
             const num = parseInt(quantity);
             const base = `${num} ${unit}`;
@@ -727,7 +724,6 @@
             });
         }
         
-        // 3. إذا لم توجد اقتراحات، أضف اقتراحات افتراضية عامة
         if (suggestions.length === 0) {
             const base = `1 ${unit}`;
             suggestions = [
@@ -737,7 +733,6 @@
             ];
         }
         
-        // عرض الاقتراحات
         UI.doseSuggestionsContainer.innerHTML = suggestions.map((s, idx) => `
             <div class="dose-suggestion-row">
                 <span>${s.text} ${s.isPref ? '<i class="fas fa-history" style="opacity:0.6; margin-right:6px;"></i>' : ''}</span>
@@ -784,7 +779,6 @@
             exchange: doseState.isExchange ? doseState.exchangeDrug : null
         });
         
-        // حفظ التفضيل
         saveDosePreference(doseState.drug, UI.drugFormSelect.value, doseString);
         
         renderPrescriptionItems();
