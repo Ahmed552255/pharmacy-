@@ -82,10 +82,22 @@ function showToast(msg, isErr = false) {
 // ---------- تحميل بيانات الطبيب والأدوية ----------
 async function loadDoctorData(user) {
     const snap = await get(ref(db, `users/${user.uid}`));
-    if (snap.exists()) {
-        doctorInfo = snap.val();
-        UI.welcomeMessage.textContent = `د. ${doctorInfo.name || ''}`;
+    if (!snap.exists()) {
+        showToast('بيانات الطبيب غير موجودة. يرجى التواصل مع المدير.', true);
+        await signOut(auth);
+        window.location.href = 'index.html';
+        return false;
     }
+    const data = snap.val();
+    if (data.role !== 'doctor') {
+        showToast('هذا الحساب ليس حساب طبيب.', true);
+        await signOut(auth);
+        window.location.href = 'index.html';
+        return false;
+    }
+    doctorInfo = data;
+    UI.welcomeMessage.textContent = `د. ${doctorInfo.name || ''}`;
+    return true;
 }
 
 async function loadDrugs() {
@@ -105,6 +117,9 @@ function loadAppointments() {
         all.sort((a,b) => (a.time||'').localeCompare(b.time||''));
         todayAppointments = all;
         updateQueueBadgeAndModal();
+    }, (error) => {
+        console.error('خطأ في تحميل الحجوزات:', error);
+        showToast('فشل تحميل قائمة الانتظار', true);
     });
 }
 
@@ -194,7 +209,6 @@ function renderPrescriptionItems() {
             renderPrescriptionItems();
         });
     });
-    // يمكن إضافة وظيفة التعديل لاحقاً
 }
 
 // ---------- إضافة دواء ذكي ----------
@@ -268,14 +282,12 @@ function generateDoseSuggestions() {
             </div>
         </div>
     `).join('');
-    // إضافة مستمعي الأحداث لأزرار التوقيت
     document.querySelectorAll('.timing-btn-sm').forEach(btn => {
         btn.addEventListener('click', (e) => {
             e.stopPropagation();
             const parentRow = btn.closest('.suggestion-row');
             parentRow.querySelectorAll('.timing-btn-sm').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            // يمكن تخزين التوقيت المختار مع الاقتراح
         });
     });
 }
@@ -286,7 +298,6 @@ UI.applyDoseBtn.addEventListener('click', () => {
     const quantity = UI.doseNumberInput.value.trim();
     if (!doseState.drug || !quantity) return;
     const formText = UI.drugFormSelect.options[UI.drugFormSelect.selectedIndex].text;
-    // الحصول على الاقتراح المختار (أول اقتراح مع التوقيت النشط)
     const activeRow = document.querySelector('.suggestion-row');
     let doseString = `${quantity} ${UI.unitLabel.textContent}`;
     if (activeRow) {
@@ -382,7 +393,8 @@ UI.logoutBtn.addEventListener('click', async () => { await signOut(auth); window
 onAuthStateChanged(auth, async (user) => {
     if (!user) { window.location.href = 'index.html'; return; }
     currentUser = user;
-    await loadDoctorData(user);
+    const isValid = await loadDoctorData(user);
+    if (!isValid) return;
     await loadDrugs();
     loadAppointments();
     updateUnitLabel();
