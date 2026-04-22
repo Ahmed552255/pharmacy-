@@ -780,9 +780,17 @@
         filterAndRenderByTab();
     }));
 
+    // ========== تعديل زر الخروج ==========
     ui.logoutBtn.onclick = async () => {
+        // إلغاء الاشتراك في تحديثات الحجوزات
         if (unsubscribeBookings) unsubscribeBookings();
-        await signOut(auth);
+        // مسح بيانات الممرض المخزنة محليًا
+        localStorage.removeItem(`nurse_${currentUser?.uid}`);
+        // مسح sessionStorage بالكامل
+        sessionStorage.clear();
+        // وضع علامة خروج ناعم
+        sessionStorage.setItem('softLogout', 'true');
+        // إعادة التوجيه إلى صفحة الدخول
         window.location.href = 'index.html';
     };
 
