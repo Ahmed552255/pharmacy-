@@ -484,18 +484,30 @@
         localStorage.setItem(key, JSON.stringify(prefs));
     }
 
-    // ---------- تحميل بيانات الطبيب ----------
+    // ---------- تحميل بيانات الطبيب (معدلة: لا توجيه قسري) ----------
     async function loadDoctorData(user) {
         try {
             const snap = await get(ref(db, `users/${user.uid}`));
             if (!snap.exists()) {
-                showToast('بيانات الطبيب غير موجودة. تواصل مع المدير.', true);
-                return false;
+                // إنشاء بيانات افتراضية بدلاً من تسجيل الخروج
+                doctorInfo = {
+                    name: 'طبيب',
+                    role: 'doctor',
+                    email: user.email || ''
+                };
+                showToast('لم يتم العثور على ملف الطبيب - تم استخدام بيانات افتراضية', false);
+                return true;
             }
             const data = snap.val();
             if (data.role !== 'doctor') {
-                showToast('هذا الحساب ليس حساب طبيب.', true);
-                return false;
+                // إذا لم يكن طبيب، نستمر ولكن قد تظهر بعض القيود (لا نوجه للخروج)
+                doctorInfo = {
+                    name: data.name || 'مستخدم',
+                    role: data.role || 'doctor',
+                    ...data
+                };
+                showToast('تنبيه: هذا الحساب ليس حساب طبيب رسمي', false);
+                return true;
             }
             doctorInfo = data;
             UI.welcomeMessage.textContent = `د. ${doctorInfo.name || ''}`;
@@ -507,8 +519,9 @@
             }
             return true;
         } catch (err) {
-            showToast('فشل تحميل بيانات الطبيب', true);
-            return false;
+            console.warn('فشل تحميل بيانات الطبيب، الاستمرار ببيانات افتراضية', err);
+            doctorInfo = { name: 'طبيب', role: 'doctor' };
+            return true;
         }
     }
 
@@ -867,30 +880,19 @@
         renderQueueModalList();
     }));
 
-    // ---------- تعديل زر الخروج (بدون signOut) ----------
-    UI.logoutBtn.addEventListener('click', async () => {
-        // مسح الجلسة المحلية فقط مع وضع إشارة
-        sessionStorage.clear();
-        sessionStorage.setItem('logoutIntent', 'doctor_manual_logout');
-        // توجيه إلى صفحة الدخول بدون تسجيل خروج من Firebase
-        window.location.href = 'index.html';
-    });
+    UI.logoutBtn.addEventListener('click', async () => { await signOut(auth); window.location.href = 'index.html'; });
 
     // ---------- بدء التشغيل ----------
     onAuthStateChanged(auth, async (user) => {
-        if (!user) {
-            window.location.href = 'index.html';
-            return;
-        }
+        if (!user) { window.location.href = 'index.html'; return; }
         currentUser = user;
-        const valid = await loadDoctorData(user);
-        if (!valid) {
-            UI.welcomeMessage.textContent = 'خطأ في تحميل البيانات';
-            return; // البقاء في الصفحة مع ظهور الخطأ
-        }
+        // تحميل البيانات مع استمرار التشغيل حتى لو كانت البيانات ناقصة
+        await loadDoctorData(user);
         await loadDrugs();
         loadAppointments();
         updateUnitLabel();
+        // تحديث اسم الترحيب بعد تحميل البيانات (قد يكون افتراضيًا)
+        UI.welcomeMessage.textContent = `د. ${doctorInfo?.name || 'طبيب'}`;
     });
 
     window.onclick = (e) => {
