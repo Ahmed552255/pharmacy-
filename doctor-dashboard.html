@@ -489,16 +489,12 @@
         try {
             const snap = await get(ref(db, `users/${user.uid}`));
             if (!snap.exists()) {
-                showToast('بيانات الطبيب غير موجودة.', true);
-                await signOut(auth);
-                window.location.href = 'index.html';
+                showToast('بيانات الطبيب غير موجودة. تواصل مع المدير.', true);
                 return false;
             }
             const data = snap.val();
             if (data.role !== 'doctor') {
                 showToast('هذا الحساب ليس حساب طبيب.', true);
-                await signOut(auth);
-                window.location.href = 'index.html';
                 return false;
             }
             doctorInfo = data;
@@ -871,14 +867,27 @@
         renderQueueModalList();
     }));
 
-    UI.logoutBtn.addEventListener('click', async () => { await signOut(auth); window.location.href = 'index.html'; });
+    // ---------- تعديل زر الخروج (بدون signOut) ----------
+    UI.logoutBtn.addEventListener('click', async () => {
+        // مسح الجلسة المحلية فقط مع وضع إشارة
+        sessionStorage.clear();
+        sessionStorage.setItem('logoutIntent', 'doctor_manual_logout');
+        // توجيه إلى صفحة الدخول بدون تسجيل خروج من Firebase
+        window.location.href = 'index.html';
+    });
 
     // ---------- بدء التشغيل ----------
     onAuthStateChanged(auth, async (user) => {
-        if (!user) { window.location.href = 'index.html'; return; }
+        if (!user) {
+            window.location.href = 'index.html';
+            return;
+        }
         currentUser = user;
         const valid = await loadDoctorData(user);
-        if (!valid) return;
+        if (!valid) {
+            UI.welcomeMessage.textContent = 'خطأ في تحميل البيانات';
+            return; // البقاء في الصفحة مع ظهور الخطأ
+        }
         await loadDrugs();
         loadAppointments();
         updateUnitLabel();
