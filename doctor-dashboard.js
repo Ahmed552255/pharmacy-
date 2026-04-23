@@ -20,6 +20,161 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
 
+// ---------- نظام التخزين المحلي (IndexedDB) ----------
+class LocalDrugDB {
+    constructor() {
+        this.db = null;
+        this.DB_NAME = 'SukunDrugsDB';
+        this.STORE_NAME = 'drugs';
+        this.VERSION = 1;
+    }
+
+    async open() {
+        return new Promise((resolve, reject) => {
+            const request = indexedDB.open(this.DB_NAME, this.VERSION);
+            request.onupgradeneeded = (e) => {
+                const db = e.target.result;
+                if (!db.objectStoreNames.contains(this.STORE_NAME)) {
+                    const store = db.createObjectStore(this.STORE_NAME, { keyPath: 'id' });
+                    store.createIndex('by_name', 'name', { unique: false });
+                    store.createIndex('by_form', 'form', { unique: false });
+                    store.createIndex('by_frequency', 'frequency', { unique: false });
+                }
+            };
+            request.onsuccess = (e) => {
+                this.db = e.target.result;
+                resolve();
+            };
+            request.onerror = reject;
+        });
+    }
+
+    async getAllDrugs() {
+        return new Promise((resolve) => {
+            const tx = this.db.transaction(this.STORE_NAME, 'readonly');
+            const store = tx.objectStore(this.STORE_NAME);
+            const request = store.getAll();
+            request.onsuccess = () => resolve(request.result || []);
+            request.onerror = () => resolve([]);
+        });
+    }
+
+    async saveDrugs(drugsArray) {
+        const tx = this.db.transaction(this.STORE_NAME, 'readwrite');
+        const store = tx.objectStore(this.STORE_NAME);
+        // مسح القديم ثم إضافة الجديد
+        await store.clear();
+        for (const drug of drugsArray) {
+            store.add(drug);
+        }
+        return new Promise((resolve) => {
+            tx.oncomplete = resolve;
+            tx.onerror = () => resolve(false);
+        });
+    }
+
+    async addOrUpdateDrug(drug) {
+        return new Promise((resolve) => {
+            const tx = this.db.transaction(this.STORE_NAME, 'readwrite');
+            const store = tx.objectStore(this.STORE_NAME);
+            const getRequest = store.get(drug.id);
+            getRequest.onsuccess = () => {
+                const existing = getRequest.result;
+                if (existing) {
+                    // تحديث العداد
+                    existing.frequency = (existing.frequency || 0) + 1;
+                    store.put(existing);
+                } else {
+                    drug.frequency = 1;
+                    store.add(drug);
+                }
+                tx.oncomplete = () => resolve(true);
+            };
+        });
+    }
+
+    async searchDrugs(term, formFilter = null) {
+        const drugs = await this.getAllDrugs();
+        const lowerTerm = term.toLowerCase();
+        let results = drugs.filter(d => 
+            d.name.toLowerCase().includes(lowerTerm) ||
+            (d.genericName && d.genericName.toLowerCase().includes(lowerTerm))
+        );
+        if (formFilter && formFilter !== 'all') {
+            results = results.filter(d => d.form === formFilter);
+        }
+        // ترتيب حسب التفضيل (frequency) ثم الأبجدي
+        results.sort((a, b) => (b.frequency || 0) - (a.frequency || 0) || a.name.localeCompare(b.name));
+        return results;
+    }
+}
+
+const localDrugDB = new LocalDrugDB();
+
+// ---------- مزامنة الأدوية من Firebase إلى المحلي ----------
+async function syncDrugsFromFirebase() {
+    try {
+        const snap = await get(ref(db, 'drugs'));
+        let drugs = [];
+        if (snap.exists()) {
+            const obj = snap.val();
+            drugs = Object.values(obj).map(d => ({
+                ...d,
+                id: d.id || crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random()
+            }));
+        }
+        await localDrugDB.saveDrugs(drugs);
+        console.log(`✅ تمت مزامنة ${drugs.length} دواء مع المحلي`);
+        return drugs;
+    } catch (err) {
+        console.warn('تعذر الاتصال بـ Firebase، استخدام البيانات المحلية فقط');
+        return await localDrugDB.getAllDrugs();
+    }
+}
+
+// ---------- إضافة دواء جديد إلى السحابة والمحلي ----------
+async function addNewDrugToBoth(name, form, strength = '', price = null) {
+    const drugId = crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random();
+    const newDrug = {
+        id: drugId,
+        name: name.trim(),
+        genericName: '',
+        form: form,
+        strength: strength,
+        price: price,
+        frequency: 1,
+        createdAt: new Date().toISOString()
+    };
+    
+    // حفظ محلياً
+    await localDrugDB.addOrUpdateDrug(newDrug);
+    
+    // حفظ في Firebase (إذا كان متصلاً)
+    try {
+        await set(ref(db, `drugs/${drugId}`), newDrug);
+    } catch (e) {
+        console.warn('تعذر حفظ الدواء في السحابة حالياً');
+    }
+    
+    return newDrug;
+}
+
+// ---------- تحديث عداد استخدام الدواء (محلياً وسحابياً) ----------
+async function incrementDrugUsage(drugName, form) {
+    const drugs = await localDrugDB.getAllDrugs();
+    const drug = drugs.find(d => d.name === drugName && d.form === form);
+    if (drug) {
+        drug.frequency = (drug.frequency || 0) + 1;
+        await localDrugDB.addOrUpdateDrug(drug);
+        try {
+            await update(ref(db, `drugs/${drug.id}`), { frequency: drug.frequency });
+        } catch (e) {}
+    } else {
+        // إذا لم يكن موجوداً، أضفه تلقائياً
+        await addNewDrugToBoth(drugName, form);
+    }
+}
+
 // ---------- عناصر واجهة المستخدم ----------
 const UI = {
     welcomeMessage: document.getElementById('welcomeMessage'),
@@ -71,7 +226,7 @@ const sessionName = sessionStorage.getItem('userName');
 if (!sessionUid || sessionRole !== 'doctor') {
     sessionStorage.clear();
     window.location.replace('index.html');
-    throw new Error('جلسة غير صالحة. الرجاء تسجيل الدخول.');
+    throw new Error('جلسة غير صالحة.');
 }
 
 // ---------- الحالة العامة ----------
@@ -84,7 +239,6 @@ let doctorInfo = { name: currentUser.name };
 let todayAppointments = [];
 let currentAppointment = null;
 let currentPrescription = [];
-let drugList = [];               // الأدوية من قاعدة البيانات (المصدر الأساسي)
 let favoriteDrugs = new Set();
 let doseState = {
     drug: null,
@@ -120,27 +274,78 @@ function escapeHtml(str) {
     return String(str).replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'})[m] || m);
 }
 
-// ---------- تفضيلات الجرعات (LocalStorage) ----------
-function getDosePreferencesKey(drug, form) {
-    return `dosePref_${currentUser.uid}_${drug}_${form}`;
+// ---------- البحث المحلي السريع (مع تفضيلات الاستخدام) ----------
+async function searchDrugsLocal(term, selectedForm = null) {
+    if (!term || term.length < 1) return [];
+    const lowerTerm = term.toLowerCase().trim();
+    let drugs = await localDrugDB.searchDrugs(lowerTerm, selectedForm);
+    
+    // تمييز المفضلة (بناءً على الاستخدام المتكرر أو المفضلة الصريحة)
+    drugs = drugs.map(d => ({
+        ...d,
+        isFavorite: favoriteDrugs.has(d.name) || (d.frequency > 3) // استخدام أكثر من 3 مرات يعتبر مفضل
+    }));
+    
+    // ترتيب: المفضلة أولاً، ثم تكرار الاستخدام
+    drugs.sort((a, b) => {
+        if (a.isFavorite && !b.isFavorite) return -1;
+        if (!a.isFavorite && b.isFavorite) return 1;
+        return (b.frequency || 0) - (a.frequency || 0);
+    });
+    
+    return drugs.slice(0, 15);
 }
 
-function loadDosePreferences(drug, form) {
-    const key = getDosePreferencesKey(drug, form);
-    const stored = localStorage.getItem(key);
-    return stored ? JSON.parse(stored) : [];
+// ---------- عرض الاقتراحات مع خيار إضافة دواء جديد ----------
+async function displayDrugSuggestions(term) {
+    const selectedForm = UI.drugFormSelect.value;
+    const matches = await searchDrugsLocal(term, selectedForm);
+    
+    if (matches.length === 0) {
+        UI.drugSuggestions.innerHTML = `
+            <div class="suggestion-item" id="addNewDrugOption" style="background: #FEF5EC; cursor: pointer;">
+                <i class="fas fa-plus-circle" style="color: var(--primary);"></i>
+                <span>إضافة "${escapeHtml(term)}" كدواء جديد (${UI.drugFormSelect.options[UI.drugFormSelect.selectedIndex].text})</span>
+            </div>
+        `;
+        UI.drugSuggestions.style.display = 'block';
+        document.getElementById('addNewDrugOption').addEventListener('click', () => addNewDrugFromSearch(term));
+        return;
+    }
+
+    UI.drugSuggestions.innerHTML = matches.map(drug => {
+        const favIcon = drug.isFavorite ? '<span class="favorites-tag"><i class="fas fa-star"></i> مفضل</span>' : '';
+        const formIcon = { 'tablet':'💊','syrup':'🥄','injection':'💉','suppository':'🧴','drops':'💧' }[drug.form] || '💊';
+        const strengthBadge = drug.strength ? `<span class="strength-info">${escapeHtml(drug.strength)}</span>` : '';
+        const usageCount = drug.frequency ? `<span class="usage-count" title="استخدم ${drug.frequency} مرة">(${drug.frequency})</span>` : '';
+        
+        return `
+        <div class="suggestion-item" data-drug-name="${escapeHtml(drug.name)}" data-drug-form="${escapeHtml(drug.form)}" data-drug-strength="${escapeHtml(drug.strength || '')}">
+            <div class="suggestion-main">
+                <span class="drug-name">${formIcon} ${escapeHtml(drug.name)}</span>
+                ${favIcon}
+                ${usageCount}
+            </div>
+            <div class="suggestion-details">
+                ${strengthBadge}
+            </div>
+        </div>
+        `;
+    }).join('');
+    UI.drugSuggestions.style.display = 'block';
 }
 
-function saveDosePreference(drug, form, doseString) {
-    const key = getDosePreferencesKey(drug, form);
-    let prefs = loadDosePreferences(drug, form);
-    prefs = prefs.filter(p => p !== doseString);
-    prefs.unshift(doseString);
-    if (prefs.length > 5) prefs.pop();
-    localStorage.setItem(key, JSON.stringify(prefs));
+// إضافة دواء جديد من شريط البحث
+async function addNewDrugFromSearch(name) {
+    const form = UI.drugFormSelect.value;
+    const newDrug = await addNewDrugToBoth(name, form);
+    doseState.drug = newDrug.name;
+    prepareDosePanel();
+    showToast(`تمت إضافة "${name}" إلى قائمة الأدوية`);
+    UI.drugSuggestions.style.display = 'none';
 }
 
-// ---------- تحميل بيانات الطبيب من قاعدة البيانات ----------
+// ---------- تحميل بيانات الطبيب (معدلة) ----------
 async function loadDoctorData(uid) {
     try {
         const snap = await get(ref(db, `users/${uid}`));
@@ -149,7 +354,6 @@ async function loadDoctorData(uid) {
             doctorInfo = { ...doctorInfo, ...data };
             UI.welcomeMessage.textContent = `د. ${doctorInfo.name || currentUser.name}`;
         } else {
-            console.warn('سجل المستخدم غير موجود في قاعدة البيانات، استخدام بيانات الجلسة.');
             UI.welcomeMessage.textContent = `د. ${currentUser.name}`;
         }
 
@@ -160,123 +364,12 @@ async function loadDoctorData(uid) {
         return true;
     } catch (err) {
         console.error('فشل تحميل بيانات الطبيب:', err);
-        showToast('تعذر تحميل بعض البيانات، لكن يمكنك متابعة العمل', true);
-        UI.welcomeMessage.textContent = `د. ${currentUser.name}`;
+        showToast('تعذر تحميل بعض البيانات', true);
         return true;
     }
 }
 
-// ---------- تحميل قائمة الأدوية من Firebase (المصدر الأساسي) ----------
-async function loadDrugs() {
-    try {
-        const snap = await get(ref(db, 'drugs'));
-        if (snap.exists()) {
-            const drugsObj = snap.val();
-            // تحويل كائن الأدوية إلى مصفوفة
-            drugList = Object.values(drugsObj);
-            console.log(`✅ تم تحميل ${drugList.length} دواء من Firebase`);
-        } else {
-            drugList = [];
-            console.warn('⚠️ مسار /drugs فارغ. تأكد من رفع الأدوية أولاً.');
-        }
-    } catch (err) {
-        console.error('❌ فشل تحميل الأدوية من Firebase:', err);
-        showToast('تعذر تحميل قاعدة الأدوية من السحابة.', true);
-        drugList = [];
-    }
-}
-
-// ---------- البحث في الأدوية (باستخدام Firebase كمصدر وحيد) ----------
-function searchDrugs(term, selectedForm = null) {
-    if (!term || term.length < 1) return [];
-    const lowerTerm = term.toLowerCase().trim();
-
-    let matches = drugList.filter(drug => {
-        const name = drug.name?.toLowerCase() || '';
-        const form = drug.form?.toLowerCase() || '';
-        const strength = drug.strength?.toLowerCase() || '';
-        // البحث في الاسم، الشكل، والتركيز
-        const matchesTerm = name.includes(lowerTerm) || form.includes(lowerTerm) || strength.includes(lowerTerm);
-        if (selectedForm && selectedForm !== 'all') {
-            return matchesTerm && form === selectedForm.toLowerCase();
-        }
-        return matchesTerm;
-    });
-
-    // إزالة التكرارات (بناءً على الاسم + الشكل)
-    const seen = new Set();
-    const uniqueMatches = [];
-    
-    matches.forEach(drug => {
-        const key = `${drug.name}|${drug.form || ''}`;
-        if (!seen.has(key)) {
-            seen.add(key);
-            uniqueMatches.push({
-                name: drug.name,
-                form: drug.form || 'غير محدد',
-                strength: drug.strength || '',
-                price: drug.price || null,
-                source: 'firebase'
-            });
-        }
-    });
-
-    // ترتيب النتائج: المفضلة أولاً، ثم تطابق بداية الاسم، ثم الأبجدي
-    uniqueMatches.sort((a, b) => {
-        const aFav = favoriteDrugs.has(a.name) ? 1 : 0;
-        const bFav = favoriteDrugs.has(b.name) ? 1 : 0;
-        if (aFav !== bFav) return bFav - aFav;
-
-        const aStartsWith = a.name.toLowerCase().startsWith(lowerTerm) ? 1 : 0;
-        const bStartsWith = b.name.toLowerCase().startsWith(lowerTerm) ? 1 : 0;
-        if (aStartsWith !== bStartsWith) return bStartsWith - aStartsWith;
-
-        return a.name.localeCompare(b.name);
-    });
-
-    return uniqueMatches.slice(0, 15);
-}
-
-// ---------- عرض الاقتراحات في واجهة المستخدم ----------
-function displayDrugSuggestions(term) {
-    const selectedForm = UI.drugFormSelect.value;
-    const matches = searchDrugs(term, selectedForm);
-    
-    if (matches.length === 0) {
-        UI.drugSuggestions.innerHTML = `<div class="suggestion-item" style="color: #888; justify-content: center;">
-            <i class="fas fa-info-circle"></i> لا توجد نتائج. اضغط "إضافة" لإدخال "${escapeHtml(term)}" كدواء جديد.
-        </div>`;
-        UI.drugSuggestions.style.display = 'block';
-        return;
-    }
-
-    UI.drugSuggestions.innerHTML = matches.map(drug => {
-        const isFav = favoriteDrugs.has(drug.name);
-        const favStar = isFav ? '<span class="favorites-tag"><i class="fas fa-star"></i> مفضل</span>' : '';
-        const formIcon = {
-            'tablet': '💊', 'capsule': '💊', 'syrup': '🥄', 'injection': '💉', 'suppository': '🧴', 'drops': '💧'
-        }[drug.form?.toLowerCase()] || '💊';
-        const formBadge = drug.form ? `<span class="form-badge"><i class="fas fa-prescription-bottle"></i> ${escapeHtml(drug.form)}</span>` : '';
-        const strengthInfo = drug.strength ? `<span class="strength-info"><i class="fas fa-weight"></i> ${escapeHtml(drug.strength)}</span>` : '';
-        const priceInfo = drug.price ? `<span class="price-tag"><i class="fas fa-tag"></i> ${drug.price} ج.م</span>` : '';
-        
-        return `
-        <div class="suggestion-item" data-drug-name="${escapeHtml(drug.name)}" data-drug-form="${escapeHtml(drug.form)}" data-drug-strength="${escapeHtml(drug.strength)}">
-            <div class="suggestion-main">
-                <span class="drug-name">${formIcon} ${escapeHtml(drug.name)}</span>
-                ${favStar}
-            </div>
-            <div class="suggestion-details">
-                ${formBadge} ${strengthInfo} ${priceInfo}
-            </div>
-        </div>
-        `;
-    }).join('');
-
-    UI.drugSuggestions.style.display = 'block';
-}
-
-// ---------- تحميل مواعيد اليوم للطبيب الحالي ----------
+// ---------- تحميل المواعيد (بدون تغيير) ----------
 function loadAppointments() {
     const appointmentsRef = ref(db, 'appointments');
     const doctorAppointmentsQuery = query(
@@ -418,27 +511,27 @@ function renderPrescriptionItems() {
     });
 }
 
-// ---------- لوحة الجرعات الذكية ----------
 function updateUnitLabel() {
     const forms = { tablet: 'قرص', syrup: 'مل', injection: 'سم', suppository: 'لبوس', drops: 'نقطة' };
     UI.unitLabel.textContent = forms[UI.drugFormSelect.value] || '';
 }
 UI.drugFormSelect.addEventListener('change', () => {
     updateUnitLabel();
-    // تحديث الاقتراحات عند تغيير الشكل الصيدلي
     if (UI.drugSearchInput.value.trim()) {
         displayDrugSuggestions(UI.drugSearchInput.value.trim());
     }
 });
 
-// البحث في الأدوية (يعتمد على Firebase)
+// البحث مع debounce بسيط
+let searchTimeout;
 UI.drugSearchInput.addEventListener('input', () => {
+    clearTimeout(searchTimeout);
     const term = UI.drugSearchInput.value.trim();
     if (term.length < 1) {
         UI.drugSuggestions.style.display = 'none';
         return;
     }
-    displayDrugSuggestions(term);
+    searchTimeout = setTimeout(() => displayDrugSuggestions(term), 200);
 });
 
 // اختيار دواء من الاقتراحات
@@ -447,12 +540,7 @@ UI.drugSuggestions.addEventListener('click', (e) => {
     if (item) {
         const drugName = item.dataset.drugName;
         const drugForm = item.dataset.drugForm || 'tablet';
-        const formMapping = {
-            'tablet': 'tablet', 'capsule': 'tablet', 'syrup': 'syrup', 'injection': 'injection',
-            'suppository': 'suppository', 'drops': 'drops'
-        };
-        const mappedForm = formMapping[drugForm.toLowerCase()] || 'tablet';
-        UI.drugFormSelect.value = mappedForm;
+        UI.drugFormSelect.value = drugForm;
         doseState.drug = drugName;
         prepareDosePanel();
     }
@@ -491,6 +579,25 @@ function prepareDosePanel() {
     UI.doseNumberInput.focus();
     updateUnitLabel();
     generateDoseSuggestions();
+}
+
+function getDosePreferencesKey(drug, form) {
+    return `dosePref_${currentUser.uid}_${drug}_${form}`;
+}
+
+function loadDosePreferences(drug, form) {
+    const key = getDosePreferencesKey(drug, form);
+    const stored = localStorage.getItem(key);
+    return stored ? JSON.parse(stored) : [];
+}
+
+function saveDosePreference(drug, form, doseString) {
+    const key = getDosePreferencesKey(drug, form);
+    let prefs = loadDosePreferences(drug, form);
+    prefs = prefs.filter(p => p !== doseString);
+    prefs.unshift(doseString);
+    if (prefs.length > 5) prefs.pop();
+    localStorage.setItem(key, JSON.stringify(prefs));
 }
 
 function generateDoseSuggestions() {
@@ -574,13 +681,14 @@ function generateDoseSuggestions() {
 UI.doseNumberInput.addEventListener('input', generateDoseSuggestions);
 UI.drugFormSelect.addEventListener('change', generateDoseSuggestions);
 
-UI.applyDoseBtn.addEventListener('click', () => {
+UI.applyDoseBtn.addEventListener('click', async () => {
     const quantity = UI.doseNumberInput.value.trim();
     if (!doseState.drug || !quantity) {
         showToast('الرجاء إدخال الدواء والكمية', true);
         return;
     }
 
+    const formValue = UI.drugFormSelect.value;
     const formText = UI.drugFormSelect.options[UI.drugFormSelect.selectedIndex].text;
     let doseString = `${quantity} ${UI.unitLabel.textContent}`;
 
@@ -596,12 +704,6 @@ UI.applyDoseBtn.addEventListener('click', () => {
             any: '' 
         }[timing] || '';
         if (timingText) doseString += ` ${timingText}`;
-        
-        const rowTiming = activeRow.dataset.timing;
-        if (rowTiming && rowTiming !== 'any' && !timingBtn) {
-            const specialTiming = { bedtime: 'قبل النوم', after1h: 'بعد الأكل بساعة' }[rowTiming];
-            if (specialTiming) doseString += ` ${specialTiming}`;
-        }
     }
 
     if (doseState.isExchange && doseState.exchangeDrug) {
@@ -615,7 +717,10 @@ UI.applyDoseBtn.addEventListener('click', () => {
         exchange: doseState.isExchange ? doseState.exchangeDrug : null
     });
 
-    saveDosePreference(doseState.drug, UI.drugFormSelect.value, doseString);
+    // ✅ تحديث عداد الاستخدام للدواء (محلياً وسحابياً)
+    await incrementDrugUsage(doseState.drug, formValue);
+    
+    saveDosePreference(doseState.drug, formValue, doseString);
     renderPrescriptionItems();
     resetDosePanel();
 });
@@ -638,7 +743,7 @@ function resetDosePanel() {
 
 UI.cancelDoseBtn.addEventListener('click', resetDosePanel);
 
-// ---------- إنهاء الكشف ----------
+// إنهاء الكشف
 UI.finishBtn.addEventListener('click', async () => {
     if (!currentAppointment) {
         showToast('لا يوجد مريض حالي', true);
@@ -674,7 +779,7 @@ UI.finishBtn.addEventListener('click', async () => {
     }
 });
 
-// ---------- القوالب (Templates) ----------
+// القوالب
 UI.templatesBtn.addEventListener('click', async () => {
     try {
         const templatesRef = ref(db, `templates/${currentUser.uid}`);
@@ -736,7 +841,7 @@ window.saveAsTemplate = async function() {
     }
 };
 
-// ---------- إدارة المودالات ----------
+// إدارة المودالات
 UI.queueModalBtn.addEventListener('click', () => {
     UI.queueModal.style.display = 'flex';
     renderQueueModalList();
@@ -759,33 +864,23 @@ window.addEventListener('click', (e) => {
     }
 });
 
-// ---------- تسجيل الخروج ----------
 UI.logoutBtn.addEventListener('click', async () => {
     try {
         await signOut(auth);
-    } catch (err) {
-        console.warn('خطأ أثناء تسجيل الخروج من Firebase:', err);
-    } finally {
-        sessionStorage.clear();
-        window.location.href = 'index.html';
-    }
+    } catch (err) {}
+    sessionStorage.clear();
+    window.location.href = 'index.html';
 });
 
 // ---------- بدء التشغيل ----------
 (async function init() {
     UI.welcomeMessage.textContent = `د. ${currentUser.name}`;
     
-    // تحميل بيانات الطبيب والأدوية (من Firebase فقط)
-    await Promise.all([
-        loadDoctorData(currentUser.uid),
-        loadDrugs()   // الآن المصدر الوحيد هو Firebase
-    ]);
+    // فتح IndexedDB ومزامنة الأدوية من Firebase
+    await localDrugDB.open();
+    await syncDrugsFromFirebase();
     
-    // إذا كانت قائمة الأدوية فارغة، قد تكون لم تُرفع بعد
-    if (drugList.length === 0) {
-        showToast('قاعدة الأدوية فارغة. يرجى التواصل مع المسؤول لرفع الأدوية.', true);
-    }
-    
+    await loadDoctorData(currentUser.uid);
     loadAppointments();
     updateUnitLabel();
 })();
