@@ -84,8 +84,7 @@ let doctorInfo = { name: currentUser.name };
 let todayAppointments = [];
 let currentAppointment = null;
 let currentPrescription = [];
-let drugList = [];               // الأدوية من قاعدة البيانات (للتوافق)
-let drugsFromJSON = [];          // الأدوية المحملة من ملف JSON
+let drugList = [];               // الأدوية من قاعدة البيانات (المصدر الأساسي)
 let favoriteDrugs = new Set();
 let doseState = {
     drug: null,
@@ -167,57 +166,49 @@ async function loadDoctorData(uid) {
     }
 }
 
-// ---------- تحميل قائمة الأدوية من قاعدة البيانات (للتوافق) ----------
+// ---------- تحميل قائمة الأدوية من Firebase (المصدر الأساسي) ----------
 async function loadDrugs() {
     try {
         const snap = await get(ref(db, 'drugs'));
         if (snap.exists()) {
-            drugList = Object.values(snap.val());
+            const drugsObj = snap.val();
+            // تحويل كائن الأدوية إلى مصفوفة
+            drugList = Object.values(drugsObj);
+            console.log(`✅ تم تحميل ${drugList.length} دواء من Firebase`);
         } else {
             drugList = [];
+            console.warn('⚠️ مسار /drugs فارغ. تأكد من رفع الأدوية أولاً.');
         }
     } catch (err) {
-        console.warn('فشل تحميل الأدوية من قاعدة البيانات:', err);
+        console.error('❌ فشل تحميل الأدوية من Firebase:', err);
+        showToast('تعذر تحميل قاعدة الأدوية من السحابة.', true);
+        drugList = [];
     }
 }
 
-// ---------- تحميل الأدوية من ملف JSON (المصدر الأساسي) ----------
-async function loadDrugsFromJSON() {
-    try {
-        const response = await fetch('organized_drugs (1).json');
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        const data = await response.json();
-        // نتوقع أن الملف يحتوي على مصفوفة كائنات كل منها يحتوي على: name, form, strength, price, etc.
-        drugsFromJSON = Array.isArray(data) ? data : [];
-        console.log(`✅ تم تحميل ${drugsFromJSON.length} دواء من ملف JSON`);
-    } catch (err) {
-        console.error('❌ فشل تحميل ملف الأدوية JSON:', err);
-        showToast('تعذر تحميل قاعدة الأدوية المحلية. سيتم استخدام البيانات البديلة.', true);
-        drugsFromJSON = [];
-    }
-}
-
-// ---------- البحث المتقدم في الأدوية (JSON + قاعدة البيانات) ----------
-function searchDrugs(term) {
+// ---------- البحث في الأدوية (باستخدام Firebase كمصدر وحيد) ----------
+function searchDrugs(term, selectedForm = null) {
     if (!term || term.length < 1) return [];
     const lowerTerm = term.toLowerCase().trim();
 
-    // فلترة من JSON
-    const jsonMatches = drugsFromJSON.filter(drug => {
+    let matches = drugList.filter(drug => {
         const name = drug.name?.toLowerCase() || '';
         const form = drug.form?.toLowerCase() || '';
         const strength = drug.strength?.toLowerCase() || '';
-        // يمكن البحث بأي جزء من الاسم أو الشكل أو التركيز
-        return name.includes(lowerTerm) || form.includes(lowerTerm) || strength.includes(lowerTerm);
+        // البحث في الاسم، الشكل، والتركيز
+        const matchesTerm = name.includes(lowerTerm) || form.includes(lowerTerm) || strength.includes(lowerTerm);
+        if (selectedForm && selectedForm !== 'all') {
+            return matchesTerm && form === selectedForm.toLowerCase();
+        }
+        return matchesTerm;
     });
 
-    // إزالة التكرارات (بناءً على الاسم)
+    // إزالة التكرارات (بناءً على الاسم + الشكل)
     const seen = new Set();
     const uniqueMatches = [];
     
-    // إضافة نتائج JSON مع تنسيق
-    jsonMatches.forEach(drug => {
-        const key = drug.name;
+    matches.forEach(drug => {
+        const key = `${drug.name}|${drug.form || ''}`;
         if (!seen.has(key)) {
             seen.add(key);
             uniqueMatches.push({
@@ -225,15 +216,12 @@ function searchDrugs(term) {
                 form: drug.form || 'غير محدد',
                 strength: drug.strength || '',
                 price: drug.price || null,
-                source: 'json'
+                source: 'firebase'
             });
         }
     });
 
-    // يمكن إضافة نتائج من قاعدة البيانات إن وجدت (للتكامل)
-    // لكن نعتمد أساساً على JSON
-
-    // ترتيب النتائج: المفضلة أولاً، ثم تطابق بداية الاسم
+    // ترتيب النتائج: المفضلة أولاً، ثم تطابق بداية الاسم، ثم الأبجدي
     uniqueMatches.sort((a, b) => {
         const aFav = favoriteDrugs.has(a.name) ? 1 : 0;
         const bFav = favoriteDrugs.has(b.name) ? 1 : 0;
@@ -246,16 +234,17 @@ function searchDrugs(term) {
         return a.name.localeCompare(b.name);
     });
 
-    return uniqueMatches.slice(0, 10); // حد أقصى 10 اقتراحات
+    return uniqueMatches.slice(0, 15);
 }
 
 // ---------- عرض الاقتراحات في واجهة المستخدم ----------
 function displayDrugSuggestions(term) {
-    const matches = searchDrugs(term);
+    const selectedForm = UI.drugFormSelect.value;
+    const matches = searchDrugs(term, selectedForm);
     
     if (matches.length === 0) {
-        UI.drugSuggestions.innerHTML = `<div class="suggestion-item" style="color: #888;">
-            <i class="fas fa-info-circle"></i> لا توجد نتائج. اضغط Enter لإضافة "${escapeHtml(term)}" كدواء جديد.
+        UI.drugSuggestions.innerHTML = `<div class="suggestion-item" style="color: #888; justify-content: center;">
+            <i class="fas fa-info-circle"></i> لا توجد نتائج. اضغط "إضافة" لإدخال "${escapeHtml(term)}" كدواء جديد.
         </div>`;
         UI.drugSuggestions.style.display = 'block';
         return;
@@ -264,18 +253,21 @@ function displayDrugSuggestions(term) {
     UI.drugSuggestions.innerHTML = matches.map(drug => {
         const isFav = favoriteDrugs.has(drug.name);
         const favStar = isFav ? '<span class="favorites-tag"><i class="fas fa-star"></i> مفضل</span>' : '';
-        const formBadge = drug.form ? `<span class="form-badge">${escapeHtml(drug.form)}</span>` : '';
-        const strengthInfo = drug.strength ? `<span class="strength-info">${escapeHtml(drug.strength)}</span>` : '';
+        const formIcon = {
+            'tablet': '💊', 'capsule': '💊', 'syrup': '🥄', 'injection': '💉', 'suppository': '🧴', 'drops': '💧'
+        }[drug.form?.toLowerCase()] || '💊';
+        const formBadge = drug.form ? `<span class="form-badge"><i class="fas fa-prescription-bottle"></i> ${escapeHtml(drug.form)}</span>` : '';
+        const strengthInfo = drug.strength ? `<span class="strength-info"><i class="fas fa-weight"></i> ${escapeHtml(drug.strength)}</span>` : '';
+        const priceInfo = drug.price ? `<span class="price-tag"><i class="fas fa-tag"></i> ${drug.price} ج.م</span>` : '';
         
         return `
         <div class="suggestion-item" data-drug-name="${escapeHtml(drug.name)}" data-drug-form="${escapeHtml(drug.form)}" data-drug-strength="${escapeHtml(drug.strength)}">
             <div class="suggestion-main">
-                <span class="drug-name">${escapeHtml(drug.name)}</span>
+                <span class="drug-name">${formIcon} ${escapeHtml(drug.name)}</span>
                 ${favStar}
             </div>
             <div class="suggestion-details">
-                ${formBadge} ${strengthInfo}
-                ${drug.price ? `<span class="price-tag">${drug.price} ج.م</span>` : ''}
+                ${formBadge} ${strengthInfo} ${priceInfo}
             </div>
         </div>
         `;
@@ -431,9 +423,15 @@ function updateUnitLabel() {
     const forms = { tablet: 'قرص', syrup: 'مل', injection: 'سم', suppository: 'لبوس', drops: 'نقطة' };
     UI.unitLabel.textContent = forms[UI.drugFormSelect.value] || '';
 }
-UI.drugFormSelect.addEventListener('change', updateUnitLabel);
+UI.drugFormSelect.addEventListener('change', () => {
+    updateUnitLabel();
+    // تحديث الاقتراحات عند تغيير الشكل الصيدلي
+    if (UI.drugSearchInput.value.trim()) {
+        displayDrugSuggestions(UI.drugSearchInput.value.trim());
+    }
+});
 
-// البحث في الأدوية (معدل لاستخدام JSON)
+// البحث في الأدوية (يعتمد على Firebase)
 UI.drugSearchInput.addEventListener('input', () => {
     const term = UI.drugSearchInput.value.trim();
     if (term.length < 1) {
@@ -449,7 +447,6 @@ UI.drugSuggestions.addEventListener('click', (e) => {
     if (item) {
         const drugName = item.dataset.drugName;
         const drugForm = item.dataset.drugForm || 'tablet';
-        // تعيين الشكل المناسب في القائمة المنسدلة
         const formMapping = {
             'tablet': 'tablet', 'capsule': 'tablet', 'syrup': 'syrup', 'injection': 'injection',
             'suppository': 'suppository', 'drops': 'drops'
@@ -501,45 +498,69 @@ function generateDoseSuggestions() {
     const drug = doseState.drug;
     const form = UI.drugFormSelect.value;
     const unit = UI.unitLabel.textContent;
+
     let suggestions = [];
+
     if (drug) {
         const prefs = loadDosePreferences(drug, form);
         suggestions = prefs.map(p => ({ text: p, isPref: true }));
     }
+
     if (quantity && !isNaN(parseInt(quantity))) {
         const num = parseInt(quantity);
         const base = `${num} ${unit}`;
         const built = [
-            `${base} يومياً`,
-            `${base} كل 8 ساعات`,
-            `${base} كل 12 ساعة`,
-            `${base} مرة واحدة يومياً`,
-            `${base} عند اللزوم`
+            { text: `${base} يومياً`, timing: 'any' },
+            { text: `${base} كل 8 ساعات`, timing: 'any' },
+            { text: `${base} كل 12 ساعة`, timing: 'any' },
+            { text: `${base} مرة واحدة يومياً`, timing: 'any' },
+            { text: `${base} عند اللزوم`, timing: 'any' },
+            { text: `${base} قبل النوم`, timing: 'bedtime' },
+            { text: `${base} بعد الأكل بساعة`, timing: 'after1h' }
         ];
         built.forEach(b => {
-            if (!suggestions.some(s => s.text === b)) {
-                suggestions.push({ text: b, isPref: false });
+            if (!suggestions.some(s => s.text === b.text)) {
+                suggestions.push({ text: b.text, isPref: false, timing: b.timing });
             }
         });
     }
+
     if (suggestions.length === 0) {
         const base = `1 ${unit}`;
-        suggestions = [
-            { text: `${base} يومياً`, isPref: false },
-            { text: `${base} كل 8 ساعات`, isPref: false },
-            { text: `${base} كل 12 ساعة`, isPref: false }
+        const defaultSuggestions = [
+            { text: `${base} يومياً`, timing: 'any' },
+            { text: `${base} كل 8 ساعات`, timing: 'any' },
+            { text: `${base} كل 12 ساعة`, timing: 'any' },
+            { text: `${base} مرة واحدة يومياً`, timing: 'any' },
+            { text: `${base} قبل النوم`, timing: 'bedtime' },
+            { text: `${base} بعد الأكل بساعة`, timing: 'after1h' }
         ];
+        defaultSuggestions.forEach(s => suggestions.push({ ...s, isPref: false }));
     }
-    UI.doseSuggestionsContainer.innerHTML = suggestions.map((s, idx) => `
-        <div class="dose-suggestion-row">
-            <span>${escapeHtml(s.text)} ${s.isPref ? '<i class="fas fa-history" style="opacity:0.6; margin-right:6px;"></i>' : ''}</span>
+
+    const displaySuggestions = suggestions.slice(0, 7);
+
+    UI.doseSuggestionsContainer.innerHTML = displaySuggestions.map((s, idx) => {
+        let timingIcon = '';
+        if (s.timing === 'bedtime') timingIcon = '<i class="fas fa-bed" title="قبل النوم"></i>';
+        else if (s.timing === 'after1h') timingIcon = '<i class="fas fa-clock" title="بعد الأكل بساعة"></i>';
+        
+        return `
+        <div class="dose-suggestion-row" data-timing="${s.timing || 'any'}">
+            <span>
+                ${escapeHtml(s.text)} 
+                ${s.isPref ? '<i class="fas fa-history" style="opacity:0.6; margin-right:6px;"></i>' : ''}
+                ${timingIcon}
+            </span>
             <div>
-                <button class="timing-btn-sm" data-timing="before" title="قبل الأكل"><i class="fas fa-utensils"></i></button>
-                <button class="timing-btn-sm" data-timing="after" title="بعد الأكل"><i class="fas fa-utensils"></i></button>
-                <button class="timing-btn-sm ${idx === 0 ? 'active' : ''}" data-timing="any" title="لا يهم"><i class="fas fa-minus"></i></button>
+                <button class="timing-btn-sm" data-timing="before" title="قبل الأكل"><i class="fas fa-utensils"></i> قبل</button>
+                <button class="timing-btn-sm" data-timing="after" title="بعد الأكل"><i class="fas fa-utensils"></i> بعد</button>
+                <button class="timing-btn-sm ${idx === 0 ? 'active' : ''}" data-timing="any" title="لا يهم"><i class="fas fa-minus"></i> عادي</button>
             </div>
         </div>
-    `).join('');
+        `;
+    }).join('');
+
     document.querySelectorAll('.timing-btn-sm').forEach(btn => {
         btn.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -559,24 +580,41 @@ UI.applyDoseBtn.addEventListener('click', () => {
         showToast('الرجاء إدخال الدواء والكمية', true);
         return;
     }
+
     const formText = UI.drugFormSelect.options[UI.drugFormSelect.selectedIndex].text;
     let doseString = `${quantity} ${UI.unitLabel.textContent}`;
+
     const activeRow = document.querySelector('.dose-suggestion-row');
     if (activeRow) {
         const timingBtn = activeRow.querySelector('.timing-btn-sm.active');
         const timing = timingBtn ? timingBtn.dataset.timing : 'any';
-        const timingText = { before: 'قبل الأكل', after: 'بعد الأكل', any: '' }[timing];
+        const timingText = { 
+            before: 'قبل الأكل', 
+            after: 'بعد الأكل', 
+            bedtime: 'قبل النوم',
+            after1h: 'بعد الأكل بساعة',
+            any: '' 
+        }[timing] || '';
         if (timingText) doseString += ` ${timingText}`;
+        
+        const rowTiming = activeRow.dataset.timing;
+        if (rowTiming && rowTiming !== 'any' && !timingBtn) {
+            const specialTiming = { bedtime: 'قبل النوم', after1h: 'بعد الأكل بساعة' }[rowTiming];
+            if (specialTiming) doseString += ` ${specialTiming}`;
+        }
     }
+
     if (doseState.isExchange && doseState.exchangeDrug) {
         doseString += ` (بالتبادل مع ${doseState.exchangeDrug})`;
     }
+
     currentPrescription.push({
         drug: doseState.drug,
         form: formText,
         dose: doseString,
         exchange: doseState.isExchange ? doseState.exchangeDrug : null
     });
+
     saveDosePreference(doseState.drug, UI.drugFormSelect.value, doseString);
     renderPrescriptionItems();
     resetDosePanel();
@@ -595,6 +633,7 @@ function resetDosePanel() {
     UI.drugSearchInput.value = '';
     UI.exchangeModeBtn.style.background = '';
     UI.exchangeInfo.style.display = 'none';
+    UI.drugSuggestions.style.display = 'none';
 }
 
 UI.cancelDoseBtn.addEventListener('click', resetDosePanel);
@@ -715,6 +754,9 @@ window.addEventListener('click', (e) => {
     if (e.target === UI.templatesModal) UI.templatesModal.style.display = 'none';
     if (e.target === UI.saveTemplateModal) UI.saveTemplateModal.style.display = 'none';
     if (e.target === UI.queueModal) UI.queueModal.style.display = 'none';
+    if (!UI.drugSearchInput.contains(e.target) && !UI.drugSuggestions.contains(e.target)) {
+        UI.drugSuggestions.style.display = 'none';
+    }
 });
 
 // ---------- تسجيل الخروج ----------
@@ -733,12 +775,16 @@ UI.logoutBtn.addEventListener('click', async () => {
 (async function init() {
     UI.welcomeMessage.textContent = `د. ${currentUser.name}`;
     
-    // تحميل الموارد بالتوازي
+    // تحميل بيانات الطبيب والأدوية (من Firebase فقط)
     await Promise.all([
         loadDoctorData(currentUser.uid),
-        loadDrugs(),                     // للتوافق مع أي ميزات قديمة
-        loadDrugsFromJSON()              // المصدر الأساسي الجديد
+        loadDrugs()   // الآن المصدر الوحيد هو Firebase
     ]);
+    
+    // إذا كانت قائمة الأدوية فارغة، قد تكون لم تُرفع بعد
+    if (drugList.length === 0) {
+        showToast('قاعدة الأدوية فارغة. يرجى التواصل مع المسؤول لرفع الأدوية.', true);
+    }
     
     loadAppointments();
     updateUnitLabel();
