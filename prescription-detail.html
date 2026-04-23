@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>سُكُون · تفاصيل الروشتة</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #F8C471;
+            --primary-light: #FDEBD0;
+            --primary-dark: #E59866;
+            --accent: #E67E22;
+            --bg: #FFF8F0;
+            --white: #FFFFFF;
+            --ink: #4A3B2C;
+            --text-sec: #8B7A66;
+            --danger: #E57373;
+            --success: #5FA88D;
+            --border-light: #F0E0D0;
+            --shadow-sm: 0 6px 12px -4px rgba(230, 126, 34, 0.08);
+            --shadow-md: 0 12px 28px -6px rgba(230, 126, 34, 0.12);
+            --radius-card: 24px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: var(--bg);
+            color: var(--ink);
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+        }
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(circle at 0% 0%, rgba(248, 196, 113, 0.08), transparent 50%),
+                        radial-gradient(circle at 100% 100%, rgba(230, 126, 34, 0.06), transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+        .container { max-width: 800px; margin: 0 auto; }
+        
+        /* البطاقة الرئيسية */
+        .prescription-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            border-radius: var(--radius-card);
+            padding: 24px;
+            border: 1px solid rgba(255,255,255,0.6);
+            box-shadow: var(--shadow-md);
+        }
+        .header-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        .back-btn {
+            width: 44px; height: 44px;
+            background: white;
+            border: 1px solid var(--border-light);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            color: var(--ink);
+            transition: all 0.2s;
+        }
+        .back-btn:hover { background: var(--primary-light); }
+        .title-section { flex: 1; }
+        .title-section h2 { font-size: 1.5rem; font-weight: 800; }
+        .title-section p { color: var(--text-sec); }
+        
+        .patient-info-box {
+            background: #FEF5EC;
+            border-radius: 24px;
+            padding: 16px 20px;
+            margin-bottom: 24px;
+            border: 1px solid var(--border-light);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .patient-name-click {
+            font-weight: 800;
+            font-size: 1.3rem;
+            cursor: pointer;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .patient-name-click:hover { text-decoration: underline; }
+        .patient-age {
+            background: var(--primary-light);
+            padding: 4px 14px;
+            border-radius: 60px;
+            font-size: 0.9rem;
+        }
+        
+        .drugs-list { margin-bottom: 24px; }
+        .drug-item {
+            background: white;
+            border-radius: 20px;
+            padding: 16px;
+            margin-bottom: 12px;
+            border: 1px solid var(--border-light);
+        }
+        .drug-main {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .drug-name {
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .drug-form {
+            background: var(--primary-light);
+            padding: 2px 10px;
+            border-radius: 30px;
+            font-size: 0.8rem;
+        }
+        .drug-dose {
+            background: var(--primary-light);
+            padding: 4px 12px;
+            border-radius: 60px;
+            font-size: 0.9rem;
+        }
+        .drug-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .btn-sm {
+            padding: 6px 14px;
+            border-radius: 40px;
+            border: 1px solid var(--border-light);
+            background: white;
+            font-family: 'Cairo', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-sm:hover { background: var(--primary-light); border-color: var(--primary); }
+        
+        .footer-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+            flex-wrap: wrap;
+        }
+        .btn {
+            padding: 12px 24px;
+            border-radius: 40px;
+            border: none;
+            font-weight: 600;
+            font-family: 'Cairo', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: white;
+            color: var(--ink);
+            border: 1px solid var(--border-light);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1rem;
+        }
+        .btn-primary {
+            background: var(--primary);
+            color: #4A3B2C;
+            border: none;
+            box-shadow: 0 6px 14px rgba(230, 126, 34, 0.2);
+            font-weight: 700;
+        }
+        .btn-primary:hover { background: var(--primary-dark); color: white; }
+        
+        /* مودال سجل المريض */
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.2);
+            backdrop-filter: blur(6px);
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            padding: 16px;
+        }
+        .modal-card {
+            background: white;
+            border-radius: var(--radius-card);
+            width: 100%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 30px 50px rgba(0,0,0,0.15);
+        }
+        .modal-header {
+            padding: 20px 24px;
+            background: #FEF5EC;
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-body { padding: 20px 24px; }
+        .history-item {
+            padding: 12px;
+            border-bottom: 1px solid var(--border-light);
+        }
+        
+        .toast {
+            position: fixed; bottom: 20px; left: 20px; right: 20px;
+            background: #4A3B2C; color: white; padding: 12px 24px;
+            border-radius: 60px; text-align: center; z-index: 3000;
+            max-width: 500px; margin: 0 auto;
+        }
+        .empty-state { text-align: center; padding: 40px; color: var(--text-sec); }
+        .diagnosis-text { margin-bottom: 24px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="prescription-card" id="prescriptionCard">
+        <div class="header-row">
+            <button class="back-btn" id="backBtn" title="العودة للوحة الصيدلي">
+                <i class="fas fa-arrow-right"></i>
+            </button>
+            <div class="title-section">
+                <h2>تفاصيل الروشتة</h2>
+                <p id="prescriptionStatus"></p>
+            </div>
+        </div>
+        
+        <!-- معلومات المريض -->
+        <div class="patient-info-box">
+            <div>
+                <div class="patient-name-click" id="patientNameLink">
+                    <span id="patientNameDisplay">---</span>
+                    <i class="fas fa-external-link-alt"></i>
+                </div>
+                <div style="margin-top:4px; color:var(--text-sec);">
+                    <span id="doctorNameDisplay"></span>
+                </div>
+            </div>
+            <span class="patient-age" id="patientAgeDisplay">-- سنة</span>
+        </div>
+        
+        <!-- التشخيص -->
+        <div class="diagnosis-text" id="diagnosisDisplay"></div>
+        
+        <!-- قائمة الأدوية -->
+        <div class="drugs-list" id="drugsContainer">
+            <div class="empty-state">لا توجد أدوية</div>
+        </div>
+        
+        <!-- أزرار الإجراءات -->
+        <div class="footer-actions" id="footerActions">
+            <button class="btn btn-primary" id="dispenseBtn">
+                <i class="fas fa-check-circle"></i> تم صرف الروشتة
+            </button>
+            <button class="btn" id="backToListBtn">
+                <i class="fas fa-list"></i> العودة للقائمة
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- مودال سجل المريض -->
+<div class="modal" id="historyModal">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h3>سجل المريض</h3>
+            <button id="closeHistoryBtn" style="background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
+        </div>
+        <div class="modal-body" id="historyBody">
+            <div class="empty-state">جاري التحميل...</div>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+    import { firebaseConfig } from './firebase-config.js';
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
+    import { getDatabase, ref, get, update, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-database.js";
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
+
+    // احصل على معرف الوصفة من URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const prescriptionId = urlParams.get('id');
+
+    let currentUser = null;
+    let prescriptionData = null;
+
+    const UI = {
+        patientNameDisplay: document.getElementById('patientNameDisplay'),
+        patientAgeDisplay: document.getElementById('patientAgeDisplay'),
+        doctorNameDisplay: document.getElementById('doctorNameDisplay'),
+        prescriptionStatus: document.getElementById('prescriptionStatus'),
+        diagnosisDisplay: document.getElementById('diagnosisDisplay'),
+        drugsContainer: document.getElementById('drugsContainer'),
+        dispenseBtn: document.getElementById('dispenseBtn'),
+        backBtn: document.getElementById('backBtn'),
+        backToListBtn: document.getElementById('backToListBtn'),
+        patientNameLink: document.getElementById('patientNameLink'),
+        historyModal: document.getElementById('historyModal'),
+        closeHistoryBtn: document.getElementById('closeHistoryBtn'),
+        historyBody: document.getElementById('historyBody')
+    };
+
+    function showToast(msg, isErr = false) {
+        const t = document.createElement('div');
+        t.className = 'toast';
+        t.style.background = isErr ? '#B23B3B' : '#4A3B2C';
+        t.innerHTML = `<i class="fas ${isErr ? 'fa-exclamation-triangle' : 'fa-check'}"></i> ${msg}`;
+        document.body.appendChild(t);
+        setTimeout(() => t.remove(), 3000);
+    }
+
+    // تحميل بيانات الروشتة
+    async function loadPrescription() {
+        if (!prescriptionId) {
+            showToast('معرف الروشتة غير موجود', true);
+            return;
+        }
+        try {
+            const snap = await get(ref(db, `prescriptions/${prescriptionId}`));
+            if (!snap.exists()) {
+                showToast('الروشتة غير موجودة', true);
+                return;
+            }
+            prescriptionData = snap.val();
+            prescriptionData.id = prescriptionId;
+            renderPrescription();
+        } catch (err) {
+            showToast('فشل تحميل البيانات', true);
+        }
+    }
+
+    function renderPrescription() {
+        const p = prescriptionData;
+        // اسم المريض والعمر
+        UI.patientNameDisplay.textContent = p.patientName || '---';
+        // محاولة جلب العمر من جدول patients إذا وجد patientId
+        if (p.patientId) {
+            get(ref(db, `patients/${p.patientId}`)).then(patSnap => {
+                if (patSnap.exists()) {
+                    const pat = patSnap.val();
+                    UI.patientAgeDisplay.textContent = pat.age ? `${pat.age} سنة` : '-- سنة';
+                }
+            });
+        } else {
+            UI.patientAgeDisplay.textContent = '-- سنة';
+        }
+        // اسم الطبيب
+        UI.doctorNameDisplay.textContent = `د. ${p.doctorName || '---'}`;
+        // الحالة
+        const statusText = p.status === 'dispensed' ? '✅ تم الصرف' : '⏳ قيد الانتظار';
+        UI.prescriptionStatus.textContent = statusText;
+        if (p.status === 'dispensed') {
+            UI.dispenseBtn.style.display = 'none';
+        }
+        // التشخيص
+        UI.diagnosisDisplay.innerHTML = p.diagnosis ? `<strong>التشخيص:</strong> ${p.diagnosis}` : '';
+        // الأدوية
+        const items = p.items || [];
+        if (items.length === 0) {
+            UI.drugsContainer.innerHTML = '<div class="empty-state">لا توجد أدوية</div>';
+        } else {
+            UI.drugsContainer.innerHTML = items.map(item => `
+                <div class="drug-item">
+                    <div class="drug-main">
+                        <div class="drug-name">
+                            <span>${item.drug}</span>
+                            <span class="drug-form">${item.form || ''}</span>
+                        </div>
+                        <span class="drug-dose">${item.dose}</span>
+                    </div>
+                    <div class="drug-actions">
+                        <button class="btn-sm image-search-btn" data-drug="${item.drug}">
+                            <i class="fas fa-image"></i> بحث عن صورته
+                        </button>
+                        <button class="btn-sm alternative-search-btn" data-drug="${item.drug}">
+                            <i class="fas fa-capsules"></i> بحث عن بدائله
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+            // ربط أزرار البحث
+            document.querySelectorAll('.image-search-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const drug = btn.dataset.drug;
+                    window.open(`https://www.google.com/search?tbm=isch&q=${encodeURIComponent(drug + ' دواء')}`, '_blank');
+                });
+            });
+            document.querySelectorAll('.alternative-search-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const drug = btn.dataset.drug;
+                    window.open(`https://www.google.com/search?q=${encodeURIComponent('بديل ' + drug + ' المادة الفعالة')}`, '_blank');
+                });
+            });
+        }
+    }
+
+    // صرف الروشتة
+    UI.dispenseBtn.addEventListener('click', async () => {
+        if (!prescriptionId) return;
+        try {
+            await update(ref(db, `prescriptions/${prescriptionId}`), {
+                status: 'dispensed',
+                pharmacistId: currentUser?.uid || 'unknown',
+                pharmacistName: currentUser?.displayName || 'صيدلي',
+                dispensedAt: new Date().toISOString()
+            });
+            showToast('✅ تم صرف الروشتة بنجاح');
+            UI.dispenseBtn.style.display = 'none';
+            UI.prescriptionStatus.textContent = '✅ تم الصرف';
+        } catch (err) {
+            showToast('فشل الصرف', true);
+        }
+    });
+
+    // العودة للصفحة الرئيسية
+    UI.backBtn.addEventListener('click', () => {
+        window.location.href = 'pharmacy-dashboard.html';
+    });
+    UI.backToListBtn.addEventListener('click', () => {
+        window.location.href = 'pharmacy-dashboard.html';
+    });
+
+    // سجل المريض
+    UI.patientNameLink.addEventListener('click', async () => {
+        if (!prescriptionData || !prescriptionData.patientId) {
+            showToast('لا يوجد معرف للمريض', true);
+            return;
+        }
+        UI.historyModal.style.display = 'flex';
+        UI.historyBody.innerHTML = '<div class="empty-state"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</div>';
+        try {
+            const q = query(ref(db, 'prescriptions'), orderByChild('patientId'), equalTo(prescriptionData.patientId));
+            const snap = await get(q);
+            let html = '';
+            if (snap.exists()) {
+                const list = [];
+                snap.forEach(child => list.push({ id: child.key, ...child.val() }));
+                list.sort((a,b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+                list.forEach(p => {
+                    html += `
+                        <div class="history-item">
+                            <strong>${p.patientName}</strong> - ${p.createdAt ? new Date(p.createdAt).toLocaleDateString('ar-EG') : ''}
+                            <br><small>${p.items ? p.items.length + ' أدوية' : ''} | ${p.status === 'dispensed' ? 'تم الصرف' : 'قيد الانتظار'}</small>
+                        </div>
+                    `;
+                });
+            } else {
+                html = '<div class="empty-state">لا يوجد سجل سابق</div>';
+            }
+            UI.historyBody.innerHTML = html;
+        } catch (err) {
+            UI.historyBody.innerHTML = '<div class="empty-state">فشل تحميل السجل</div>';
+        }
+    });
+
+    UI.closeHistoryBtn.addEventListener('click', () => {
+        UI.historyModal.style.display = 'none';
+    });
+    window.onclick = (e) => {
+        if (e.target === UI.historyModal) UI.historyModal.style.display = 'none';
+    };
+
+    // المصادقة
+    onAuthStateChanged(auth, async (user) => {
+        if (!user) {
+            window.location.href = 'index.html';
+            return;
+        }
+        currentUser = user;
+        loadPrescription();
+    });
+</script>
+</body>
+</html>
