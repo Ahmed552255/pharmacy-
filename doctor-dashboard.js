@@ -62,6 +62,7 @@ class LocalDrugDB {
     async saveDrugs(drugsArray) {
         const tx = this.db.transaction(this.STORE_NAME, 'readwrite');
         const store = tx.objectStore(this.STORE_NAME);
+        // مسح القديم ثم إضافة الجديد
         await store.clear();
         for (const drug of drugsArray) {
             store.add(drug);
@@ -80,6 +81,7 @@ class LocalDrugDB {
             getRequest.onsuccess = () => {
                 const existing = getRequest.result;
                 if (existing) {
+                    // تحديث العداد
                     existing.frequency = (existing.frequency || 0) + 1;
                     store.put(existing);
                 } else {
@@ -101,6 +103,7 @@ class LocalDrugDB {
         if (formFilter && formFilter !== 'all') {
             results = results.filter(d => d.form === formFilter);
         }
+        // ترتيب حسب التفضيل (frequency) ثم الأبجدي
         results.sort((a, b) => (b.frequency || 0) - (a.frequency || 0) || a.name.localeCompare(b.name));
         return results;
     }
@@ -117,7 +120,7 @@ async function syncDrugsFromFirebase() {
             const obj = snap.val();
             drugs = Object.values(obj).map(d => ({
                 ...d,
-                id: d.id || (crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random())
+                id: d.id || crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random()
             }));
         }
         await localDrugDB.saveDrugs(drugs);
@@ -143,8 +146,10 @@ async function addNewDrugToBoth(name, form, strength = '', price = null) {
         createdAt: new Date().toISOString()
     };
     
+    // حفظ محلياً
     await localDrugDB.addOrUpdateDrug(newDrug);
     
+    // حفظ في Firebase (إذا كان متصلاً)
     try {
         await set(ref(db, `drugs/${drugId}`), newDrug);
     } catch (e) {
@@ -165,6 +170,7 @@ async function incrementDrugUsage(drugName, form) {
             await update(ref(db, `drugs/${drug.id}`), { frequency: drug.frequency });
         } catch (e) {}
     } else {
+        // إذا لم يكن موجوداً، أضفه تلقائياً
         await addNewDrugToBoth(drugName, form);
     }
 }
@@ -209,12 +215,7 @@ const UI = {
     templatesModal: document.getElementById('templatesModal'),
     saveTemplateModal: document.getElementById('saveTemplateModal'),
     templatesList: document.getElementById('templatesList'),
-    logoutBtn: document.getElementById('logoutBtn'),
-    // عناصر مودال تاريخ المريض الجديد
-    patientHistoryModal: document.getElementById('patientHistoryModal'),
-    closeHistoryModalBtn: document.getElementById('closeHistoryModalBtn'),
-    patientHistoryContent: document.getElementById('patientHistoryContent'),
-    historyPatientName: document.getElementById('historyPatientName')
+    logoutBtn: document.getElementById('logoutBtn')
 };
 
 // ---------- التحقق من الجلسة ----------
@@ -279,11 +280,13 @@ async function searchDrugsLocal(term, selectedForm = null) {
     const lowerTerm = term.toLowerCase().trim();
     let drugs = await localDrugDB.searchDrugs(lowerTerm, selectedForm);
     
+    // تمييز المفضلة (بناءً على الاستخدام المتكرر أو المفضلة الصريحة)
     drugs = drugs.map(d => ({
         ...d,
-        isFavorite: favoriteDrugs.has(d.name) || (d.frequency > 3)
+        isFavorite: favoriteDrugs.has(d.name) || (d.frequency > 3) // استخدام أكثر من 3 مرات يعتبر مفضل
     }));
     
+    // ترتيب: المفضلة أولاً، ثم تكرار الاستخدام
     drugs.sort((a, b) => {
         if (a.isFavorite && !b.isFavorite) return -1;
         if (!a.isFavorite && b.isFavorite) return 1;
@@ -332,6 +335,7 @@ async function displayDrugSuggestions(term) {
     UI.drugSuggestions.style.display = 'block';
 }
 
+// إضافة دواء جديد من شريط البحث
 async function addNewDrugFromSearch(name) {
     const form = UI.drugFormSelect.value;
     const newDrug = await addNewDrugToBoth(name, form);
@@ -341,7 +345,7 @@ async function addNewDrugFromSearch(name) {
     UI.drugSuggestions.style.display = 'none';
 }
 
-// ---------- تحميل بيانات الطبيب ----------
+// ---------- تحميل بيانات الطبيب (معدلة) ----------
 async function loadDoctorData(uid) {
     try {
         const snap = await get(ref(db, `users/${uid}`));
@@ -365,7 +369,7 @@ async function loadDoctorData(uid) {
     }
 }
 
-// ---------- تحميل المواعيد ----------
+// ---------- تحميل المواعيد (بدون تغيير) ----------
 function loadAppointments() {
     const appointmentsRef = ref(db, 'appointments');
     const doctorAppointmentsQuery = query(
@@ -452,88 +456,29 @@ function updateCurrentPatientUI() {
     UI.currentPatientAgeDisplay.textContent = `${currentAppointment.age || '--'} سنة`;
 }
 
-// ---------- عرض سجل المريض عند النقر على الاسم ----------
 UI.patientNameClickable.addEventListener('click', async () => {
     if (!currentAppointment?.patientId) {
         showToast('لا يوجد معرف للمريض', true);
         return;
     }
-    await loadAndShowPatientHistory(currentAppointment.patientId, currentAppointment.patientName);
+    try {
+        const prescriptionsRef = ref(db, 'prescriptions');
+        const patientQuery = query(prescriptionsRef, orderByChild('patientId'), equalTo(currentAppointment.patientId));
+        const snap = await get(patientQuery);
+        let history = '';
+        if (snap.exists()) {
+            snap.forEach(child => {
+                const p = child.val();
+                const date = p.createdAt ? p.createdAt.split('T')[0] : 'تاريخ غير معروف';
+                history += `${date} : ${p.items?.length || 0} أدوية\n`;
+            });
+        }
+        alert(`📋 سجل المريض ${currentAppointment.patientName}:\n${history || 'لا توجد روشتات سابقة'}`);
+    } catch (err) {
+        showToast('تعذر جلب السجل', true);
+    }
 });
 
-async function loadAndShowPatientHistory(patientId, patientName) {
-    try {
-        UI.patientHistoryContent.innerHTML = '<div class="empty-state"><i class="fas fa-spinner fa-pulse"></i> جاري تحميل السجلات...</div>';
-        UI.historyPatientName.textContent = patientName;
-        UI.patientHistoryModal.style.display = 'flex';
-
-        const recordsRef = ref(db, 'medical_records');
-        const patientRecordsQuery = query(recordsRef, orderByChild('patientId'), equalTo(patientId));
-        const snapshot = await get(patientRecordsQuery);
-
-        const records = [];
-        if (snapshot.exists()) {
-            snapshot.forEach(child => {
-                records.push({ id: child.key, ...child.val() });
-            });
-        }
-
-        records.sort((a, b) => (b.timestamp || '').localeCompare(a.timestamp || ''));
-
-        if (records.length === 0) {
-            UI.patientHistoryContent.innerHTML = '<div class="empty-state">لا توجد سجلات سابقة لهذا المريض</div>';
-            return;
-        }
-
-        let html = '';
-        records.forEach(record => {
-            const visitDate = record.visitDate || record.timestamp?.split('T')[0] || 'غير محدد';
-            const doctor = record.doctorName || 'غير معروف';
-            const diagnosis = record.diagnosis || 'بدون تشخيص';
-            const items = record.prescriptionItems || [];
-            
-            let itemsHtml = '';
-            items.forEach(item => {
-                itemsHtml += `<div style="margin-right:16px; font-size:0.9rem;">• ${escapeHtml(item.drug)} - ${escapeHtml(item.dose)} (${escapeHtml(item.form)})</div>`;
-            });
-
-            html += `
-                <div style="background:#FEF5EC; border-radius:20px; padding:16px; margin-bottom:16px; border:1px solid var(--border-light);">
-                    <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-                        <span style="font-weight:700;"><i class="fas fa-calendar-alt"></i> ${visitDate}</span>
-                        <span style="color:var(--text-sec);">د. ${escapeHtml(doctor)}</span>
-                    </div>
-                    <div style="margin-bottom:8px;">
-                        <span style="font-weight:600;">التشخيص:</span> ${escapeHtml(diagnosis)}
-                    </div>
-                    <div>
-                        <span style="font-weight:600;">الأدوية الموصوفة:</span>
-                        ${itemsHtml || '<div style="margin-right:16px; color:#888;">لا توجد أدوية</div>'}
-                    </div>
-                </div>
-            `;
-        });
-
-        UI.patientHistoryContent.innerHTML = html;
-    } catch (error) {
-        console.error('خطأ في تحميل تاريخ المريض:', error);
-        UI.patientHistoryContent.innerHTML = '<div class="empty-state" style="color:red;">حدث خطأ أثناء تحميل البيانات</div>';
-    }
-}
-
-// ---------- دالة مساعدة لاستدعاء السجلات (لأغراض أخرى) ----------
-async function fetchPatientRecordsForReport(patientId) {
-    const recordsRef = ref(db, 'medical_records');
-    const q = query(recordsRef, orderByChild('patientId'), equalTo(patientId));
-    const snap = await get(q);
-    const records = [];
-    if (snap.exists()) {
-        snap.forEach(child => records.push({ id: child.key, ...child.val() }));
-    }
-    return records.sort((a, b) => (b.timestamp || '').localeCompare(a.timestamp || ''));
-}
-
-// ---------- عرض عناصر الروشتة ----------
 function renderPrescriptionItems() {
     if (currentPrescription.length === 0) {
         UI.rxItemsContainer.innerHTML = '<div class="empty-state">لم تُضِف أي أدوية بعد</div>';
@@ -577,6 +522,7 @@ UI.drugFormSelect.addEventListener('change', () => {
     }
 });
 
+// البحث مع debounce بسيط
 let searchTimeout;
 UI.drugSearchInput.addEventListener('input', () => {
     clearTimeout(searchTimeout);
@@ -588,6 +534,7 @@ UI.drugSearchInput.addEventListener('input', () => {
     searchTimeout = setTimeout(() => displayDrugSuggestions(term), 200);
 });
 
+// اختيار دواء من الاقتراحات
 UI.drugSuggestions.addEventListener('click', (e) => {
     const item = e.target.closest('[data-drug-name]');
     if (item) {
@@ -770,6 +717,7 @@ UI.applyDoseBtn.addEventListener('click', async () => {
         exchange: doseState.isExchange ? doseState.exchangeDrug : null
     });
 
+    // ✅ تحديث عداد الاستخدام للدواء (محلياً وسحابياً)
     await incrementDrugUsage(doseState.drug, formValue);
     
     saveDosePreference(doseState.drug, formValue, doseString);
@@ -795,7 +743,7 @@ function resetDosePanel() {
 
 UI.cancelDoseBtn.addEventListener('click', resetDosePanel);
 
-// ---------- إنهاء الكشف وحفظ السجل الطبي ----------
+// إنهاء الكشف
 UI.finishBtn.addEventListener('click', async () => {
     if (!currentAppointment) {
         showToast('لا يوجد مريض حالي', true);
@@ -807,9 +755,8 @@ UI.finishBtn.addEventListener('click', async () => {
         return;
     }
     try {
-        // حفظ في prescriptions
         const prescriptionRef = ref(db, `prescriptions/${currentAppointment.id}`);
-        const prescriptionData = {
+        await set(prescriptionRef, {
             patientName: currentAppointment.patientName,
             patientId: currentAppointment.patientId,
             doctorId: currentUser.uid,
@@ -817,29 +764,9 @@ UI.finishBtn.addEventListener('click', async () => {
             diagnosis: diagnosis,
             items: currentPrescription,
             createdAt: new Date().toISOString()
-        };
-        await set(prescriptionRef, prescriptionData);
-
-        // حفظ في medical_records (سجل طبي)
-        const medicalRecordRef = push(ref(db, 'medical_records'));
-        const medicalRecordData = {
-            patientId: currentAppointment.patientId,
-            patientName: currentAppointment.patientName,
-            doctorId: currentUser.uid,
-            doctorName: doctorInfo.name || currentUser.name,
-            appointmentId: currentAppointment.id,
-            diagnosis: diagnosis,
-            prescriptionItems: currentPrescription,
-            visitDate: today,
-            timestamp: new Date().toISOString()
-        };
-        await set(medicalRecordRef, medicalRecordData);
-
-        // تحديث حالة الموعد
+        });
         await update(ref(db, `appointments/${currentAppointment.id}`), { status: 'منتهي' });
-
-        showToast('✅ تم إنهاء الكشف وحفظ السجل الطبي بنجاح');
-
+        showToast('✅ تم إنهاء الكشف وحفظ الروشتة بنجاح');
         currentAppointment = null;
         currentPrescription = [];
         UI.currentPatientCard.style.display = 'none';
@@ -852,7 +779,7 @@ UI.finishBtn.addEventListener('click', async () => {
     }
 });
 
-// ---------- القوالب ----------
+// القوالب
 UI.templatesBtn.addEventListener('click', async () => {
     try {
         const templatesRef = ref(db, `templates/${currentUser.uid}`);
@@ -914,13 +841,12 @@ window.saveAsTemplate = async function() {
     }
 };
 
-// ---------- إدارة المودالات ----------
+// إدارة المودالات
 UI.queueModalBtn.addEventListener('click', () => {
     UI.queueModal.style.display = 'flex';
     renderQueueModalList();
 });
 UI.closeQueueModalBtn.addEventListener('click', () => UI.queueModal.style.display = 'none');
-UI.closeHistoryModalBtn.addEventListener('click', () => UI.patientHistoryModal.style.display = 'none');
 UI.queueTabs.forEach(tab => {
     tab.addEventListener('click', () => {
         UI.queueTabs.forEach(t => t.classList.remove('active'));
@@ -933,7 +859,6 @@ window.addEventListener('click', (e) => {
     if (e.target === UI.templatesModal) UI.templatesModal.style.display = 'none';
     if (e.target === UI.saveTemplateModal) UI.saveTemplateModal.style.display = 'none';
     if (e.target === UI.queueModal) UI.queueModal.style.display = 'none';
-    if (e.target === UI.patientHistoryModal) UI.patientHistoryModal.style.display = 'none';
     if (!UI.drugSearchInput.contains(e.target) && !UI.drugSuggestions.contains(e.target)) {
         UI.drugSuggestions.style.display = 'none';
     }
@@ -951,6 +876,7 @@ UI.logoutBtn.addEventListener('click', async () => {
 (async function init() {
     UI.welcomeMessage.textContent = `د. ${currentUser.name}`;
     
+    // فتح IndexedDB ومزامنة الأدوية من Firebase
     await localDrugDB.open();
     await syncDrugsFromFirebase();
     
