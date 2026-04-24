@@ -447,13 +447,18 @@ function updateCurrentPatientUI() {
     UI.currentPatientAgeDisplay.textContent = `${currentAppointment.age || '--'} سنة`;
 }
 
-// --------------------- فتح الملف الطبي للمريض (مودال) ---------------------
+// --------------------- الانتقال إلى صفحة تفاصيل الوصفة ---------------------
 UI.patientNameClickable.addEventListener('click', () => {
     if (!currentAppointment?.patientId) {
         showToast('لا يوجد معرف للمريض', true);
         return;
     }
-    openPatientFile(currentAppointment.patientId, currentAppointment.patientName);
+    const params = new URLSearchParams({
+        patientId: currentAppointment.patientId,
+        patientName: currentAppointment.patientName || '',
+        appointmentId: currentAppointment.id || ''
+    });
+    window.location.href = `prescription_details.html?${params.toString()}`;
 });
 
 async function openPatientFile(patientId, patientName) {
