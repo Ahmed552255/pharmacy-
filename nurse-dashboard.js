@@ -196,8 +196,8 @@ function renderTable(bookings) {
         const statusClass = {
             'انتظار': 'status-waiting', 'قيد الكشف': 'status-inprogress', 'منتهي': 'status-done', 'ملغي': 'status-cancelled'
         }[b.status] || 'status-waiting';
+        // تم حذف زرار البدء (نقل إلى قيد الكشف) من القائمة
         let actions = currentTab === 'waiting' ? `
-            <button class="icon-btn success" data-id="${b.id}" data-action="start"><i class="fas fa-play"></i></button>
             <button class="icon-btn warning" data-id="${b.id}" data-action="edit"><i class="fas fa-edit"></i></button>
             <button class="icon-btn danger" data-id="${b.id}" data-action="cancel"><i class="fas fa-times"></i></button>
         ` : '<span style="opacity:0.5;">—</span>';
@@ -218,8 +218,8 @@ ui.bookingsBody.addEventListener('click', (e) => {
     const action = btn.dataset.action;
     const booking = allBookings.find(b => b.id === id);
     if (!booking) return;
-    if (action === 'start') updateStatus(id, 'قيد الكشف');
-    else if (action === 'cancel') updateStatus(id, 'ملغي');
+    // تم حذف التعامل مع action === 'start' نهائيًا
+    if (action === 'cancel') updateStatus(id, 'ملغي');
     else if (action === 'edit') openEditModal(booking);
 });
 
