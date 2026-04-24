@@ -244,6 +244,9 @@ let doseState = {
 };
 let currentQueueTab = 'waiting';
 
+// ---------- مفتاح التخزين المحلي لجلسة الكشف الحالية ----------
+const SESSION_STORAGE_KEY = 'currentDoctorSession';
+
 // ---------- دوال مساعدة ----------
 function getLocalDateString() {
     const d = new Date();
@@ -266,6 +269,40 @@ function showToast(msg, isErr = false) {
 function escapeHtml(str) {
     if (!str) return '';
     return String(str).replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'})[m] || m);
+}
+
+// ---------- تخزين واسترجاع جلسة الكشف الحالية ----------
+function saveCurrentSession() {
+    if (currentAppointment && currentPrescription) {
+        const session = {
+            appointment: currentAppointment,
+            prescription: currentPrescription,
+            diagnosis: UI.diagnosisTextarea.value
+        };
+        localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(session));
+    }
+}
+
+function loadSavedSession() {
+    const saved = localStorage.getItem(SESSION_STORAGE_KEY);
+    if (saved) {
+        try {
+            const session = JSON.parse(saved);
+            if (session.appointment && session.prescription) {
+                currentAppointment = session.appointment;
+                currentPrescription = session.prescription;
+                UI.diagnosisTextarea.value = session.diagnosis || '';
+                updateCurrentPatientUI();
+                UI.emptyPrescriptionMsg.style.display = 'none';
+                UI.prescriptionContent.style.display = 'block';
+                renderPrescriptionItems();
+                return true;
+            }
+        } catch (e) {
+            console.warn('تعذر استرجاع الجلسة المحفوظة');
+        }
+    }
+    return false;
 }
 
 // ---------- البحث المحلي السريع ----------
@@ -435,6 +472,7 @@ async function selectPatientFromQueue(appointmentId) {
     UI.prescriptionContent.style.display = 'block';
     renderPrescriptionItems();
     UI.queueModal.style.display = 'none';
+    saveCurrentSession(); // حفظ الجلسة فوراً بعد اختيار المريض
 }
 
 function updateCurrentPatientUI() {
@@ -447,7 +485,7 @@ function updateCurrentPatientUI() {
     UI.currentPatientAgeDisplay.textContent = `${currentAppointment.age || '--'} سنة`;
 }
 
-// --------------------- الانتقال إلى صفحة تفاصيل الوصفة ---------------------
+// --------------------- الانتقال إلى صفحة detail.html ---------------------
 UI.patientNameClickable.addEventListener('click', () => {
     if (!currentAppointment?.patientId) {
         showToast('لا يوجد معرف للمريض', true);
@@ -458,7 +496,7 @@ UI.patientNameClickable.addEventListener('click', () => {
         patientName: currentAppointment.patientName || '',
         appointmentId: currentAppointment.id || ''
     });
-    window.location.href = `prescription_details.html?${params.toString()}`;
+    window.location.href = `detail.html?${params.toString()}`;
 });
 
 async function openPatientFile(patientId, patientName) {
@@ -552,6 +590,7 @@ function renderPrescriptionItems() {
             const index = parseInt(btn.dataset.index);
             currentPrescription.splice(index, 1);
             renderPrescriptionItems();
+            saveCurrentSession(); // حفظ بعد الحذف
         });
     });
 }
@@ -763,6 +802,7 @@ UI.applyDoseBtn.addEventListener('click', async () => {
     await incrementDrugUsage(doseState.drug, formValue);
     saveDosePreference(doseState.drug, formValue, doseString);
     renderPrescriptionItems();
+    saveCurrentSession(); // حفظ بعد إضافة الدواء
     resetDosePanel();
 });
 
@@ -783,6 +823,11 @@ function resetDosePanel() {
 }
 
 UI.cancelDoseBtn.addEventListener('click', resetDosePanel);
+
+// حفظ التشخيص تلقائياً عند الكتابة
+UI.diagnosisTextarea.addEventListener('input', () => {
+    saveCurrentSession();
+});
 
 // ---------- إنهاء الكشف (حفظ في جدول medical_records الجديد) ----------
 UI.finishBtn.addEventListener('click', async () => {
@@ -831,6 +876,7 @@ UI.finishBtn.addEventListener('click', async () => {
         UI.emptyPrescriptionMsg.style.display = 'block';
         UI.prescriptionContent.style.display = 'none';
         UI.diagnosisTextarea.value = '';
+        localStorage.removeItem(SESSION_STORAGE_KEY); // مسح الجلسة المحفوظة بعد الإنهاء
     } catch (err) {
         console.error('فشل الحفظ:', err);
         showToast('حدث خطأ أثناء حفظ البيانات', true);
@@ -853,6 +899,7 @@ UI.templatesBtn.addEventListener('click', async () => {
                     currentPrescription = t.items || [];
                     if (t.diagnosis) UI.diagnosisTextarea.value = t.diagnosis;
                     renderPrescriptionItems();
+                    saveCurrentSession(); // حفظ بعد تحميل قالب
                     UI.templatesModal.style.display = 'none';
                     showToast(`تم تحميل القالب: ${t.name}`);
                 });
@@ -936,6 +983,10 @@ UI.logoutBtn.addEventListener('click', async () => {
     await localDrugDB.open();
     await syncDrugsFromFirebase();
     await loadDoctorData(currentUser.uid);
+    
+    // محاولة استرجاع جلسة كشف سابقة إن وجدت
+    loadSavedSession();
+    
     loadAppointments();
     updateUnitLabel();
 })();
