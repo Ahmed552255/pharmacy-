@@ -208,6 +208,40 @@
             margin-bottom: 1rem;
             font-weight: 600;
         }
+        /* ---------- أنماط جديدة لبطاقة الجلسة النشطة ---------- */
+        .session-card {
+            display: none; /* تظهر فقط عند وجود جلسة */
+            background: rgba(255,255,255,0.9);
+            border: 1px solid var(--primary);
+            border-radius: 20px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .session-card.active {
+            display: block;
+        }
+        .session-card p {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            color: var(--accent-dark);
+            font-weight: 600;
+        }
+        .btn-outline {
+            width: auto;
+            background: transparent;
+            border: 2px solid var(--danger);
+            color: var(--danger);
+            padding: 0.6rem 2rem;
+            box-shadow: none;
+        }
+        .btn-outline:hover {
+            background: rgba(229, 115, 115, 0.08);
+            transform: none;
+            box-shadow: none;
+        }
+        #loginForm.hidden {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -218,6 +252,16 @@
             <h1>سُكُون</h1>
             <p>منصة إدارة العيادات والصيدليات</p>
         </header>
+
+        <!-- بطاقة الجلسة النشطة (تظهر لو في مستخدم مسجل مسبقاً) -->
+        <div id="sessionPanel" class="session-card">
+            <p>👋 أهلاً بعودتك <span id="sessionName"></span>!</p>
+            <button id="logoutFromSessionBtn" class="btn btn-outline">
+                <i data-feather="log-out" style="width:18px;height:18px;vertical-align:middle;margin-left:6px;"></i>
+                تسجيل الخروج
+            </button>
+        </div>
+
         <form id="loginForm">
             <div class="input-group">
                 <input type="text" id="username" placeholder="البريد الإلكتروني" required autocomplete="email">
@@ -241,14 +285,14 @@
         // استيراد الإعدادات
         import { firebaseConfig } from './firebase-config.js';
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
         import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-database.js";
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getDatabase(app);
 
-        // بيانات المدير الثابتة (للتجربة)
+        // بيانات المدير الثابتة (للتجربة) – تم الإبقاء عليها حسب طلبك
         const ADMIN_CREDENTIALS = {
             email: "admin@sokoon.com",
             password: "Admin@2024Secure"
@@ -261,7 +305,10 @@
             passwordInput: document.getElementById('password'),
             loginButton: document.getElementById('loginButton'),
             loginForm: document.getElementById('loginForm'),
-            togglePasswordBtn: document.getElementById('togglePasswordBtn')
+            togglePasswordBtn: document.getElementById('togglePasswordBtn'),
+            sessionPanel: document.getElementById('sessionPanel'),
+            sessionName: document.getElementById('sessionName'),
+            logoutFromSessionBtn: document.getElementById('logoutFromSessionBtn')
         };
 
         // ---------- دوال مساعدة ----------
@@ -308,7 +355,7 @@
             return null;
         };
 
-        // ---------- جلب اسم المستخدم من قاعدة البيانات (إذا وُجد) ----------
+        // ---------- جلب اسم المستخدم من قاعدة البيانات ----------
         const fetchUserName = async (uid) => {
             const snap = await get(ref(db, `users/${uid}`));
             if (snap.exists()) {
@@ -317,13 +364,13 @@
             return null;
         };
 
-        // ---------- تخزين الجلسة والتوجيه ----------
+        // ---------- تخزين الجلسة (localStorage) والتوجيه ----------
         const storeSessionAndRedirect = (userData) => {
-            // تخزين جميع المعلومات المهمة في sessionStorage
-            sessionStorage.setItem('userRole', userData.role);
-            sessionStorage.setItem('userEmail', userData.email);
-            sessionStorage.setItem('userName', userData.name);
-            sessionStorage.setItem('userUid', userData.uid);
+            // استخدام localStorage بدلاً من sessionStorage
+            localStorage.setItem('userRole', userData.role);
+            localStorage.setItem('userEmail', userData.email);
+            localStorage.setItem('userName', userData.name);
+            localStorage.setItem('userUid', userData.uid);
             
             showToast(`مرحباً ${userData.name}!`, true);
 
@@ -340,6 +387,49 @@
             }, 1500);
         };
 
+        // ---------- تسجيل الخروج (تستخدم من الصفحة الحالية وأيضاً من الأزرار) ----------
+        const performLogout = async () => {
+            // مسح بيانات الجلسة من localStorage
+            localStorage.removeItem('userRole');
+            localStorage.removeItem('userEmail');
+            localStorage.removeItem('userName');
+            localStorage.removeItem('userUid');
+
+            // تسجيل الخروج من Firebase إن كان المستخدم مسجلاً بـ Firebase
+            try {
+                await signOut(auth);
+            } catch (e) {
+                // لا نفعل شيئاً إذا لم يكن هناك مستخدم Firebase حالياً
+            }
+
+            // إعادة تحميل الصفحة لتظهر واجهة الدخول
+            showToast('تم تسجيل الخروج بنجاح', true);
+            setTimeout(() => {
+                window.location.reload();
+            }, 800);
+        };
+
+        // ---------- جلب الجلسة من localStorage وعرضها ----------
+        const showExistingSession = () => {
+            const role = localStorage.getItem('userRole');
+            const name = localStorage.getItem('userName');
+            const email = localStorage.getItem('userEmail');
+            
+            if (role && name) {
+                // إظهار لوحة الجلسة وإخفاء نموذج الدخول
+                elements.sessionPanel.classList.add('active');
+                elements.loginForm.classList.add('hidden');
+                elements.sessionName.textContent = name + (role === 'admin' ? ' (مدير)' : '');
+                // إعادة رسم الأيقونات
+                feather.replace();
+                return true;
+            }
+            return false;
+        };
+
+        // ---------- زر تسجيل الخروج من شاشة الجلسة ----------
+        elements.logoutFromSessionBtn.addEventListener('click', performLogout);
+
         // ---------- معالجة تسجيل الدخول ----------
         const handleLogin = async (e) => {
             e.preventDefault();
@@ -354,7 +444,7 @@
             setLoading(true);
             showError('');
 
-            // 1. التحقق من المدير المحلي (اختباري)
+            // 1. التحقق من المدير المحلي (تم الإبقاء عليه كما طلبت)
             if (email === ADMIN_CREDENTIALS.email && pwd === ADMIN_CREDENTIALS.password) {
                 storeSessionAndRedirect({
                     uid: 'admin-local',
@@ -370,7 +460,6 @@
                 const userCredential = await signInWithEmailAndPassword(auth, email, pwd);
                 const user = userCredential.user;
                 
-                // جلب الدور من قاعدة البيانات
                 const role = await fetchUserRole(user.uid);
                 if (!role) {
                     showError('❌ المستخدم غير موجود في قاعدة البيانات. تواصل مع المدير.');
@@ -378,7 +467,6 @@
                     return;
                 }
 
-                // محاولة جلب الاسم الحقيقي من قاعدة البيانات
                 const dbName = await fetchUserName(user.uid);
                 const displayName = dbName || user.email.split('@')[0];
 
@@ -401,29 +489,9 @@
             }
         };
 
-        // ---------- التحقق من وجود جلسة سابقة ----------
-        const checkExistingSession = () => {
-            const role = sessionStorage.getItem('userRole');
-            const name = sessionStorage.getItem('userName');
-            if (role && name) {
-                const pages = {
-                    admin: 'admin-panel.html',
-                    doctor: 'doctor-dashboard.html',
-                    nurse: 'nurse-dashboard.html',
-                    pharmacist: 'pharmacy-dashboard.html'
-                };
-                const redirect = pages[role] || 'dashboard.html';
-                showToast(`أهلاً بعودتك ${name}!`, true);
-                setTimeout(() => {
-                    window.location.href = redirect;
-                }, 1200);
-            }
-        };
-
         // ---------- ربط الأحداث ----------
         elements.loginForm.addEventListener('submit', handleLogin);
         
-        // السماح بتسجيل الدخول بالضغط على Enter من أي حقل
         elements.usernameInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') elements.loginForm.dispatchEvent(new Event('submit'));
         });
@@ -431,11 +499,15 @@
             if (e.key === 'Enter') elements.loginForm.dispatchEvent(new Event('submit'));
         });
 
-        // بدء التحقق من الجلسة
-        checkExistingSession();
-           // داخل index.html في قسم <script type="module">
-import './upload_drugs.js';  // سيتم تشغيل عملية الرفع في الخلفية
+        // ---------- بداية الصفحة: جلب الجلسة إن وجدت ----------
+        if (!showExistingSession()) {
+            // إذا لم توجد جلسة، نتأكد أن نموذج الدخول ظاهر
+            elements.loginForm.classList.remove('hidden');
+            elements.sessionPanel.classList.remove('active');
+        }
 
+        // تصحيح: إزالة الاستدعاء الخاطئ الذي كان هنا
+        // لا يوجد import لملف غير موجود
     </script>
- </body>
+</body>
 </html>
