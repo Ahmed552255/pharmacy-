@@ -229,7 +229,7 @@ const currentUser = {
     name: sessionName || 'طبيب'
 };
 
-let doctorInfo = { name: currentUser.name };
+let doctorInfo = { name: currentUser.name, specialization: '' };
 let todayAppointments = [];
 let currentAppointment = null;
 let currentPrescription = [];
@@ -271,7 +271,7 @@ function escapeHtml(str) {
     return String(str).replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'})[m] || m);
 }
 
-// ---------- تخزين واسترجاع جلسة الكشف الحالية ----------
+// ---------- تخزين واسترجاع جلسة الكشف الحالية (بسرعة localStorage) ----------
 function saveCurrentSession() {
     if (currentAppointment && currentPrescription) {
         const session = {
@@ -379,7 +379,11 @@ async function loadDoctorData(uid) {
         const snap = await get(ref(db, `users/${uid}`));
         if (snap.exists()) {
             const data = snap.val();
-            doctorInfo = { ...doctorInfo, ...data };
+            doctorInfo = { 
+                ...doctorInfo, 
+                ...data,
+                specialization: data.specialization || ''
+            };
             UI.welcomeMessage.textContent = `د. ${doctorInfo.name || currentUser.name}`;
         } else {
             UI.welcomeMessage.textContent = `د. ${currentUser.name}`;
@@ -829,7 +833,7 @@ UI.diagnosisTextarea.addEventListener('input', () => {
     saveCurrentSession();
 });
 
-// ---------- إنهاء الكشف (حفظ في جدول medical_records الجديد) ----------
+// ---------- إنهاء الكشف (حفظ في جداول medical_records و prescriptions) ----------
 UI.finishBtn.addEventListener('click', async () => {
     if (!currentAppointment) {
         showToast('لا يوجد مريض حالي', true);
@@ -841,7 +845,9 @@ UI.finishBtn.addEventListener('click', async () => {
         return;
     }
     try {
-        // 1️⃣ حفظ في جدول medical_records (السجل الطبي الجديد)
+        const now = new Date().toISOString();
+        
+        // 1️⃣ حفظ في جدول medical_records (السجل الطبي الشامل)
         const recordRef = push(ref(db, 'medical_records'));
         await set(recordRef, {
             patientName: currentAppointment.patientName,
@@ -850,20 +856,24 @@ UI.finishBtn.addEventListener('click', async () => {
             doctorName: doctorInfo.name || currentUser.name,
             diagnosis: diagnosis,
             items: currentPrescription,
-            createdAt: new Date().toISOString(),
+            createdAt: now,
             appointmentId: currentAppointment.id
         });
 
-        // 2️⃣ حفظ إضافي في جدول prescriptions للتوافق مع النظام القديم (اختياري)
+        // 2️⃣ حفظ في جدول prescriptions مع بيانات الصرف (للصيدلية)
         const prescriptionRef = ref(db, `prescriptions/${currentAppointment.id}`);
         await set(prescriptionRef, {
             patientName: currentAppointment.patientName,
             patientId: currentAppointment.patientId,
             doctorId: currentUser.uid,
             doctorName: doctorInfo.name || currentUser.name,
+            doctorSpecialization: doctorInfo.specialization || '',
             diagnosis: diagnosis,
             items: currentPrescription,
-            createdAt: new Date().toISOString()
+            createdAt: now,
+            status: 'لم تصرف بعد',               // حالة الصرف الافتراضية
+            pharmacistName: '',                  // سيملؤه الصيدلي لاحقاً
+            dispensedAt: ''                      // تاريخ ووقت الصرف
         });
 
         // 3️⃣ تحديث حالة الموعد إلى منتهي
