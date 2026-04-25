@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>سُكُون · تفاصيل الروشتة</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* ----- نفس الستايلات السابقة كاملة بدون تغيير ----- */
+        :root {
+            --primary: #F8C471;
+            --primary-light: #FDEBD0;
+            --primary-dark: #E59866;
+            --accent: #E67E22;
+            --accent-soft: #FAD7A1;
+            --bg: #FFF8F0;
+            --white: #FFFFFF;
+            --ink: #4A3B2C;
+            --text-sec: #8B7A66;
+            --danger: #E57373;
+            --success: #5FA88D;
+            --warning: #F4B886;
+            --border-light: #F0E0D0;
+            --shadow-sm: 0 6px 12px -4px rgba(230, 126, 34, 0.08);
+            --shadow-md: 0 12px 28px -6px rgba(230, 126, 34, 0.12);
+            --radius-card: 24px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: var(--bg);
+            color: var(--ink);
+            min-height: 100vh;
+            padding: 16px;
+            position: relative;
+        }
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(circle at 0% 0%, rgba(248, 196, 113, 0.08), transparent 50%),
+                        radial-gradient(circle at 100% 100%, rgba(230, 126, 34, 0.06), transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+        .top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(255,255,255,0.8);
+            backdrop-filter: blur(12px);
+            border-radius: 60px;
+            padding: 12px 24px;
+            border: 1px solid rgba(255,255,255,0.6);
+            box-shadow: var(--shadow-sm);
+        }
+        .btn {
+            padding: 10px 18px;
+            border-radius: 40px;
+            border: none;
+            font-weight: 600;
+            font-family: 'Cairo', sans-serif;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            background: white;
+            color: var(--ink);
+            border: 1px solid var(--border-light);
+        }
+        .btn-primary {
+            background: var(--primary);
+            color: #4A3B2C;
+            border: none;
+            box-shadow: 0 6px 14px rgba(230, 126, 34, 0.2);
+        }
+        .btn-success {
+            background: var(--success);
+            color: white;
+            border: none;
+        }
+        .btn-outline { background: transparent; }
+        .btn-sm { padding: 6px 14px; font-size: 0.8rem; }
+        .card {
+            background: rgba(255,255,255,0.75);
+            backdrop-filter: blur(8px);
+            border-radius: var(--radius-card);
+            padding: 24px;
+            border: 1px solid rgba(255,255,255,0.7);
+            box-shadow: var(--shadow-sm);
+        }
+        .card h2 { font-size: 1.4rem; margin-bottom: 16px; color: var(--accent); }
+        .info-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+            font-size: 1rem;
+        }
+        .info-row i {
+            width: 24px;
+            color: var(--accent);
+        }
+        .drug-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+        }
+        .drug-table th, .drug-table td {
+            padding: 12px 8px;
+            border-bottom: 1px solid var(--border-light);
+            text-align: right;
+            vertical-align: middle;
+        }
+        .drug-table th { background: var(--primary-light); color: var(--ink); font-weight: 700; }
+        .drug-table td .drug-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+        .status-pending { background: #FFF3E0; color: #E65100; }
+        .status-dispensed { background: #E8F5E9; color: #2E7D32; }
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: #4A3B2C;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 60px;
+            text-align: center;
+            z-index: 3000;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        .loading { text-align: center; padding: 40px; font-size: 1.2rem; }
+    </style>
+</head>
+<body>
+<div class="container" id="appContainer">
+    <div class="top-bar">
+        <h2><i class="fas fa-prescription"></i> تفاصيل الروشتة</h2>
+        <!-- تعديل زر العودة ليفتح لوحة الصيدلي الرئيسية -->
+        <button class="btn btn-outline" onclick="window.location.href='pharmacy-dashboard.html'">
+            <i class="fas fa-arrow-right"></i> العودة للوحة الرئيسية
+        </button>
+    </div>
+    <div id="contentArea">
+        <div class="loading"><i class="fas fa-spinner fa-pulse"></i> جاري تحميل البيانات...</div>
+    </div>
+</div>
+
+<script type="module">
+    import { firebaseConfig } from './firebase-config.js';
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
+    import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-database.js";
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
+
+    let currentUser = null;
+    let pharmacistInfo = null;
+    let prescriptionData = null;
+    const urlParams = new URLSearchParams(window.location.search);
+    const prescriptionId = urlParams.get('id');
+
+    if (!prescriptionId) {
+        document.getElementById('contentArea').innerHTML = '<div class="card"><p>معرف الروشتة غير موجود.</p></div>';
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'})[m] || m);
+    }
+
+    function showToast(msg, isErr = false) {
+        const t = document.createElement('div');
+        t.className = 'toast';
+        t.style.background = isErr ? '#B23B3B' : '#4A3B2C';
+        t.innerHTML = `<i class="fas ${isErr ? 'fa-exclamation-triangle' : 'fa-check'}"></i> ${msg}`;
+        document.body.appendChild(t);
+        setTimeout(() => t.remove(), 3000);
+    }
+
+    async function loadPharmacistData(uid) {
+        const snap = await get(ref(db, `users/${uid}`));
+        if (snap.exists()) {
+            const data = snap.val();
+            if (data.role === 'pharmacist') {
+                pharmacistInfo = data;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    async function loadPrescription() {
+        const presRef = ref(db, `prescriptions/${prescriptionId}`);
+        const snap = await get(presRef);
+        if (!snap.exists()) {
+            document.getElementById('contentArea').innerHTML = '<div class="card"><p>الروشتة غير موجودة.</p></div>';
+            return;
+        }
+        prescriptionData = { id: prescriptionId, ...snap.val() };
+        renderPrescription();
+    }
+
+    function renderPrescription() {
+        const p = prescriptionData;
+        const items = p.items || [];
+        const statusText = p.status === 'تم الصرف' ? 'تم الصرف' : 'لم تصرف بعد';
+        const statusClass = p.status === 'تم الصرف' ? 'status-dispensed' : 'status-pending';
+
+        let itemsRows = '';
+        items.forEach(item => {
+            itemsRows += `
+                <tr>
+                    <td>${escapeHtml(item.drug)}</td>
+                    <td>${escapeHtml(item.form || '')}</td>
+                    <td>${escapeHtml(item.dose)}</td>
+                    <td>
+                        <div class="drug-actions">
+                            <button class="btn btn-sm btn-outline search-google-btn" data-drug="${escapeHtml(item.drug)}">
+                                <i class="fab fa-google"></i> بحث
+                            </button>
+                            <button class="btn btn-sm btn-outline search-image-btn" data-drug="${escapeHtml(item.drug)}">
+                                <i class="fas fa-image"></i> صورة
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+
+        let pharmacySectionHtml = '';
+        if (p.status === 'تم الصرف') {
+            pharmacySectionHtml = `
+                <div class="card" style="background: #E8F5E9;">
+                    <h2><i class="fas fa-check-circle"></i> تم الصرف</h2>
+                    <div class="info-row"><i class="fas fa-user-check"></i> <strong>الصيدلي:</strong> ${escapeHtml(p.pharmacistName || '')}</div>
+                    <div class="info-row"><i class="far fa-clock"></i> <strong>تاريخ الصرف:</strong> ${p.dispensedAt ? new Date(p.dispensedAt).toLocaleString('ar-EG') : ''}</div>
+                </div>
+            `;
+        } else if (pharmacistInfo) {
+            pharmacySectionHtml = `
+                <div class="card">
+                    <h2><i class="fas fa-capsules"></i> إجراء الصرف</h2>
+                    <p>تأكيد صرف هذه الروشتة.</p>
+                    <button id="dispenseBtn" class="btn btn-success"><i class="fas fa-check-circle"></i> تأكيد الصرف</button>
+                </div>
+            `;
+        }
+
+        const html = `
+            <div class="card">
+                <h2><i class="fas fa-user"></i> معلومات المريض</h2>
+                <div class="info-row"><i class="fas fa-user"></i> <strong>الاسم:</strong> ${escapeHtml(p.patientName)}</div>
+                <div class="info-row"><i class="fas fa-user-md"></i> <strong>الطبيب:</strong> د. ${escapeHtml(p.doctorName || '')} ${p.doctorSpecialization ? '(' + escapeHtml(p.doctorSpecialization) + ')' : ''}</div>
+                <div class="info-row"><i class="far fa-calendar-alt"></i> <strong>تاريخ الوصفة:</strong> ${p.createdAt ? new Date(p.createdAt).toLocaleString('ar-EG') : ''}</div>
+                ${p.diagnosis ? `<div class="info-row"><i class="fas fa-notes-medical"></i> <strong>التشخيص:</strong> ${escapeHtml(p.diagnosis)}</div>` : ''}
+                <div class="info-row"><i class="fas fa-circle"></i> <strong>الحالة:</strong> <span class="status-badge ${statusClass}">${statusText}</span></div>
+            </div>
+
+            <div class="card">
+                <h2><i class="fas fa-pills"></i> الأدوية الموصوفة</h2>
+                ${items.length === 0 ? '<p>لا توجد أدوية.</p>' : `
+                <table class="drug-table">
+                    <thead>
+                        <tr>
+                            <th>اسم الدواء</th>
+                            <th>الشكل</th>
+                            <th>الجرعة</th>
+                            <th>إجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>${itemsRows}</tbody>
+                </table>
+                `}
+            </div>
+
+            ${pharmacySectionHtml}
+        `;
+
+        document.getElementById('contentArea').innerHTML = html;
+
+        // ربط أزرار البحث
+        document.querySelectorAll('.search-google-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const query = btn.dataset.drug;
+                if (query) window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}`, '_blank');
+            });
+        });
+
+        document.querySelectorAll('.search-image-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const query = btn.dataset.drug;
+                if (query) window.open(`https://www.google.com/search?tbm=isch&q=${encodeURIComponent(query)}`, '_blank');
+            });
+        });
+
+        // زر الصرف
+        const dispenseBtn = document.getElementById('dispenseBtn');
+        if (dispenseBtn) {
+            dispenseBtn.addEventListener('click', async () => {
+                try {
+                    await update(ref(db, `prescriptions/${prescriptionId}`), {
+                        status: 'تم الصرف',
+                        pharmacistId: currentUser.uid,
+                        pharmacistName: pharmacistInfo.name || 'صيدلي',
+                        dispensedAt: new Date().toISOString()
+                    });
+                    showToast('✅ تم صرف الروشتة بنجاح');
+                    // إعادة تحميل البيانات
+                    loadPrescription();
+                } catch (err) {
+                    showToast('فشل الصرف', true);
+                }
+            });
+        }
+    }
+
+    // التحقق من الجلسة
+    onAuthStateChanged(auth, async (user) => {
+        if (!user) {
+            window.location.href = 'index.html';
+            return;
+        }
+        currentUser = user;
+        const valid = await loadPharmacistData(user.uid);
+        if (!valid) {
+            document.getElementById('contentArea').innerHTML = '<div class="card"><p>هذا الحساب ليس صيدليًا.</p></div>';
+            return;
+        }
+        if (prescriptionId) {
+            loadPrescription();
+        }
+    });
+</script>
+</body>
+</html>
