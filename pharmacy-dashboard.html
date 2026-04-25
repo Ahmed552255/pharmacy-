@@ -47,7 +47,7 @@
         }
         .app-container { display: flex; gap: 20px; max-width: 1600px; margin: 0 auto; height: calc(100vh - 32px); }
         
-        /* الشريط الجانبي للأطباء (مخفي افتراضياً) */
+        /* الشريط الجانبي للأطباء (يُظهر مخفي افتراضياً) */
         .doctors-sidebar {
             width: 280px;
             background: rgba(255,255,255,0.6);
@@ -56,7 +56,7 @@
             padding: 20px 12px;
             border: 1px solid rgba(255,255,255,0.7);
             box-shadow: var(--shadow-md);
-            display: none; /* مخفي */
+            display: none;
             flex-direction: column;
             overflow-y: auto;
             transition: all 0.3s;
@@ -251,6 +251,14 @@
             max-width: 500px; margin: 0 auto;
         }
         .empty-state { text-align: center; padding: 40px; color: var(--text-sec); }
+        .badge-pulse {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
 
         @media (max-width: 800px) {
             .app-container { flex-direction: column; height: auto; }
@@ -260,7 +268,7 @@
 </head>
 <body>
 <div class="app-container">
-    <!-- الشريط الجانبي للأطباء (مخفي) -->
+    <!-- الشريط الجانبي للأطباء -->
     <div class="doctors-sidebar" id="doctorsSidebar">
         <div class="sidebar-header">
             <h3><i class="fas fa-user-md"></i> الأطباء</h3>
@@ -293,8 +301,8 @@
             <div class="panel-header">
                 <h3 id="selectedDoctorTitle">اختر طبيباً من القائمة</h3>
                 <div class="tabs">
-                    <button class="tab-btn active" data-doctor-tab="pending">جديدة</button>
-                    <button class="tab-btn" data-doctor-tab="dispensed">مصروفة</button>
+                    <button class="tab-btn active" data-doctor-tab="لم تصرف بعد">جديدة</button>
+                    <button class="tab-btn" data-doctor-tab="تم الصرف">مصروفة</button>
                 </div>
             </div>
             <div class="rx-list" id="prescriptionsListContainer">
@@ -333,8 +341,12 @@
     let doctorsList = [];
     let allPrescriptions = [];
     let selectedDoctorId = null;
-    let currentDoctorTab = 'pending';
+    let currentDoctorTab = 'لم تصرف بعد'; // متوافق مع حالة الدكتور الجديدة
     let unsubscribePrescriptions = null;
+    let unsubscribeDoctors = null;
+
+    // مفتاح التخزين المحلي
+    const PHARMACIST_STORAGE_KEY = 'pharmacist_selected_doctor';
 
     // ---------- عناصر DOM ----------
     const UI = {
@@ -364,6 +376,22 @@
         setTimeout(() => t.remove(), 3000);
     }
 
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'})[m] || m);
+    }
+
+    // ---------- تخزين محلي لآخر طبيب مختار ----------
+    function saveSelectedDoctor() {
+        if (selectedDoctorId) {
+            localStorage.setItem(PHARMACIST_STORAGE_KEY, selectedDoctorId);
+        }
+    }
+
+    function loadSavedDoctor() {
+        return localStorage.getItem(PHARMACIST_STORAGE_KEY);
+    }
+
     // ---------- تحميل بيانات الصيدلي ----------
     async function loadPharmacistData(user) {
         try {
@@ -386,10 +414,11 @@
         }
     }
 
-    // ---------- تحميل الأطباء ----------
+    // ---------- تحميل الأطباء (مستمع لحظي) ----------
     function loadDoctors() {
         const usersRef = ref(db, 'users');
-        onValue(usersRef, (snap) => {
+        if (unsubscribeDoctors) unsubscribeDoctors();
+        unsubscribeDoctors = onValue(usersRef, (snap) => {
             const docs = [];
             snap.forEach(child => {
                 const user = child.val();
@@ -399,6 +428,8 @@
             });
             doctorsList = docs;
             renderDoctorsList();
+            // تحديث شريط الروشتات الجديدة عند تغير الأطباء
+            renderNewPrescriptionsStrip();
         });
     }
 
@@ -409,14 +440,14 @@
         }
         let html = '';
         doctorsList.forEach(doc => {
-            const pendingCount = allPrescriptions.filter(p => p.doctorId === doc.id && p.status === 'pending').length;
+            const pendingCount = allPrescriptions.filter(p => p.doctorId === doc.id && p.status === 'لم تصرف بعد').length;
             html += `
                 <div class="doctor-item ${selectedDoctorId === doc.id ? 'active' : ''}" data-doctor-id="${doc.id}">
                     <div class="doctor-info">
                         <div class="doctor-avatar"><i class="fas fa-user-md"></i></div>
-                        <span class="doctor-name">د. ${doc.name || '---'}</span>
+                        <span class="doctor-name">د. ${escapeHtml(doc.name || '---')}</span>
                     </div>
-                    ${pendingCount > 0 ? `<span class="new-badge">${pendingCount}</span>` : ''}
+                    ${pendingCount > 0 ? `<span class="new-badge badge-pulse">${pendingCount}</span>` : ''}
                 </div>
             `;
         });
@@ -425,20 +456,25 @@
             el.addEventListener('click', () => {
                 const docId = el.dataset.doctorId;
                 selectedDoctorId = docId;
+                saveSelectedDoctor();
                 renderDoctorsList();
                 updateSelectedDoctorTitle();
                 renderPrescriptionsForDoctor();
-                UI.doctorsSidebar.classList.remove('show'); // إخفاء الشريط بعد الاختيار (اختياري)
             });
         });
     }
 
     function updateSelectedDoctorTitle() {
         const doc = doctorsList.find(d => d.id === selectedDoctorId);
-        UI.selectedDoctorTitle.textContent = doc ? `روشتات د. ${doc.name}` : 'اختر طبيباً من القائمة';
+        if (doc) {
+            const pendingCount = allPrescriptions.filter(p => p.doctorId === doc.id && p.status === 'لم تصرف بعد').length;
+            UI.selectedDoctorTitle.innerHTML = `روشتات د. ${escapeHtml(doc.name)} ${pendingCount > 0 ? `<span class="new-badge badge-pulse" style="margin-right:8px;">${pendingCount} جديدة</span>` : ''}`;
+        } else {
+            UI.selectedDoctorTitle.textContent = 'اختر طبيباً من القائمة';
+        }
     }
 
-    // ---------- تحميل جميع الروشتات (لحظي) ----------
+    // ---------- تحميل جميع الروشتات (مستمع لحظي) ----------
     function loadAllPrescriptions() {
         const presRef = ref(db, 'prescriptions');
         if (unsubscribePrescriptions) unsubscribePrescriptions();
@@ -448,10 +484,12 @@
                 prescriptions.push({ id: child.key, ...child.val() });
             });
             allPrescriptions = prescriptions;
-            // تحديث واجهة المستخدم
+            console.log('📋 تم تحديث الروشتات:', prescriptions.length);
+            // تحديث جميع مكونات الواجهة
             renderNewPrescriptionsStrip();
-            renderDoctorsList(); // لتحديث الشارات
+            renderDoctorsList();
             if (selectedDoctorId) {
+                updateSelectedDoctorTitle();
                 renderPrescriptionsForDoctor();
             }
         });
@@ -459,20 +497,25 @@
 
     // شريط الروشتات الجديدة (كل الأطباء)
     function renderNewPrescriptionsStrip() {
-        const newPrescriptions = allPrescriptions.filter(p => p.status === 'pending');
+        const newPrescriptions = allPrescriptions.filter(p => p.status === 'لم تصرف بعد');
         UI.newTotalCount.textContent = newPrescriptions.length;
         if (newPrescriptions.length === 0) {
             UI.newCardsContainer.innerHTML = '<div class="empty-state" style="padding:20px;">لا توجد روشتات جديدة</div>';
             return;
         }
+        // ترتيب تنازلي حسب التاريخ (الأحدث أولاً)
+        newPrescriptions.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+        
         let html = '';
-        newPrescriptions.slice(0, 10).forEach(p => {
-            const doctor = doctorsList.find(d => d.id === p.doctorId) || { name: 'غير معروف' };
+        newPrescriptions.slice(0, 15).forEach(p => {
+            const doctor = doctorsList.find(d => d.id === p.doctorId) || { name: p.doctorName || 'غير معروف' };
+            const patientAge = p.patientAge ? ` - ${p.patientAge} سنة` : '';
             html += `
                 <div class="new-card" data-prescription-id="${p.id}">
-                    <div class="doc-name"><i class="fas fa-user-md"></i> د. ${doctor.name}</div>
-                    <div class="patient-name">${p.patientName}</div>
+                    <div class="doc-name"><i class="fas fa-user-md"></i> د. ${escapeHtml(doctor.name)}</div>
+                    <div class="patient-name">${escapeHtml(p.patientName)}</div>
                     <div class="time"><i class="far fa-calendar"></i> ${p.createdAt ? new Date(p.createdAt).toLocaleDateString('ar-EG') : ''}</div>
+                    ${p.doctorSpecialization ? `<div style="font-size:0.8rem; color: var(--text-sec);">${escapeHtml(p.doctorSpecialization)}</div>` : ''}
                 </div>
             `;
         });
@@ -488,23 +531,26 @@
             UI.prescriptionsListContainer.innerHTML = '<div class="empty-state">اختر طبيباً لعرض الروشتات</div>';
             return;
         }
-        const filtered = allPrescriptions.filter(p => p.doctorId === selectedDoctorId && p.status === currentDoctorTab);
+        const tabStatus = currentDoctorTab; // 'لم تصرف بعد' أو 'تم الصرف'
+        const filtered = allPrescriptions.filter(p => p.doctorId === selectedDoctorId && p.status === tabStatus);
         if (filtered.length === 0) {
-            UI.prescriptionsListContainer.innerHTML = `<div class="empty-state">لا توجد روشتات ${currentDoctorTab === 'pending' ? 'جديدة' : 'مصروفة'}</div>`;
+            UI.prescriptionsListContainer.innerHTML = `<div class="empty-state">لا توجد روشتات ${tabStatus === 'لم تصرف بعد' ? 'جديدة' : 'مصروفة'}</div>`;
             return;
         }
-        let html = '';
         filtered.sort((a,b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+        let html = '';
         filtered.forEach(p => {
             const itemsCount = p.items ? p.items.length : 0;
             html += `
                 <div class="rx-item-card" data-prescription-id="${p.id}">
                     <div class="rx-item-header">
-                        <span class="rx-patient">${p.patientName}</span>
+                        <span class="rx-patient">${escapeHtml(p.patientName)}</span>
                         <span class="rx-date">${p.createdAt ? new Date(p.createdAt).toLocaleDateString('ar-EG') : ''}</span>
                     </div>
-                    <div class="rx-doctor">د. ${p.doctorName || ''}</div>
+                    <div class="rx-doctor">د. ${escapeHtml(p.doctorName || '')} ${p.doctorSpecialization ? `- ${escapeHtml(p.doctorSpecialization)}` : ''}</div>
                     <div class="rx-items-preview">${itemsCount} أصناف دوائية</div>
+                    ${p.diagnosis ? `<div style="font-size:0.85rem; color: var(--text-sec); margin-top:4px;"><i class="fas fa-notes-medical"></i> ${escapeHtml(p.diagnosis.substring(0, 60))}${p.diagnosis.length > 60 ? '...' : ''}</div>` : ''}
+                    ${p.status === 'تم الصرف' ? `<div style="color: var(--success); font-weight:600; margin-top:6px;"><i class="fas fa-check-circle"></i> تم الصرف بواسطة: ${escapeHtml(p.pharmacistName || '')} - ${p.dispensedAt ? new Date(p.dispensedAt).toLocaleString('ar-EG') : ''}</div>` : ''}
                 </div>
             `;
         });
@@ -524,25 +570,32 @@
         
         let itemsHtml = '';
         items.forEach(item => {
-            itemsHtml += `<tr><td>${item.drug}</td><td>${item.form || ''}</td><td>${item.dose}</td></tr>`;
+            itemsHtml += `<tr><td>${escapeHtml(item.drug)}</td><td>${escapeHtml(item.form || '')}</td><td>${escapeHtml(item.dose)}</td></tr>`;
         });
         
         UI.modalBody.innerHTML = `
             <div style="margin-bottom:20px;">
-                <h4>${prescription.patientName}</h4>
-                <p><i class="fas fa-user-md"></i> د. ${doctor.name}</p>
+                <h4>${escapeHtml(prescription.patientName)}</h4>
+                <p><i class="fas fa-user-md"></i> د. ${escapeHtml(doctor.name)} ${prescription.doctorSpecialization ? `(${escapeHtml(prescription.doctorSpecialization)})` : ''}</p>
                 <p><i class="far fa-calendar"></i> ${prescription.createdAt ? new Date(prescription.createdAt).toLocaleString('ar-EG') : ''}</p>
-                ${prescription.diagnosis ? `<p><i class="fas fa-notes-medical"></i> ${prescription.diagnosis}</p>` : ''}
+                ${prescription.diagnosis ? `<p><i class="fas fa-notes-medical"></i> ${escapeHtml(prescription.diagnosis)}</p>` : ''}
+                ${prescription.status === 'تم الصرف' ? `
+                    <div style="background: #E8F5E9; padding: 12px; border-radius: 16px; margin-top: 8px;">
+                        <p style="color: var(--success);"><i class="fas fa-check-circle"></i> <strong>تم الصرف</strong></p>
+                        <p><i class="fas fa-user-check"></i> الصيدلي: ${escapeHtml(prescription.pharmacistName || '')}</p>
+                        <p><i class="far fa-clock"></i> وقت الصرف: ${prescription.dispensedAt ? new Date(prescription.dispensedAt).toLocaleString('ar-EG') : ''}</p>
+                    </div>
+                ` : ''}
             </div>
             <table class="rx-items-table">
                 <thead><tr><th>الدواء</th><th>الشكل</th><th>الجرعة</th></tr></thead>
                 <tbody>${itemsHtml}</tbody>
             </table>
             <div style="display:flex; gap:12px; margin-top:24px;">
-                ${prescription.status === 'pending' ? `
-                    <button class="btn btn-primary" id="dispenseBtn" style="flex:1;"><i class="fas fa-check-circle"></i> صرف الروشتة</button>
+                ${prescription.status === 'لم تصرف بعد' ? `
+                    <button class="btn btn-primary" id="dispenseBtn" style="flex:1;"><i class="fas fa-check-circle"></i> تأكيد صرف الروشتة</button>
                 ` : `
-                    <div style="background:var(--success); color:white; padding:10px; border-radius:40px; text-align:center; flex:1;">✅ تم الصرف</div>
+                    <div style="background:var(--success); color:white; padding:10px; border-radius:40px; text-align:center; flex:1; font-weight:600;">✅ تم الصرف بالفعل</div>
                 `}
                 <button class="btn btn-outline" id="closeDetailsBtn">إغلاق</button>
             </div>
@@ -556,7 +609,7 @@
             dispenseBtn.addEventListener('click', async () => {
                 try {
                     await update(ref(db, `prescriptions/${prescriptionId}`), {
-                        status: 'dispensed',
+                        status: 'تم الصرف',
                         pharmacistId: currentUser.uid,
                         pharmacistName: pharmacistInfo.name || 'صيدلي',
                         dispensedAt: new Date().toISOString()
@@ -580,7 +633,6 @@
     });
 
     UI.refreshDoctorsBtn.addEventListener('click', () => {
-        loadDoctors();
         showToast('تم تحديث قائمة الأطباء');
     });
 
@@ -599,8 +651,8 @@
 
     UI.logoutBtn.addEventListener('click', async () => {
         if (unsubscribePrescriptions) unsubscribePrescriptions();
+        if (unsubscribeDoctors) unsubscribeDoctors();
         sessionStorage.clear();
-        sessionStorage.setItem('logoutIntent', 'pharmacist_manual_logout');
         window.location.href = 'index.html';
     });
 
@@ -619,6 +671,11 @@
         if (!valid) {
             UI.welcomeMessage.textContent = 'خطأ في تحميل البيانات';
             return;
+        }
+        // استرجاع آخر طبيب تم اختياره
+        const savedDoctorId = loadSavedDoctor();
+        if (savedDoctorId) {
+            selectedDoctorId = savedDoctorId;
         }
         loadDoctors();
         loadAllPrescriptions();
