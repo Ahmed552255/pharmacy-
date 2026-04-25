@@ -229,6 +229,54 @@
         }
         .open-details-btn:hover { background: var(--primary); }
 
+        /* مودال البحث عن مريض */
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(60, 40, 20, 0.25);
+            backdrop-filter: blur(8px);
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            padding: 16px;
+        }
+        .modal-card {
+            background: white;
+            border-radius: 40px;
+            width: 100%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 30px 50px rgba(160, 100, 40, 0.2);
+        }
+        .modal-header {
+            padding: 24px 28px;
+            background: #FEF5EC;
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-body { padding: 24px 28px; }
+        .search-input-group {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .search-input-group input {
+            flex: 1;
+            padding: 12px 16px;
+            border-radius: 20px;
+            border: 1.5px solid var(--border-light);
+            font-family: 'Cairo', sans-serif;
+        }
+        .search-result-item {
+            padding: 12px;
+            border-bottom: 1px solid var(--border-light);
+            cursor: pointer;
+        }
+        .search-result-item:hover { background: var(--primary-light); }
         .toast {
             position: fixed; bottom: 20px; left: 20px; right: 20px;
             background: #4A3B2C; color: white; padding: 12px 24px;
@@ -270,6 +318,8 @@
             <div class="logo"><h2><i class="fas fa-pills" style="color:var(--primary);"></i> سُكُون · الصيدلي</h2></div>
             <div class="header-actions">
                 <span id="welcomeMessage" style="font-weight:600;"></span>
+                <!-- زر البحث عن مريض -->
+                <button class="btn btn-outline" id="searchPatientBtn"><i class="fas fa-search"></i> بحث عن مريض</button>
                 <button class="btn btn-outline btn-icon" id="toggleSidebarBtn" title="إظهار/إخفاء الأطباء"><i class="fas fa-user-md"></i></button>
                 <button class="btn btn-outline" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> خروج</button>
             </div>
@@ -297,11 +347,30 @@
     </div>
 </div>
 
+<!-- مودال البحث عن مريض -->
+<div id="searchPatientModal" class="modal">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h3><i class="fas fa-search"></i> بحث عن مريض</h3>
+            <button class="close-btn" id="closeSearchModalBtn">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="search-input-group">
+                <input type="text" id="patientSearchInput" placeholder="اسم المريض أو رقم الهاتف">
+                <button class="btn btn-primary" id="executeSearchBtn"><i class="fas fa-search"></i> بحث</button>
+            </div>
+            <div id="searchResultsContainer">
+                <div class="empty-state">ابدأ البحث عن مريض</div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script type="module">
     import { firebaseConfig } from './firebase-config.js';
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
-    import { getDatabase, ref, onValue, update, get } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-database.js";
+    import { getDatabase, ref, onValue, update, get, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-database.js";
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
@@ -331,7 +400,14 @@
         selectedDoctorTitle: document.getElementById('selectedDoctorTitle'),
         prescriptionsListContainer: document.getElementById('prescriptionsListContainer'),
         logoutBtn: document.getElementById('logoutBtn'),
-        tabBtns: document.querySelectorAll('[data-doctor-tab]')
+        tabBtns: document.querySelectorAll('[data-doctor-tab]'),
+        // عناصر البحث
+        searchPatientBtn: document.getElementById('searchPatientBtn'),
+        searchPatientModal: document.getElementById('searchPatientModal'),
+        closeSearchModalBtn: document.getElementById('closeSearchModalBtn'),
+        patientSearchInput: document.getElementById('patientSearchInput'),
+        executeSearchBtn: document.getElementById('executeSearchBtn'),
+        searchResultsContainer: document.getElementById('searchResultsContainer')
     };
 
     function showToast(msg, isErr = false) {
@@ -513,10 +589,8 @@
             `;
         });
         UI.prescriptionsListContainer.innerHTML = html;
-        // ربط الأحداث لزر "عرض التفاصيل" والبطاقة بأكملها
         document.querySelectorAll('.rx-item-card').forEach(card => {
             card.addEventListener('click', (e) => {
-                // لو الضغط كان على الزر نفسه، ما تتعاملش مرتين
                 if (e.target.closest('.open-details-btn')) return;
                 openPrescriptionInNewPage(card.dataset.prescriptionId);
             });
@@ -529,13 +603,124 @@
         });
     }
 
-    // الانتقال إلى صفحة تفاصيل الروشتة (بدلاً من المودال)
     function openPrescriptionInNewPage(prescriptionId) {
         if (!prescriptionId) return;
         window.open(`prescription-details.html?id=${prescriptionId}`, '_blank');
     }
 
-    // ---------- الأحداث ----------
+    // ---------- وظائف البحث عن مريض ----------
+    function openSearchModal() {
+        UI.searchPatientModal.style.display = 'flex';
+        UI.patientSearchInput.value = '';
+        UI.searchResultsContainer.innerHTML = '<div class="empty-state">ابدأ البحث عن مريض</div>';
+        UI.patientSearchInput.focus();
+    }
+
+    function closeSearchModal() {
+        UI.searchPatientModal.style.display = 'none';
+    }
+
+    async function searchPatients() {
+        const term = UI.patientSearchInput.value.trim();
+        if (!term) {
+            showToast('الرجاء إدخال اسم أو رقم هاتف', true);
+            return;
+        }
+
+        UI.searchResultsContainer.innerHTML = '<div class="empty-state"><i class="fas fa-spinner fa-pulse"></i> جاري البحث...</div>';
+
+        try {
+            // 1. البحث في جدول patients إن وجد
+            const patientsRef = ref(db, 'patients');
+            const patientsSnap = await get(patientsRef);
+            const results = [];
+
+            if (patientsSnap.exists()) {
+                patientsSnap.forEach(child => {
+                    const p = child.val();
+                    const nameMatch = p.name && p.name.toLowerCase().includes(term.toLowerCase());
+                    const phoneMatch = p.phone && p.phone.includes(term);
+                    if (nameMatch || phoneMatch) {
+                        results.push({ id: child.key, ...p });
+                    }
+                });
+            }
+
+            // 2. إن لم تكن هناك نتائج، ابحث في prescriptions و medical_records
+            if (results.length === 0) {
+                // البحث في prescriptions
+                const presSnap = await get(ref(db, 'prescriptions'));
+                const seen = new Set();
+                if (presSnap.exists()) {
+                    presSnap.forEach(child => {
+                        const p = child.val();
+                        const nameMatch = p.patientName && p.patientName.toLowerCase().includes(term.toLowerCase());
+                        const phoneMatch = p.patientPhone && p.patientPhone.includes(term);
+                        if ((nameMatch || phoneMatch) && p.patientId && !seen.has(p.patientId)) {
+                            seen.add(p.patientId);
+                            results.push({ id: p.patientId, name: p.patientName, phone: p.patientPhone || '' });
+                        }
+                    });
+                }
+
+                // البحث في medical_records
+                const recordsSnap = await get(ref(db, 'medical_records'));
+                if (recordsSnap.exists()) {
+                    recordsSnap.forEach(child => {
+                        const r = child.val();
+                        const nameMatch = r.patientName && r.patientName.toLowerCase().includes(term.toLowerCase());
+                        if (nameMatch && r.patientId && !seen.has(r.patientId)) {
+                            seen.add(r.patientId);
+                            results.push({ id: r.patientId, name: r.patientName, phone: '' });
+                        }
+                    });
+                }
+            }
+
+            // عرض النتائج
+            if (results.length === 0) {
+                UI.searchResultsContainer.innerHTML = '<div class="empty-state">لا توجد نتائج مطابقة</div>';
+                return;
+            }
+
+            let html = '';
+            results.forEach(patient => {
+                html += `
+                    <div class="search-result-item" data-patient-id="${patient.id}" data-patient-name="${escapeHtml(patient.name || '')}">
+                        <strong>${escapeHtml(patient.name || 'بدون اسم')}</strong>
+                        ${patient.phone ? ` - ${escapeHtml(patient.phone)}` : ''}
+                    </div>
+                `;
+            });
+            UI.searchResultsContainer.innerHTML = html;
+
+            // ربط الأحداث للانتقال إلى detail.html
+            document.querySelectorAll('.search-result-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const pid = item.dataset.patientId;
+                    const pname = item.dataset.patientName;
+                    window.location.href = `detail.html?patientId=${pid}&patientName=${encodeURIComponent(pname)}`;
+                });
+            });
+
+        } catch (err) {
+            console.error('خطأ في البحث:', err);
+            UI.searchResultsContainer.innerHTML = '<div class="empty-state">حدث خطأ أثناء البحث</div>';
+        }
+    }
+
+    // ---------- ربط أحداث البحث ----------
+    UI.searchPatientBtn.addEventListener('click', openSearchModal);
+    UI.closeSearchModalBtn.addEventListener('click', closeSearchModal);
+    UI.searchPatientModal.addEventListener('click', (e) => {
+        if (e.target === UI.searchPatientModal) closeSearchModal();
+    });
+    UI.executeSearchBtn.addEventListener('click', searchPatients);
+    UI.patientSearchInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') searchPatients();
+    });
+
+    // ---------- الأحداث الأخرى ----------
     UI.toggleSidebarBtn.addEventListener('click', () => {
         UI.doctorsSidebar.classList.toggle('show');
     });
