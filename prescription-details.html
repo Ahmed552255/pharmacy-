@@ -9,7 +9,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* ----- نفس الستايلات السابقة كاملة بدون تغيير ----- */
         :root {
             --primary: #F8C471;
             --primary-light: #FDEBD0;
@@ -63,6 +62,8 @@
             padding: 12px 24px;
             border: 1px solid rgba(255,255,255,0.6);
             box-shadow: var(--shadow-sm);
+            flex-wrap: wrap;
+            gap: 12px;
         }
         .btn {
             padding: 10px 18px;
@@ -154,13 +155,20 @@
             margin: 0 auto;
         }
         .loading { text-align: center; padding: 40px; font-size: 1.2rem; }
+
+        /* أنماط خاصة بالطباعة */
+        @media print {
+            body::before { display: none; }
+            .btn, .top-bar, .toast, .drug-actions, .no-print { display: none !important; }
+            .card { box-shadow: none; border: 1px solid #ccc; break-inside: avoid; }
+            body { background: white; padding: 0; }
+        }
     </style>
 </head>
 <body>
 <div class="container" id="appContainer">
-    <div class="top-bar">
+    <div class="top-bar no-print">
         <h2><i class="fas fa-prescription"></i> تفاصيل الروشتة</h2>
-        <!-- تعديل زر العودة ليفتح لوحة الصيدلي الرئيسية -->
         <button class="btn btn-outline" onclick="window.location.href='pharmacy-dashboard.html'">
             <i class="fas fa-arrow-right"></i> العودة للوحة الرئيسية
         </button>
@@ -240,7 +248,7 @@
                     <td>${escapeHtml(item.drug)}</td>
                     <td>${escapeHtml(item.form || '')}</td>
                     <td>${escapeHtml(item.dose)}</td>
-                    <td>
+                    <td class="no-print">
                         <div class="drug-actions">
                             <button class="btn btn-sm btn-outline search-google-btn" data-drug="${escapeHtml(item.drug)}">
                                 <i class="fab fa-google"></i> بحث
@@ -254,6 +262,13 @@
             `;
         });
 
+        // زر "ملف المريض" لفتح detail.html
+        const patientFileBtn = (p.patientId) ? `
+            <button id="patientFileBtn" class="btn btn-outline">
+                <i class="fas fa-folder-open"></i> ملف المريض
+            </button>
+        ` : '';
+
         let pharmacySectionHtml = '';
         if (p.status === 'تم الصرف') {
             pharmacySectionHtml = `
@@ -265,7 +280,7 @@
             `;
         } else if (pharmacistInfo) {
             pharmacySectionHtml = `
-                <div class="card">
+                <div class="card no-print">
                     <h2><i class="fas fa-capsules"></i> إجراء الصرف</h2>
                     <p>تأكيد صرف هذه الروشتة.</p>
                     <button id="dispenseBtn" class="btn btn-success"><i class="fas fa-check-circle"></i> تأكيد الصرف</button>
@@ -281,6 +296,10 @@
                 <div class="info-row"><i class="far fa-calendar-alt"></i> <strong>تاريخ الوصفة:</strong> ${p.createdAt ? new Date(p.createdAt).toLocaleString('ar-EG') : ''}</div>
                 ${p.diagnosis ? `<div class="info-row"><i class="fas fa-notes-medical"></i> <strong>التشخيص:</strong> ${escapeHtml(p.diagnosis)}</div>` : ''}
                 <div class="info-row"><i class="fas fa-circle"></i> <strong>الحالة:</strong> <span class="status-badge ${statusClass}">${statusText}</span></div>
+                <div class="no-print" style="margin-top: 16px; display: flex; gap: 12px; flex-wrap: wrap;">
+                    ${patientFileBtn}
+                    <button id="printBtn" class="btn btn-primary"><i class="fas fa-print"></i> طباعة الروشتة</button>
+                </div>
             </div>
 
             <div class="card">
@@ -292,7 +311,7 @@
                             <th>اسم الدواء</th>
                             <th>الشكل</th>
                             <th>الجرعة</th>
-                            <th>إجراءات</th>
+                            <th class="no-print">إجراءات</th>
                         </tr>
                     </thead>
                     <tbody>${itemsRows}</tbody>
@@ -305,7 +324,7 @@
 
         document.getElementById('contentArea').innerHTML = html;
 
-        // ربط أزرار البحث
+        // أزرار البحث عن الدواء
         document.querySelectorAll('.search-google-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const query = btn.dataset.drug;
@@ -320,6 +339,26 @@
             });
         });
 
+        // زر ملف المريض
+        const patientFileBtnEl = document.getElementById('patientFileBtn');
+        if (patientFileBtnEl) {
+            patientFileBtnEl.addEventListener('click', () => {
+                const params = new URLSearchParams({
+                    patientId: p.patientId || '',
+                    patientName: p.patientName || ''
+                });
+                window.location.href = `detail.html?${params.toString()}`;
+            });
+        }
+
+        // زر الطباعة
+        const printBtn = document.getElementById('printBtn');
+        if (printBtn) {
+            printBtn.addEventListener('click', () => {
+                window.print();
+            });
+        }
+
         // زر الصرف
         const dispenseBtn = document.getElementById('dispenseBtn');
         if (dispenseBtn) {
@@ -332,7 +371,6 @@
                         dispensedAt: new Date().toISOString()
                     });
                     showToast('✅ تم صرف الروشتة بنجاح');
-                    // إعادة تحميل البيانات
                     loadPrescription();
                 } catch (err) {
                     showToast('فشل الصرف', true);
@@ -341,7 +379,6 @@
         }
     }
 
-    // التحقق من الجلسة
     onAuthStateChanged(auth, async (user) => {
         if (!user) {
             window.location.href = 'index.html';
