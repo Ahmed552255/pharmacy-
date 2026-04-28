@@ -46,7 +46,6 @@
         }
         .container { max-width: 1400px; margin: 0 auto; }
 
-        /* الهيدر */
         .app-header {
             display: flex;
             align-items: center;
@@ -132,7 +131,6 @@
             border-radius: 50%;
         }
 
-        /* شبكة المستخدمين */
         .users-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -231,7 +229,6 @@
             margin-top: 14px;
         }
 
-        /* المودالات */
         .modal {
             display: none;
             position: fixed;
@@ -337,7 +334,6 @@
             font-size: 1.2rem;
         }
         .highlight { color: var(--accent); }
-        /* تحسينات إضافية */
         .password-section { position: relative; }
         .password-toggle { position: absolute; left: 16px; top: 38px; cursor: pointer; color: var(--text-sec); }
         .field-hint { font-size: 0.8rem; color: var(--text-sec); margin-top: 4px; }
@@ -425,7 +421,6 @@
                     <option value="pharmacist">💊 صيدلي</option>
                 </select>
             </div>
-            <!-- مجموعة اختيار الأطباء (تظهر للممرضة فقط) -->
             <div class="form-group" id="assignDoctorsGroup" style="display:none;">
                 <label>الأطباء المسؤولون (يمكن اختيار أكثر من طبيب)</label>
                 <div class="multi-select" id="assignedDoctorsCheckboxGroup"></div>
@@ -465,6 +460,7 @@
     const db = getDatabase(app);
     const auth = getAuth(app);
     const usersRef = ref(db, 'users');
+    const linksRef = ref(db, 'doctor_nurse_links');
 
     const API_KEY = firebaseConfig.apiKey;
     const SIGN_UP_URL = `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${API_KEY}`;
@@ -472,9 +468,12 @@
 
     let allUsers = [];
     let doctorsList = [];
+    let linksMap = {};                 // nurse_id -> { doctor_id: true }
     let currentEditId = null;
     let currentViewId = null;
     let unsubscribeUsers = null;
+    let unsubscribeLinks = null;
+    let searchDebounceTimer = null;
 
     // ---------- دوال مساعدة ----------
     function showToast(msg, isErr = false) {
@@ -491,66 +490,52 @@
         return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'})[m] || m);
     }
 
-    // ---------- جلب الأطباء المرتبطين بممرضة (من الجدول الوسيط أولاً) ----------
-    async function fetchLinkedDoctorsForNurse(nurseId) {
-        try {
-            const linksSnap = await get(ref(db, `doctor_nurse_links/${nurseId}`));
-            if (linksSnap.exists()) {
-                return Object.keys(linksSnap.val());
+    // ---------- دمج بيانات المستخدمين مع الروابط ----------
+    function combineAndRender() {
+        const arr = [];
+        doctorsList = [];
+        
+        // بناء قائمة المستخدمين وإضافة الروابط الخاصة بالممرضات
+        allUsers.forEach(user => {
+            const u = { ...user };
+            if (u.role === 'nurse') {
+                u._linkedDoctorIds = Object.keys(linksMap[u.id] || {});
             }
-            // الرجوع إلى assignedDoctors القديمة للتوافق
-            const nurseSnap = await get(ref(db, `users/${nurseId}`));
-            if (nurseSnap.exists()) {
-                const nurseData = nurseSnap.val();
-                return Object.keys(nurseData.assignedDoctors || {});
-            }
-            return [];
-        } catch (err) {
-            console.warn('فشل جلب الأطباء المرتبطين:', err);
-            return [];
-        }
+            arr.push(u);
+            if (u.role === 'doctor') doctorsList.push(u);
+        });
+        
+        allUsers = arr;
+        renderGrid();
+        populateDoctorsCheckboxes();
     }
 
-    // ---------- حفظ روابط الممرضة مع الأطباء في الجدول الوسيط ----------
-    async function saveNurseDoctorLinks(nurseId, doctorIds) {
-        const linksRef = ref(db, `doctor_nurse_links/${nurseId}`);
-        // حذف الروابط القديمة
-        await set(linksRef, null);
-        if (doctorIds.length === 0) return;
-        // إنشاء الروابط الجديدة
-        const updates = {};
-        doctorIds.forEach(docId => { updates[docId] = true; });
-        await set(linksRef, updates);
-    }
-
-    // ---------- تحميل جميع المستخدمين ----------
-    function loadUsers() {
+    // ---------- مستمعون للبيانات ----------
+    function startListeners() {
         if (unsubscribeUsers) unsubscribeUsers();
-        unsubscribeUsers = onValue(usersRef, async (snap) => {
-            const arr = [];
-            const docs = [];
+        if (unsubscribeLinks) unsubscribeLinks();
+
+        // مستمع للمستخدمين
+        unsubscribeUsers = onValue(usersRef, (snap) => {
+            const usersArray = [];
             snap.forEach(child => {
-                const user = { id: child.key, ...child.val() };
-                arr.push(user);
-                if (user.role === 'doctor') docs.push(user);
+                usersArray.push({ id: child.key, ...child.val() });
             });
-            // تحديث قائمة الأطباء
-            doctorsList = docs;
-            
-            // للممرضات، نجلب الأطباء المرتبطين من الجدول الوسيط ونضيفها مؤقتاً للعرض
-            for (const user of arr) {
-                if (user.role === 'nurse') {
-                    const linkedDoctorIds = await fetchLinkedDoctorsForNurse(user.id);
-                    user._linkedDoctorIds = linkedDoctorIds;
-                }
+            allUsers = usersArray;
+            combineAndRender();   // عند تغير المستخدمين ندمج ونعرض
+        });
+
+        // مستمع لروابط الممرضات
+        unsubscribeLinks = onValue(linksRef, (snap) => {
+            linksMap = snap.val() || {};
+            // إذا كانت بيانات المستخدمين موجودة مسبقاً، ندمج مرة أخرى
+            if (allUsers.length) {
+                combineAndRender();
             }
-            
-            allUsers = arr;
-            renderGrid();
-            populateDoctorsCheckboxes();
         });
     }
 
+    // ---------- إعداد قائمة الأطباء في مربعات الاختيار ----------
     function populateDoctorsCheckboxes() {
         const container = document.getElementById('assignedDoctorsCheckboxGroup');
         if (!container) return;
@@ -562,6 +547,7 @@
         });
     }
 
+    // ---------- عرض الشبكة ----------
     function renderGrid() {
         const term = document.getElementById('searchInput')?.value.toLowerCase() || '';
         const filtered = allUsers.filter(u => 
@@ -602,12 +588,10 @@
                 </div>
             </div>`;
         }).join('');
-        document.querySelectorAll('.user-card').forEach(card => {
-            card.addEventListener('click', () => openDetailModal(card.dataset.id));
-        });
     }
 
-    async function openDetailModal(id) {
+    // ---------- تفاصيل المستخدم ----------
+    function openDetailModal(id) {
         const user = allUsers.find(u => u.id === id);
         if (!user) return;
         currentViewId = id;
@@ -623,7 +607,7 @@
         
         const assignedSection = document.getElementById('detailAssignedDoctorsSection');
         if (user.role === 'nurse') {
-            const linkedIds = user._linkedDoctorIds || await fetchLinkedDoctorsForNurse(id);
+            const linkedIds = user._linkedDoctorIds || [];
             const names = linkedIds
                 .map(docId => {
                     const doc = doctorsList.find(d => d.id === docId);
@@ -638,6 +622,9 @@
         document.getElementById('detailModal').style.display = 'flex';
     }
 
+    function closeDetailModal() { document.getElementById('detailModal').style.display = 'none'; currentViewId = null; }
+
+    // ---------- نموذج الإضافة / التعديل ----------
     function openAddModal() {
         currentEditId = null;
         document.getElementById('formModalTitle').innerHTML = '<i class="fas fa-user-plus"></i> إضافة مستخدم';
@@ -661,7 +648,7 @@
         document.getElementById('formModal').style.display = 'flex';
     }
 
-    async function openEditModal(user) {
+    function openEditModal(user) {
         currentEditId = user.id;
         document.getElementById('formModalTitle').innerHTML = '<i class="fas fa-edit"></i> تعديل المستخدم';
         document.getElementById('userName').value = user.name || '';
@@ -683,7 +670,7 @@
         if (role === 'nurse') {
             const checkboxes = document.querySelectorAll('#assignedDoctorsCheckboxGroup input[type=checkbox]');
             checkboxes.forEach(cb => cb.checked = false);
-            const linkedIds = user._linkedDoctorIds || await fetchLinkedDoctorsForNurse(user.id);
+            const linkedIds = user._linkedDoctorIds || [];
             linkedIds.forEach(docId => {
                 checkboxes.forEach(cb => { if (cb.value === docId) cb.checked = true; });
             });
@@ -692,7 +679,6 @@
     }
 
     function closeFormModal() { document.getElementById('formModal').style.display = 'none'; currentEditId = null; }
-    function closeDetailModal() { document.getElementById('detailModal').style.display = 'none'; currentViewId = null; }
 
     document.getElementById('userRole').addEventListener('change', (e) => {
         const role = e.target.value;
@@ -708,6 +694,7 @@
         this.classList.toggle('fa-eye-slash');
     });
 
+    // ---------- حفظ المستخدم (جديد / تعديل) ----------
     async function saveUser() {
         const name = document.getElementById('userName').value.trim();
         const email = document.getElementById('userEmail').value.trim();
@@ -720,11 +707,15 @@
 
         if (!name || !email || !role) { showToast('الاسم والبريد والدور مطلوبة', true); return; }
 
+        // إعداد كائن المستخدم المتوافق مع المخطط
         const userData = {
-            name, email, phone, role,
+            name: name,
+            email: email,
+            phone: phone,
+            role: role,
             specialty: role === 'doctor' ? specialty : '',
-            quickBlurb, status,
-            lastModified: new Date().toISOString()
+            quick_blurb: quickBlurb,      // ملاحظة: المفتاح quick_blurb (بشَرطة سفلية كما في المخطط)
+            status: status
         };
 
         let selectedDoctorIds = [];
@@ -739,7 +730,7 @@
 
         try {
             if (currentEditId) {
-                // تعديل مستخدم موجود
+                // تعديل مستخدم موجود – لا نضيف created_at
                 await update(ref(db, `users/${currentEditId}`), userData);
                 if (role === 'nurse') {
                     await saveNurseDoctorLinks(currentEditId, selectedDoctorIds);
@@ -763,7 +754,8 @@
                 }
                 const uid = signUpData.localId;
                 
-                userData.createdAt = new Date().toISOString();
+                // إضافة created_at
+                userData.created_at = new Date().toISOString();
                 await set(ref(db, `users/${uid}`), userData);
                 
                 if (role === 'nurse') {
@@ -778,12 +770,25 @@
         }
     }
 
+    // ---------- روابط الممرضة مع الأطباء ----------
+    async function saveNurseDoctorLinks(nurseId, doctorIds) {
+        const linksRefNurse = ref(db, `doctor_nurse_links/${nurseId}`);
+        // مسح الروابط الحالية
+        await set(linksRefNurse, null);
+        if (doctorIds.length === 0) return;
+        const updates = {};
+        doctorIds.forEach(docId => { updates[docId] = true; });
+        await set(linksRefNurse, updates);
+    }
+
+    // ---------- حظر / إلغاء حظر ----------
     async function toggleBlockUser(id, newStatus) {
         await update(ref(db, `users/${id}`), { status: newStatus });
         showToast(newStatus === 'blocked' ? 'تم الحظر' : 'تم إلغاء الحظر');
         closeDetailModal();
     }
 
+    // ---------- حذف مستخدم ----------
     async function deleteUser(id) {
         if (!confirm('حذف نهائي؟ سيتم حذف الحساب بالكامل من النظام.')) return;
         try {
@@ -801,9 +806,8 @@
                 throw new Error(deleteData.error?.message || 'فشل حذف حساب المستخدم');
             }
             
-            // حذف بيانات المستخدم من Realtime Database
+            // حذف بيانات المستخدم والروابط
             await remove(ref(db, `users/${id}`));
-            // حذف روابط الممرضة مع الأطباء إن وجدت
             await remove(ref(db, `doctor_nurse_links/${id}`));
             showToast('تم حذف المستخدم بالكامل');
             closeDetailModal();
@@ -812,33 +816,56 @@
         }
     }
 
+    // ---------- الخروج ----------
     async function logout() {
         if (unsubscribeUsers) unsubscribeUsers();
+        if (unsubscribeLinks) unsubscribeLinks();
         await signOut(auth);
         window.location.href = 'index.html';
     }
 
-    // ربط الأحداث
-    document.getElementById('searchInput').addEventListener('input', renderGrid);
-    document.getElementById('addUserBtn').onclick = openAddModal;
-    document.getElementById('refreshBtn').onclick = () => { loadUsers(); showToast('تم التحديث'); };
-    document.getElementById('logoutBtn').onclick = logout;
-    document.getElementById('saveFormBtn').onclick = saveUser;
-    document.getElementById('closeFormBtn').onclick = closeFormModal;
-    document.getElementById('closeDetailBtn').onclick = closeDetailModal;
-    document.getElementById('blockModalBtn').onclick = () => currentViewId && toggleBlockUser(currentViewId, 'blocked');
-    document.getElementById('unblockModalBtn').onclick = () => currentViewId && toggleBlockUser(currentViewId, 'active');
-    document.getElementById('deleteModalBtn').onclick = () => currentViewId && deleteUser(currentViewId);
-    document.getElementById('editModalBtn').onclick = () => {
-        const user = allUsers.find(u => u.id === currentViewId);
-        if (user) { closeDetailModal(); openEditModal(user); }
-    };
-    window.onclick = (e) => {
-        if (e.target === document.getElementById('detailModal')) closeDetailModal();
-        if (e.target === document.getElementById('formModal')) closeFormModal();
-    };
+    // ---------- تهيئة الأحداث ----------
+    function initEvents() {
+        // حدث البحث مع Debounce
+        const searchInput = document.getElementById('searchInput');
+        searchInput.addEventListener('input', () => {
+            clearTimeout(searchDebounceTimer);
+            searchDebounceTimer = setTimeout(() => {
+                renderGrid();
+            }, 300);
+        });
 
-    loadUsers();
+        // استخدام Event Delegation للنقر على البطاقات
+        document.getElementById('usersGrid').addEventListener('click', (e) => {
+            const card = e.target.closest('.user-card');
+            if (card) {
+                openDetailModal(card.dataset.id);
+            }
+        });
+
+        document.getElementById('addUserBtn').onclick = openAddModal;
+        document.getElementById('refreshBtn').onclick = () => showToast('التحديث يتم بشكل تلقائي');
+        document.getElementById('logoutBtn').onclick = logout;
+        document.getElementById('saveFormBtn').onclick = saveUser;
+        document.getElementById('closeFormBtn').onclick = closeFormModal;
+        document.getElementById('closeDetailBtn').onclick = closeDetailModal;
+        document.getElementById('blockModalBtn').onclick = () => currentViewId && toggleBlockUser(currentViewId, 'blocked');
+        document.getElementById('unblockModalBtn').onclick = () => currentViewId && toggleBlockUser(currentViewId, 'active');
+        document.getElementById('deleteModalBtn').onclick = () => currentViewId && deleteUser(currentViewId);
+        document.getElementById('editModalBtn').onclick = () => {
+            const user = allUsers.find(u => u.id === currentViewId);
+            if (user) { closeDetailModal(); openEditModal(user); }
+        };
+
+        window.onclick = (e) => {
+            if (e.target === document.getElementById('detailModal')) closeDetailModal();
+            if (e.target === document.getElementById('formModal')) closeFormModal();
+        };
+    }
+
+    // ---------- بدء التطبيق ----------
+    initEvents();
+    startListeners();
 </script>
 </body>
 </html>
