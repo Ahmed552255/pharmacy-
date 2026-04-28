@@ -871,6 +871,8 @@ UI.diagnosisTextarea.addEventListener('input', () => {
 });
 
 // ---------- إنهاء الكشف (حفظ في prescriptions و prescription_items) ----------
+
+// ---------- إنهاء الكشف (حفظ في prescriptions و prescription_items) ----------
 UI.finishBtn.addEventListener('click', async () => {
     if (!currentAppointment) {
         showToast('لا يوجد مريض حالي', true);
@@ -885,19 +887,32 @@ UI.finishBtn.addEventListener('click', async () => {
         const now = new Date().toISOString();
         const prescriptionId = currentAppointment.id;  // استخدام معرّف الموعد كمعرّف للروشتة
         
+        // جلب اسم المريض من جدول patients لضمان الدقة
+        let patientName = currentAppointment.patient_name || '';  // الحقل الجديد في الموعد
+        if (!patientName && currentAppointment.patient_id) {
+            const patientSnap = await get(ref(db, `patients/${currentAppointment.patient_id}`));
+            if (patientSnap.exists()) {
+                patientName = patientSnap.val().name || '';
+            }
+        }
+        // إذا كان لا يزال فارغًا نستخدم أي قيمة متاحة
+        if (!patientName) patientName = currentAppointment.patientName || 'غير معروف';
+
         // بناء كائن التحديثات دفعة واحدة (Batch Write)
         const updates = {};
         
-        // 1. الروشتة الرئيسية
+        // 1. الروشتة الرئيسية (بما فيها patient_name و item_count)
         updates[`prescriptions/${prescriptionId}`] = {
-            patient_id: currentAppointment.patientId,
+            patient_id: currentAppointment.patient_id || currentAppointment.patientId || '',
+            patient_name: patientName,
             doctor_id: currentUser.uid,
             diagnosis: diagnosis,
             created_at: now,
             status: 'لم تصرف بعد',
             pharmacist_id: '',
             pharmacist_name: '',
-            dispensed_at: ''
+            dispensed_at: '',
+            item_count: currentPrescription.length   // عدد الأصناف المضافة
         };
         
         // 2. الأدوية الموصوفة (جدول prescription_items)
@@ -928,7 +943,6 @@ UI.finishBtn.addEventListener('click', async () => {
         showToast('حدث خطأ أثناء حفظ البيانات', true);
     }
 });
-
 // ---------- القوالب (محدثة لاستخدام prescription_templates و template_items) ----------
 UI.templatesBtn.addEventListener('click', async () => {
     try {
