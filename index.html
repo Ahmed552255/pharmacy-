@@ -7,7 +7,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/feather-icons"></script>
     <style>
         :root {
             --primary: #7AC5C5;
@@ -220,14 +219,26 @@
         </header>
         <form id="loginForm">
             <div class="input-group">
+                <!-- أيقونة SVG للبريد بدلاً من feather -->
+                <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                    <polyline points="22,6 12,13 2,6"></polyline>
+                </svg>
                 <input type="text" id="username" placeholder="البريد الإلكتروني" required autocomplete="email">
-                <i class="icon" data-feather="mail"></i>
             </div>
             <div class="input-group">
+                <!-- أيقونة SVG للقفل -->
+                <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
                 <input type="password" id="password" placeholder="كلمة المرور" required autocomplete="current-password">
-                <i class="icon" data-feather="lock"></i>
                 <button type="button" class="password-toggle" id="togglePasswordBtn" title="إظهار/إخفاء كلمة المرور">
-                    <i data-feather="eye"></i>
+                    <!-- أيقونة العين (تتغير بالجافاسكريبت) -->
+                    <svg id="eyeIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
                 </button>
             </div>
             <div class="error-message" id="errorMessage"></div>
@@ -236,8 +247,6 @@
     </main>
 
     <script type="module">
-        feather.replace();
-
         // استيراد الإعدادات
         import { firebaseConfig } from './firebase-config.js';
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
@@ -261,7 +270,8 @@
             passwordInput: document.getElementById('password'),
             loginButton: document.getElementById('loginButton'),
             loginForm: document.getElementById('loginForm'),
-            togglePasswordBtn: document.getElementById('togglePasswordBtn')
+            togglePasswordBtn: document.getElementById('togglePasswordBtn'),
+            eyeIcon: document.getElementById('eyeIcon')
         };
 
         // ---------- دوال مساعدة ----------
@@ -285,21 +295,23 @@
             elements.loginButton.innerHTML = loading ? '<span class="spinner"></span> جاري التحقق...' : 'تسجيل الدخول';
         };
 
-        // ---------- إظهار/إخفاء كلمة المرور ----------
+        // ---------- أيقونة العين (مضمنة) ----------
+        const eyeOpenSVG = `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>`;
+        const eyeOffSVG = `<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>`;
+
         elements.togglePasswordBtn.addEventListener('click', () => {
             const input = elements.passwordInput;
-            const icon = elements.togglePasswordBtn.querySelector('i');
+            const icon = elements.eyeIcon;
             if (input.type === 'password') {
                 input.type = 'text';
-                icon.setAttribute('data-feather', 'eye-off');
+                icon.innerHTML = eyeOffSVG;
             } else {
                 input.type = 'password';
-                icon.setAttribute('data-feather', 'eye');
+                icon.innerHTML = eyeOpenSVG;
             }
-            feather.replace();
         });
 
-        // ---------- جلب دور المستخدم من Realtime Database ----------
+        // ---------- جلب دور المستخدم والاسم ----------
         const fetchUserRole = async (uid) => {
             const snap = await get(ref(db, `users/${uid}`));
             if (snap.exists()) {
@@ -308,7 +320,6 @@
             return null;
         };
 
-        // ---------- جلب اسم المستخدم من قاعدة البيانات (إذا وُجد) ----------
         const fetchUserName = async (uid) => {
             const snap = await get(ref(db, `users/${uid}`));
             if (snap.exists()) {
@@ -319,7 +330,6 @@
 
         // ---------- تخزين الجلسة والتوجيه ----------
         const storeSessionAndRedirect = (userData) => {
-            // تخزين جميع المعلومات المهمة في sessionStorage
             sessionStorage.setItem('userRole', userData.role);
             sessionStorage.setItem('userEmail', userData.email);
             sessionStorage.setItem('userName', userData.name);
@@ -354,7 +364,7 @@
             setLoading(true);
             showError('');
 
-            // 1. التحقق من المدير المحلي (اختباري)
+            // 1. مدير محلي (اختباري)
             if (email === ADMIN_CREDENTIALS.email && pwd === ADMIN_CREDENTIALS.password) {
                 storeSessionAndRedirect({
                     uid: 'admin-local',
@@ -365,12 +375,11 @@
                 return;
             }
 
-            // 2. التحقق عبر Firebase Auth
+            // 2. تسجيل الدخول عبر Firebase Auth
             try {
                 const userCredential = await signInWithEmailAndPassword(auth, email, pwd);
                 const user = userCredential.user;
                 
-                // جلب الدور من قاعدة البيانات
                 const role = await fetchUserRole(user.uid);
                 if (!role) {
                     showError('❌ المستخدم غير موجود في قاعدة البيانات. تواصل مع المدير.');
@@ -378,7 +387,6 @@
                     return;
                 }
 
-                // محاولة جلب الاسم الحقيقي من قاعدة البيانات
                 const dbName = await fetchUserName(user.uid);
                 const displayName = dbName || user.email.split('@')[0];
 
@@ -423,7 +431,7 @@
         // ---------- ربط الأحداث ----------
         elements.loginForm.addEventListener('submit', handleLogin);
         
-        // السماح بتسجيل الدخول بالضغط على Enter من أي حقل
+        // السماح بتسجيل الدخول بالضغط على Enter
         elements.usernameInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') elements.loginForm.dispatchEvent(new Event('submit'));
         });
@@ -433,7 +441,6 @@
 
         // بدء التحقق من الجلسة
         checkExistingSession();
-          
     </script>
- </body>
-</html> 
+</body>
+</html>
