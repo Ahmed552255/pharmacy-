@@ -109,10 +109,7 @@
             padding: 16px;
             margin-bottom: 12px;
             border: 1px solid var(--border-light);
-            cursor: pointer;
-            transition: all 0.2s;
         }
-        .record-item:hover { background: var(--primary-light); }
         .record-date { font-weight: 700; color: var(--accent); margin-bottom: 8px; }
         .record-diagnosis { margin-bottom: 8px; }
         .drug-list {
@@ -181,62 +178,72 @@
         return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'})[m] || m);
     }
 
-    function showToast(msg, isErr = false) {
-        const t = document.createElement('div');
-        t.className = 'toast';
-        t.style.background = isErr ? '#B23B3B' : '#4A3B2C';
-        t.innerHTML = `<i class="fas ${isErr ? 'fa-exclamation-triangle' : 'fa-check'}"></i> ${msg}`;
-        document.body.appendChild(t);
-        setTimeout(() => t.remove(), 3000);
-    }
-
     async function loadPatientData() {
         const contentArea = document.getElementById('contentArea');
 
         try {
-            // 1. جلب بيانات المريض الأساسية (إن وجد جدول patients)
-            let patientInfo = null;
+            // 1. جلب بيانات المريض من جدول patients إن وجد
             const patientSnap = await get(ref(db, `patients/${patientId}`));
-            if (patientSnap.exists()) {
-                patientInfo = patientSnap.val();
-            } else {
-                // إذا لم يكن هناك جدول patients، نأخذ الاسم من الرابط ونحاول البحث في السجلات
-                patientInfo = { name: patientName };
-            }
+            const patientInfo = patientSnap.exists() ? patientSnap.val() : { name: patientName };
 
-            // 2. جلب السجلات الطبية (medical_records)
-            const recordsQuery = query(ref(db, 'medical_records'), orderByChild('patientId'), equalTo(patientId));
-            const recordsSnap = await get(recordsQuery);
-            const records = [];
-            if (recordsSnap.exists()) {
-                recordsSnap.forEach(child => {
-                    records.push({ id: child.key, ...child.val() });
-                });
-            }
-            // ترتيب تنازلي حسب التاريخ
-            records.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-
-            // 3. جلب الوصفات الطبية (prescriptions) لمزيد من التفاصيل
-            const presQuery = query(ref(db, 'prescriptions'), orderByChild('patientId'), equalTo(patientId));
-            const presSnap = await get(presQuery);
+            // 2. جلب جميع الوصفات الخاصة بهذا المريض
+            const prescriptionsQuery = query(
+                ref(db, 'prescriptions'),
+                orderByChild('patient_id'),
+                equalTo(patientId)
+            );
+            const presSnap = await get(prescriptionsQuery);
             const prescriptions = [];
             if (presSnap.exists()) {
                 presSnap.forEach(child => {
                     prescriptions.push({ id: child.key, ...child.val() });
                 });
             }
+            // ترتيب الوصفات تنازلياً حسب تاريخ الإنشاء
+            prescriptions.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
-            // 4. جلب المواعيد السابقة (appointments)
-            const aptQuery = query(ref(db, 'appointments'), orderByChild('patientId'), equalTo(patientId));
-            const aptSnap = await get(aptQuery);
-            const appointments = [];
-            if (aptSnap.exists()) {
-                aptSnap.forEach(child => {
-                    appointments.push({ id: child.key, ...child.val() });
+            // 3. جلب الأطباء الذين كتبوا هذه الوصفات دفعة واحدة (لتجنب طلبات متكررة)
+            const doctorIds = [...new Set(prescriptions.map(p => p.doctor_id).filter(Boolean))];
+            const doctorPromises = doctorIds.map(docId => get(ref(db, `users/${docId}`)));
+            const doctorSnaps = await Promise.all(doctorPromises);
+            const doctorsMap = {};
+            doctorSnaps.forEach((snap, idx) => {
+                if (snap.exists()) {
+                    doctorsMap[doctorIds[idx]] = snap.val();
+                }
+            });
+
+            // 4. جلب الأدوية لكل وصفة (من prescription_items) - بشكل متوازٍ أيضاً
+            const itemsPromises = prescriptions.map(p => get(ref(db, `prescription_items/${p.id}`)));
+            const itemsSnaps = await Promise.all(itemsPromises);
+            const itemsMap = {}; // prescriptionId -> array of items
+            itemsSnaps.forEach((snap, idx) => {
+                const presId = prescriptions[idx].id;
+                if (snap.exists()) {
+                    itemsMap[presId] = Object.values(snap.val()); // { drug_id, dose, form }
+                } else {
+                    itemsMap[presId] = [];
+                }
+            });
+
+            // 5. (اختياري) جلب أسماء الأدوية من جدول drugs لتحسين العرض
+            const drugIds = [];
+            for (const presId in itemsMap) {
+                itemsMap[presId].forEach(item => {
+                    if (item.drug_id) drugIds.push(item.drug_id);
                 });
             }
+            const uniqueDrugIds = [...new Set(drugIds)];
+            const drugPromises = uniqueDrugIds.map(did => get(ref(db, `drugs/${did}`)));
+            const drugSnaps = await Promise.all(drugPromises);
+            const drugNames = {};
+            drugSnaps.forEach((snap, idx) => {
+                if (snap.exists()) {
+                    drugNames[uniqueDrugIds[idx]] = snap.val().name;
+                }
+            });
 
-            // بناء واجهة المستخدم
+            // 6. بناء واجهة المستخدم
             let html = `
                 <div class="card">
                     <h2><i class="fas fa-user"></i> معلومات المريض</h2>
@@ -248,48 +255,37 @@
                 </div>
 
                 <div class="card">
-                    <h2><i class="fas fa-history"></i> السجل الطبي (${records.length} كشف)</h2>
-                    ${records.length === 0 ? '<div class="empty-state">لا توجد كشوفات سابقة</div>' : ''}
+                    <h2><i class="fas fa-history"></i> السجل الطبي (${prescriptions.length} وصفة)</h2>
+                    ${prescriptions.length === 0 ? '<div class="empty-state">لا توجد وصفات سابقة</div>' : ''}
             `;
 
-            records.forEach(rec => {
-                const date = rec.createdAt ? new Date(rec.createdAt).toLocaleString('ar-EG') : 'غير معروف';
-                const drugs = rec.items || [];
-                const drugList = drugs.map(d => `<li>${escapeHtml(d.drug)} - ${escapeHtml(d.dose)}</li>`).join('');
+            for (const pres of prescriptions) {
+                const date = pres.created_at ? new Date(pres.created_at).toLocaleString('ar-EG') : 'غير معروف';
+                const docData = doctorsMap[pres.doctor_id] || {};
+                const doctorName = docData.name || 'غير معروف';
+                const items = itemsMap[pres.id] || [];
+                const drugList = items.map(item => {
+                    const drugName = drugNames[item.drug_id] || item.drug_id;
+                    return `<li>${escapeHtml(drugName)} - ${escapeHtml(item.dose)}</li>`;
+                }).join('');
 
                 html += `
                     <div class="record-item">
                         <div class="record-date"><i class="far fa-calendar-alt"></i> ${date}</div>
-                        <div class="record-diagnosis"><strong>التشخيص:</strong> ${escapeHtml(rec.diagnosis || 'غير مذكور')}</div>
+                        <div><i class="fas fa-user-md"></i> <strong>الطبيب:</strong> د. ${escapeHtml(doctorName)}</div>
+                        <div class="record-diagnosis"><strong>التشخيص:</strong> ${escapeHtml(pres.diagnosis || 'غير مذكور')}</div>
                         <div><strong>الأدوية:</strong></div>
                         <ul class="drug-list">${drugList || '<li>لا توجد أدوية</li>'}</ul>
-                        ${rec.doctorName ? `<div style="margin-top:8px;"><i class="fas fa-user-md"></i> الطبيب: د. ${escapeHtml(rec.doctorName)}</div>` : ''}
+                        <div style="margin-top: 8px;">
+                            <strong>الحالة:</strong> 
+                            ${pres.status === 'تم الصرف' ? '✅ تم الصرف' : '⏳ لم تصرف بعد'}
+                            ${pres.pharmacist_name ? ` (بواسطة ${escapeHtml(pres.pharmacist_name)})` : ''}
+                        </div>
                     </div>
                 `;
-            });
-
-            html += `</div>`;
-
-            // عرض الوصفات إن وجدت
-            if (prescriptions.length > 0) {
-                html += `<div class="card">
-                    <h2><i class="fas fa-prescription"></i> الوصفات الطبية (${prescriptions.length})</h2>`;
-                prescriptions.forEach(p => {
-                    const date = p.createdAt ? new Date(p.createdAt).toLocaleString('ar-EG') : '';
-                    const drugs = p.items || [];
-                    const drugList = drugs.map(d => `<li>${escapeHtml(d.drug)} - ${escapeHtml(d.dose)}</li>`).join('');
-                    html += `
-                        <div class="record-item">
-                            <div class="record-date">${date}</div>
-                            <div><strong>الطبيب:</strong> د. ${escapeHtml(p.doctorName || '')}</div>
-                            <div><strong>الأدوية:</strong></div>
-                            <ul class="drug-list">${drugList || '<li>لا توجد أدوية</li>'}</ul>
-                            <div><strong>الحالة:</strong> ${p.status === 'تم الصرف' ? '✅ تم الصرف' : '⏳ لم تصرف بعد'}</div>
-                        </div>`;
-                });
-                html += `</div>`;
             }
 
+            html += `</div>`;
             contentArea.innerHTML = html;
 
         } catch (err) {
