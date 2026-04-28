@@ -156,7 +156,6 @@
         }
         .loading { text-align: center; padding: 40px; font-size: 1.2rem; }
 
-        /* أنماط خاصة بالطباعة */
         @media print {
             body::before { display: none; }
             .btn, .top-bar, .toast, .drug-actions, .no-print { display: none !important; }
@@ -169,8 +168,8 @@
 <div class="container" id="appContainer">
     <div class="top-bar no-print">
         <h2><i class="fas fa-prescription"></i> تفاصيل الروشتة</h2>
-        <button class="btn btn-outline" onclick="window.location.href='pharmacy-dashboard.html'">
-            <i class="fas fa-arrow-right"></i> العودة للوحة الرئيسية
+        <button class="btn btn-outline" onclick="window.location.href='pharmacist.html'">
+            <i class="fas fa-arrow-right"></i> العودة للوحة الصيدلي
         </button>
     </div>
     <div id="contentArea">
@@ -225,35 +224,84 @@
     }
 
     async function loadPrescription() {
-        const presRef = ref(db, `prescriptions/${prescriptionId}`);
-        const snap = await get(presRef);
-        if (!snap.exists()) {
+        // 1. جلب بيانات الوصفة الأساسية
+        const presSnap = await get(ref(db, `prescriptions/${prescriptionId}`));
+        if (!presSnap.exists()) {
             document.getElementById('contentArea').innerHTML = '<div class="card"><p>الروشتة غير موجودة.</p></div>';
             return;
         }
-        prescriptionData = { id: prescriptionId, ...snap.val() };
+        prescriptionData = { id: prescriptionId, ...presSnap.val() };
+        
+        // 2. جلب الأدوية من prescription_items
+        const itemsSnap = await get(ref(db, `prescription_items/${prescriptionId}`));
+        let items = [];
+        if (itemsSnap.exists()) {
+            const itemsObj = itemsSnap.val();
+            items = Object.values(itemsObj);   // كائنات { drug_id, dose, form }
+        }
+        prescriptionData._items = items;      // سنخزنها مؤقتاً
+        prescriptionData._itemCount = items.length;
+
+        // 3. جلب معلومات إضافية (الطبيب والمريض) بالتوازي
+        const [doctorInfo, patientInfo] = await Promise.all([
+            get(ref(db, `users/${prescriptionData.doctor_id}`)),
+            prescriptionData.patient_id ? get(ref(db, `patients/${prescriptionData.patient_id}`)) : Promise.resolve(null)
+        ]);
+
+        if (doctorInfo.exists()) {
+            const doc = doctorInfo.val();
+            prescriptionData._doctorName = doc.name || '';
+            prescriptionData._doctorSpecialty = doc.specialty || '';
+        } else {
+            prescriptionData._doctorName = '';
+            prescriptionData._doctorSpecialty = '';
+        }
+
+        let patientName = prescriptionData.patient_name || '';
+        if (!patientName && patientInfo && patientInfo.exists()) {
+            patientName = patientInfo.val().name || '';
+        }
+        prescriptionData._patientName = patientName || 'غير معروف';
+
         renderPrescription();
     }
 
-    function renderPrescription() {
+    async function getDrugNameById(drugId) {
+        // محاولة جلب اسم الدواء من جدول drugs لتحسين العرض (اختياري)
+        try {
+            const snap = await get(ref(db, `drugs/${drugId}`));
+            if (snap.exists()) {
+                return snap.val().name || drugId;
+            }
+        } catch (e) {}
+        return drugId;  // العودة إلى المعرف إذا لم يُعثر على الاسم
+    }
+
+    async function renderPrescription() {
         const p = prescriptionData;
-        const items = p.items || [];
+        const items = p._items || [];
         const statusText = p.status === 'تم الصرف' ? 'تم الصرف' : 'لم تصرف بعد';
         const statusClass = p.status === 'تم الصرف' ? 'status-dispensed' : 'status-pending';
+        const itemCount = p.item_count || p._itemCount || 0;
+
+        // تجهيز جدول الأدوية مع أسماء الأدوية من جدول drugs (بشكل متوازٍ)
+        const drugNamePromises = items.map(item => getDrugNameById(item.drug_id));
+        const drugNames = await Promise.all(drugNamePromises);
 
         let itemsRows = '';
-        items.forEach(item => {
+        items.forEach((item, i) => {
+            const drugName = drugNames[i] || item.drug_id;
             itemsRows += `
                 <tr>
-                    <td>${escapeHtml(item.drug)}</td>
+                    <td>${escapeHtml(drugName)}</td>
                     <td>${escapeHtml(item.form || '')}</td>
                     <td>${escapeHtml(item.dose)}</td>
                     <td class="no-print">
                         <div class="drug-actions">
-                            <button class="btn btn-sm btn-outline search-google-btn" data-drug="${escapeHtml(item.drug)}">
+                            <button class="btn btn-sm btn-outline search-google-btn" data-drug="${escapeHtml(drugName)}">
                                 <i class="fab fa-google"></i> بحث
                             </button>
-                            <button class="btn btn-sm btn-outline search-image-btn" data-drug="${escapeHtml(item.drug)}">
+                            <button class="btn btn-sm btn-outline search-image-btn" data-drug="${escapeHtml(drugName)}">
                                 <i class="fas fa-image"></i> صورة
                             </button>
                         </div>
@@ -262,8 +310,7 @@
             `;
         });
 
-        // زر "ملف المريض" لفتح detail.html
-        const patientFileBtn = (p.patientId) ? `
+        const patientFileBtn = (p.patient_id) ? `
             <button id="patientFileBtn" class="btn btn-outline">
                 <i class="fas fa-folder-open"></i> ملف المريض
             </button>
@@ -274,8 +321,8 @@
             pharmacySectionHtml = `
                 <div class="card" style="background: #E8F5E9;">
                     <h2><i class="fas fa-check-circle"></i> تم الصرف</h2>
-                    <div class="info-row"><i class="fas fa-user-check"></i> <strong>الصيدلي:</strong> ${escapeHtml(p.pharmacistName || '')}</div>
-                    <div class="info-row"><i class="far fa-clock"></i> <strong>تاريخ الصرف:</strong> ${p.dispensedAt ? new Date(p.dispensedAt).toLocaleString('ar-EG') : ''}</div>
+                    <div class="info-row"><i class="fas fa-user-check"></i> <strong>الصيدلي:</strong> ${escapeHtml(p.pharmacist_name || '')}</div>
+                    <div class="info-row"><i class="far fa-clock"></i> <strong>تاريخ الصرف:</strong> ${p.dispensed_at ? new Date(p.dispensed_at).toLocaleString('ar-EG') : ''}</div>
                 </div>
             `;
         } else if (pharmacistInfo) {
@@ -291,11 +338,12 @@
         const html = `
             <div class="card">
                 <h2><i class="fas fa-user"></i> معلومات المريض</h2>
-                <div class="info-row"><i class="fas fa-user"></i> <strong>الاسم:</strong> ${escapeHtml(p.patientName)}</div>
-                <div class="info-row"><i class="fas fa-user-md"></i> <strong>الطبيب:</strong> د. ${escapeHtml(p.doctorName || '')} ${p.doctorSpecialization ? '(' + escapeHtml(p.doctorSpecialization) + ')' : ''}</div>
-                <div class="info-row"><i class="far fa-calendar-alt"></i> <strong>تاريخ الوصفة:</strong> ${p.createdAt ? new Date(p.createdAt).toLocaleString('ar-EG') : ''}</div>
+                <div class="info-row"><i class="fas fa-user"></i> <strong>الاسم:</strong> ${escapeHtml(p._patientName)}</div>
+                <div class="info-row"><i class="fas fa-user-md"></i> <strong>الطبيب:</strong> د. ${escapeHtml(p._doctorName)} ${p._doctorSpecialty ? '(' + escapeHtml(p._doctorSpecialty) + ')' : ''}</div>
+                <div class="info-row"><i class="far fa-calendar-alt"></i> <strong>تاريخ الوصفة:</strong> ${p.created_at ? new Date(p.created_at).toLocaleString('ar-EG') : ''}</div>
                 ${p.diagnosis ? `<div class="info-row"><i class="fas fa-notes-medical"></i> <strong>التشخيص:</strong> ${escapeHtml(p.diagnosis)}</div>` : ''}
                 <div class="info-row"><i class="fas fa-circle"></i> <strong>الحالة:</strong> <span class="status-badge ${statusClass}">${statusText}</span></div>
+                <div class="info-row"><i class="fas fa-cubes"></i> <strong>عدد الأصناف:</strong> ${itemCount}</div>
                 <div class="no-print" style="margin-top: 16px; display: flex; gap: 12px; flex-wrap: wrap;">
                     ${patientFileBtn}
                     <button id="printBtn" class="btn btn-primary"><i class="fas fa-print"></i> طباعة الروشتة</button>
@@ -324,14 +372,13 @@
 
         document.getElementById('contentArea').innerHTML = html;
 
-        // أزرار البحث عن الدواء
+        // أزرار البحث
         document.querySelectorAll('.search-google-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const query = btn.dataset.drug;
                 if (query) window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}`, '_blank');
             });
         });
-
         document.querySelectorAll('.search-image-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const query = btn.dataset.drug;
@@ -343,32 +390,23 @@
         const patientFileBtnEl = document.getElementById('patientFileBtn');
         if (patientFileBtnEl) {
             patientFileBtnEl.addEventListener('click', () => {
-                const params = new URLSearchParams({
-                    patientId: p.patientId || '',
-                    patientName: p.patientName || ''
-                });
-                window.location.href = `detail.html?${params.toString()}`;
+                window.location.href = `detail.html?patientId=${p.patient_id}&patientName=${encodeURIComponent(p._patientName)}`;
             });
         }
 
-        // زر الطباعة
-        const printBtn = document.getElementById('printBtn');
-        if (printBtn) {
-            printBtn.addEventListener('click', () => {
-                window.print();
-            });
-        }
+        // طباعة
+        document.getElementById('printBtn')?.addEventListener('click', () => window.print());
 
-        // زر الصرف
+        // صرف الروشتة
         const dispenseBtn = document.getElementById('dispenseBtn');
         if (dispenseBtn) {
             dispenseBtn.addEventListener('click', async () => {
                 try {
                     await update(ref(db, `prescriptions/${prescriptionId}`), {
                         status: 'تم الصرف',
-                        pharmacistId: currentUser.uid,
-                        pharmacistName: pharmacistInfo.name || 'صيدلي',
-                        dispensedAt: new Date().toISOString()
+                        pharmacist_id: currentUser.uid,
+                        pharmacist_name: pharmacistInfo.name || 'صيدلي',
+                        dispensed_at: new Date().toISOString()
                     });
                     showToast('✅ تم صرف الروشتة بنجاح');
                     loadPrescription();
