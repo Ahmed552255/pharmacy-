@@ -7,18 +7,6 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
 
-// ---------- التحقق من الجلسة أولاً ----------
-const sessionUid = sessionStorage.getItem('userUid');
-const sessionRole = sessionStorage.getItem('userRole');
-const sessionName = sessionStorage.getItem('userName');
-
-// إذا لم توجد جلسة أو الدور ليس ممرضًا، ارجع إلى صفحة الدخول دون تسجيل خروج (فقط توجيه)
-if (!sessionUid || sessionRole !== 'nurse') {
-    sessionStorage.clear();
-    window.location.replace('index.html');
-    throw new Error('جلسة غير صالحة. الرجاء تسجيل الدخول.');
-}
-
 // ---------- دوال التاريخ ----------
 function getLocalDateString() {
     const d = new Date();
@@ -29,8 +17,8 @@ function getLocalDateString() {
 }
 const today = getLocalDateString();
 
-let currentUser = { uid: sessionUid };  // نبدأ بالـ UID من الجلسة
-let nurseInfo = { name: sessionName || 'ممرض' };
+let currentUser = null;               // سيتم تعيينه بعد مصادقة صحيحة
+let nurseInfo = { name: 'ممرض' };
 let assignedDoctorsList = [], currentDoctorId = null;
 let allBookings = [], unsubscribeBookings = null, selectedPatientId = null, currentTab = 'waiting';
 
@@ -62,7 +50,6 @@ const ui = {
 };
 
 ui.appointmentDate.value = today;
-ui.welcomeMessage.textContent = `أهلاً، ${nurseInfo.name}`;
 
 function showToast(msg, isErr = false) {
     const t = document.createElement('div');
@@ -73,49 +60,36 @@ function showToast(msg, isErr = false) {
     setTimeout(() => t.remove(), 3000);
 }
 
-// ---------- تحميل بيانات الممرض (بدون تسجيل خروج قاسي) ----------
+// ---------- تحميل بيانات الممرض والأطباء المرتبطين ----------
 async function loadNurseData(uid) {
     try {
-        const snap = await get(ref(db, `users/${uid}`));
-        if (snap.exists()) {
-            const data = snap.val();
-            // التحقق من الدور لكن لا نسجل خروجًا إذا كان غير متطابق، فقط نعرض تحذيرًا ونستمر بالجلسة الحالية
-            if (data.role && data.role !== 'nurse') {
-                showToast('تحذير: هذا الحساب ليس ممرضًا في قاعدة البيانات، لكنك ستستمر بصلاحيات محدودة.', true);
+        // 1. بيانات الممرضة
+        const nurseSnap = await get(ref(db, `users/${uid}`));
+        if (nurseSnap.exists()) {
+            const data = nurseSnap.val();
+            if (data.role !== 'nurse') {
+                showToast('هذا الحساب ليس ممرضًا.', true);
+                return false;
             }
             nurseInfo = { ...nurseInfo, ...data };
-            ui.welcomeMessage.textContent = `أهلاً، ${nurseInfo.name || sessionName}`;
-        } else {
-            // قد لا يكون السجل موجودًا بعد، نستخدم بيانات الجلسة فقط
-            showToast('لم يتم العثور على سجل مفصل في قاعدة البيانات. بعض الميزات قد لا تعمل.', true);
         }
+        ui.welcomeMessage.textContent = `أهلاً، ${nurseInfo.name || 'ممرض'}`;
 
-        // جلب الأطباء المرتبطين من الجدول الوسيط
+        // 2. الأطباء المرتبطون (من الجدول الوسيط doctor_nurse_links)
         const linksSnap = await get(ref(db, `doctor_nurse_links/${uid}`));
-        let doctorIds = [];
-        if (linksSnap.exists()) {
-            doctorIds = Object.keys(linksSnap.val());
-        } else {
-            // الرجوع إلى assignedDoctors في بيانات الممرض (للتوافق)
-            const nurseData = (await get(ref(db, `users/${uid}`))).val() || {};
-            const assignedDoctors = nurseData.assignedDoctors || {};
-            doctorIds = Object.keys(assignedDoctors);
-        }
-
-        assignedDoctorsList = [];
-        for (const docId of doctorIds) {
-            const docSnap = await get(ref(db, `users/${docId}`));
-            if (docSnap.exists()) {
-                assignedDoctorsList.push({ id: docId, name: docSnap.val().name || 'دكتور' });
-            }
-        }
-
-        if (assignedDoctorsList.length === 0) {
+        const doctorIds = linksSnap.exists() ? Object.keys(linksSnap.val()) : [];
+        if (doctorIds.length === 0) {
             ui.doctorsToolbar.innerHTML = '<div class="empty-state">لا يوجد أطباء مرتبطين بك. تواصل مع المدير.</div>';
             ui.bookingDoctorSelect.innerHTML = '<option value="">لا يوجد أطباء</option>';
-            ui.bookingsBody.innerHTML = '<tr><td colspan="8" class="empty-state">لا يمكن عرض الحجوزات</td></tr>';
             return false;
         }
+
+        // جلب أسماء الأطباء بالتوازي
+        const doctorPromises = doctorIds.map(async (docId) => {
+            const snap = await get(ref(db, `users/${docId}`));
+            return { id: docId, name: snap.exists() ? snap.val().name : 'دكتور' };
+        });
+        assignedDoctorsList = await Promise.all(doctorPromises);
 
         renderDoctorsToolbar();
         ui.bookingDoctorSelect.innerHTML = assignedDoctorsList.map(d => `<option value="${d.id}">د. ${d.name}</option>`).join('');
@@ -153,7 +127,8 @@ function highlightDoctorButton(docId) {
 function loadBookingsForDoctor(doctorId) {
     if (unsubscribeBookings) unsubscribeBookings();
     if (!doctorId) return;
-    const q = query(ref(db, 'appointments'), orderByChild('doctorId'), equalTo(doctorId));
+    // استخدام doctor_id بدلاً من doctorId
+    const q = query(ref(db, 'appointments'), orderByChild('doctor_id'), equalTo(doctorId));
     unsubscribeBookings = onValue(q, (snap) => {
         const bookings = [];
         snap.forEach(child => {
@@ -164,8 +139,6 @@ function loadBookingsForDoctor(doctorId) {
         allBookings = bookings;
         updateTabCounts();
         filterAndRenderByTab();
-    }, (error) => {
-        showToast("فشل تحميل الحجوزات", true);
     });
 }
 
@@ -196,13 +169,12 @@ function renderTable(bookings) {
         const statusClass = {
             'انتظار': 'status-waiting', 'قيد الكشف': 'status-inprogress', 'منتهي': 'status-done', 'ملغي': 'status-cancelled'
         }[b.status] || 'status-waiting';
-        // تم حذف زرار البدء (نقل إلى قيد الكشف) من القائمة
         let actions = currentTab === 'waiting' ? `
             <button class="icon-btn warning" data-id="${b.id}" data-action="edit"><i class="fas fa-edit"></i></button>
             <button class="icon-btn danger" data-id="${b.id}" data-action="cancel"><i class="fas fa-times"></i></button>
         ` : '<span style="opacity:0.5;">—</span>';
         html += `<tr>
-            <td>${idx + 1}</td><td><b>${b.patientName || '-'}</b></td><td>${b.age || '-'}</td><td>${b.phone || '-'}</td>
+            <td>${idx + 1}</td><td><b>${b.patient_name || '-'}</b></td><td>${b.age || '-'}</td><td>${b.phone || '-'}</td>
             <td>${b.date || '-'}</td><td>${b.time || '-'}</td>
             <td><span class="status-badge ${statusClass}">${b.status || 'انتظار'}</span></td>
             <td><div class="action-btns">${actions}</div></td>
@@ -218,16 +190,13 @@ ui.bookingsBody.addEventListener('click', (e) => {
     const action = btn.dataset.action;
     const booking = allBookings.find(b => b.id === id);
     if (!booking) return;
-    // تم حذف التعامل مع action === 'start' نهائيًا
     if (action === 'cancel') updateStatus(id, 'ملغي');
     else if (action === 'edit') openEditModal(booking);
 });
 
 async function updateStatus(id, status) {
-    try {
-        await update(ref(db, `appointments/${id}`), { status });
-        showToast(status === 'قيد الكشف' ? '🩺 بدأ الكشف' : '❌ تم الإلغاء');
-    } catch (e) { showToast('فشل التحديث', true); }
+    await update(ref(db, `appointments/${id}`), { status });
+    showToast(status === 'ملغي' ? '❌ تم الإلغاء' : 'تم التحديث');
 }
 
 function openAddModal() {
@@ -240,13 +209,13 @@ function openAddModal() {
 function openEditModal(booking) {
     ui.modalTitle.innerHTML = '<i class="fas fa-edit"></i> تعديل الحجز';
     ui.editBookingId.value = booking.id;
-    ui.bookingDoctorSelect.value = booking.doctorId || currentDoctorId;
-    ui.patientName.value = booking.patientName || '';
+    ui.bookingDoctorSelect.value = booking.doctor_id || currentDoctorId;
+    ui.patientName.value = booking.patient_name || '';
     ui.patientAge.value = booking.age || '';
     ui.patientPhone.value = booking.phone || '';
     ui.appointmentDate.value = booking.date || today;
     ui.appointmentTime.value = booking.time || '';
-    selectedPatientId = booking.patientId || null;
+    selectedPatientId = booking.patient_id || null;
     ui.modal.style.display = 'flex';
 }
 
@@ -302,7 +271,7 @@ document.addEventListener('click', (e) => {
     if (!ui.patientSearch.contains(e.target) && !ui.searchResults.contains(e.target)) ui.searchResults.style.display = 'none';
 });
 
-// حفظ الحجز
+// حفظ الحجز (باستخدام الحقول الجديدة)
 ui.bookingForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const editId = ui.editBookingId.value;
@@ -316,34 +285,30 @@ ui.bookingForm.addEventListener('submit', async (e) => {
     try {
         const phone = ui.patientPhone.value.trim();
         let patientId = selectedPatientId;
-        if (!patientId && phone) {
+        // إذا لم يكن هناك patient_id، ننشئ مريضًا جديدًا
+        if (!patientId || editId) {
             const newPatientRef = push(ref(db, 'patients'));
             patientId = newPatientRef.key;
             await set(newPatientRef, {
                 name, age: ui.patientAge.value || null, phone,
-                updatedAt: new Date().toISOString()
-            });
-        } else if (phone) {
-            await set(ref(db, `patients/${phone}`), {
-                name, age: ui.patientAge.value || null, phone,
-                updatedAt: new Date().toISOString()
+                created_at: new Date().toISOString()
             });
         }
         const bookingData = {
-            patientName: name,
-            patientId: patientId || phone || null,
+            patient_name: name,
+            patient_id: patientId,
             age: ui.patientAge.value || null,
             phone: phone || null,
-            doctorId: doctorId,
+            doctor_id: doctorId,
             date: date,
             time: time,
-            status: 'انتظار',
-            createdAt: editId ? (await get(ref(db, `appointments/${editId}`))).val()?.createdAt : new Date().toISOString()
+            status: 'انتظار'
         };
         if (editId) {
             await update(ref(db, `appointments/${editId}`), bookingData);
             showToast('✅ تم تعديل الحجز');
         } else {
+            bookingData.created_at = new Date().toISOString();
             await push(ref(db, 'appointments'), bookingData);
             showToast('✅ تم حجز الموعد');
         }
@@ -364,30 +329,38 @@ ui.tabBtns.forEach(btn => btn.addEventListener('click', () => {
     filterAndRenderByTab();
 }));
 
-// ---------- تسجيل الخروج بشكل صحيح ----------
+// ---------- تسجيل الخروج ----------
 ui.logoutBtn.onclick = async () => {
     if (unsubscribeBookings) unsubscribeBookings();
-    try {
-        await signOut(auth);
-    } catch (e) {}
+    try { await signOut(auth); } catch (e) {}
     sessionStorage.clear();
     window.location.href = 'index.html';
 };
 
-// ---------- مراقبة حالة المصادقة (للتأكد من بقاء الجلسة) ----------
-onAuthStateChanged(auth, (user) => {
+// ---------- التحكم بالمصادقة الحية (الحل الجديد) ----------
+onAuthStateChanged(auth, async (user) => {
     if (!user) {
-        // إذا لم يعد هناك مستخدم مصادق عليه، امسح الجلسة وارجع لصفحة الدخول
+        // لا يوجد مستخدم -> توجيه لصفحة الدخول
         sessionStorage.clear();
         window.location.href = 'index.html';
-    } else {
-        // تأكد من أن UID متطابق مع الجلسة، إذا اختلف حدث تلاعب
-        if (user.uid !== sessionUid) {
-            sessionStorage.clear();
-            window.location.href = 'index.html';
+        return;
+    }
+    
+    // مستخدم موجود، تحقق من دوره في قاعدة البيانات
+    const userSnap = await get(ref(db, `users/${user.uid}`));
+    if (userSnap.exists() && userSnap.val().role === 'nurse') {
+        // هو ممرض بالفعل، خزن الجلسة وابدأ
+        sessionStorage.setItem('userUid', user.uid);
+        sessionStorage.setItem('userRole', 'nurse');
+        sessionStorage.setItem('userName', userSnap.val().name || 'ممرض');
+        
+        if (!currentUser) {
+            currentUser = { uid: user.uid };
+            await loadNurseData(user.uid);
         }
+    } else {
+        // ليس ممرضًا (أو لا يوجد سجل)، وجهه إلى الصفحة الرئيسية دون تسجيل خروج
+        sessionStorage.clear();
+        window.location.href = 'index.html';
     }
 });
-
-// بدء التطبيق
-loadNurseData(sessionUid);
