@@ -127,7 +127,6 @@ function highlightDoctorButton(docId) {
 function loadBookingsForDoctor(doctorId) {
     if (unsubscribeBookings) unsubscribeBookings();
     if (!doctorId) return;
-    // استخدام doctor_id بدلاً من doctorId
     const q = query(ref(db, 'appointments'), orderByChild('doctor_id'), equalTo(doctorId));
     unsubscribeBookings = onValue(q, (snap) => {
         const bookings = [];
@@ -271,7 +270,7 @@ document.addEventListener('click', (e) => {
     if (!ui.patientSearch.contains(e.target) && !ui.searchResults.contains(e.target)) ui.searchResults.style.display = 'none';
 });
 
-// حفظ الحجز (باستخدام الحقول الجديدة)
+// حفظ الحجز
 ui.bookingForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const editId = ui.editBookingId.value;
@@ -285,7 +284,6 @@ ui.bookingForm.addEventListener('submit', async (e) => {
     try {
         const phone = ui.patientPhone.value.trim();
         let patientId = selectedPatientId;
-        // إذا لم يكن هناك patient_id، ننشئ مريضًا جديدًا
         if (!patientId || editId) {
             const newPatientRef = push(ref(db, 'patients'));
             patientId = newPatientRef.key;
@@ -337,19 +335,22 @@ ui.logoutBtn.onclick = async () => {
     window.location.href = 'index.html';
 };
 
-// ---------- التحكم بالمصادقة الحية (الحل الجديد) ----------
+// ---------- التحكم بالمصادقة الحية (مع تجربة مستخدم محسّنة) ----------
 onAuthStateChanged(auth, async (user) => {
     if (!user) {
-        // لا يوجد مستخدم -> توجيه لصفحة الدخول
-        sessionStorage.clear();
-        window.location.href = 'index.html';
+        // لا يوجد مستخدم مسجل دخوله حالياً → إشعار ثم توجيه بعد مهلة قصيرة
+        showToast('تم تسجيل الخروج. جاري تحويلك لصفحة الدخول...', false);
+        setTimeout(() => {
+            sessionStorage.clear();
+            window.location.href = 'index.html';
+        }, 2000);
         return;
     }
     
-    // مستخدم موجود، تحقق من دوره في قاعدة البيانات
+    // مستخدم موجود، تحقق من دوره
     const userSnap = await get(ref(db, `users/${user.uid}`));
     if (userSnap.exists() && userSnap.val().role === 'nurse') {
-        // هو ممرض بالفعل، خزن الجلسة وابدأ
+        // هو ممرض بالفعل، نخزّن الجلسة ونحمّل البيانات إذا كانت أول مرة
         sessionStorage.setItem('userUid', user.uid);
         sessionStorage.setItem('userRole', 'nurse');
         sessionStorage.setItem('userName', userSnap.val().name || 'ممرض');
@@ -359,8 +360,11 @@ onAuthStateChanged(auth, async (user) => {
             await loadNurseData(user.uid);
         }
     } else {
-        // ليس ممرضًا (أو لا يوجد سجل)، وجهه إلى الصفحة الرئيسية دون تسجيل خروج
-        sessionStorage.clear();
-        window.location.href = 'index.html';
+        // المستخدم ليس ممرضًا (حدث تغيير في تاب آخر)
+        showToast('تم تغيير المستخدم في نافذة أخرى. جاري إعادة التوجيه...', true);
+        setTimeout(() => {
+            sessionStorage.clear();
+            window.location.href = 'index.html';
+        }, 2500);
     }
 });
