@@ -205,7 +205,8 @@
 <div class="container">
     <div class="top-bar">
         <h2 style="font-size:1.2rem; font-weight:700;"><i class="fas fa-prescription"></i> تفاصيل الروشتة</h2>
-        <button class="btn btn-outline btn-sm" onclick="window.location.href='pharmacist.html'">
+        <!-- الرابط المعدل إلى pharmacy-dashboard.html -->
+        <button class="btn btn-outline btn-sm" onclick="window.location.href='pharmacy-dashboard.html'">
             <i class="fas fa-arrow-right"></i> العودة للوحة الصيدلي
         </button>
     </div>
@@ -293,7 +294,6 @@
         }
         prescriptionData._patientName = patientName || 'غير معروف';
 
-        // جلب أسماء الأدوية (اختياري للتبسيط، قد نعرض المعرف إذا لم يوجد)
         const drugNamePromises = items.map(async (item) => {
             try {
                 const drugSnap = await get(ref(db, `drugs/${item.drug_id}`));
@@ -388,7 +388,6 @@
 
         document.getElementById('contentArea').innerHTML = html;
 
-        // زر ملف المريض
         const patientFileBtnEl = document.getElementById('patientFileBtn');
         if (patientFileBtnEl) {
             patientFileBtnEl.addEventListener('click', () => {
@@ -396,10 +395,8 @@
             });
         }
 
-        // طباعة
         document.getElementById('printBtn')?.addEventListener('click', () => window.print());
 
-        // صرف الروشتة
         const dispenseBtn = document.getElementById('dispenseBtn');
         if (dispenseBtn) {
             dispenseBtn.addEventListener('click', async () => {
@@ -411,9 +408,9 @@
                         dispensed_at: new Date().toISOString()
                     });
                     showToast('✅ تم صرف الروشتة بنجاح، جاري العودة...');
-                    // بعد لحظة نعود للوحة الصيدلي
                     setTimeout(() => {
-                        window.location.href = 'pharmacist.html';
+                        // العودة إلى لوحة الصيدلي (pharmacy-dashboard.html)
+                        window.location.href = 'pharmacy-dashboard.html';
                     }, 800);
                 } catch (err) {
                     showToast('فشل الصرف، حاول مرة أخرى', true);
