@@ -109,6 +109,7 @@
             padding: 16px;
             margin-bottom: 12px;
             border: 1px solid var(--border-light);
+            position: relative;
         }
         .record-date { font-weight: 700; color: var(--accent); margin-bottom: 8px; }
         .record-diagnosis { margin-bottom: 8px; }
@@ -137,8 +138,25 @@
             max-width: 500px;
             margin: 0 auto;
         }
+        .print-btn {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            background: var(--primary-light);
+            border: none;
+            border-radius: 20px;
+            padding: 6px 14px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            font-weight: 600;
+            font-family: 'Cairo', sans-serif;
+            transition: 0.2s;
+        }
+        .print-btn:hover {
+            background: var(--primary);
+        }
         @media print {
-            .btn, .top-bar { display: none; }
+            .btn, .top-bar, .print-btn { display: none; }
             body { background: white; }
         }
     </style>
@@ -169,6 +187,9 @@
     const patientId = urlParams.get('patientId');
     const patientName = urlParams.get('patientName') || 'المريض';
 
+    // خريطة لتخزين بيانات كل وصفة مؤقتاً لاستخدامها في الطباعة
+    const prescriptionCache = {};
+
     if (!patientId) {
         document.getElementById('contentArea').innerHTML = '<div class="card"><p>لا يوجد معرف للمريض.</p></div>';
     }
@@ -178,15 +199,72 @@
         return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'})[m] || m);
     }
 
+    // دالة طباعة وصفة محددة
+    function printPrescription(presId) {
+        const data = prescriptionCache[presId];
+        if (!data) return;
+
+        const { prescription, items, doctorName, drugNames } = data;
+        const patientDisplayName = escapeHtml(patientName || prescription.patient_name || 'المريض');
+        const date = prescription.created_at ? new Date(prescription.created_at).toLocaleString('ar-EG') : 'غير معروف';
+
+        let itemsHtml = '';
+        items.forEach(item => {
+            const drugName = drugNames[item.drug_id] || item.drug_id;
+            itemsHtml += `<li>${escapeHtml(drugName)} - ${escapeHtml(item.dose)}</li>`;
+        });
+
+        const printWindow = window.open('', '_blank', 'width=800,height=600');
+        printWindow.document.write(`
+            <!DOCTYPE html>
+            <html lang="ar" dir="rtl">
+            <head>
+                <meta charset="UTF-8">
+                <title>طباعة الروشتة</title>
+                <style>
+                    body { font-family: 'Cairo', sans-serif; padding: 30px; color: #333; }
+                    .header { text-align: center; margin-bottom: 25px; }
+                    .header h1 { color: #E67E22; }
+                    .info { margin-bottom: 20px; }
+                    .info p { margin: 8px 0; font-size: 1.1rem; }
+                    ul { list-style-type: none; padding: 0; }
+                    ul li { padding: 8px 0; border-bottom: 1px dashed #ccc; }
+                    ul li::before { content: "💊 "; margin-left: 8px; }
+                    @media print { body { padding: 10px; } }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h1>روشتة طبية</h1>
+                    <p style="font-size:1.2rem;">عيادة سُكُون</p>
+                </div>
+                <div class="info">
+                    <p><strong>المريض:</strong> ${patientDisplayName}</p>
+                    <p><strong>الطبيب:</strong> د. ${escapeHtml(doctorName)}</p>
+                    <p><strong>التاريخ:</strong> ${date}</p>
+                    <p><strong>التشخيص:</strong> ${escapeHtml(prescription.diagnosis || 'غير مذكور')}</p>
+                </div>
+                <h3>الأدوية الموصوفة:</h3>
+                <ul>${itemsHtml || '<li>لا توجد أدوية</li>'}</ul>
+                <p style="margin-top:20px;"><strong>الحالة:</strong> ${prescription.status === 'تم الصرف' ? 'تم الصرف' : 'لم تصرف بعد'}</p>
+                <script>
+                    window.onload = function() { window.print(); setTimeout(window.close, 500); };
+                <\/script>
+            </body>
+            </html>
+        `);
+        printWindow.document.close();
+    }
+
     async function loadPatientData() {
         const contentArea = document.getElementById('contentArea');
 
         try {
-            // 1. جلب بيانات المريض من جدول patients إن وجد
+            // 1. جلب بيانات المريض
             const patientSnap = await get(ref(db, `patients/${patientId}`));
             const patientInfo = patientSnap.exists() ? patientSnap.val() : { name: patientName };
 
-            // 2. جلب جميع الوصفات الخاصة بهذا المريض
+            // 2. جلب جميع الوصفات
             const prescriptionsQuery = query(
                 ref(db, 'prescriptions'),
                 orderByChild('patient_id'),
@@ -199,34 +277,27 @@
                     prescriptions.push({ id: child.key, ...child.val() });
                 });
             }
-            // ترتيب الوصفات تنازلياً حسب تاريخ الإنشاء
             prescriptions.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
-            // 3. جلب الأطباء الذين كتبوا هذه الوصفات دفعة واحدة (لتجنب طلبات متكررة)
+            // 3. جلب الأطباء
             const doctorIds = [...new Set(prescriptions.map(p => p.doctor_id).filter(Boolean))];
             const doctorPromises = doctorIds.map(docId => get(ref(db, `users/${docId}`)));
             const doctorSnaps = await Promise.all(doctorPromises);
             const doctorsMap = {};
             doctorSnaps.forEach((snap, idx) => {
-                if (snap.exists()) {
-                    doctorsMap[doctorIds[idx]] = snap.val();
-                }
+                if (snap.exists()) doctorsMap[doctorIds[idx]] = snap.val();
             });
 
-            // 4. جلب الأدوية لكل وصفة (من prescription_items) - بشكل متوازٍ أيضاً
+            // 4. جلب الأدوية لكل وصفة
             const itemsPromises = prescriptions.map(p => get(ref(db, `prescription_items/${p.id}`)));
             const itemsSnaps = await Promise.all(itemsPromises);
-            const itemsMap = {}; // prescriptionId -> array of items
+            const itemsMap = {};
             itemsSnaps.forEach((snap, idx) => {
                 const presId = prescriptions[idx].id;
-                if (snap.exists()) {
-                    itemsMap[presId] = Object.values(snap.val()); // { drug_id, dose, form }
-                } else {
-                    itemsMap[presId] = [];
-                }
+                itemsMap[presId] = snap.exists() ? Object.values(snap.val()) : [];
             });
 
-            // 5. (اختياري) جلب أسماء الأدوية من جدول drugs لتحسين العرض
+            // 5. جلب أسماء الأدوية
             const drugIds = [];
             for (const presId in itemsMap) {
                 itemsMap[presId].forEach(item => {
@@ -238,12 +309,20 @@
             const drugSnaps = await Promise.all(drugPromises);
             const drugNames = {};
             drugSnaps.forEach((snap, idx) => {
-                if (snap.exists()) {
-                    drugNames[uniqueDrugIds[idx]] = snap.val().name;
-                }
+                if (snap.exists()) drugNames[uniqueDrugIds[idx]] = snap.val().name;
             });
 
-            // 6. بناء واجهة المستخدم
+            // 6. تخزين البيانات في الكاش
+            prescriptions.forEach(pres => {
+                prescriptionCache[pres.id] = {
+                    prescription: pres,
+                    items: itemsMap[pres.id] || [],
+                    doctorName: (doctorsMap[pres.doctor_id] || {}).name || 'غير معروف',
+                    drugNames: drugNames
+                };
+            });
+
+            // 7. بناء واجهة المستخدم
             let html = `
                 <div class="card">
                     <h2><i class="fas fa-user"></i> معلومات المريض</h2>
@@ -271,6 +350,7 @@
 
                 html += `
                     <div class="record-item">
+                        <button class="print-btn" data-print-id="${pres.id}"><i class="fas fa-print"></i> طباعة</button>
                         <div class="record-date"><i class="far fa-calendar-alt"></i> ${date}</div>
                         <div><i class="fas fa-user-md"></i> <strong>الطبيب:</strong> د. ${escapeHtml(doctorName)}</div>
                         <div class="record-diagnosis"><strong>التشخيص:</strong> ${escapeHtml(pres.diagnosis || 'غير مذكور')}</div>
@@ -287,6 +367,14 @@
 
             html += `</div>`;
             contentArea.innerHTML = html;
+
+            // ربط أزرار الطباعة
+            document.querySelectorAll('.print-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const presId = this.getAttribute('data-print-id');
+                    printPrescription(presId);
+                });
+            });
 
         } catch (err) {
             console.error('فشل تحميل بيانات المريض:', err);
