@@ -117,7 +117,7 @@ async function syncDrugsFromFirebase() {
             const obj = snap.val();
             drugs = Object.values(obj).map(d => ({
                 ...d,
-                id: d.id || crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random()
+                id: d.id || (crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random())
             }));
         }
         await localDrugDB.saveDrugs(drugs);
@@ -203,7 +203,6 @@ const UI = {
     doseSuggestionsContainer: document.getElementById('doseSuggestionsContainer'),
     applyDoseBtn: document.getElementById('applyDoseBtn'),
     cancelDoseBtn: document.getElementById('cancelDoseBtn'),
-    customDoseBtn: document.getElementById('customDoseBtn'),  // زر الجرعة المخصصة الجديد (سنضيفه في HTML)
     finishBtn: document.getElementById('finishBtn'),
     saveTemplateBtn: document.getElementById('saveTemplateBtn'),
     templatesBtn: document.getElementById('templatesBtn'),
@@ -488,101 +487,23 @@ function updateCurrentPatientUI() {
         return;
     }
     UI.currentPatientCard.style.display = 'flex';
-    UI.currentPatientNameDisplay.textContent = currentAppointment.patientName;
+    UI.currentPatientNameDisplay.textContent = currentAppointment.patientName || currentAppointment.patient_name || 'غير معروف';
     UI.currentPatientAgeDisplay.textContent = `${currentAppointment.age || '--'} سنة`;
 }
 
-// --------------------- ملف المريض (معدل لاستخدام prescriptions و prescription_items) ---------------------
+// --------------------- ملف المريض (الانتقال إلى صفحة السجل المرضى) ---------------------
 UI.patientNameClickable.addEventListener('click', () => {
-    if (!currentAppointment?.patientId) {
-        showToast('لا يوجد معرف للمريض', true);
+    const patientId = currentAppointment?.patientId || currentAppointment?.patient_id;
+    const patientName = currentAppointment?.patientName || currentAppointment?.patient_name || '';
+    if (!patientId) {
+        showToast('المريض غير مسجل برقم هوية', true);
         return;
     }
-    openPatientFile(currentAppointment.patientId, currentAppointment.patientName);
+    // الانتقال إلى صفحة السجل المرضى مع تمرير البيانات عبر الرابط
+    window.location.href = `detail.html?patientId=${patientId}&patientName=${encodeURIComponent(patientName)}`;
 });
 
-async function openPatientFile(patientId, patientName) {
-    const prescriptionsRef = ref(db, 'prescriptions');
-    const patientQuery = query(prescriptionsRef, orderByChild('patient_id'), equalTo(patientId));
-    
-    let prescriptionsList = [];
-    try {
-        const snap = await get(patientQuery);
-        if (snap.exists()) {
-            snap.forEach(child => {
-                prescriptionsList.push({ id: child.key, ...child.val() });
-            });
-        }
-    } catch (err) {
-        showToast('تعذر جلب الملف الطبي', true);
-        return;
-    }
-
-    prescriptionsList.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-
-    const existingModal = document.getElementById('patientFileModal');
-    if (existingModal) existingModal.remove();
-
-    const modal = document.createElement('div');
-    modal.className = 'modal';
-    modal.id = 'patientFileModal';
-    modal.style.display = 'flex';
-    modal.innerHTML = `
-        <div class="modal-content" style="max-width: 700px; max-height: 80vh; overflow-y: auto;">
-            <span class="close-modal" id="closePatientFileModal">&times;</span>
-            <h2>📄 ملف المريض: ${escapeHtml(patientName)}</h2>
-            <div id="patientRecordsContainer"></div>
-        </div>
-    `;
-    document.body.appendChild(modal);
-
-    document.getElementById('closePatientFileModal').addEventListener('click', () => modal.remove());
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) modal.remove();
-    });
-
-    const container = document.getElementById('patientRecordsContainer');
-    if (prescriptionsList.length === 0) {
-        container.innerHTML = '<div class="empty-state">لا توجد كشوفات سابقة</div>';
-        return;
-    }
-
-    const drugsCache = await localDrugDB.getAllDrugs();
-    const drugMap = Object.fromEntries(drugsCache.map(d => [d.id, d]));
-
-    container.innerHTML = '';
-    for (const pres of prescriptionsList) {
-        const date = pres.created_at ? pres.created_at.split('T')[0] : 'غير معروف';
-        let itemsHtml = '';
-        try {
-            const itemsSnap = await get(ref(db, `prescription_items/${pres.id}`));
-            if (itemsSnap.exists()) {
-                const itemsObj = itemsSnap.val();
-                const itemsArr = Object.values(itemsObj);
-                itemsHtml = itemsArr.map(it => {
-                    const drugInfo = drugMap[it.drug_id] || {};
-                    const drugName = drugInfo.name || it.drug_id || 'غير معروف';
-                    return `<li>${escapeHtml(drugName)} - ${escapeHtml(it.dose)}</li>`;
-                }).join('');
-            } else {
-                itemsHtml = '<li>لا توجد أدوية مسجلة</li>';
-            }
-        } catch (e) {
-            itemsHtml = '<li>تعذر تحميل الأدوية</li>';
-        }
-
-        const recordDiv = document.createElement('div');
-        recordDiv.style.cssText = 'border:1px solid #ddd; border-radius:8px; padding:10px; margin-bottom:8px;';
-        recordDiv.innerHTML = `
-            <strong>📅 ${date}</strong>
-            <div style="margin-top:5px;"><b>التشخيص:</b> ${escapeHtml(pres.diagnosis || 'غير مذكور')}</div>
-            <div><b>الأدوية:</b><ul style="margin:5px 0 0 20px;">${itemsHtml}</ul></div>
-        `;
-        container.appendChild(recordDiv);
-    }
-}
-
-// -------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------
 
 function renderPrescriptionItems() {
     if (currentPrescription.length === 0) {
@@ -617,7 +538,7 @@ function renderPrescriptionItems() {
     });
 }
 
-// قائمة وحدات الأشكال الصيدلانية (تمت إضافة فوار، بخاخ، كريم)
+// قائمة وحدات الأشكال الصيدلانية
 function updateUnitLabel() {
     const forms = { 
         tablet: 'قرص', 
@@ -632,7 +553,6 @@ function updateUnitLabel() {
     UI.unitLabel.textContent = forms[UI.drugFormSelect.value] || '';
 }
 
-// إضافة الخيارات الجديدة لـ drugFormSelect بشكل ديناميكي (يُستدعى مرة واحدة)
 function addNewFormOptions() {
     const select = UI.drugFormSelect;
     if (!select) return;
@@ -642,7 +562,6 @@ function addNewFormOptions() {
         { value: 'cream', text: '🧴 كريم' }
     ];
     newOptions.forEach(opt => {
-        // تجنب الإضافة المتكررة
         if (!select.querySelector(`option[value="${opt.value}"]`)) {
             const option = document.createElement('option');
             option.value = opt.value;
@@ -667,7 +586,6 @@ UI.drugSearchInput.addEventListener('input', () => {
         UI.drugSuggestions.style.display = 'none';
         return;
     }
-    // تقليل مدة الديبونس لتصبح 100ms لتسريع ظهور الاقتراحات
     searchTimeout = setTimeout(() => displayDrugSuggestions(term), 100);
 });
 
@@ -743,7 +661,6 @@ function saveDosePreference(drug, form, doseString) {
     localStorage.setItem(key, JSON.stringify(prefs));
 }
 
-// توليد اقتراحات الجرعة بشكل أزرار مباشرة (أسرع وأسهل)
 function generateDoseSuggestions() {
     const quantity = UI.doseNumberInput.value.trim();
     const drug = doseState.drug;
@@ -752,13 +669,11 @@ function generateDoseSuggestions() {
 
     let suggestions = [];
 
-    // الاقتراحات المفضلة من التخزين المحلي
     if (drug) {
         const prefs = loadDosePreferences(drug, form);
         suggestions = prefs.map(p => ({ text: p, isPref: true }));
     }
 
-    // اقتراحات مولدة من الكمية الحالية إن وُجدت
     if (quantity && !isNaN(parseInt(quantity))) {
         const num = parseInt(quantity);
         const base = `${num} ${unit}`;
@@ -776,7 +691,6 @@ function generateDoseSuggestions() {
         });
     }
 
-    // إذا لم تكن هناك اقتراحات، نقدم الجرعات الافتراضية
     if (suggestions.length === 0) {
         const defaultSuggestions = [
             { text: `1 ${unit} يومياً` },
@@ -788,23 +702,19 @@ function generateDoseSuggestions() {
         suggestions = defaultSuggestions.map(s => ({ ...s, isPref: false }));
     }
 
-    // عرض الاقتراحات كأزرار
     UI.doseSuggestionsContainer.innerHTML = suggestions.slice(0, 8).map(s => `
         <button class="dose-chip-btn" data-dose-text="${escapeHtml(s.text)}">
             ${escapeHtml(s.text)} ${s.isPref ? '<i class="fas fa-history" style="opacity:0.6; margin-right:4px;"></i>' : ''}
         </button>
     `).join('');
 
-    // عند الضغط على أي زر جرعة، يتم تطبيقها فوراً
     document.querySelectorAll('.dose-chip-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
             const doseText = btn.dataset.doseText;
-            // تطبيق الجرعة مباشرة
             applyDoseFromSuggestion(doseText);
         });
     });
     
-    // زر "جرعة مخصصة"
     UI.doseSuggestionsContainer.innerHTML += `
         <button id="customDoseTriggerBtn" class="dose-chip-btn" style="background: var(--primary-light);">
             ✏️ جرعة مخصصة
@@ -815,7 +725,6 @@ function generateDoseSuggestions() {
     });
 }
 
-// دوال جديدة لتطبيق الجرعة بسرعة
 async function applyDoseFromSuggestion(doseText) {
     if (!doseState.drug || !doseText) return;
     const formValue = UI.drugFormSelect.value;
@@ -846,21 +755,16 @@ async function applyDoseFromSuggestion(doseText) {
     resetDosePanel();
 }
 
-// إظهار حقل إدخال حر للجرعة المخصصة
 function showCustomDoseInput() {
     const customDose = prompt('أدخل الجرعة كاملة (مثال: 2 قرص بعد الأكل):');
     if (customDose && customDose.trim()) {
-        // يمكن تحسينها لاستخدام applyDoseFromSuggestion
         applyDoseFromSuggestion(customDose.trim());
     }
 }
 
-
 UI.doseNumberInput.addEventListener('input', generateDoseSuggestions);
 UI.drugFormSelect.addEventListener('change', generateDoseSuggestions);
 
-// إلغاء زر `applyDoseBtn` القديم - أصبح غير ضروري لأن الاقتراحات تُطبق مباشرة
-// لكن نتركه لمن يريد استخدامه مع doseNumberInput فقط
 UI.applyDoseBtn.addEventListener('click', async () => {
     const quantity = UI.doseNumberInput.value.trim();
     if (!doseState.drug || !quantity) {
@@ -933,14 +837,14 @@ UI.finishBtn.addEventListener('click', async () => {
         const now = new Date().toISOString();
         const prescriptionId = currentAppointment.id;
         
-        let patientName = currentAppointment.patient_name || '';
+        let patientName = currentAppointment.patient_name || currentAppointment.patientName || '';
         if (!patientName && currentAppointment.patient_id) {
             const patientSnap = await get(ref(db, `patients/${currentAppointment.patient_id}`));
             if (patientSnap.exists()) {
                 patientName = patientSnap.val().name || '';
             }
         }
-        if (!patientName) patientName = currentAppointment.patientName || 'غير معروف';
+        if (!patientName) patientName = 'غير معروف';
 
         const updates = {};
         
@@ -1111,7 +1015,7 @@ UI.logoutBtn.addEventListener('click', async () => {
     await localDrugDB.open();
     await syncDrugsFromFirebase();
     await loadDoctorData(currentUser.uid);
-    addNewFormOptions(); // إضافة الأشكال الصيدلانية الجديدة
+    addNewFormOptions();
     loadSavedSession();
     loadAppointments();
     updateUnitLabel();
