@@ -23,7 +23,7 @@
             --success: #5FA88D;
             --warning: #F4B886;
             --border-light: #F0E0D0;
-            --shadow-sm: 0 6px 12px -4px rgba(230, 126, 34, 0.08);
+            --shadow-sm: 0 6px 12px -4px rgba(230, 126, 34, 0.08 );
             --shadow-md: 0 12px 28px -6px rgba(230, 126, 34, 0.12);
             --radius-card: 24px;
         }
@@ -177,9 +177,9 @@
     import { firebaseConfig } from './firebase-config.js';
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
-    import { getDatabase, ref, get, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-database.js";
+    import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-database.js";
 
-    const app = initializeApp(firebaseConfig);
+    const app = initializeApp(firebaseConfig );
     const auth = getAuth(app);
     const db = getDatabase(app);
 
@@ -261,43 +261,52 @@
 
         try {
             // 1. جلب بيانات المريض
+            let patientInfo = { name: patientName };
             const patientSnap = await get(ref(db, `patients/${patientId}`));
-            const patientInfo = patientSnap.exists() ? patientSnap.val() : { name: patientName };
+            if (patientSnap.exists()) {
+                patientInfo = patientSnap.val();
+            }
 
-            // 2. جلب جميع الوصفات
-            const prescriptionsQuery = query(
-                ref(db, 'prescriptions'),
-                orderByChild('patient_id'),
-                equalTo(patientId)
-            );
-            const presSnap = await get(prescriptionsQuery);
-            const prescriptions = [];
-            if (presSnap.exists()) {
-                presSnap.forEach(child => {
-                    prescriptions.push({ id: child.key, ...child.val() });
+            // 2. جلب كل الروشتات من السحابة وفلترتها محلياً
+            const allPresSnap = await get(ref(db, 'prescriptions'));
+            let patientPrescriptions = [];
+
+            if (allPresSnap.exists()) {
+                allPresSnap.forEach(child => {
+                    const val = child.val();
+                    // الفلترة المحلية: تحويل كلا القيمتين لنص لضمان التطابق التام
+                    if (String(val.patient_id) === String(patientId)) {
+                        patientPrescriptions.push({ id: child.key, ...val });
+                    }
                 });
             }
-            prescriptions.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
-            // 3. جلب الأطباء
-            const doctorIds = [...new Set(prescriptions.map(p => p.doctor_id).filter(Boolean))];
-            const doctorPromises = doctorIds.map(docId => get(ref(db, `users/${docId}`)));
-            const doctorSnaps = await Promise.all(doctorPromises);
+            // الترتيب محلياً من الأحدث للأقدم
+            patientPrescriptions.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+
+            // 3. جلب بيانات الأطباء المرتبطين بهذه الروشتات فقط
+            const doctorIds = [...new Set(patientPrescriptions.map(p => p.doctor_id).filter(Boolean))];
             const doctorsMap = {};
-            doctorSnaps.forEach((snap, idx) => {
-                if (snap.exists()) doctorsMap[doctorIds[idx]] = snap.val();
-            });
+            if (doctorIds.length > 0) {
+                const doctorPromises = doctorIds.map(docId => get(ref(db, `users/${docId}`)));
+                const doctorSnaps = await Promise.all(doctorPromises);
+                doctorSnaps.forEach((snap, idx) => {
+                    if (snap.exists()) doctorsMap[doctorIds[idx]] = snap.val();
+                });
+            }
 
-            // 4. جلب الأدوية لكل وصفة
-            const itemsPromises = prescriptions.map(p => get(ref(db, `prescription_items/${p.id}`)));
-            const itemsSnaps = await Promise.all(itemsPromises);
+            // 4. جلب تفاصيل الأدوية (Items) لكل روشتة
             const itemsMap = {};
-            itemsSnaps.forEach((snap, idx) => {
-                const presId = prescriptions[idx].id;
-                itemsMap[presId] = snap.exists() ? Object.values(snap.val()) : [];
-            });
+            if (patientPrescriptions.length > 0) {
+                const itemsPromises = patientPrescriptions.map(p => get(ref(db, `prescription_items/${p.id}`)));
+                const itemsSnaps = await Promise.all(itemsPromises);
+                itemsSnaps.forEach((snap, idx) => {
+                    const presId = patientPrescriptions[idx].id;
+                    itemsMap[presId] = snap.exists() ? Object.values(snap.val()) : [];
+                });
+            }
 
-            // 5. جلب أسماء الأدوية
+            // 5. جلب أسماء الأدوية من السحابة
             const drugIds = [];
             for (const presId in itemsMap) {
                 itemsMap[presId].forEach(item => {
@@ -305,15 +314,17 @@
                 });
             }
             const uniqueDrugIds = [...new Set(drugIds)];
-            const drugPromises = uniqueDrugIds.map(did => get(ref(db, `drugs/${did}`)));
-            const drugSnaps = await Promise.all(drugPromises);
             const drugNames = {};
-            drugSnaps.forEach((snap, idx) => {
-                if (snap.exists()) drugNames[uniqueDrugIds[idx]] = snap.val().name;
-            });
+            if (uniqueDrugIds.length > 0) {
+                const drugPromises = uniqueDrugIds.map(did => get(ref(db, `drugs/${did}`)));
+                const drugSnaps = await Promise.all(drugPromises);
+                drugSnaps.forEach((snap, idx) => {
+                    if (snap.exists()) drugNames[uniqueDrugIds[idx]] = snap.val().name;
+                });
+            }
 
-            // 6. تخزين البيانات في الكاش
-            prescriptions.forEach(pres => {
+            // 6. تخزين البيانات في الكاش للطباعة
+            patientPrescriptions.forEach(pres => {
                 prescriptionCache[pres.id] = {
                     prescription: pres,
                     items: itemsMap[pres.id] || [],
@@ -334,11 +345,11 @@
                 </div>
 
                 <div class="card">
-                    <h2><i class="fas fa-history"></i> السجل الطبي (${prescriptions.length} وصفة)</h2>
-                    ${prescriptions.length === 0 ? '<div class="empty-state">لا توجد وصفات سابقة</div>' : ''}
+                    <h2><i class="fas fa-history"></i> السجل الطبي (${patientPrescriptions.length} وصفة)</h2>
+                    ${patientPrescriptions.length === 0 ? '<div class="empty-state">لا توجد وصفات سابقة لهذا المريض</div>' : ''}
             `;
 
-            for (const pres of prescriptions) {
+            for (const pres of patientPrescriptions) {
                 const date = pres.created_at ? new Date(pres.created_at).toLocaleString('ar-EG') : 'غير معروف';
                 const docData = doctorsMap[pres.doctor_id] || {};
                 const doctorName = docData.name || 'غير معروف';
@@ -378,7 +389,7 @@
 
         } catch (err) {
             console.error('فشل تحميل بيانات المريض:', err);
-            contentArea.innerHTML = '<div class="card"><p>حدث خطأ أثناء تحميل الملف.</p></div>';
+            contentArea.innerHTML = '<div class="card"><p style="color: red;">حدث خطأ أثناء تحميل الملف. يرجى المحاولة مرة أخرى.</p></div>';
         }
     }
 
