@@ -335,10 +335,10 @@ ui.logoutBtn.onclick = async () => {
     window.location.href = 'index.html';
 };
 
-// ---------- التحكم بالمصادقة الحية (مع تجربة مستخدم محسّنة) ----------
+// ---------- التحكم بالمصادقة الحية (مع الحل النهائي لتعدد النوافذ) ----------
 onAuthStateChanged(auth, async (user) => {
     if (!user) {
-        // لا يوجد مستخدم مسجل دخوله حالياً → إشعار ثم توجيه بعد مهلة قصيرة
+        // لا يوجد مستخدم مسجل دخوله حالياً → تنبيه وتوجيه
         showToast('تم تسجيل الخروج. جاري تحويلك لصفحة الدخول...', false);
         setTimeout(() => {
             sessionStorage.clear();
@@ -347,10 +347,17 @@ onAuthStateChanged(auth, async (user) => {
         return;
     }
     
-    // مستخدم موجود، تحقق من دوره
+    // 🌟 السطر السحري: إذا كان الممرض قد سجل دخوله بالفعل في هذه النافذة،
+    // وتم تغيير المستخدم بسبب نافذة أخرى، نتجاهل التغيير ونحافظ على الجلسة الحالية
+    if (currentUser && currentUser.uid !== user.uid) {
+        console.warn('تم تسجيل الدخول بحساب مختلف في نافذة أخرى، سيتم الاحتفاظ بجلسة الممرض الحالية.');
+        return;
+    }
+    
+    // مستخدم جديد (أو نفس المستخدم)، تحقق من دوره
     const userSnap = await get(ref(db, `users/${user.uid}`));
     if (userSnap.exists() && userSnap.val().role === 'nurse') {
-        // هو ممرض بالفعل، نخزّن الجلسة ونحمّل البيانات إذا كانت أول مرة
+        // هو ممرض، نخزّن الجلسة ونحمّل البيانات إذا كانت أول مرة
         sessionStorage.setItem('userUid', user.uid);
         sessionStorage.setItem('userRole', 'nurse');
         sessionStorage.setItem('userName', userSnap.val().name || 'ممرض');
@@ -360,8 +367,8 @@ onAuthStateChanged(auth, async (user) => {
             await loadNurseData(user.uid);
         }
     } else {
-        // المستخدم ليس ممرضًا (حدث تغيير في تاب آخر)
-        showToast('تم تغيير المستخدم في نافذة أخرى. جاري إعادة التوجيه...', true);
+        // المستخدم ليس ممرضًا (ولم يكن هناك ممرض فعلي في النافذة)
+        showToast('هذا الحساب ليس له صلاحيات ممرض. جاري إعادة التوجيه...', true);
         setTimeout(() => {
             sessionStorage.clear();
             window.location.href = 'index.html';
