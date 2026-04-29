@@ -503,6 +503,7 @@
     }
 
     async function loadItemsCountForPrescriptions(prescriptionIds) {
+        // جلب عدد العناصر لكل وصفة من prescription_items
         const updates = {};
         const promises = prescriptionIds.map(async (pid) => {
             const snap = await get(ref(db, `prescription_items/${pid}`));
@@ -531,7 +532,7 @@
                 prescriptions.push({ id: child.key, ...child.val() });
             });
             allPrescriptions = prescriptions;
-            await refreshItemsCount();
+            await refreshItemsCount();           // تحديث عدد الأصناف بعد تحميل الوصفات
             renderNewPrescriptionsStrip();
             renderDoctorsList();
             if (selectedDoctorId) {
@@ -568,7 +569,7 @@
         UI.newCardsContainer.innerHTML = html;
         document.querySelectorAll('.new-card').forEach(card => {
             card.addEventListener('click', () => {
-                openPrescriptionInSamePage(card.dataset.prescriptionId);
+                openPrescriptionInNewPage(card.dataset.prescriptionId);
             });
         });
     }
@@ -608,20 +609,20 @@
         document.querySelectorAll('.rx-item-card').forEach(card => {
             card.addEventListener('click', (e) => {
                 if (e.target.closest('.open-details-btn')) return;
-                openPrescriptionInSamePage(card.dataset.prescriptionId);
+                openPrescriptionInNewPage(card.dataset.prescriptionId);
             });
         });
         document.querySelectorAll('.open-details-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                openPrescriptionInSamePage(btn.dataset.prescriptionId);
+                openPrescriptionInNewPage(btn.dataset.prescriptionId);
             });
         });
     }
 
-    function openPrescriptionInSamePage(prescriptionId) {
+    function openPrescriptionInNewPage(prescriptionId) {
         if (!prescriptionId) return;
-        window.location.href = `prescription-details.html?id=${prescriptionId}`;
+        window.open(`prescription-details.html?id=${prescriptionId}`, '_blank');
     }
 
     // ---------- تحميل بيانات المرضى ----------
@@ -659,6 +660,7 @@
         UI.searchResultsContainer.innerHTML = '<div class="empty-state"><i class="fas fa-spinner fa-pulse"></i> جاري البحث...</div>';
         const lowerTerm = term.toLowerCase();
 
+        // 1. البحث في patientsMap المحلي
         let results = [];
         for (const [id, p] of Object.entries(patientsMap)) {
             const nameMatch = p.name && p.name.toLowerCase().includes(lowerTerm);
@@ -668,6 +670,7 @@
             }
         }
 
+        // 2. إذا لم توجد نتائج، ابحث في prescriptions
         if (results.length === 0) {
             const seen = new Set();
             for (const p of allPrescriptions) {
@@ -761,8 +764,8 @@
         }
         loadDoctors();
         loadAllPrescriptions();
-        loadPatients();
+        loadPatients();                    // تحميل المرضى واستماع دائم
     });
 </script>
 </body>
-</html>
+</html> خد عدل الكود ده وبدال ما لما ييجى يفتح ملف تفاصيل الروشته فى نافزه جديده لا تتفتح فى نفس النافزه بس بتغيير الملف زى باقى الاكواد عادى  وخليه يقرى من قاعده بينات عادى وكده لانه بيقول لم يتم تحميل البينات
