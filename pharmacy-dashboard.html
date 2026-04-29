@@ -503,7 +503,6 @@
     }
 
     async function loadItemsCountForPrescriptions(prescriptionIds) {
-        // جلب عدد العناصر لكل وصفة من prescription_items
         const updates = {};
         const promises = prescriptionIds.map(async (pid) => {
             const snap = await get(ref(db, `prescription_items/${pid}`));
@@ -532,7 +531,7 @@
                 prescriptions.push({ id: child.key, ...child.val() });
             });
             allPrescriptions = prescriptions;
-            await refreshItemsCount();           // تحديث عدد الأصناف بعد تحميل الوصفات
+            await refreshItemsCount();
             renderNewPrescriptionsStrip();
             renderDoctorsList();
             if (selectedDoctorId) {
@@ -569,7 +568,7 @@
         UI.newCardsContainer.innerHTML = html;
         document.querySelectorAll('.new-card').forEach(card => {
             card.addEventListener('click', () => {
-                openPrescriptionInNewPage(card.dataset.prescriptionId);
+                openPrescriptionInSamePage(card.dataset.prescriptionId);
             });
         });
     }
@@ -609,20 +608,20 @@
         document.querySelectorAll('.rx-item-card').forEach(card => {
             card.addEventListener('click', (e) => {
                 if (e.target.closest('.open-details-btn')) return;
-                openPrescriptionInNewPage(card.dataset.prescriptionId);
+                openPrescriptionInSamePage(card.dataset.prescriptionId);
             });
         });
         document.querySelectorAll('.open-details-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                openPrescriptionInNewPage(btn.dataset.prescriptionId);
+                openPrescriptionInSamePage(btn.dataset.prescriptionId);
             });
         });
     }
 
-    function openPrescriptionInNewPage(prescriptionId) {
+    function openPrescriptionInSamePage(prescriptionId) {
         if (!prescriptionId) return;
-        window.open(`prescription-details.html?id=${prescriptionId}`, '_blank');
+        window.location.href = `prescription-details.html?id=${prescriptionId}`;
     }
 
     // ---------- تحميل بيانات المرضى ----------
@@ -660,7 +659,6 @@
         UI.searchResultsContainer.innerHTML = '<div class="empty-state"><i class="fas fa-spinner fa-pulse"></i> جاري البحث...</div>';
         const lowerTerm = term.toLowerCase();
 
-        // 1. البحث في patientsMap المحلي
         let results = [];
         for (const [id, p] of Object.entries(patientsMap)) {
             const nameMatch = p.name && p.name.toLowerCase().includes(lowerTerm);
@@ -670,7 +668,6 @@
             }
         }
 
-        // 2. إذا لم توجد نتائج، ابحث في prescriptions
         if (results.length === 0) {
             const seen = new Set();
             for (const p of allPrescriptions) {
@@ -764,7 +761,7 @@
         }
         loadDoctors();
         loadAllPrescriptions();
-        loadPatients();                    // تحميل المرضى واستماع دائم
+        loadPatients();
     });
 </script>
 </body>
