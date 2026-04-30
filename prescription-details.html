@@ -205,7 +205,6 @@
 <div class="container">
     <div class="top-bar">
         <h2 style="font-size:1.2rem; font-weight:700;"><i class="fas fa-prescription"></i> تفاصيل الروشتة</h2>
-        <!-- الرابط المعدل إلى pharmacy-dashboard.html -->
         <button class="btn btn-outline btn-sm" onclick="window.location.href='pharmacy-dashboard.html'">
             <i class="fas fa-arrow-right"></i> العودة للوحة الصيدلي
         </button>
@@ -271,18 +270,26 @@
         }
         prescriptionData = { id: prescriptionId, ...presSnap.val() };
 
-        const [itemsSnap, doctorSnap, patientSnap] = await Promise.all([
-            get(ref(db, `prescription_items/${prescriptionId}`)),
-            get(ref(db, `users/${prescriptionData.doctor_id}`)),
-            prescriptionData.patient_id ? get(ref(db, `patients/${prescriptionData.patient_id}`)) : Promise.resolve(null)
-        ]);
-
+        // 1. جلب عناصر الوصفة (إما من prescription_items أو من template_items)
+        let itemsSnap = await get(ref(db, `prescription_items/${prescriptionId}`));
         let items = [];
         if (itemsSnap.exists()) {
             items = Object.values(itemsSnap.val());
         }
-        prescriptionData._items = items;
-        prescriptionData._itemCount = items.length;
+
+        // لو مفيش عناصر مباشرة ولكن الروشتة مرتبطة بقالب → نجيب عناصر القالب
+        if (items.length === 0 && prescriptionData.template_id) {
+            const templateItemsSnap = await get(ref(db, `template_items/${prescriptionData.template_id}`));
+            if (templateItemsSnap.exists()) {
+                items = Object.values(templateItemsSnap.val());
+            }
+        }
+
+        // 2. بيانات الطبيب والمريض
+        const [doctorSnap, patientSnap] = await Promise.all([
+            get(ref(db, `users/${prescriptionData.doctor_id}`)),
+            prescriptionData.patient_id ? get(ref(db, `patients/${prescriptionData.patient_id}`)) : Promise.resolve(null)
+        ]);
 
         const doctorData = doctorSnap.exists() ? doctorSnap.val() : {};
         prescriptionData._doctorName = doctorData.name || '';
@@ -294,15 +301,19 @@
         }
         prescriptionData._patientName = patientName || 'غير معروف';
 
+        // 3. أسماء الأدوية (اختياري، لتحسين العرض)
         const drugNamePromises = items.map(async (item) => {
             try {
+                if (!item.drug_id) return 'غير معروف';
                 const drugSnap = await get(ref(db, `drugs/${item.drug_id}`));
                 return drugSnap.exists() ? drugSnap.val().name : item.drug_id;
             } catch (e) {
                 return item.drug_id;
             }
         });
+        prescriptionData._items = items;
         prescriptionData._drugNames = await Promise.all(drugNamePromises);
+        prescriptionData._itemCount = items.length;
 
         renderPrescription();
     }
@@ -316,16 +327,17 @@
         const itemCount = p._itemCount || 0;
 
         let itemsRows = '';
-        items.forEach((item, i) => {
-            const drugName = drugNames[i] || item.drug_id;
-            itemsRows += `
+        if (items.length > 0) {
+            items.forEach((item, i) => {
+                const drugName = drugNames[i] || item.drug_id || '—';
+                itemsRows += `
                 <tr>
                     <td>${escapeHtml(drugName)}</td>
                     <td>${escapeHtml(item.form || '—')}</td>
                     <td>${escapeHtml(item.dose)}</td>
-                </tr>
-            `;
-        });
+                </tr>`;
+            });
+        }
 
         const patientFileBtn = (p.patient_id) ? `
             <button id="patientFileBtn" class="btn btn-outline btn-sm"><i class="fas fa-folder-open"></i> ملف المريض</button>
@@ -334,7 +346,7 @@
         let pharmacySectionHtml = '';
         if (p.status === 'تم الصرف') {
             pharmacySectionHtml = `
-                <div class="card" style="background: #E8F5E9; border-left: 4px solid var(--success);">
+                <div class="card" style="background: #E8F5E9; border-right: 4px solid var(--success);">
                     <h2><i class="fas fa-check-circle" style="color:var(--success);"></i> تم الصرف</h2>
                     <div class="info-row"><i class="fas fa-user-check"></i> <strong>الصيدلي:</strong> ${escapeHtml(p.pharmacist_name || '')}</div>
                     <div class="info-row"><i class="far fa-clock"></i> <strong>تاريخ الصرف:</strong> ${p.dispensed_at ? new Date(p.dispensed_at).toLocaleString('ar-EG') : ''}</div>
@@ -367,7 +379,7 @@
 
             <div class="card">
                 <h2><i class="fas fa-pills"></i> الأدوية الموصوفة</h2>
-                ${items.length === 0 ? '<p>لا توجد أدوية.</p>' : `
+                ${items.length === 0 ? '<p>لا توجد أدوية مسجلة.</p>' : `
                 <div style="overflow-x: auto;">
                 <table class="drug-table">
                     <thead>
@@ -409,7 +421,6 @@
                     });
                     showToast('✅ تم صرف الروشتة بنجاح، جاري العودة...');
                     setTimeout(() => {
-                        // العودة إلى لوحة الصيدلي (pharmacy-dashboard.html)
                         window.location.href = 'pharmacy-dashboard.html';
                     }, 800);
                 } catch (err) {
