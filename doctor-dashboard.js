@@ -15,7 +15,7 @@ import {
     equalTo
 } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-database.js";
 
-// ---------- استيراد إدارة الأدوية المحلية ----------
+// ---------- استيراد إدارة الأدوية المحلية (الإصدار الذكي) ----------
 import { LocalDrugManager } from './local-drug-manager.js';
 
 // ---------- تهيئة Firebase ----------
@@ -23,8 +23,8 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
 
-// ---------- تهيئة قاعدة البيانات المحلية ----------
-const localDrugDB = new LocalDrugManager();
+// ---------- تهيئة قاعدة البيانات المحلية الذكية ----------
+const localDrugDB = new LocalDrugManager(db, 'drugs');
 
 // ---------- عناصر واجهة المستخدم ----------
 const UI = {
@@ -136,108 +136,10 @@ function getPatientName(apt) {
     return apt.patient_name || apt.patientName || 'غير معروف';
 }
 
-// ---------- مزامنة الأدوية من Firebase إلى المحلي ----------
-async function syncDrugsFromFirebase() {
-    try {
-        const snap = await get(ref(db, 'drugs'));
-        let drugs = [];
-        if (snap.exists()) {
-            const obj = snap.val();
-            drugs = Object.values(obj).map(d => ({
-                ...d,
-                id: d.id || (crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random())
-            }));
-        }
-        await localDrugDB.saveDrugs(drugs);
-        console.log(`✅ تمت مزامنة ${drugs.length} دواء مع المحلي`);
-        return drugs;
-    } catch (err) {
-        console.warn('تعذر الاتصال بـ Firebase، استخدام البيانات المحلية فقط');
-        return await localDrugDB.getAllDrugs();
-    }
-}
-
-// ---------- إضافة دواء جديد إلى السحابة والمحلي ----------
-async function addNewDrugToBoth(name, form, strength = '', price = null) {
-    const drugId = crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random();
-    const newDrug = {
-        id: drugId,
-        name: name.trim(),
-        genericName: '',
-        form: form,
-        strength: strength,
-        price: price,
-        frequency: 1,
-        createdAt: new Date().toISOString()
-    };
-    
-    await localDrugDB.addOrUpdateDrug(newDrug);
-    
-    try {
-        await set(ref(db, `drugs/${drugId}`), newDrug);
-    } catch (e) {
-        console.warn('تعذر حفظ الدواء في السحابة حالياً');
-    }
-    
-    return newDrug;
-}
-
-// ---------- تحديث عداد استخدام الدواء ----------
-async function incrementDrugUsage(drugName, form) {
-    const drugs = await localDrugDB.getAllDrugs();
-    const drug = drugs.find(d => d.name === drugName && d.form === form);
-    if (drug) {
-        drug.frequency = (drug.frequency || 0) + 1;
-        await localDrugDB.addOrUpdateDrug(drug);
-        try {
-            await update(ref(db, `drugs/${drug.id}`), { frequency: drug.frequency });
-        } catch (e) {}
-    } else {
-        await addNewDrugToBoth(drugName, form);
-    }
-}
-
-// ---------- تخزين واسترجاع جلسة الكشف الحالية ----------
-function saveCurrentSession() {
-    if (currentAppointment && currentPrescription.length > 0) {
-        const session = {
-            appointment: currentAppointment,
-            prescription: currentPrescription,
-            diagnosis: UI.diagnosisTextarea.value,
-            loadedTemplateId: loadedTemplateId
-        };
-        localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(session));
-    }
-}
-
-function loadSavedSession() {
-    const saved = localStorage.getItem(SESSION_STORAGE_KEY);
-    if (saved) {
-        try {
-            const session = JSON.parse(saved);
-            if (session.appointment && session.prescription) {
-                currentAppointment = session.appointment;
-                currentPrescription = session.prescription;
-                UI.diagnosisTextarea.value = session.diagnosis || '';
-                loadedTemplateId = session.loadedTemplateId || null;
-                updateCurrentPatientUI();
-                UI.emptyPrescriptionMsg.style.display = 'none';
-                UI.prescriptionContent.style.display = 'block';
-                renderPrescriptionItems();
-                return true;
-            }
-        } catch (e) {
-            console.warn('تعذر استرجاع الجلسة المحفوظة');
-        }
-    }
-    return false;
-}
-
-// ---------- البحث المحلي السريع ----------
+// ---------- دوال الأدوية (باستخدام المدير الذكي) ----------
 async function searchDrugsLocal(term, selectedForm = null) {
     if (!term || term.length < 1) return [];
-    const lowerTerm = term.toLowerCase().trim();
-    let drugs = await localDrugDB.searchDrugs(lowerTerm, selectedForm);
+    let drugs = await localDrugDB.searchDrugs(term.toLowerCase().trim(), selectedForm);
     
     drugs = drugs.map(d => ({
         ...d,
@@ -251,6 +153,32 @@ async function searchDrugsLocal(term, selectedForm = null) {
     });
     
     return drugs.slice(0, 15);
+}
+
+async function addNewDrugToBoth(name, form, strength = '', price = null) {
+    const drugId = crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random();
+    const newDrug = {
+        id: drugId,
+        name: name.trim(),
+        genericName: '',
+        form: form,
+        strength: strength,
+        price: price,
+        frequency: 1,
+        createdAt: new Date().toISOString()
+    };
+    await localDrugDB.addNewDrug(newDrug);
+    return newDrug;
+}
+
+async function incrementDrugUsage(drugName, form) {
+    const drugs = await localDrugDB.getAllDrugs();
+    const drug = drugs.find(d => d.name === drugName && d.form === form);
+    if (drug) {
+        await localDrugDB.incrementDrugUsage(drug.id);
+    } else {
+        await addNewDrugToBoth(drugName, form);
+    }
 }
 
 // ---------- عرض الاقتراحات مع خيار إضافة دواء جديد ----------
@@ -300,6 +228,42 @@ async function addNewDrugFromSearch(name) {
     prepareDosePanel();
     showToast(`تمت إضافة "${name}" إلى قائمة الأدوية`);
     UI.drugSuggestions.style.display = 'none';
+}
+
+// ---------- تخزين واسترجاع جلسة الكشف الحالية ----------
+function saveCurrentSession() {
+    if (currentAppointment && currentPrescription.length > 0) {
+        const session = {
+            appointment: currentAppointment,
+            prescription: currentPrescription,
+            diagnosis: UI.diagnosisTextarea.value,
+            loadedTemplateId: loadedTemplateId
+        };
+        localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(session));
+    }
+}
+
+function loadSavedSession() {
+    const saved = localStorage.getItem(SESSION_STORAGE_KEY);
+    if (saved) {
+        try {
+            const session = JSON.parse(saved);
+            if (session.appointment && session.prescription) {
+                currentAppointment = session.appointment;
+                currentPrescription = session.prescription;
+                UI.diagnosisTextarea.value = session.diagnosis || '';
+                loadedTemplateId = session.loadedTemplateId || null;
+                updateCurrentPatientUI();
+                UI.emptyPrescriptionMsg.style.display = 'none';
+                UI.prescriptionContent.style.display = 'block';
+                renderPrescriptionItems();
+                return true;
+            }
+        } catch (e) {
+            console.warn('تعذر استرجاع الجلسة المحفوظة');
+        }
+    }
+    return false;
 }
 
 // ---------- تحميل بيانات الطبيب ----------
@@ -402,7 +366,7 @@ async function selectPatientFromQueue(appointmentId) {
     currentAppointment = apt;
     currentPrescription = [];
     UI.diagnosisTextarea.value = '';
-    loadedTemplateId = null;  // إعادة تعيين القالب
+    loadedTemplateId = null;
     updateCurrentPatientUI();
     UI.emptyPrescriptionMsg.style.display = 'none';
     UI.prescriptionContent.style.display = 'block';
@@ -461,7 +425,6 @@ function renderPrescriptionItems() {
         </div>
     `).join('');
 
-    // مستمع حدث الحذف
     document.querySelectorAll('[data-action="remove"]').forEach(btn => {
         btn.addEventListener('click', () => {
             const index = parseInt(btn.dataset.index);
@@ -471,7 +434,6 @@ function renderPrescriptionItems() {
         });
     });
 
-    // مستمع حدث التعديل
     document.querySelectorAll('[data-action="edit"]').forEach(btn => {
         btn.addEventListener('click', () => {
             const index = parseInt(btn.dataset.index);
@@ -668,8 +630,6 @@ async function applyDoseFromSuggestion(doseText) {
     const formValue = UI.drugFormSelect.value;
     const formText = UI.drugFormSelect.options[UI.drugFormSelect.selectedIndex].text;
 
-    let finalDose = doseText;
-
     if (!doseState.drug_id) {
         const newDrug = await addNewDrugToBoth(doseState.drug, formValue);
         doseState.drug_id = newDrug.id;
@@ -679,7 +639,7 @@ async function applyDoseFromSuggestion(doseText) {
         drug_id: doseState.drug_id,
         drug: doseState.drug,
         form: formText,
-        dose: finalDose
+        dose: doseText
     });
 
     await incrementDrugUsage(doseState.drug, formValue);
@@ -758,7 +718,7 @@ UI.diagnosisTextarea.addEventListener('input', () => {
     saveCurrentSession();
 });
 
-// ---------- إنهاء الكشف (مع حفظ بمعرف القالب عند الحاجة) ----------
+// ---------- إنهاء الكشف ----------
 UI.finishBtn.addEventListener('click', async () => {
     if (!currentAppointment) {
         showToast('لا يوجد مريض حالي', true);
@@ -783,7 +743,6 @@ UI.finishBtn.addEventListener('click', async () => {
 
         const updates = {};
         
-        // إنشاء كائن الوصفة مع أو بدون قالب
         const prescriptionData = {
             patient_id: currentAppointment.patient_id || currentAppointment.patientId || '',
             patient_name: patientName,
@@ -797,12 +756,9 @@ UI.finishBtn.addEventListener('click', async () => {
             item_count: currentPrescription.length
         };
 
-        // إذا كان هناك قالب محمّل نستخدم معرفه ولا نكرر الأدوية
         if (loadedTemplateId) {
             prescriptionData.template_id = loadedTemplateId;
-            // لا حاجة لـ prescription_items لأن الأدوية موجودة في القالب
         } else {
-            // وصفة مخصصة، نحفظ الأصناف
             currentPrescription.forEach((item, index) => {
                 updates[`prescription_items/${prescriptionId}/item_${index}`] = {
                     drug_id: item.drug_id,
@@ -813,7 +769,6 @@ UI.finishBtn.addEventListener('click', async () => {
         }
 
         updates[`prescriptions/${prescriptionId}`] = prescriptionData;
-        
         updates[`appointments/${currentAppointment.id}/status`] = 'منتهي';
         
         await update(ref(db), updates);
@@ -833,7 +788,7 @@ UI.finishBtn.addEventListener('click', async () => {
     }
 });
 
-// ---------- القوالب (تحميل وحفظ) ----------
+// ---------- القوالب ----------
 UI.templatesBtn.addEventListener('click', async () => {
     try {
         const templatesRef = ref(db, `prescription_templates/${currentUser.uid}`);
@@ -898,7 +853,6 @@ UI.saveTemplateBtn.addEventListener('click', () => {
     UI.templateNameInput.focus();
 });
 
-// دالة الحفظ كقالب جديد (دائماً)
 async function saveAsNewTemplate(name) {
     const templateId = push(ref(db, `prescription_templates/${currentUser.uid}`)).key;
     const templateData = {
@@ -927,7 +881,6 @@ async function saveAsNewTemplate(name) {
     }
 }
 
-// زر "حفظ كجديد" ينشئ قالباً جديداً دوماً
 UI.saveAsNewTemplateBtn.addEventListener('click', async () => {
     const name = UI.templateNameInput.value.trim();
     if (!name) {
@@ -938,7 +891,6 @@ UI.saveAsNewTemplateBtn.addEventListener('click', async () => {
     UI.saveTemplateModal.style.display = 'none';
 });
 
-// زر "تحديث المحدد" أصبح ينشئ قالباً جديداً أيضاً (مع إعلام المستخدم)
 if (UI.overwriteTemplateBtn) {
     UI.overwriteTemplateBtn.addEventListener('click', async () => {
         const name = UI.templateNameInput.value.trim();
@@ -946,7 +898,6 @@ if (UI.overwriteTemplateBtn) {
             showToast('الرجاء إدخال اسم للقالب', true);
             return;
         }
-        // حفظ كقالب جديد تماماً مع تنبيه
         await saveAsNewTemplate(name);
         showToast('تم إنشاء قالب جديد مع الاحتفاظ بالقديم');
         UI.saveTemplateModal.style.display = 'none';
@@ -991,8 +942,7 @@ UI.logoutBtn.addEventListener('click', async () => {
 // ---------- بدء التشغيل ----------
 (async function init() {
     UI.welcomeMessage.textContent = `د. ${currentUser.name}`;
-    await localDrugDB.open();
-    await syncDrugsFromFirebase();
+    await localDrugDB.open();                  // يفتح IndexedDB ويقوم بأول مزامنة سحابية بصمت
     await loadDoctorData(currentUser.uid);
     addNewFormOptions();
     loadSavedSession();
