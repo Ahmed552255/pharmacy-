@@ -102,7 +102,7 @@ let doseState = {
     timing: 'any'
 };
 let currentQueueTab = 'waiting';
-let loadedTemplateId = null; // لتتبع القالب المُحمّل لتحديثه لاحقاً
+let loadedTemplateId = null; // لتتبع القالب المُحمّل
 
 // ---------- مفتاح التخزين المحلي لجلسة الكشف الحالية ----------
 const SESSION_STORAGE_KEY = 'currentDoctorSession';
@@ -129,6 +129,11 @@ function showToast(msg, isErr = false) {
 function escapeHtml(str) {
     if (!str) return '';
     return String(str).replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'})[m] || m);
+}
+
+/** استخراج اسم المريض بشكل موحد */
+function getPatientName(apt) {
+    return apt.patient_name || apt.patientName || 'غير معروف';
 }
 
 // ---------- مزامنة الأدوية من Firebase إلى المحلي ----------
@@ -198,7 +203,8 @@ function saveCurrentSession() {
         const session = {
             appointment: currentAppointment,
             prescription: currentPrescription,
-            diagnosis: UI.diagnosisTextarea.value
+            diagnosis: UI.diagnosisTextarea.value,
+            loadedTemplateId: loadedTemplateId
         };
         localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(session));
     }
@@ -213,6 +219,7 @@ function loadSavedSession() {
                 currentAppointment = session.appointment;
                 currentPrescription = session.prescription;
                 UI.diagnosisTextarea.value = session.diagnosis || '';
+                loadedTemplateId = session.loadedTemplateId || null;
                 updateCurrentPatientUI();
                 UI.emptyPrescriptionMsg.style.display = 'none';
                 UI.prescriptionContent.style.display = 'block';
@@ -368,12 +375,14 @@ function renderQueueModalList() {
         return;
     }
 
-    UI.queueModalList.innerHTML = filtered.map(apt => `
+    UI.queueModalList.innerHTML = filtered.map(apt => {
+        const name = getPatientName(apt);
+        return `
         <div class="queue-item-modal" data-id="${apt.id}">
-            <b>${escapeHtml(apt.patientName || apt.patient_name)}</b> - ${apt.time} - ${apt.age || '--'} سنة
+            <b>${escapeHtml(name)}</b> - ${apt.time} - ${apt.age || '--'} سنة
             ${apt.status === 'منتهي' ? '<span style="color:green;">✓ تم</span>' : ''}
-        </div>
-    `).join('');
+        </div>`;
+    }).join('');
 
     document.querySelectorAll('.queue-item-modal').forEach(el => {
         el.addEventListener('click', () => selectPatientFromQueue(el.dataset.id));
@@ -393,6 +402,7 @@ async function selectPatientFromQueue(appointmentId) {
     currentAppointment = apt;
     currentPrescription = [];
     UI.diagnosisTextarea.value = '';
+    loadedTemplateId = null;  // إعادة تعيين القالب
     updateCurrentPatientUI();
     UI.emptyPrescriptionMsg.style.display = 'none';
     UI.prescriptionContent.style.display = 'block';
@@ -407,14 +417,14 @@ function updateCurrentPatientUI() {
         return;
     }
     UI.currentPatientCard.style.display = 'flex';
-    UI.currentPatientNameDisplay.textContent = currentAppointment.patientName || currentAppointment.patient_name || 'غير معروف';
+    UI.currentPatientNameDisplay.textContent = getPatientName(currentAppointment);
     UI.currentPatientAgeDisplay.textContent = `${currentAppointment.age || '--'} سنة`;
 }
 
 // --------------------- ملف المريض ---------------------
 UI.patientNameClickable.addEventListener('click', () => {
     const patientId = currentAppointment?.patientId || currentAppointment?.patient_id;
-    const patientName = currentAppointment?.patientName || currentAppointment?.patient_name || '';
+    const patientName = currentAppointment ? getPatientName(currentAppointment) : '';
     if (!patientId) {
         showToast('المريض غير مسجل برقم هوية', true);
         return;
@@ -467,13 +477,11 @@ function renderPrescriptionItems() {
             const index = parseInt(btn.dataset.index);
             const item = currentPrescription[index];
             if (item) {
-                // تحميل بيانات الدواء في لوحة الإضافة
                 doseState.drug = item.drug;
                 doseState.form = item.form;
                 UI.drugSearchInput.value = item.drug;
                 UI.drugFormSelect.value = item.form;
                 prepareDosePanel();
-                // إزالة العنصر القديم بعد التعديل
                 currentPrescription.splice(index, 1);
                 renderPrescriptionItems();
                 saveCurrentSession();
@@ -739,6 +747,7 @@ UI.clearPrescriptionBtn.addEventListener('click', () => {
     if (currentPrescription.length === 0) return;
     if (confirm('هل أنت متأكد من مسح جميع الأدوية من الوصفة؟')) {
         currentPrescription = [];
+        loadedTemplateId = null;
         renderPrescriptionItems();
         saveCurrentSession();
         showToast('تم مسح الوصفة');
@@ -749,7 +758,7 @@ UI.diagnosisTextarea.addEventListener('input', () => {
     saveCurrentSession();
 });
 
-// ---------- إنهاء الكشف ----------
+// ---------- إنهاء الكشف (مع حفظ بمعرف القالب عند الحاجة) ----------
 UI.finishBtn.addEventListener('click', async () => {
     if (!currentAppointment) {
         showToast('لا يوجد مريض حالي', true);
@@ -764,18 +773,18 @@ UI.finishBtn.addEventListener('click', async () => {
         const now = new Date().toISOString();
         const prescriptionId = currentAppointment.id;
         
-        let patientName = currentAppointment.patient_name || currentAppointment.patientName || '';
-        if (!patientName && currentAppointment.patient_id) {
+        let patientName = getPatientName(currentAppointment);
+        if (patientName === 'غير معروف' && currentAppointment.patient_id) {
             const patientSnap = await get(ref(db, `patients/${currentAppointment.patient_id}`));
             if (patientSnap.exists()) {
-                patientName = patientSnap.val().name || '';
+                patientName = patientSnap.val().name || patientName;
             }
         }
-        if (!patientName) patientName = 'غير معروف';
 
         const updates = {};
         
-        updates[`prescriptions/${prescriptionId}`] = {
+        // إنشاء كائن الوصفة مع أو بدون قالب
+        const prescriptionData = {
             patient_id: currentAppointment.patient_id || currentAppointment.patientId || '',
             patient_name: patientName,
             doctor_id: currentUser.uid,
@@ -787,14 +796,23 @@ UI.finishBtn.addEventListener('click', async () => {
             dispensed_at: '',
             item_count: currentPrescription.length
         };
-        
-        currentPrescription.forEach((item, index) => {
-            updates[`prescription_items/${prescriptionId}/item_${index}`] = {
-                drug_id: item.drug_id,
-                dose: item.dose,
-                form: item.form
-            };
-        });
+
+        // إذا كان هناك قالب محمّل نستخدم معرفه ولا نكرر الأدوية
+        if (loadedTemplateId) {
+            prescriptionData.template_id = loadedTemplateId;
+            // لا حاجة لـ prescription_items لأن الأدوية موجودة في القالب
+        } else {
+            // وصفة مخصصة، نحفظ الأصناف
+            currentPrescription.forEach((item, index) => {
+                updates[`prescription_items/${prescriptionId}/item_${index}`] = {
+                    drug_id: item.drug_id,
+                    dose: item.dose,
+                    form: item.form
+                };
+            });
+        }
+
+        updates[`prescriptions/${prescriptionId}`] = prescriptionData;
         
         updates[`appointments/${currentAppointment.id}/status`] = 'منتهي';
         
@@ -803,6 +821,7 @@ UI.finishBtn.addEventListener('click', async () => {
         showToast('✅ تم إنهاء الكشف وحفظ الروشتة بنجاح');
         currentAppointment = null;
         currentPrescription = [];
+        loadedTemplateId = null;
         UI.currentPatientCard.style.display = 'none';
         UI.emptyPrescriptionMsg.style.display = 'block';
         UI.prescriptionContent.style.display = 'none';
@@ -814,7 +833,7 @@ UI.finishBtn.addEventListener('click', async () => {
     }
 });
 
-// ---------- القوالب ----------
+// ---------- القوالب (تحميل وحفظ) ----------
 UI.templatesBtn.addEventListener('click', async () => {
     try {
         const templatesRef = ref(db, `prescription_templates/${currentUser.uid}`);
@@ -851,7 +870,7 @@ UI.templatesBtn.addEventListener('click', async () => {
                         });
                     }
                     if (t.diagnosis) UI.diagnosisTextarea.value = t.diagnosis;
-                    loadedTemplateId = id; // حفظ id لاستخدامه في التحديث
+                    loadedTemplateId = id;
                     renderPrescriptionItems();
                     saveCurrentSession();
                     UI.templatesModal.style.display = 'none';
@@ -879,28 +898,7 @@ UI.saveTemplateBtn.addEventListener('click', () => {
     UI.templateNameInput.focus();
 });
 
-// حفظ كجديد
-UI.saveAsNewTemplateBtn.addEventListener('click', async () => {
-    const name = UI.templateNameInput.value.trim();
-    if (!name) {
-        showToast('الرجاء إدخال اسم للقالب', true);
-        return;
-    }
-    await saveAsNewTemplate(name);
-    UI.saveTemplateModal.style.display = 'none';
-});
-
-// تحديث القالب الحالي
-UI.overwriteTemplateBtn.addEventListener('click', async () => {
-    if (!loadedTemplateId) {
-        showToast('لم يتم تحميل قالب. استخدم "حفظ كجديد" لحفظ قالب جديد.', true);
-        return;
-    }
-    const name = UI.templateNameInput.value.trim();
-    await overwriteTemplate(loadedTemplateId, name);
-    UI.saveTemplateModal.style.display = 'none';
-});
-
+// دالة الحفظ كقالب جديد (دائماً)
 async function saveAsNewTemplate(name) {
     const templateId = push(ref(db, `prescription_templates/${currentUser.uid}`)).key;
     const templateData = {
@@ -929,32 +927,30 @@ async function saveAsNewTemplate(name) {
     }
 }
 
-async function overwriteTemplate(templateId, name) {
-    const templateData = {
-        name: name,
-        diagnosis: UI.diagnosisTextarea.value.trim(),
-        updated_at: new Date().toISOString(),
-        itemCount: currentPrescription.length
-    };
-    const updates = {};
-    updates[`prescription_templates/${currentUser.uid}/${templateId}`] = templateData;
-    // مسح العناصر القديمة وإعادة كتابتها
-    updates[`template_items/${templateId}`] = null;
-    
-    currentPrescription.forEach((item, idx) => {
-        updates[`template_items/${templateId}/item_${idx}`] = {
-            drug_id: item.drug_id,
-            dose: item.dose,
-            form: item.form
-        };
-    });
-    
-    try {
-        await update(ref(db), updates);
-        showToast('✅ تم تحديث القالب بنجاح');
-    } catch (err) {
-        showToast('فشل تحديث القالب', true);
+// زر "حفظ كجديد" ينشئ قالباً جديداً دوماً
+UI.saveAsNewTemplateBtn.addEventListener('click', async () => {
+    const name = UI.templateNameInput.value.trim();
+    if (!name) {
+        showToast('الرجاء إدخال اسم للقالب', true);
+        return;
     }
+    await saveAsNewTemplate(name);
+    UI.saveTemplateModal.style.display = 'none';
+});
+
+// زر "تحديث المحدد" أصبح ينشئ قالباً جديداً أيضاً (مع إعلام المستخدم)
+if (UI.overwriteTemplateBtn) {
+    UI.overwriteTemplateBtn.addEventListener('click', async () => {
+        const name = UI.templateNameInput.value.trim();
+        if (!name) {
+            showToast('الرجاء إدخال اسم للقالب', true);
+            return;
+        }
+        // حفظ كقالب جديد تماماً مع تنبيه
+        await saveAsNewTemplate(name);
+        showToast('تم إنشاء قالب جديد مع الاحتفاظ بالقديم');
+        UI.saveTemplateModal.style.display = 'none';
+    });
 }
 
 // ---------- إدارة المودالات ----------
