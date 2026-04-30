@@ -41,6 +41,17 @@ const UI = {
     searchResultsContainer: document.getElementById('searchResultsContainer')
 };
 
+// ---------- دوال مساعدة ----------
+function getLocalDateString() {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+const today = getLocalDateString();
+
 function showToast(msg, isErr = false) {
     const old = document.querySelector('.toast');
     if (old) old.remove();
@@ -199,7 +210,16 @@ function renderPrescriptionsForDoctor() {
         return;
     }
     const tabStatus = currentDoctorTab;
-    const filtered = allPrescriptions.filter(p => p.doctor_id === selectedDoctorId && p.status === tabStatus);
+    let filtered = allPrescriptions.filter(p => p.doctor_id === selectedDoctorId && p.status === tabStatus);
+
+    // 🆕 فلترة إضافية للوصفات المصروفة لتشمل تاريخ اليوم فقط
+    if (tabStatus === 'تم الصرف') {
+        filtered = filtered.filter(p => {
+            if (!p.dispensed_at) return false;
+            return p.dispensed_at.startsWith(today);
+        });
+    }
+
     if (filtered.length === 0) {
         UI.prescriptionsListContainer.innerHTML =
             `<div class="empty-state"><i class="fas fa-prescription"></i>لا توجد روشتات ${tabStatus === 'لم تصرف بعد' ? 'جديدة' : 'مصروفة'}</div>`;
