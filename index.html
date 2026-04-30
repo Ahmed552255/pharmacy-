@@ -18,7 +18,7 @@
             --text-sec: #6B8E8E;
             --danger: #E57373;
             --success: #5FA88D;
-            --shadow: 0 12px 28px rgba(58, 128, 128, 0.12);
+            --shadow: 0 12px 28px rgba(58, 128, 128, 0.12 );
             --border-light: rgba(122, 197, 197, 0.2);
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -99,7 +99,8 @@
         }
         .input-group input {
             width: 100%;
-            padding: 1rem 3.5rem 1rem 1.5rem;
+            /* تم تعديل الـ padding لمنع تداخل النص مع أيقونة العين في اليسار */
+            padding: 1rem 3.5rem 1rem 3.5rem; 
             background: var(--white);
             border: 1.5px solid rgba(122, 197, 197, 0.25);
             border-radius: 20px;
@@ -164,6 +165,7 @@
             opacity: 0;
             transition: opacity 0.25s;
             border: 1px solid rgba(229, 115, 115, 0.15);
+            margin-bottom: 1rem;
         }
         .error-message.show { opacity: 1; }
         .toast-notification {
@@ -219,22 +221,19 @@
         </header>
         <form id="loginForm">
             <div class="input-group">
-                <!-- أيقونة SVG للبريد بدلاً من feather -->
                 <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
                     <polyline points="22,6 12,13 2,6"></polyline>
                 </svg>
-                <input type="text" id="username" placeholder="البريد الإلكتروني" required autocomplete="email">
+                <input type="email" id="username" placeholder="البريد الإلكتروني" required autocomplete="email">
             </div>
             <div class="input-group">
-                <!-- أيقونة SVG للقفل -->
                 <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
                     <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
                 </svg>
                 <input type="password" id="password" placeholder="كلمة المرور" required autocomplete="current-password">
                 <button type="button" class="password-toggle" id="togglePasswordBtn" title="إظهار/إخفاء كلمة المرور">
-                    <!-- أيقونة العين (تتغير بالجافاسكريبت) -->
                     <svg id="eyeIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                         <circle cx="12" cy="12" r="3"></circle>
@@ -247,21 +246,15 @@
     </main>
 
     <script type="module">
-        // استيراد الإعدادات
+        // تم تعديل إصدار Firebase إلى الإصدار المستقر 10.8.1
         import { firebaseConfig } from './firebase-config.js';
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
-        import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-database.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
-        const app = initializeApp(firebaseConfig);
+        const app = initializeApp(firebaseConfig );
         const auth = getAuth(app);
         const db = getDatabase(app);
-
-        // بيانات المدير الثابتة (للتجربة)
-        const ADMIN_CREDENTIALS = {
-            email: "admin@sokoon.com",
-            password: "Admin@2024Secure"
-        };
 
         // عناصر DOM
         const elements = {
@@ -276,6 +269,10 @@
 
         // ---------- دوال مساعدة ----------
         const showError = (msg) => {
+            if (!msg) {
+                elements.errorMessage.classList.remove('show');
+                return;
+            }
             elements.errorMessage.textContent = msg;
             elements.errorMessage.classList.add('show');
             setTimeout(() => elements.errorMessage.classList.remove('show'), 5000);
@@ -295,7 +292,7 @@
             elements.loginButton.innerHTML = loading ? '<span class="spinner"></span> جاري التحقق...' : 'تسجيل الدخول';
         };
 
-        // ---------- أيقونة العين (مضمنة) ----------
+        // ---------- أيقونة العين ----------
         const eyeOpenSVG = `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>`;
         const eyeOffSVG = `<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>`;
 
@@ -311,39 +308,30 @@
             }
         });
 
-        // ---------- جلب دور المستخدم والاسم ----------
-        const fetchUserRole = async (uid) => {
-            const snap = await get(ref(db, `users/${uid}`));
-            if (snap.exists()) {
-                return snap.val().role || 'doctor';
+        // ---------- جلب بيانات المستخدم ----------
+        const fetchUserData = async (uid) => {
+            try {
+                const snap = await get(ref(db, `users/${uid}`));
+                if (snap.exists()) {
+                    return snap.val();
+                }
+                return null;
+            } catch (error) {
+                console.error("Error fetching user data:", error);
+                return null;
             }
-            return null;
         };
 
-        const fetchUserName = async (uid) => {
-            const snap = await get(ref(db, `users/${uid}`));
-            if (snap.exists()) {
-                return snap.val().name || null;
-            }
-            return null;
-        };
-
-        // ---------- تخزين الجلسة والتوجيه ----------
-        const storeSessionAndRedirect = (userData) => {
-            sessionStorage.setItem('userRole', userData.role);
-            sessionStorage.setItem('userEmail', userData.email);
-            sessionStorage.setItem('userName', userData.name);
-            sessionStorage.setItem('userUid', userData.uid);
-            
-            showToast(`مرحباً ${userData.name}!`, true);
-
+        // ---------- التوجيه بناءً على الصلاحية ----------
+        const redirectUser = (role, name) => {
+            showToast(`مرحباً ${name}!`, true);
             const pages = {
                 admin: 'admin-panel.html',
                 doctor: 'doctor-dashboard.html',
                 nurse: 'nurse-dashboard.html',
                 pharmacist: 'pharmacy-dashboard.html'
             };
-            const redirect = pages[userData.role] || 'dashboard.html';
+            const redirect = pages[role] || 'dashboard.html';
             
             setTimeout(() => {
                 window.location.href = redirect;
@@ -364,44 +352,30 @@
             setLoading(true);
             showError('');
 
-            // 1. مدير محلي (اختباري)
-            if (email === ADMIN_CREDENTIALS.email && pwd === ADMIN_CREDENTIALS.password) {
-                storeSessionAndRedirect({
-                    uid: 'admin-local',
-                    email: email,
-                    name: 'مدير النظام',
-                    role: 'admin'
-                });
-                return;
-            }
-
-            // 2. تسجيل الدخول عبر Firebase Auth
             try {
                 const userCredential = await signInWithEmailAndPassword(auth, email, pwd);
                 const user = userCredential.user;
                 
-                const role = await fetchUserRole(user.uid);
-                if (!role) {
-                    showError('❌ المستخدم غير موجود في قاعدة البيانات. تواصل مع المدير.');
+                const userData = await fetchUserData(user.uid);
+                
+                if (!userData || !userData.role) {
+                    showError('❌ المستخدم غير موجود في قاعدة البيانات أو لا يملك صلاحيات.');
                     setLoading(false);
                     return;
                 }
 
-                const dbName = await fetchUserName(user.uid);
-                const displayName = dbName || user.email.split('@')[0];
+                const displayName = userData.name || user.email.split('@')[0];
+                
+                // حفظ البيانات في الجلسة (اختياري، لأن Firebase يحفظ الجلسة تلقائياً)
+                sessionStorage.setItem('userRole', userData.role);
+                sessionStorage.setItem('userName', displayName);
 
-                storeSessionAndRedirect({
-                    uid: user.uid,
-                    email: user.email,
-                    name: displayName,
-                    role: role
-                });
+                redirectUser(userData.role, displayName);
 
             } catch (err) {
                 console.error("Login error:", err);
                 let msg = 'بيانات الدخول غير صحيحة';
-                if (err.code === 'auth/user-not-found') msg = '❌ البريد الإلكتروني غير مسجل';
-                else if (err.code === 'auth/wrong-password') msg = '❌ كلمة مرور غير صحيحة';
+                if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') msg = '❌ البريد الإلكتروني أو كلمة المرور غير صحيحة';
                 else if (err.code === 'auth/too-many-requests') msg = '⚠️ تم تعطيل الحساب مؤقتاً، حاول لاحقاً';
                 else if (err.code === 'auth/network-request-failed') msg = '⚠️ مشكلة في الاتصال بالإنترنت';
                 showError(msg);
@@ -409,38 +383,29 @@
             }
         };
 
-        // ---------- التحقق من وجود جلسة سابقة ----------
-        const checkExistingSession = () => {
-            const role = sessionStorage.getItem('userRole');
-            const name = sessionStorage.getItem('userName');
-            if (role && name) {
-                const pages = {
-                    admin: 'admin-panel.html',
-                    doctor: 'doctor-dashboard.html',
-                    nurse: 'nurse-dashboard.html',
-                    pharmacist: 'pharmacy-dashboard.html'
-                };
-                const redirect = pages[role] || 'dashboard.html';
-                showToast(`أهلاً بعودتك ${name}!`, true);
-                setTimeout(() => {
-                    window.location.href = redirect;
-                }, 1200);
+        // ---------- التحقق من وجود جلسة سابقة عبر Firebase ----------
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                // إذا كان المستخدم مسجل دخول بالفعل، نجلبه ونوجهه
+                const role = sessionStorage.getItem('userRole');
+                const name = sessionStorage.getItem('userName');
+                
+                if (role && name) {
+                    redirectUser(role, name);
+                } else {
+                    // إذا لم تكن البيانات في sessionStorage، نجلبها من قاعدة البيانات
+                    const userData = await fetchUserData(user.uid);
+                    if (userData) {
+                        sessionStorage.setItem('userRole', userData.role);
+                        sessionStorage.setItem('userName', userData.name);
+                        redirectUser(userData.role, userData.name);
+                    }
+                }
             }
-        };
+        });
 
         // ---------- ربط الأحداث ----------
         elements.loginForm.addEventListener('submit', handleLogin);
-        
-        // السماح بتسجيل الدخول بالضغط على Enter
-        elements.usernameInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') elements.loginForm.dispatchEvent(new Event('submit'));
-        });
-        elements.passwordInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') elements.loginForm.dispatchEvent(new Event('submit'));
-        });
-
-        // بدء التحقق من الجلسة
-        checkExistingSession();
     </script>
 </body>
 </html>
