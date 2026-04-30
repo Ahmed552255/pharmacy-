@@ -7,7 +7,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* ----- ألوان برتقالية هادئة (مشمش / كراميل) ----- */
         :root {
             --primary: #F8C471;
             --primary-light: #FDEBD0;
@@ -45,6 +44,23 @@
             z-index: -1;
         }
         .container { max-width: 1400px; margin: 0 auto; }
+
+        /* شاشة تحميل التحقق من الصلاحية */
+        #authCheckLoader {
+            position: fixed;
+            inset: 0;
+            background: rgba(255,248,240,0.95);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            font-size: 1.4rem;
+            color: var(--accent);
+            flex-direction: column;
+            gap: 16px;
+        }
+        #authCheckLoader i { font-size: 3rem; }
 
         .app-header {
             display: flex;
@@ -340,7 +356,14 @@
     </style>
 </head>
 <body>
-<div class="container">
+
+<!-- شاشة التحقق من المسؤول -->
+<div id="authCheckLoader">
+    <i class="fas fa-spinner fa-pulse"></i>
+    <span>جارٍ التحقق من الصلاحية...</span>
+</div>
+
+<div class="container" style="display: none;">
     <header class="app-header">
         <div class="logo">
             <h2><i class="fas fa-spa" style="color:var(--primary); margin-left:8px;"></i>سُكُون · الإدارة</h2>
@@ -370,13 +393,21 @@
         </div>
         <div class="modal-body">
             <div style="display: flex; gap: 16px; align-items: center; margin-bottom: 24px;">
-                <div id="detailAvatarArea">
-                    <div style="width:70px; height:70px; background: var(--primary-light); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:2rem; color: var(--accent);"><i class="fas fa-user"></i></div>
+                <div id="detailAvatar">
+                    <div style="width:70px; height:70px; background: var(--primary-light); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:2rem; color: var(--accent);">
+                        <i id="detailAvatarIcon" class="fas fa-user"></i>
+                    </div>
                 </div>
-                <div><h2 id="detailName">الاسم</h2><span id="detailRoleSpan"></span></div>
+                <div>
+                    <h2 id="detailName">الاسم</h2>
+                    <span id="detailRoleSpan"></span>
+                </div>
             </div>
             <div style="margin-bottom: 20px;"><i class="fas fa-envelope"></i> <span id="detailEmail"></span></div>
-            <div><i class="fas fa-phone"></i> <span id="detailPhone"></span></div>
+            <div style="margin-bottom: 8px;"><i class="fas fa-phone"></i> <span id="detailPhone"></span></div>
+            <div id="detailSpecialtyRow" style="margin-bottom: 8px; display: none;">
+                <i class="fas fa-stethoscope"></i> <span id="detailSpecialty"></span>
+            </div>
             <div style="margin: 20px 0;"><i class="fas fa-id-card"></i> UID: <span id="detailUid"></span></div>
             <div><i class="fas fa-circle"></i> الحالة: <span id="detailStatusSpan"></span></div>
             <div id="detailAssignedDoctorsSection" style="display:none; margin-top: 20px; background: #FEF5EC; padding: 14px; border-radius: 24px;">
@@ -390,7 +421,6 @@
                 <button id="blockModalBtn" class="btn" style="background:#E57373; color:white;">🔒 حظر</button>
                 <button id="unblockModalBtn" class="btn" style="background:#5FA88D; color:white;">🔓 إلغاء حظر</button>
                 <button id="editModalBtn" class="btn btn-primary">✏️ تعديل</button>
-                <button id="deleteModalBtn" class="btn" style="background:#6c757d; color:white;">🗑️ حذف</button>
             </div>
         </div>
     </div>
@@ -452,9 +482,9 @@
 
 <script type="module">
     import { firebaseConfig } from './firebase-config.js';
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
-    import { getDatabase, ref, onValue, set, update, remove, get } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-database.js";
-    import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+    import { getDatabase, ref, onValue, set, update, remove, get } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
@@ -464,11 +494,10 @@
 
     const API_KEY = firebaseConfig.apiKey;
     const SIGN_UP_URL = `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${API_KEY}`;
-    const DELETE_ACCOUNT_URL = `https://identitytoolkit.googleapis.com/v1/accounts:delete?key=${API_KEY}`;
 
     let allUsers = [];
     let doctorsList = [];
-    let linksMap = {};                 // nurse_id -> { doctor_id: true }
+    let linksMap = {};
     let currentEditId = null;
     let currentViewId = null;
     let unsubscribeUsers = null;
@@ -495,7 +524,6 @@
         const arr = [];
         doctorsList = [];
         
-        // بناء قائمة المستخدمين وإضافة الروابط الخاصة بالممرضات
         allUsers.forEach(user => {
             const u = { ...user };
             if (u.role === 'nurse') {
@@ -515,20 +543,17 @@
         if (unsubscribeUsers) unsubscribeUsers();
         if (unsubscribeLinks) unsubscribeLinks();
 
-        // مستمع للمستخدمين
         unsubscribeUsers = onValue(usersRef, (snap) => {
             const usersArray = [];
             snap.forEach(child => {
                 usersArray.push({ id: child.key, ...child.val() });
             });
             allUsers = usersArray;
-            combineAndRender();   // عند تغير المستخدمين ندمج ونعرض
+            combineAndRender();
         });
 
-        // مستمع لروابط الممرضات
         unsubscribeLinks = onValue(linksRef, (snap) => {
             linksMap = snap.val() || {};
-            // إذا كانت بيانات المستخدمين موجودة مسبقاً، ندمج مرة أخرى
             if (allUsers.length) {
                 combineAndRender();
             }
@@ -560,9 +585,14 @@
             return;
         }
         grid.innerHTML = filtered.map(user => {
-            const roleClass = `role-${user.role}`;
             const roleText = { doctor: 'طبيب', nurse: 'ممرض', pharmacist: 'صيدلي' }[user.role] || user.role;
+            const roleClass = `role-${user.role}`;
             let assignedInfo = '';
+            let avatarIcon = 'fa-user';
+            if (user.role === 'doctor') avatarIcon = 'fa-user-md';
+            else if (user.role === 'nurse') avatarIcon = 'fa-user-nurse';
+            else if (user.role === 'pharmacist') avatarIcon = 'fa-prescription';
+            
             if (user.role === 'nurse') {
                 const linkedIds = user._linkedDoctorIds || [];
                 const doctorNames = linkedIds
@@ -570,18 +600,19 @@
                         const doc = doctorsList.find(d => d.id === id);
                         return doc ? doc.name : '';
                     }).filter(Boolean).join('، ');
-                if (doctorNames) assignedInfo = `<div class="assigned-doctors"><i class="fas fa-user-md"></i> ${doctorNames}</div>`;
-                else assignedInfo = `<div class="assigned-doctors" style="color:#a00;"><i class="fas fa-exclamation-triangle"></i> لا يوجد أطباء مسؤولين</div>`;
+                assignedInfo = doctorNames 
+                    ? `<div class="assigned-doctors"><i class="fas fa-user-md"></i> ${doctorNames}</div>`
+                    : `<div class="assigned-doctors" style="color:#a00;"><i class="fas fa-exclamation-triangle"></i> لا يوجد أطباء مسؤولين</div>`;
             }
             return `
             <div class="user-card" data-id="${user.id}">
                 <div class="card-avatar">
-                    <div class="avatar-circle"><i class="fas fa-user-md"></i></div>
+                    <div class="avatar-circle"><i class="fas ${avatarIcon}"></i></div>
                 </div>
                 <div class="user-name">${escapeHtml(user.name || 'بدون اسم')}</div>
                 <div style="text-align:center"><span class="role-tag ${roleClass}">${roleText}</span></div>
                 ${assignedInfo}
-                <div class="user-bio"><i class="fas fa-pen"></i> ${escapeHtml(user.quickBlurb ? user.quickBlurb.substring(0, 55) : 'لا توجد لمحة')}</div>
+                <div class="user-bio"><i class="fas fa-pen"></i> ${escapeHtml((user.quickBlurb || '').substring(0, 55) || 'لا توجد لمحة')}</div>
                 <div class="card-footer">
                     <span class="status-badge ${user.status === 'blocked' ? 'status-blocked' : ''}">${user.status === 'active' ? 'نشط' : 'محظور'}</span>
                     <small><i class="far fa-envelope"></i> ${escapeHtml(user.email)}</small>
@@ -599,12 +630,32 @@
         document.getElementById('detailName').innerText = user.name || '-';
         document.getElementById('detailEmail').innerText = user.email || '-';
         document.getElementById('detailPhone').innerText = user.phone || '-';
+        
         const roleText = { doctor: 'طبيب', nurse: 'ممرض', pharmacist: 'صيدلي' }[user.role] || user.role;
         document.getElementById('detailRoleSpan').innerHTML = `<span class="role-tag role-${user.role}">${roleText}</span>`;
+        
         document.getElementById('detailUid').innerText = user.id || '-';
         document.getElementById('detailStatusSpan').innerHTML = user.status === 'active' ? '<span style="color:#2e7d32;">✅ نشط</span>' : '<span style="color:#c62828;">⛔ محظور</span>';
         document.getElementById('quickBlurbDisplay').innerHTML = user.quickBlurb ? escapeHtml(user.quickBlurb) : 'لا توجد لمحة';
         
+        // أيقونة الأفتار
+        let avatarIconClass = 'fa-user';
+        if (user.role === 'doctor') avatarIconClass = 'fa-user-md';
+        else if (user.role === 'nurse') avatarIconClass = 'fa-user-nurse';
+        else if (user.role === 'pharmacist') avatarIconClass = 'fa-prescription';
+        document.getElementById('detailAvatarIcon').className = 'fas ' + avatarIconClass;
+        
+        // التخصص
+        const specialtyRow = document.getElementById('detailSpecialtyRow');
+        const specialtySpan = document.getElementById('detailSpecialty');
+        if (user.role === 'doctor' && user.specialty) {
+            specialtySpan.innerText = user.specialty;
+            specialtyRow.style.display = 'block';
+        } else {
+            specialtyRow.style.display = 'none';
+        }
+        
+        // الأطباء المسؤولون (للممرضة)
         const assignedSection = document.getElementById('detailAssignedDoctorsSection');
         if (user.role === 'nurse') {
             const linkedIds = user._linkedDoctorIds || [];
@@ -635,10 +686,10 @@
         document.getElementById('userSpecialty').value = '';
         document.getElementById('quickBlurb').value = '';
         document.getElementById('userPassword').value = '';
+        document.getElementById('userPassword').required = true;
         document.getElementById('userStatus').value = 'active';
         
         document.getElementById('passwordFieldGroup').style.display = 'block';
-        document.getElementById('userPassword').required = true;
         document.getElementById('passwordHint').innerText = 'أدخل كلمة مرور قوية';
         
         document.getElementById('assignDoctorsGroup').style.display = 'none';
@@ -707,15 +758,14 @@
 
         if (!name || !email || !role) { showToast('الاسم والبريد والدور مطلوبة', true); return; }
 
-        // إعداد كائن المستخدم المتوافق مع المخطط
         const userData = {
-            name: name,
-            email: email,
-            phone: phone,
-            role: role,
+            name,
+            email,
+            phone,
+            role,
             specialty: role === 'doctor' ? specialty : '',
-            quick_blurb: quickBlurb,      // ملاحظة: المفتاح quick_blurb (بشَرطة سفلية كما في المخطط)
-            status: status
+            quickBlurb,              // مفتاح موحد
+            status
         };
 
         let selectedDoctorIds = [];
@@ -730,7 +780,7 @@
 
         try {
             if (currentEditId) {
-                // تعديل مستخدم موجود – لا نضيف created_at
+                // تعديل مستخدم
                 await update(ref(db, `users/${currentEditId}`), userData);
                 if (role === 'nurse') {
                     await saveNurseDoctorLinks(currentEditId, selectedDoctorIds);
@@ -754,7 +804,6 @@
                 }
                 const uid = signUpData.localId;
                 
-                // إضافة created_at
                 userData.created_at = new Date().toISOString();
                 await set(ref(db, `users/${uid}`), userData);
                 
@@ -773,7 +822,6 @@
     // ---------- روابط الممرضة مع الأطباء ----------
     async function saveNurseDoctorLinks(nurseId, doctorIds) {
         const linksRefNurse = ref(db, `doctor_nurse_links/${nurseId}`);
-        // مسح الروابط الحالية
         await set(linksRefNurse, null);
         if (doctorIds.length === 0) return;
         const updates = {};
@@ -788,34 +836,6 @@
         closeDetailModal();
     }
 
-    // ---------- حذف مستخدم ----------
-    async function deleteUser(id) {
-        if (!confirm('حذف نهائي؟ سيتم حذف الحساب بالكامل من النظام.')) return;
-        try {
-            const currentUser = auth.currentUser;
-            if (!currentUser) throw new Error('يجب أن تكون مسجل الدخول كمسؤول');
-            const idToken = await currentUser.getIdToken();
-            
-            const deleteRes = await fetch(DELETE_ACCOUNT_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ idToken })
-            });
-            const deleteData = await deleteRes.json();
-            if (!deleteRes.ok) {
-                throw new Error(deleteData.error?.message || 'فشل حذف حساب المستخدم');
-            }
-            
-            // حذف بيانات المستخدم والروابط
-            await remove(ref(db, `users/${id}`));
-            await remove(ref(db, `doctor_nurse_links/${id}`));
-            showToast('تم حذف المستخدم بالكامل');
-            closeDetailModal();
-        } catch (err) {
-            showToast('خطأ في الحذف: ' + err.message, true);
-        }
-    }
-
     // ---------- الخروج ----------
     async function logout() {
         if (unsubscribeUsers) unsubscribeUsers();
@@ -824,23 +844,44 @@
         window.location.href = 'index.html';
     }
 
+    // ---------- التحقق من الصلاحية (مشرف فقط) ----------
+    async function checkAdminAuth() {
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                window.location.href = 'index.html';
+                return;
+            }
+            try {
+                const snap = await get(ref(db, `users/${user.uid}`));
+                if (!snap.exists() || snap.val().role !== 'admin') {
+                    showToast('غير مصرح لك بالدخول', true);
+                    await signOut(auth);
+                    window.location.href = 'index.html';
+                    return;
+                }
+                // المستخدم مشرف، نعرض الواجهة
+                document.getElementById('authCheckLoader').style.display = 'none';
+                document.querySelector('.container').style.display = 'block';
+                startListeners();
+            } catch (err) {
+                console.error(err);
+                showToast('فشل التحقق من الصلاحية', true);
+                window.location.href = 'index.html';
+            }
+        });
+    }
+
     // ---------- تهيئة الأحداث ----------
     function initEvents() {
-        // حدث البحث مع Debounce
         const searchInput = document.getElementById('searchInput');
-        searchInput.addEventListener('input', () => {
+        searchInput?.addEventListener('input', () => {
             clearTimeout(searchDebounceTimer);
-            searchDebounceTimer = setTimeout(() => {
-                renderGrid();
-            }, 300);
+            searchDebounceTimer = setTimeout(() => renderGrid(), 300);
         });
 
-        // استخدام Event Delegation للنقر على البطاقات
         document.getElementById('usersGrid').addEventListener('click', (e) => {
             const card = e.target.closest('.user-card');
-            if (card) {
-                openDetailModal(card.dataset.id);
-            }
+            if (card) openDetailModal(card.dataset.id);
         });
 
         document.getElementById('addUserBtn').onclick = openAddModal;
@@ -851,7 +892,6 @@
         document.getElementById('closeDetailBtn').onclick = closeDetailModal;
         document.getElementById('blockModalBtn').onclick = () => currentViewId && toggleBlockUser(currentViewId, 'blocked');
         document.getElementById('unblockModalBtn').onclick = () => currentViewId && toggleBlockUser(currentViewId, 'active');
-        document.getElementById('deleteModalBtn').onclick = () => currentViewId && deleteUser(currentViewId);
         document.getElementById('editModalBtn').onclick = () => {
             const user = allUsers.find(u => u.id === currentViewId);
             if (user) { closeDetailModal(); openEditModal(user); }
@@ -865,7 +905,7 @@
 
     // ---------- بدء التطبيق ----------
     initEvents();
-    startListeners();
+    checkAdminAuth();
 </script>
 </body>
 </html>
