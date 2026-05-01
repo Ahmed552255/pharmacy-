@@ -117,7 +117,7 @@ async function syncDrugsFromFirebase() {
             const obj = snap.val();
             drugs = Object.values(obj).map(d => ({
                 ...d,
-                id: d.id || (crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random())
+                id: d.id || crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random()
             }));
         }
         await localDrugDB.saveDrugs(drugs);
@@ -232,6 +232,7 @@ const currentUser = {
 let doctorInfo = { name: currentUser.name, specialty: '' };
 let todayAppointments = [];
 let currentAppointment = null;
+// حقل جديد: currentPrescription أصبح يحمل كائنات { drug_id, drug, form, dose }
 let currentPrescription = [];
 let favoriteDrugs = new Set();
 let doseState = {
@@ -345,7 +346,7 @@ async function displayDrugSuggestions(term) {
 
     UI.drugSuggestions.innerHTML = matches.map(drug => {
         const favIcon = drug.isFavorite ? '<span class="favorites-tag"><i class="fas fa-star"></i> مفضل</span>' : '';
-        const formIcon = { 'tablet':'💊','syrup':'🥄','injection':'💉','suppository':'🧴','drops':'💧','fizzy':'🫧','spray':'💨','cream':'🧴' }[drug.form] || '💊';
+        const formIcon = { 'tablet':'💊','syrup':'🥄','injection':'💉','suppository':'🧴','drops':'💧' }[drug.form] || '💊';
         const strengthBadge = drug.strength ? `<span class="strength-info">${escapeHtml(drug.strength)}</span>` : '';
         const usageCount = drug.frequency ? `<span class="usage-count" title="استخدم ${drug.frequency} مرة">(${drug.frequency})</span>` : '';
         
@@ -384,7 +385,7 @@ async function loadDoctorData(uid) {
             doctorInfo = { 
                 ...doctorInfo, 
                 ...data,
-                specialty: data.specialty || ''
+                specialty: data.specialty || ''   // استخدام specialty بدلاً من specialization
             };
             UI.welcomeMessage.textContent = `د. ${doctorInfo.name || currentUser.name}`;
         } else {
@@ -406,6 +407,7 @@ async function loadDoctorData(uid) {
 // ---------- تحميل المواعيد ----------
 function loadAppointments() {
     const appointmentsRef = ref(db, 'appointments');
+    // التغيير: استخدم doctor_id بدلاً من doctorId
     const doctorAppointmentsQuery = query(
         appointmentsRef,
         orderByChild('doctor_id'),
@@ -478,7 +480,7 @@ async function selectPatientFromQueue(appointmentId) {
     UI.prescriptionContent.style.display = 'block';
     renderPrescriptionItems();
     UI.queueModal.style.display = 'none';
-    saveCurrentSession();
+    saveCurrentSession(); // حفظ الجلسة فوراً بعد اختيار المريض
 }
 
 function updateCurrentPatientUI() {
@@ -487,23 +489,105 @@ function updateCurrentPatientUI() {
         return;
     }
     UI.currentPatientCard.style.display = 'flex';
-    UI.currentPatientNameDisplay.textContent = currentAppointment.patientName || currentAppointment.patient_name || 'غير معروف';
+    UI.currentPatientNameDisplay.textContent = currentAppointment.patientName;
     UI.currentPatientAgeDisplay.textContent = `${currentAppointment.age || '--'} سنة`;
 }
 
-// --------------------- ملف المريض (الانتقال إلى صفحة السجل المرضى) ---------------------
+// --------------------- ملف المريض (معدل لاستخدام prescriptions و prescription_items) ---------------------
 UI.patientNameClickable.addEventListener('click', () => {
-    const patientId = currentAppointment?.patientId || currentAppointment?.patient_id;
-    const patientName = currentAppointment?.patientName || currentAppointment?.patient_name || '';
-    if (!patientId) {
-        showToast('المريض غير مسجل برقم هوية', true);
+    if (!currentAppointment?.patientId) {
+        showToast('لا يوجد معرف للمريض', true);
         return;
     }
-    // الانتقال إلى صفحة السجل المرضى مع تمرير البيانات عبر الرابط
-    window.location.href = `detail.html?patientId=${patientId}&patientName=${encodeURIComponent(patientName)}`;
+    openPatientFile(currentAppointment.patientId, currentAppointment.patientName);
 });
 
-// ---------------------------------------------------------------------------------
+async function openPatientFile(patientId, patientName) {
+    // استعلام عن جميع الوصفات لهذا المريض
+    const prescriptionsRef = ref(db, 'prescriptions');
+    const patientQuery = query(prescriptionsRef, orderByChild('patient_id'), equalTo(patientId));
+    
+    let prescriptionsList = [];
+    try {
+        const snap = await get(patientQuery);
+        if (snap.exists()) {
+            snap.forEach(child => {
+                prescriptionsList.push({ id: child.key, ...child.val() });
+            });
+        }
+    } catch (err) {
+        showToast('تعذر جلب الملف الطبي', true);
+        return;
+    }
+
+    // ترتيب تنازلي حسب التاريخ
+    prescriptionsList.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+    // بناء النافذة
+    const existingModal = document.getElementById('patientFileModal');
+    if (existingModal) existingModal.remove();
+
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.id = 'patientFileModal';
+    modal.style.display = 'flex';
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 700px; max-height: 80vh; overflow-y: auto;">
+            <span class="close-modal" id="closePatientFileModal">&times;</span>
+            <h2>📄 ملف المريض: ${escapeHtml(patientName)}</h2>
+            <div id="patientRecordsContainer"></div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+
+    document.getElementById('closePatientFileModal').addEventListener('click', () => modal.remove());
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) modal.remove();
+    });
+
+    const container = document.getElementById('patientRecordsContainer');
+    if (prescriptionsList.length === 0) {
+        container.innerHTML = '<div class="empty-state">لا توجد كشوفات سابقة</div>';
+        return;
+    }
+
+    // جلب الأدوية لكل وصفة من prescription_items
+    const drugsCache = await localDrugDB.getAllDrugs(); // للترجمة من drug_id إلى اسم
+    const drugMap = Object.fromEntries(drugsCache.map(d => [d.id, d]));
+
+    container.innerHTML = '';
+    for (const pres of prescriptionsList) {
+        const date = pres.created_at ? pres.created_at.split('T')[0] : 'غير معروف';
+        let itemsHtml = '';
+        try {
+            const itemsSnap = await get(ref(db, `prescription_items/${pres.id}`));
+            if (itemsSnap.exists()) {
+                const itemsObj = itemsSnap.val();
+                const itemsArr = Object.values(itemsObj);
+                itemsHtml = itemsArr.map(it => {
+                    const drugInfo = drugMap[it.drug_id] || {};
+                    const drugName = drugInfo.name || it.drug_id || 'غير معروف';
+                    return `<li>${escapeHtml(drugName)} - ${escapeHtml(it.dose)}</li>`;
+                }).join('');
+            } else {
+                itemsHtml = '<li>لا توجد أدوية مسجلة</li>';
+            }
+        } catch (e) {
+            itemsHtml = '<li>تعذر تحميل الأدوية</li>';
+        }
+
+        const recordDiv = document.createElement('div');
+        recordDiv.style.cssText = 'border:1px solid #ddd; border-radius:8px; padding:10px; margin-bottom:8px;';
+        recordDiv.innerHTML = `
+            <strong>📅 ${date}</strong>
+            <div style="margin-top:5px;"><b>التشخيص:</b> ${escapeHtml(pres.diagnosis || 'غير مذكور')}</div>
+            <div><b>الأدوية:</b><ul style="margin:5px 0 0 20px;">${itemsHtml}</ul></div>
+        `;
+        container.appendChild(recordDiv);
+    }
+}
+
+// -------------------------------------------------------------------------
 
 function renderPrescriptionItems() {
     if (currentPrescription.length === 0) {
@@ -538,39 +622,10 @@ function renderPrescriptionItems() {
     });
 }
 
-// قائمة وحدات الأشكال الصيدلانية
 function updateUnitLabel() {
-    const forms = { 
-        tablet: 'قرص', 
-        syrup: 'مل', 
-        injection: 'سم', 
-        suppository: 'لبوس', 
-        drops: 'نقطة',
-        fizzy: 'فوار',
-        spray: 'بخة',
-        cream: 'جم'
-    };
+    const forms = { tablet: 'قرص', syrup: 'مل', injection: 'سم', suppository: 'لبوس', drops: 'نقطة' };
     UI.unitLabel.textContent = forms[UI.drugFormSelect.value] || '';
 }
-
-function addNewFormOptions() {
-    const select = UI.drugFormSelect;
-    if (!select) return;
-    const newOptions = [
-        { value: 'fizzy', text: '🧊 فوار' },
-        { value: 'spray', text: '💨 بخاخ' },
-        { value: 'cream', text: '🧴 كريم' }
-    ];
-    newOptions.forEach(opt => {
-        if (!select.querySelector(`option[value="${opt.value}"]`)) {
-            const option = document.createElement('option');
-            option.value = opt.value;
-            option.textContent = opt.text;
-            select.appendChild(option);
-        }
-    });
-}
-
 UI.drugFormSelect.addEventListener('change', () => {
     updateUnitLabel();
     if (UI.drugSearchInput.value.trim()) {
@@ -586,14 +641,14 @@ UI.drugSearchInput.addEventListener('input', () => {
         UI.drugSuggestions.style.display = 'none';
         return;
     }
-    searchTimeout = setTimeout(() => displayDrugSuggestions(term), 100);
+    searchTimeout = setTimeout(() => displayDrugSuggestions(term), 200);
 });
 
 UI.drugSuggestions.addEventListener('click', (e) => {
     const item = e.target.closest('[data-drug-name]');
     if (item) {
         doseState.drug = item.dataset.drugName;
-        doseState.drug_id = item.dataset.drugId;
+        doseState.drug_id = item.dataset.drugId;   // التقاط معرّف الدواء
         doseState.form = item.dataset.drugForm || 'tablet';
         UI.drugFormSelect.value = doseState.form;
         prepareDosePanel();
@@ -604,7 +659,7 @@ UI.startAddDrugBtn.addEventListener('click', () => {
     const custom = UI.drugSearchInput.value.trim();
     if (custom) {
         doseState.drug = custom;
-        doseState.drug_id = null;
+        doseState.drug_id = null;   // سيتم إنشاؤه عند الإضافة
         prepareDosePanel();
     } else {
         showToast('الرجاء إدخال اسم الدواء', true);
@@ -627,6 +682,7 @@ UI.exchangeModeBtn.addEventListener('click', () => {
 
 function prepareDosePanel() {
     if (!doseState.drug) return;
+    // إذا لم يكن لدينا drug_id، حاول العثور عليه من الأدوية المحلية
     if (!doseState.drug_id) {
         localDrugDB.getAllDrugs().then(drugs => {
             const found = drugs.find(d => d.name === doseState.drug && d.form === UI.drugFormSelect.value);
@@ -678,88 +734,64 @@ function generateDoseSuggestions() {
         const num = parseInt(quantity);
         const base = `${num} ${unit}`;
         const built = [
-            { text: `${base} يومياً` },
-            { text: `${base} كل 8 ساعات` },
-            { text: `${base} كل 12 ساعة` },
-            { text: `${base} مرة واحدة يومياً` },
-            { text: `${base} عند اللزوم` }
+            { text: `${base} يومياً`, timing: 'any' },
+            { text: `${base} كل 8 ساعات`, timing: 'any' },
+            { text: `${base} كل 12 ساعة`, timing: 'any' },
+            { text: `${base} مرة واحدة يومياً`, timing: 'any' },
+            { text: `${base} عند اللزوم`, timing: 'any' },
+            { text: `${base} قبل النوم`, timing: 'bedtime' },
+            { text: `${base} بعد الأكل بساعة`, timing: 'after1h' }
         ];
         built.forEach(b => {
             if (!suggestions.some(s => s.text === b.text)) {
-                suggestions.push({ text: b.text, isPref: false });
+                suggestions.push({ text: b.text, isPref: false, timing: b.timing });
             }
         });
     }
 
     if (suggestions.length === 0) {
+        const base = `1 ${unit}`;
         const defaultSuggestions = [
-            { text: `1 ${unit} يومياً` },
-            { text: `2 ${unit} يومياً` },
-            { text: `1 ${unit} كل 8 ساعات` },
-            { text: `1 ${unit} كل 12 ساعة` },
-            { text: `1 ${unit} مرة واحدة` }
+            { text: `${base} يومياً`, timing: 'any' },
+            { text: `${base} كل 8 ساعات`, timing: 'any' },
+            { text: `${base} كل 12 ساعة`, timing: 'any' },
+            { text: `${base} مرة واحدة يومياً`, timing: 'any' },
+            { text: `${base} قبل النوم`, timing: 'bedtime' }
         ];
-        suggestions = defaultSuggestions.map(s => ({ ...s, isPref: false }));
+        defaultSuggestions.forEach(s => suggestions.push({ ...s, isPref: false }));
     }
 
-    UI.doseSuggestionsContainer.innerHTML = suggestions.slice(0, 8).map(s => `
-        <button class="dose-chip-btn" data-dose-text="${escapeHtml(s.text)}">
-            ${escapeHtml(s.text)} ${s.isPref ? '<i class="fas fa-history" style="opacity:0.6; margin-right:4px;"></i>' : ''}
-        </button>
-    `).join('');
+    const displaySuggestions = suggestions.slice(0, 7);
 
-    document.querySelectorAll('.dose-chip-btn').forEach(btn => {
+    UI.doseSuggestionsContainer.innerHTML = displaySuggestions.map((s, idx) => {
+        let timingIcon = '';
+        if (s.timing === 'bedtime') timingIcon = '<i class="fas fa-bed" title="قبل النوم"></i>';
+        else if (s.timing === 'after1h') timingIcon = '<i class="fas fa-clock" title="بعد الأكل بساعة"></i>';
+        
+        return `
+        <div class="dose-suggestion-row" data-timing="${s.timing || 'any'}">
+            <span>
+                ${escapeHtml(s.text)} 
+                ${s.isPref ? '<i class="fas fa-history" style="opacity:0.6; margin-right:6px;"></i>' : ''}
+                ${timingIcon}
+            </span>
+            <div>
+                <button class="timing-btn-sm" data-timing="before" title="قبل الأكل"><i class="fas fa-utensils"></i> قبل</button>
+                <button class="timing-btn-sm" data-timing="after" title="بعد الأكل"><i class="fas fa-utensils"></i> بعد</button>
+                <button class="timing-btn-sm ${idx === 0 ? 'active' : ''}" data-timing="any" title="لا يهم"><i class="fas fa-minus"></i> عادي</button>
+            </div>
+        </div>
+        `;
+    }).join('');
+
+    document.querySelectorAll('.timing-btn-sm').forEach(btn => {
         btn.addEventListener('click', (e) => {
-            const doseText = btn.dataset.doseText;
-            applyDoseFromSuggestion(doseText);
+            e.stopPropagation();
+            const parentRow = btn.closest('.dose-suggestion-row');
+            parentRow.querySelectorAll('.timing-btn-sm').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
         });
     });
-    
-    UI.doseSuggestionsContainer.innerHTML += `
-        <button id="customDoseTriggerBtn" class="dose-chip-btn" style="background: var(--primary-light);">
-            ✏️ جرعة مخصصة
-        </button>
-    `;
-    document.getElementById('customDoseTriggerBtn').addEventListener('click', () => {
-        showCustomDoseInput();
-    });
-}
-
-async function applyDoseFromSuggestion(doseText) {
-    if (!doseState.drug || !doseText) return;
-    const formValue = UI.drugFormSelect.value;
-    const formText = UI.drugFormSelect.options[UI.drugFormSelect.selectedIndex].text;
-
-    let finalDose = doseText;
-    if (doseState.isExchange && doseState.exchangeDrug) {
-        finalDose += ` (بالتبادل مع ${doseState.exchangeDrug})`;
-    }
-
-    if (!doseState.drug_id) {
-        const newDrug = await addNewDrugToBoth(doseState.drug, formValue);
-        doseState.drug_id = newDrug.id;
-    }
-
-    currentPrescription.push({
-        drug_id: doseState.drug_id,
-        drug: doseState.drug,
-        form: formText,
-        dose: finalDose,
-        exchange: doseState.isExchange ? doseState.exchangeDrug : null
-    });
-
-    await incrementDrugUsage(doseState.drug, formValue);
-    saveDosePreference(doseState.drug, formValue, doseText);
-    renderPrescriptionItems();
-    saveCurrentSession();
-    resetDosePanel();
-}
-
-function showCustomDoseInput() {
-    const customDose = prompt('أدخل الجرعة كاملة (مثال: 2 قرص بعد الأكل):');
-    if (customDose && customDose.trim()) {
-        applyDoseFromSuggestion(customDose.trim());
-    }
 }
 
 UI.doseNumberInput.addEventListener('input', generateDoseSuggestions);
@@ -771,22 +803,38 @@ UI.applyDoseBtn.addEventListener('click', async () => {
         showToast('الرجاء إدخال الدواء والكمية', true);
         return;
     }
+
     const formValue = UI.drugFormSelect.value;
     const formText = UI.drugFormSelect.options[UI.drugFormSelect.selectedIndex].text;
     let doseString = `${quantity} ${UI.unitLabel.textContent}`;
+
+    const activeRow = document.querySelector('.dose-suggestion-row');
+    if (activeRow) {
+        const timingBtn = activeRow.querySelector('.timing-btn-sm.active');
+        const timing = timingBtn ? timingBtn.dataset.timing : 'any';
+        const timingText = { 
+            before: 'قبل الأكل', 
+            after: 'بعد الأكل', 
+            bedtime: 'قبل النوم',
+            after1h: 'بعد الأكل بساعة',
+            any: '' 
+        }[timing] || '';
+        if (timingText) doseString += ` ${timingText}`;
+    }
 
     if (doseState.isExchange && doseState.exchangeDrug) {
         doseString += ` (بالتبادل مع ${doseState.exchangeDrug})`;
     }
 
+    // إذا لم يكن لدينا drug_id بعد (دواء جديد مخصص)، أنشئه الآن
     if (!doseState.drug_id) {
         const newDrug = await addNewDrugToBoth(doseState.drug, formValue);
         doseState.drug_id = newDrug.id;
     }
 
     currentPrescription.push({
-        drug_id: doseState.drug_id,
-        drug: doseState.drug,
+        drug_id: doseState.drug_id,        // مفتاح الربط بجدول drugs
+        drug: doseState.drug,              // للعرض فقط
         form: formText,
         dose: doseString,
         exchange: doseState.isExchange ? doseState.exchangeDrug : null
@@ -823,6 +871,8 @@ UI.diagnosisTextarea.addEventListener('input', () => {
 });
 
 // ---------- إنهاء الكشف (حفظ في prescriptions و prescription_items) ----------
+
+// ---------- إنهاء الكشف (حفظ في prescriptions و prescription_items) ----------
 UI.finishBtn.addEventListener('click', async () => {
     if (!currentAppointment) {
         showToast('لا يوجد مريض حالي', true);
@@ -835,19 +885,23 @@ UI.finishBtn.addEventListener('click', async () => {
     }
     try {
         const now = new Date().toISOString();
-        const prescriptionId = currentAppointment.id;
+        const prescriptionId = currentAppointment.id;  // استخدام معرّف الموعد كمعرّف للروشتة
         
-        let patientName = currentAppointment.patient_name || currentAppointment.patientName || '';
+        // جلب اسم المريض من جدول patients لضمان الدقة
+        let patientName = currentAppointment.patient_name || '';  // الحقل الجديد في الموعد
         if (!patientName && currentAppointment.patient_id) {
             const patientSnap = await get(ref(db, `patients/${currentAppointment.patient_id}`));
             if (patientSnap.exists()) {
                 patientName = patientSnap.val().name || '';
             }
         }
-        if (!patientName) patientName = 'غير معروف';
+        // إذا كان لا يزال فارغًا نستخدم أي قيمة متاحة
+        if (!patientName) patientName = currentAppointment.patientName || 'غير معروف';
 
+        // بناء كائن التحديثات دفعة واحدة (Batch Write)
         const updates = {};
         
+        // 1. الروشتة الرئيسية (بما فيها patient_name و item_count)
         updates[`prescriptions/${prescriptionId}`] = {
             patient_id: currentAppointment.patient_id || currentAppointment.patientId || '',
             patient_name: patientName,
@@ -858,9 +912,10 @@ UI.finishBtn.addEventListener('click', async () => {
             pharmacist_id: '',
             pharmacist_name: '',
             dispensed_at: '',
-            item_count: currentPrescription.length
+            item_count: currentPrescription.length   // عدد الأصناف المضافة
         };
         
+        // 2. الأدوية الموصوفة (جدول prescription_items)
         currentPrescription.forEach((item, index) => {
             updates[`prescription_items/${prescriptionId}/item_${index}`] = {
                 drug_id: item.drug_id,
@@ -869,8 +924,10 @@ UI.finishBtn.addEventListener('click', async () => {
             };
         });
         
+        // 3. تحديث حالة الموعد إلى منتهي
         updates[`appointments/${currentAppointment.id}/status`] = 'منتهي';
         
+        // تنفيذ جميع الكتابات في طلب واحد
         await update(ref(db), updates);
         
         showToast('✅ تم إنهاء الكشف وحفظ الروشتة بنجاح');
@@ -886,7 +943,6 @@ UI.finishBtn.addEventListener('click', async () => {
         showToast('حدث خطأ أثناء حفظ البيانات', true);
     }
 });
-
 // ---------- القوالب (محدثة لاستخدام prescription_templates و template_items) ----------
 UI.templatesBtn.addEventListener('click', async () => {
     try {
@@ -903,6 +959,7 @@ UI.templatesBtn.addEventListener('click', async () => {
                 div.style.cssText = 'padding:12px; cursor:pointer; border-bottom:1px solid #eee;';
                 div.innerHTML = `<b>${escapeHtml(t.name)}</b><br><small>${t.itemCount || 0} أصناف</small>`;
                 div.addEventListener('click', async () => {
+                    // تحميل عناصر القالب من template_items
                     const itemsSnap = await get(ref(db, `template_items/${id}`));
                     currentPrescription = [];
                     if (itemsSnap.exists()) {
@@ -961,6 +1018,7 @@ window.saveAsTemplate = async function() {
     const updates = {};
     updates[`prescription_templates/${currentUser.uid}/${templateId}`] = templateData;
     
+    // حفظ عناصر القالب في template_items
     currentPrescription.forEach((item, idx) => {
         updates[`template_items/${templateId}/item_${idx}`] = {
             drug_id: item.drug_id,
@@ -1015,7 +1073,6 @@ UI.logoutBtn.addEventListener('click', async () => {
     await localDrugDB.open();
     await syncDrugsFromFirebase();
     await loadDoctorData(currentUser.uid);
-    addNewFormOptions();
     loadSavedSession();
     loadAppointments();
     updateUnitLabel();
