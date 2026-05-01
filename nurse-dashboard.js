@@ -15,15 +15,13 @@ function getLocalDateString() {
     const day = String(d.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
 }
-const todayString = getLocalDateString();
+const today = getLocalDateString();
 
-let currentUser = null;               // بيانات المستخدم الحالي
+let currentUser = null;               // سيتم تعيينه بعد مصادقة صحيحة
 let nurseInfo = { name: 'ممرض' };
 let assignedDoctorsList = [], currentDoctorId = null;
 let allBookings = [], unsubscribeBookings = null, selectedPatientId = null, currentTab = 'waiting';
-let currentDate = todayString;         // التاريخ المحدد للعرض (قابل للتغيير)
 
-// ---------- عناصر واجهة المستخدم ----------
 const ui = {
     welcomeMessage: document.getElementById('welcomeMessage'),
     doctorsToolbar: document.getElementById('doctorsToolbar'),
@@ -48,16 +46,11 @@ const ui = {
     bookingForm: document.getElementById('bookingForm'),
     editBookingId: document.getElementById('editBookingId'),
     logoutBtn: document.getElementById('logoutBtn'),
-    tabBtns: document.querySelectorAll('.tab-btn'),
-    filterDateInput: document.getElementById('filterDateInput'),
-    todayBtn: document.getElementById('todayBtn')
+    tabBtns: document.querySelectorAll('.tab-btn')
 };
 
-// تهيئة حقول التاريخ
-ui.appointmentDate.value = todayString;
-ui.filterDateInput.value = todayString;
+ui.appointmentDate.value = today;
 
-// ---------- دوال مساعدة ----------
 function showToast(msg, isErr = false) {
     const t = document.createElement('div');
     t.className = 'toast';
@@ -82,7 +75,7 @@ async function loadNurseData(uid) {
         }
         ui.welcomeMessage.textContent = `أهلاً، ${nurseInfo.name || 'ممرض'}`;
 
-        // 2. الأطباء المرتبطون (من doctor_nurse_links)
+        // 2. الأطباء المرتبطون (من الجدول الوسيط doctor_nurse_links)
         const linksSnap = await get(ref(db, `doctor_nurse_links/${uid}`));
         const doctorIds = linksSnap.exists() ? Object.keys(linksSnap.val()) : [];
         if (doctorIds.length === 0) {
@@ -91,7 +84,7 @@ async function loadNurseData(uid) {
             return false;
         }
 
-        // جلب أسماء الأطباء
+        // جلب أسماء الأطباء بالتوازي
         const doctorPromises = doctorIds.map(async (docId) => {
             const snap = await get(ref(db, `users/${docId}`));
             return { id: docId, name: snap.exists() ? snap.val().name : 'دكتور' };
@@ -110,11 +103,10 @@ async function loadNurseData(uid) {
     }
 }
 
-// ---------- شريط الأطباء ----------
 function renderDoctorsToolbar() {
     ui.doctorsToolbar.innerHTML = assignedDoctorsList.map(doc => `
         <button class="doctor-tab-btn" data-doctor-id="${doc.id}">
-            <i class="fas fa-user-md"></i> د. ${escapeHtml(doc.name)}
+            <i class="fas fa-user-md"></i> د. ${doc.name}
         </button>
     `).join('');
     document.querySelectorAll('.doctor-tab-btn').forEach(btn => {
@@ -132,17 +124,15 @@ function highlightDoctorButton(docId) {
     });
 }
 
-// ---------- تحميل الحجوزات لطبيب معين مع احترام التاريخ المحدد ----------
 function loadBookingsForDoctor(doctorId) {
     if (unsubscribeBookings) unsubscribeBookings();
     if (!doctorId) return;
-    // نستعلم عن جميع مواعيد الطبيب، ثم نفلتر حسب currentDate
     const q = query(ref(db, 'appointments'), orderByChild('doctor_id'), equalTo(doctorId));
     unsubscribeBookings = onValue(q, (snap) => {
         const bookings = [];
         snap.forEach(child => {
             const apt = child.val();
-            if (apt.date === currentDate) bookings.push({ id: child.key, ...apt });
+            if (apt.date === today) bookings.push({ id: child.key, ...apt });
         });
         bookings.sort((a, b) => (a.time || '').localeCompare(b.time || ''));
         allBookings = bookings;
@@ -151,7 +141,6 @@ function loadBookingsForDoctor(doctorId) {
     });
 }
 
-// ---------- تحديث أعداد التبويبات ----------
 function updateTabCounts() {
     const waiting = allBookings.filter(b => b.status === 'انتظار').length;
     const inProgress = allBookings.filter(b => b.status === 'قيد الكشف').length;
@@ -161,7 +150,6 @@ function updateTabCounts() {
     ui.doneTabCount.textContent = done;
 }
 
-// ---------- فلترة وعرض حسب التبويب الحالي ----------
 function filterAndRenderByTab() {
     let filtered = [];
     if (currentTab === 'waiting') filtered = allBookings.filter(b => b.status === 'انتظار');
@@ -170,10 +158,9 @@ function filterAndRenderByTab() {
     renderTable(filtered);
 }
 
-// ---------- عرض الجدول (مُطابق للـ 6 أعمدة: #, المريض, التاريخ, الوقت, الحالة, إجراءات) ----------
 function renderTable(bookings) {
     if (bookings.length === 0) {
-        ui.bookingsBody.innerHTML = `<tr><td colspan="6" class="empty-state">لا توجد حجوزات في هذا القسم</td></tr>`;
+        ui.bookingsBody.innerHTML = `<tr><td colspan="8" class="empty-state">لا توجد حجوزات في هذا القسم</td></tr>`;
         return;
     }
     let html = '';
@@ -186,10 +173,8 @@ function renderTable(bookings) {
             <button class="icon-btn danger" data-id="${b.id}" data-action="cancel"><i class="fas fa-times"></i></button>
         ` : '<span style="opacity:0.5;">—</span>';
         html += `<tr>
-            <td>${idx + 1}</td>
-            <td><b>${escapeHtml(b.patient_name || '-')}</b></td>
-            <td>${b.date || '-'}</td>
-            <td>${b.time || '-'}</td>
+            <td>${idx + 1}</td><td><b>${b.patient_name || '-'}</b></td><td>${b.age || '-'}</td><td>${b.phone || '-'}</td>
+            <td>${b.date || '-'}</td><td>${b.time || '-'}</td>
             <td><span class="status-badge ${statusClass}">${b.status || 'انتظار'}</span></td>
             <td><div class="action-btns">${actions}</div></td>
         </tr>`;
@@ -197,7 +182,6 @@ function renderTable(bookings) {
     ui.bookingsBody.innerHTML = html;
 }
 
-// ---------- التعامل مع أزرار الإجراءات (إلغاء / تعديل) ----------
 ui.bookingsBody.addEventListener('click', (e) => {
     const btn = e.target.closest('[data-action]');
     if (!btn) return;
@@ -214,7 +198,6 @@ async function updateStatus(id, status) {
     showToast(status === 'ملغي' ? '❌ تم الإلغاء' : 'تم التحديث');
 }
 
-// ---------- فتح نافذة الإضافة والتعديل ----------
 function openAddModal() {
     ui.modalTitle.innerHTML = '<i class="fas fa-calendar-plus"></i> حجز موعد جديد';
     ui.editBookingId.value = '';
@@ -229,7 +212,7 @@ function openEditModal(booking) {
     ui.patientName.value = booking.patient_name || '';
     ui.patientAge.value = booking.age || '';
     ui.patientPhone.value = booking.phone || '';
-    ui.appointmentDate.value = booking.date || todayString;
+    ui.appointmentDate.value = booking.date || today;
     ui.appointmentTime.value = booking.time || '';
     selectedPatientId = booking.patient_id || null;
     ui.modal.style.display = 'flex';
@@ -237,7 +220,7 @@ function openEditModal(booking) {
 
 function resetForm() {
     ui.bookingForm.reset();
-    ui.appointmentDate.value = todayString;  // نفضل تاريخ اليوم للحجز الجديد
+    ui.appointmentDate.value = today;
     selectedPatientId = null;
     ui.formAlert.textContent = '';
 }
@@ -249,10 +232,10 @@ ui.openModalBtn.onclick = () => {
 ui.closeModalBtn.onclick = () => ui.modal.style.display = 'none';
 window.onclick = (e) => { if (e.target === ui.modal) ui.modal.style.display = 'none'; };
 
-// ---------- البحث عن مريض ----------
+// البحث عن مريض
 let searchTimeout;
 ui.patientSearch.addEventListener('input', (e) => {
-    const term = e.target.value.trim().toLowerCase();
+    const term = e.target.value.trim();
     if (term.length < 2) { ui.searchResults.style.display = 'none'; return; }
     clearTimeout(searchTimeout);
     searchTimeout = setTimeout(async () => {
@@ -260,15 +243,13 @@ ui.patientSearch.addEventListener('input', (e) => {
         const results = [];
         snap.forEach(child => {
             const p = child.val();
-            if ((p.name && p.name.toLowerCase().includes(term)) || (p.phone && p.phone.includes(term))) {
-                results.push({ id: child.key, ...p });
-            }
+            if (p.name?.includes(term) || p.phone?.includes(term)) results.push({ id: child.key, ...p });
         });
         ui.searchResults.innerHTML = results.length === 0 ? '<div class="search-item">لا توجد نتائج</div>' : '';
         results.forEach(p => {
             const div = document.createElement('div');
             div.className = 'search-item';
-            div.innerHTML = `<b>${escapeHtml(p.name)}</b><br><small>${escapeHtml(p.phone || 'بدون رقم')}</small>`;
+            div.innerHTML = `<b>${p.name}</b><br><small>${p.phone || 'بدون رقم'}</small>`;
             div.onclick = () => selectPatient(p);
             ui.searchResults.appendChild(div);
         });
@@ -289,7 +270,7 @@ document.addEventListener('click', (e) => {
     if (!ui.patientSearch.contains(e.target) && !ui.searchResults.contains(e.target)) ui.searchResults.style.display = 'none';
 });
 
-// ---------- حفظ الحجز (جديد / تعديل) ----------
+// حفظ الحجز
 ui.bookingForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const editId = ui.editBookingId.value;
@@ -297,28 +278,20 @@ ui.bookingForm.addEventListener('submit', async (e) => {
     const name = ui.patientName.value.trim();
     const date = ui.appointmentDate.value;
     const time = ui.appointmentTime.value;
-    if (!doctorId || !name || !date || !time) {
-        ui.formAlert.textContent = 'جميع الحقول المطلوبة';
-        return;
-    }
+    if (!doctorId || !name || !date || !time) { ui.formAlert.textContent = 'جميع الحقول المطلوبة'; return; }
     ui.submitBtn.disabled = true;
     ui.submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
     try {
         const phone = ui.patientPhone.value.trim();
         let patientId = selectedPatientId;
-
-        // إنشاء مريض جديد فقط إذا لم يكن هناك مريض مُحدد مسبقاً (بغض النظر عن كونه تعديل)
-        if (!patientId) {
+        if (!patientId || editId) {
             const newPatientRef = push(ref(db, 'patients'));
             patientId = newPatientRef.key;
             await set(newPatientRef, {
-                name,
-                age: ui.patientAge.value || null,
-                phone,
+                name, age: ui.patientAge.value || null, phone,
                 created_at: new Date().toISOString()
             });
         }
-
         const bookingData = {
             patient_name: name,
             patient_id: patientId,
@@ -329,7 +302,6 @@ ui.bookingForm.addEventListener('submit', async (e) => {
             time: time,
             status: 'انتظار'
         };
-
         if (editId) {
             await update(ref(db, `appointments/${editId}`), bookingData);
             showToast('✅ تم تعديل الحجز');
@@ -348,28 +320,12 @@ ui.bookingForm.addEventListener('submit', async (e) => {
     }
 });
 
-// ---------- تبويبات الحالة ----------
 ui.tabBtns.forEach(btn => btn.addEventListener('click', () => {
     ui.tabBtns.forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     currentTab = btn.dataset.tab;
     filterAndRenderByTab();
 }));
-
-// ---------- التحكم بأداة اختيار اليوم ----------
-ui.filterDateInput.addEventListener('change', () => {
-    const newDate = ui.filterDateInput.value;
-    if (newDate) {
-        currentDate = newDate;
-        if (currentDoctorId) loadBookingsForDoctor(currentDoctorId);
-    }
-});
-
-ui.todayBtn.addEventListener('click', () => {
-    ui.filterDateInput.value = todayString;
-    currentDate = todayString;
-    if (currentDoctorId) loadBookingsForDoctor(currentDoctorId);
-});
 
 // ---------- تسجيل الخروج ----------
 ui.logoutBtn.onclick = async () => {
@@ -379,9 +335,10 @@ ui.logoutBtn.onclick = async () => {
     window.location.href = 'index.html';
 };
 
-// ---------- التحقق من المصادقة والصلاحية (ذكي) ----------
+// ---------- التحكم بالمصادقة الحية (مع الحل النهائي لتعدد النوافذ) ----------
 onAuthStateChanged(auth, async (user) => {
     if (!user) {
+        // لا يوجد مستخدم مسجل دخوله حالياً → تنبيه وتوجيه
         showToast('تم تسجيل الخروج. جاري تحويلك لصفحة الدخول...', false);
         setTimeout(() => {
             sessionStorage.clear();
@@ -390,14 +347,17 @@ onAuthStateChanged(auth, async (user) => {
         return;
     }
     
-    // منع تغيير المستخدم بسبب نافذة أخرى
+    // 🌟 السطر السحري: إذا كان الممرض قد سجل دخوله بالفعل في هذه النافذة،
+    // وتم تغيير المستخدم بسبب نافذة أخرى، نتجاهل التغيير ونحافظ على الجلسة الحالية
     if (currentUser && currentUser.uid !== user.uid) {
         console.warn('تم تسجيل الدخول بحساب مختلف في نافذة أخرى، سيتم الاحتفاظ بجلسة الممرض الحالية.');
         return;
     }
-
+    
+    // مستخدم جديد (أو نفس المستخدم)، تحقق من دوره
     const userSnap = await get(ref(db, `users/${user.uid}`));
     if (userSnap.exists() && userSnap.val().role === 'nurse') {
+        // هو ممرض، نخزّن الجلسة ونحمّل البيانات إذا كانت أول مرة
         sessionStorage.setItem('userUid', user.uid);
         sessionStorage.setItem('userRole', 'nurse');
         sessionStorage.setItem('userName', userSnap.val().name || 'ممرض');
@@ -407,16 +367,11 @@ onAuthStateChanged(auth, async (user) => {
             await loadNurseData(user.uid);
         }
     } else {
+        // المستخدم ليس ممرضًا (ولم يكن هناك ممرض فعلي في النافذة)
         showToast('هذا الحساب ليس له صلاحيات ممرض. جاري إعادة التوجيه...', true);
         setTimeout(() => {
             sessionStorage.clear();
             window.location.href = 'index.html';
         }, 2500);
     }
-});
-
-// ---------- وظيفة مساعدة لتفادي هجمات XSS ----------
-function escapeHtml(str) {
-    if (!str) return '';
-    return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'})[m] || m);
-}
+}); خد راجعها
