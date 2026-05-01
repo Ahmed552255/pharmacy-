@@ -364,7 +364,8 @@
 
                 const displayName = userData.name || user.email.split('@')[0];
                 
-                // حفظ البيانات في الجلسة (اختياري، لأن Firebase يحفظ الجلسة تلقائياً)
+                // حفظ البيانات في الجلسة
+                sessionStorage.setItem('userUid', user.uid); // ✅ تمت الإضافة
                 sessionStorage.setItem('userRole', userData.role);
                 sessionStorage.setItem('userName', displayName);
 
@@ -380,9 +381,6 @@
                 setLoading(false);
             }
         };
-
-        // تم حذف onAuthStateChanged تماماً لمنع التوجيه التلقائي
-        // المستخدم يجب أن يسجل دخوله كل مرة
 
         // ---------- ربط الأحداث ----------
         elements.loginForm.addEventListener('submit', handleLogin);
