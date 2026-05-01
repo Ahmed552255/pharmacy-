@@ -18,7 +18,7 @@
             --text-sec: #6B8E8E;
             --danger: #E57373;
             --success: #5FA88D;
-            --shadow: 0 12px 28px rgba(58, 128, 128, 0.12 );
+            --shadow: 0 12px 28px rgba(58, 128, 128, 0.12);
             --border-light: rgba(122, 197, 197, 0.2);
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -99,8 +99,7 @@
         }
         .input-group input {
             width: 100%;
-            /* تم تعديل الـ padding لمنع تداخل النص مع أيقونة العين في اليسار */
-            padding: 1rem 3.5rem 1rem 3.5rem; 
+            padding: 1rem 3.5rem 1rem 3.5rem;
             background: var(--white);
             border: 1.5px solid rgba(122, 197, 197, 0.25);
             border-radius: 20px;
@@ -246,13 +245,12 @@
     </main>
 
     <script type="module">
-        // تم تعديل إصدار Firebase إلى الإصدار المستقر 10.8.1
         import { firebaseConfig } from './firebase-config.js';
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
-        const app = initializeApp(firebaseConfig );
+        const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getDatabase(app);
 
@@ -383,26 +381,8 @@
             }
         };
 
-        // ---------- التحقق من وجود جلسة سابقة عبر Firebase ----------
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                // إذا كان المستخدم مسجل دخول بالفعل، نجلبه ونوجهه
-                const role = sessionStorage.getItem('userRole');
-                const name = sessionStorage.getItem('userName');
-                
-                if (role && name) {
-                    redirectUser(role, name);
-                } else {
-                    // إذا لم تكن البيانات في sessionStorage، نجلبها من قاعدة البيانات
-                    const userData = await fetchUserData(user.uid);
-                    if (userData) {
-                        sessionStorage.setItem('userRole', userData.role);
-                        sessionStorage.setItem('userName', userData.name);
-                        redirectUser(userData.role, userData.name);
-                    }
-                }
-            }
-        });
+        // تم حذف onAuthStateChanged تماماً لمنع التوجيه التلقائي
+        // المستخدم يجب أن يسجل دخوله كل مرة
 
         // ---------- ربط الأحداث ----------
         elements.loginForm.addEventListener('submit', handleLogin);
