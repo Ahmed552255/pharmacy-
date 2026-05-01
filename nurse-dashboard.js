@@ -374,4 +374,4 @@ onAuthStateChanged(auth, async (user) => {
             window.location.href = 'index.html';
         }, 2500);
     }
-}); خد راجعها
+}); 
