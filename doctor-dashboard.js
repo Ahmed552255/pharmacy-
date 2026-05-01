@@ -1076,4 +1076,4 @@ UI.logoutBtn.addEventListener('click', async () => {
     loadSavedSession();
     loadAppointments();
     updateUnitLabel();
-})(); 
+})(); خد اقسم الكود دخ لاتنين وخليهم يشتغلوا مع بعض عادى واياك تحزف اوتعدل فى الكود doctor-dashboard.jsاقسمهم بسوخلى الملف الرايسى الى فيهم اسمه 
