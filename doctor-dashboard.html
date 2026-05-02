@@ -267,21 +267,9 @@
             cursor: pointer;
             font-size: 0.85rem;
             transition: 0.2s;
-            color: var(--ink);
         }
-        .dose-chip-btn:hover {
-            background: var(--primary-light);
-            border-color: var(--primary);
-        }
-        .timing-btn-sm {
-            width: 32px; height: 32px; border-radius: 50%;
-            border: 1px solid var(--border-light); background: white;
-            cursor: pointer; display: inline-flex; align-items: center;
-            justify-content: center; margin: 0 2px; transition: 0.2s;
-        }
-        .timing-btn-sm.active { background: var(--primary); color: #4A3B2C; border-color: var(--primary); }
+        .dose-chip-btn:hover { background: var(--primary-light); border-color: var(--primary); }
 
-        /* مودال قائمة الانتظار */
         .queue-modal {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(0,0,0,0.2); backdrop-filter: blur(6px);
@@ -333,13 +321,16 @@
     <header class="app-header">
         <div class="logo-area">
             <div class="logo"><h2><i class="fas fa-stethoscope" style="color:var(--primary); margin-left:8px;"></i>سُكُون</h2></div>
-            <button type="button" class="queue-btn" id="queueModalBtn">
+            <button type="button" class="queue-btn" id="queueModalBtn" title="قائمة الانتظار">
                 <i class="fas fa-users"></i>
                 <span class="queue-badge" id="queueBadgeCount">0</span>
             </button>
         </div>
         <div class="header-actions">
             <span id="welcomeMessage" style="font-weight:600;"></span>
+            <button type="button" class="btn btn-outline" id="pendingSessionsBtn" title="المرضى الذين لديهم كشف معلق">
+                <i class="fas fa-clock"></i> <span>مرضى معلقون</span>
+            </button>
             <button type="button" class="btn btn-outline" id="templatesBtn"><i class="fas fa-folder-open"></i> القوالب</button>
             <button type="button" class="btn btn-outline" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> خروج</button>
         </div>
@@ -418,15 +409,6 @@
             <button type="button" class="queue-tab" data-queue-tab="done">تم الكشف <span class="count" id="doneTabCount">0</span></button>
         </div>
         <div class="queue-list-container" id="queueModalList"></div>
-    </div>
-</div>
-
-<!-- مودال الجلسات المعلقة -->
-<div id="pendingSessionsModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.3); backdrop-filter:blur(6px); align-items:center; justify-content:center; z-index:2500;">
-    <div style="background:white; border-radius:24px; padding:24px; max-width:500px; width:90%; max-height:80vh; overflow-y:auto;">
-        <h3 style="margin-bottom:16px;">استئناف كشف معلق</h3>
-        <div id="sessionsListContainer"></div>
-        <button id="closeSessionsModalBtn" class="btn btn-outline" style="margin-top:16px; width:100%;">إغلاق</button>
     </div>
 </div>
 
