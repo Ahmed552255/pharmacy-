@@ -12,8 +12,7 @@ import {
     get,
     query,
     orderByChild,
-    equalTo,
-    remove
+    equalTo
 } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-database.js";
 
 // ---------- استيراد إدارة الأدوية المحلية (الإصدار الذكي) ----------
@@ -70,8 +69,7 @@ const UI = {
     overwriteTemplateBtn: document.getElementById('overwriteTemplateBtn'),
     templateNameInput: document.getElementById('templateNameInput'),
     clearPrescriptionBtn: document.getElementById('clearPrescriptionBtn'),
-    logoutBtn: document.getElementById('logoutBtn'),
-    pendingSessionsBtn: document.getElementById('pendingSessionsBtn') // الزر الجديد
+    logoutBtn: document.getElementById('logoutBtn')
 };
 
 // ---------- التحقق من الجلسة ----------
@@ -104,12 +102,11 @@ let doseState = {
     timing: 'any'
 };
 let currentQueueTab = 'waiting';
-let loadedTemplateId = null;
-let activeSessionUnsubscribe = null;
-let activeSessionsData = {}; // تخزين آخر جلسات معلقة
+let loadedTemplateId = null; // لتتبع القالب المُحمّل
 
-// ---------- مسار الجلسات السحابية ----------
-const ACTIVE_SESSIONS_PATH = `active_sessions/${currentUser.uid}`;
+// ---------- مفتاح التخزين المحلي ----------
+const SESSION_STORAGE_KEY = 'currentDoctorSession';
+const RECENT_PATIENTS_KEY = 'recentPatients'; // قائمة المرضى السابقين
 
 // ---------- دوال مساعدة ----------
 function getLocalDateString() {
@@ -135,6 +132,7 @@ function escapeHtml(str) {
     return String(str).replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'})[m] || m);
 }
 
+/** استخراج اسم المريض بشكل موحد */
 function getPatientName(apt) {
     return apt.patient_name || apt.patientName || 'غير معروف';
 }
@@ -233,34 +231,44 @@ async function addNewDrugFromSearch(name) {
     UI.drugSuggestions.style.display = 'none';
 }
 
-// ---------- تخزين واسترجاع جلسة الكشف (محلي + سحابي) ----------
+// ---------- تخزين واسترجاع جلسة الكشف الحالية ----------
 function saveCurrentSession() {
-    if (currentAppointment && currentPrescription.length > 0) {
+    if (currentAppointment) {
         const session = {
             appointment: currentAppointment,
             prescription: currentPrescription,
             diagnosis: UI.diagnosisTextarea.value,
             loadedTemplateId: loadedTemplateId
         };
-        localStorage.setItem('currentDoctorSession', JSON.stringify(session));
-        set(ref(db, `${ACTIVE_SESSIONS_PATH}/${currentAppointment.id}`), session).catch(err => {
-            console.warn('فشل حفظ الجلسة في السحابة:', err);
+        localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(session));
+
+        // تحديث قائمة المرضى السابقين (حفظ آخر 20 مريض)
+        let recent = [];
+        try {
+            recent = JSON.parse(localStorage.getItem(RECENT_PATIENTS_KEY)) || [];
+        } catch (e) {}
+        // إزالة أي إدخال سابق لنفس المريض
+        recent = recent.filter(p => p.id !== currentAppointment.id);
+        recent.unshift({
+            id: currentAppointment.id,
+            name: getPatientName(currentAppointment),
+            age: currentAppointment.age || '',
+            time: currentAppointment.time,
+            date: currentAppointment.date
         });
-    } else {
-        if (currentAppointment) {
-            remove(ref(db, `${ACTIVE_SESSIONS_PATH}/${currentAppointment.id}`)).catch(() => {});
-        }
+        if (recent.length > 20) recent.pop();
+        localStorage.setItem(RECENT_PATIENTS_KEY, JSON.stringify(recent));
     }
 }
 
-function loadSavedSessionFromLocal() {
-    const saved = localStorage.getItem('currentDoctorSession');
+function loadSavedSession() {
+    const saved = localStorage.getItem(SESSION_STORAGE_KEY);
     if (saved) {
         try {
             const session = JSON.parse(saved);
-            if (session.appointment && session.prescription) {
+            if (session.appointment) {
                 currentAppointment = session.appointment;
-                currentPrescription = session.prescription;
+                currentPrescription = session.prescription || [];
                 UI.diagnosisTextarea.value = session.diagnosis || '';
                 loadedTemplateId = session.loadedTemplateId || null;
                 updateCurrentPatientUI();
@@ -270,108 +278,14 @@ function loadSavedSessionFromLocal() {
                 return true;
             }
         } catch (e) {
-            console.warn('تعذر استرجاع الجلسة المحلية');
+            console.warn('تعذر استرجاع الجلسة المحفوظة');
         }
     }
     return false;
 }
 
-// ---------- التعامل مع الجلسات السحابية المتعددة ----------
-function listenToActiveSessions() {
-    if (activeSessionUnsubscribe) activeSessionUnsubscribe();
-    const sessionsRef = ref(db, ACTIVE_SESSIONS_PATH);
-    activeSessionUnsubscribe = onValue(sessionsRef, (snap) => {
-        const sessions = snap.val() || {};
-        activeSessionsData = sessions; // تخزين للمرجع اليدوي
-        const sessionIds = Object.keys(sessions);
-        if (sessionIds.length === 0) return;
-
-        // السلوك التلقائي كما كان (جلسة واحدة مع تأكيد)
-        if (sessionIds.length === 1) {
-            const single = sessions[sessionIds[0]];
-            const patientName = single.appointment?.patient_name || single.appointment?.patientName || 'المريض';
-            const confirmResume = confirm(`لديك كشف معلق للمريض "${patientName}". هل تريد استئنافه؟`);
-            if (confirmResume) {
-                loadSessionFromCloud(sessionIds[0], single);
-            } else {
-                remove(ref(db, `${ACTIVE_SESSIONS_PATH}/${sessionIds[0]}`));
-            }
-        }
-        // لم نعد نعرض مودال تلقائي عند أكثر من جلسة، بل نكتفي بالزر اليدوي
-    });
-}
-
-function showSessionsListModal(sessions) {
-    const modalId = 'pendingSessionsModal';
-    let modal = document.getElementById(modalId);
-    if (!modal) {
-        modal = document.createElement('div');
-        modal.id = modalId;
-        modal.style.cssText = 'position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.3); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; z-index:2500;';
-        document.body.appendChild(modal);
-    }
-    const html = `
-        <div style="background:white; border-radius:24px; padding:24px; max-width:500px; width:90%; max-height:80vh; overflow-y:auto;">
-            <h3 style="margin-bottom:16px;">مرضى لديهم كشف معلق</h3>
-            <div id="sessionsListContainer"></div>
-            <button id="closeSessionsModalBtn" class="btn btn-outline" style="margin-top:16px; width:100%;">إغلاق</button>
-        </div>
-    `;
-    modal.innerHTML = html;
-    modal.style.display = 'flex';
-
-    const listContainer = document.getElementById('sessionsListContainer');
-    for (const [id, session] of Object.entries(sessions)) {
-        const patientName = session.appointment?.patient_name || session.appointment?.patientName || 'مريض';
-        const itemDiv = document.createElement('div');
-        itemDiv.style.cssText = 'padding:12px; border-bottom:1px solid #eee; cursor:pointer;';
-        itemDiv.innerHTML = `<b>${escapeHtml(patientName)}</b> - ${session.appointment?.time || ''}`;
-        itemDiv.addEventListener('click', async () => {
-            modal.style.display = 'none';
-            await loadSessionFromCloud(id, session);
-        });
-        listContainer.appendChild(itemDiv);
-    }
-
-    document.getElementById('closeSessionsModalBtn').addEventListener('click', () => {
-        modal.style.display = 'none';
-    });
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) modal.style.display = 'none';
-    });
-}
-
-// ربط زر "المرضى المعلقون"
-if (UI.pendingSessionsBtn) {
-    UI.pendingSessionsBtn.addEventListener('click', () => {
-        const sessions = activeSessionsData;
-        const ids = Object.keys(sessions);
-        if (ids.length === 0) {
-            showToast('لا يوجد مرضى معلقون حالياً');
-            return;
-        }
-        showSessionsListModal(sessions);
-    });
-}
-
-async function loadSessionFromCloud(appointmentId, sessionData) {
-    currentAppointment = sessionData.appointment;
-    currentPrescription = sessionData.prescription || [];
-    UI.diagnosisTextarea.value = sessionData.diagnosis || '';
-    loadedTemplateId = sessionData.loadedTemplateId || null;
-    updateCurrentPatientUI();
-    UI.emptyPrescriptionMsg.style.display = 'none';
-    UI.prescriptionContent.style.display = 'block';
-    renderPrescriptionItems();
-    localStorage.setItem('currentDoctorSession', JSON.stringify(sessionData));
-}
-
-async function deleteActiveSession(appointmentId) {
-    await remove(ref(db, `${ACTIVE_SESSIONS_PATH}/${appointmentId}`)).catch(() => {});
-    const localSession = JSON.parse(localStorage.getItem('currentDoctorSession') || '{}');
-    if (localSession.appointment?.id === appointmentId) {
-        localStorage.removeItem('currentDoctorSession');
-    }
+function clearCurrentSession() {
+    localStorage.removeItem(SESSION_STORAGE_KEY);
 }
 
 // ---------- تحميل بيانات الطبيب ----------
@@ -480,7 +394,7 @@ async function selectPatientFromQueue(appointmentId) {
     UI.prescriptionContent.style.display = 'block';
     renderPrescriptionItems();
     UI.queueModal.style.display = 'none';
-    saveCurrentSession();
+    saveCurrentSession(); // يحفظ الجلسة فوراً حتى لو لم تُضف أدوية بعد
 }
 
 function updateCurrentPatientUI() {
@@ -669,59 +583,42 @@ function saveDosePreference(drug, form, doseString) {
     localStorage.setItem(key, JSON.stringify(prefs));
 }
 
+// ---------- توليد الاقتراحات (الجرعات السابقة فقط، بدون افتراضات) ----------
 function generateDoseSuggestions() {
-    const quantity = UI.doseNumberInput.value.trim();
     const drug = doseState.drug;
     const form = UI.drugFormSelect.value;
     const unit = UI.unitLabel.textContent;
 
     let suggestions = [];
 
+    // فقط الاقتراحات التي سبق حفظها للدواء والشكل الحاليين
     if (drug) {
         const prefs = loadDosePreferences(drug, form);
         suggestions = prefs.map(p => ({ text: p, isPref: true }));
     }
 
-    if (quantity && !isNaN(parseInt(quantity))) {
-        const num = parseInt(quantity);
-        const base = `${num} ${unit}`;
-        const built = [
-            { text: `${base} يومياً` },
-            { text: `${base} كل 8 ساعات` },
-            { text: `${base} كل 12 ساعة` },
-            { text: `${base} مرة واحدة يومياً` },
-            { text: `${base} عند اللزوم` }
-        ];
-        built.forEach(b => {
-            if (!suggestions.some(s => s.text === b.text)) {
-                suggestions.push({ text: b.text, isPref: false });
-            }
-        });
-    }
-
+    // إذا لم توجد اقتراحات سابقة، لا نضيف أي شيء – مجرد زر الجرعة المخصصة
     UI.doseSuggestionsContainer.innerHTML = suggestions.slice(0, 8).map(s => `
         <button class="dose-chip-btn" data-dose-text="${escapeHtml(s.text)}">
             ${escapeHtml(s.text)} ${s.isPref ? '<i class="fas fa-history" style="opacity:0.6; margin-right:4px;"></i>' : ''}
         </button>
     `).join('');
 
-    if (suggestions.length === 0) {
-        UI.doseSuggestionsContainer.innerHTML = '<small style="color:gray;">لا توجد اقتراحات سابقة</small>';
-    }
-
-    const customBtn = document.createElement('button');
-    customBtn.id = 'customDoseTriggerBtn';
-    customBtn.className = 'dose-chip-btn';
-    customBtn.style.background = 'var(--primary-light)';
-    customBtn.textContent = '✏️ جرعة مخصصة';
-    customBtn.addEventListener('click', showCustomDoseInput);
-    UI.doseSuggestionsContainer.appendChild(customBtn);
-
-    document.querySelectorAll('.dose-chip-btn[data-dose-text]').forEach(btn => {
+    document.querySelectorAll('.dose-chip-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
             const doseText = btn.dataset.doseText;
             applyDoseFromSuggestion(doseText);
         });
+    });
+    
+    // زر الجرعة المخصصة يكون موجوداً دائماً
+    UI.doseSuggestionsContainer.innerHTML += `
+        <button id="customDoseTriggerBtn" class="dose-chip-btn" style="background: var(--primary-light);">
+            ✏️ جرعة مخصصة
+        </button>
+    `;
+    document.getElementById('customDoseTriggerBtn').addEventListener('click', () => {
+        showCustomDoseInput();
     });
 }
 
@@ -757,7 +654,6 @@ function showCustomDoseInput() {
 }
 
 UI.doseNumberInput.addEventListener('input', generateDoseSuggestions);
-UI.drugFormSelect.addEventListener('change', generateDoseSuggestions);
 
 UI.applyDoseBtn.addEventListener('click', async () => {
     const quantity = UI.doseNumberInput.value.trim();
@@ -809,9 +705,8 @@ UI.clearPrescriptionBtn.addEventListener('click', () => {
         currentPrescription = [];
         loadedTemplateId = null;
         renderPrescriptionItems();
-        deleteActiveSession(currentAppointment?.id);
-        localStorage.removeItem('currentDoctorSession');
-        showToast('تم مسح الوصفة وإلغاء الكشف');
+        saveCurrentSession();
+        showToast('تم مسح الوصفة');
     }
 });
 
@@ -874,9 +769,6 @@ UI.finishBtn.addEventListener('click', async () => {
         
         await update(ref(db), updates);
         
-        await remove(ref(db, `${ACTIVE_SESSIONS_PATH}/${currentAppointment.id}`)).catch(() => {});
-        localStorage.removeItem('currentDoctorSession');
-        
         showToast('✅ تم إنهاء الكشف وحفظ الروشتة بنجاح');
         currentAppointment = null;
         currentPrescription = [];
@@ -885,6 +777,7 @@ UI.finishBtn.addEventListener('click', async () => {
         UI.emptyPrescriptionMsg.style.display = 'block';
         UI.prescriptionContent.style.display = 'none';
         UI.diagnosisTextarea.value = '';
+        clearCurrentSession(); // يمسح الجلسة من التخزين المحلي
     } catch (err) {
         console.error('فشل الحفظ:', err);
         showToast('حدث خطأ أثناء حفظ البيانات', true);
@@ -1035,11 +928,11 @@ window.addEventListener('click', (e) => {
 });
 
 UI.logoutBtn.addEventListener('click', async () => {
-    if (activeSessionUnsubscribe) activeSessionUnsubscribe();
     try {
         await signOut(auth);
     } catch (err) {}
     sessionStorage.clear();
+    clearCurrentSession(); // يمسح جلسة الكشف عند الخروج
     window.location.href = 'index.html';
 });
 
@@ -1049,15 +942,7 @@ UI.logoutBtn.addEventListener('click', async () => {
     await localDrugDB.open();
     await loadDoctorData(currentUser.uid);
     addNewFormOptions();
-    
-    const localLoaded = loadSavedSessionFromLocal();
-    
-    listenToActiveSessions();
-    
-    if (!localLoaded) {
-        // سيعمل المستمع وسيُحدث البيانات، ويمكن للمستخدم استخدام الزر اليدوي
-    }
-    
+    loadSavedSession(); // يستعيد الجلسة إن وُجدت (حتى لو لم تضف أدوية بعد)
     loadAppointments();
     updateUnitLabel();
 })();
