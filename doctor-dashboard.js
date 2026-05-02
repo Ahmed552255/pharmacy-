@@ -70,7 +70,8 @@ const UI = {
     overwriteTemplateBtn: document.getElementById('overwriteTemplateBtn'),
     templateNameInput: document.getElementById('templateNameInput'),
     clearPrescriptionBtn: document.getElementById('clearPrescriptionBtn'),
-    logoutBtn: document.getElementById('logoutBtn')
+    logoutBtn: document.getElementById('logoutBtn'),
+    pendingSessionsBtn: document.getElementById('pendingSessionsBtn') // الزر الجديد
 };
 
 // ---------- التحقق من الجلسة ----------
@@ -104,7 +105,8 @@ let doseState = {
 };
 let currentQueueTab = 'waiting';
 let loadedTemplateId = null;
-let activeSessionUnsubscribe = null; // مستمع الجلسات السحابية
+let activeSessionUnsubscribe = null;
+let activeSessionsData = {}; // تخزين آخر جلسات معلقة
 
 // ---------- مسار الجلسات السحابية ----------
 const ACTIVE_SESSIONS_PATH = `active_sessions/${currentUser.uid}`;
@@ -240,14 +242,11 @@ function saveCurrentSession() {
             diagnosis: UI.diagnosisTextarea.value,
             loadedTemplateId: loadedTemplateId
         };
-        // تخزين محلي
         localStorage.setItem('currentDoctorSession', JSON.stringify(session));
-        // تخزين سحابي
         set(ref(db, `${ACTIVE_SESSIONS_PATH}/${currentAppointment.id}`), session).catch(err => {
             console.warn('فشل حفظ الجلسة في السحابة:', err);
         });
     } else {
-        // إذا لم توجد أدوية، نحذف الجلسة من السحابة إذا كانت موجودة
         if (currentAppointment) {
             remove(ref(db, `${ACTIVE_SESSIONS_PATH}/${currentAppointment.id}`)).catch(() => {});
         }
@@ -281,31 +280,28 @@ function loadSavedSessionFromLocal() {
 function listenToActiveSessions() {
     if (activeSessionUnsubscribe) activeSessionUnsubscribe();
     const sessionsRef = ref(db, ACTIVE_SESSIONS_PATH);
-    activeSessionUnsubscribe = onValue(sessionsRef, async (snap) => {
+    activeSessionUnsubscribe = onValue(sessionsRef, (snap) => {
         const sessions = snap.val() || {};
+        activeSessionsData = sessions; // تخزين للمرجع اليدوي
         const sessionIds = Object.keys(sessions);
-        if (sessionIds.length === 0) return; // لا توجد جلسات معلقة
+        if (sessionIds.length === 0) return;
 
-        // إذا كان هناك جلسة واحدة فقط، نستأنفها تلقائياً (بعد موافقة)
+        // السلوك التلقائي كما كان (جلسة واحدة مع تأكيد)
         if (sessionIds.length === 1) {
             const single = sessions[sessionIds[0]];
             const patientName = single.appointment?.patient_name || single.appointment?.patientName || 'المريض';
             const confirmResume = confirm(`لديك كشف معلق للمريض "${patientName}". هل تريد استئنافه؟`);
             if (confirmResume) {
-                await loadSessionFromCloud(sessionIds[0], single);
+                loadSessionFromCloud(sessionIds[0], single);
             } else {
-                // حذف الجلسة من السحابة إذا رفض
-                await remove(ref(db, `${ACTIVE_SESSIONS_PATH}/${sessionIds[0]}`));
+                remove(ref(db, `${ACTIVE_SESSIONS_PATH}/${sessionIds[0]}`));
             }
-        } else {
-            // أكثر من جلسة: نعرض قائمة للاختيار
-            showSessionsListModal(sessions);
         }
+        // لم نعد نعرض مودال تلقائي عند أكثر من جلسة، بل نكتفي بالزر اليدوي
     });
 }
 
 function showSessionsListModal(sessions) {
-    // إنشاء مودال ديناميكي للاختيار
     const modalId = 'pendingSessionsModal';
     let modal = document.getElementById(modalId);
     if (!modal) {
@@ -316,7 +312,7 @@ function showSessionsListModal(sessions) {
     }
     const html = `
         <div style="background:white; border-radius:24px; padding:24px; max-width:500px; width:90%; max-height:80vh; overflow-y:auto;">
-            <h3 style="margin-bottom:16px;">استئناف كشف معلق</h3>
+            <h3 style="margin-bottom:16px;">مرضى لديهم كشف معلق</h3>
             <div id="sessionsListContainer"></div>
             <button id="closeSessionsModalBtn" class="btn btn-outline" style="margin-top:16px; width:100%;">إغلاق</button>
         </div>
@@ -345,8 +341,20 @@ function showSessionsListModal(sessions) {
     });
 }
 
+// ربط زر "المرضى المعلقون"
+if (UI.pendingSessionsBtn) {
+    UI.pendingSessionsBtn.addEventListener('click', () => {
+        const sessions = activeSessionsData;
+        const ids = Object.keys(sessions);
+        if (ids.length === 0) {
+            showToast('لا يوجد مرضى معلقون حالياً');
+            return;
+        }
+        showSessionsListModal(sessions);
+    });
+}
+
 async function loadSessionFromCloud(appointmentId, sessionData) {
-    // تعيين الحالة
     currentAppointment = sessionData.appointment;
     currentPrescription = sessionData.prescription || [];
     UI.diagnosisTextarea.value = sessionData.diagnosis || '';
@@ -355,13 +363,11 @@ async function loadSessionFromCloud(appointmentId, sessionData) {
     UI.emptyPrescriptionMsg.style.display = 'none';
     UI.prescriptionContent.style.display = 'block';
     renderPrescriptionItems();
-    // نحدث الحالة المحلية
     localStorage.setItem('currentDoctorSession', JSON.stringify(sessionData));
 }
 
 async function deleteActiveSession(appointmentId) {
     await remove(ref(db, `${ACTIVE_SESSIONS_PATH}/${appointmentId}`)).catch(() => {});
-    // إذا كانت الجلسة المحلية تشير إلى نفس المعرف، نمسحها
     const localSession = JSON.parse(localStorage.getItem('currentDoctorSession') || '{}');
     if (localSession.appointment?.id === appointmentId) {
         localStorage.removeItem('currentDoctorSession');
@@ -474,7 +480,6 @@ async function selectPatientFromQueue(appointmentId) {
     UI.prescriptionContent.style.display = 'block';
     renderPrescriptionItems();
     UI.queueModal.style.display = 'none';
-    // إنشاء جلسة سحابية جديدة
     saveCurrentSession();
 }
 
@@ -672,13 +677,11 @@ function generateDoseSuggestions() {
 
     let suggestions = [];
 
-    // تحميل التفضيلات المخزنة لهذا الدواء (إن وجدت)
     if (drug) {
         const prefs = loadDosePreferences(drug, form);
         suggestions = prefs.map(p => ({ text: p, isPref: true }));
     }
 
-    // بناء جرعات من الكمية المدخلة فقط (بدون افتراضيات)
     if (quantity && !isNaN(parseInt(quantity))) {
         const num = parseInt(quantity);
         const base = `${num} ${unit}`;
@@ -696,7 +699,6 @@ function generateDoseSuggestions() {
         });
     }
 
-    // عرض الاقتراحات (قد تكون فارغة)
     UI.doseSuggestionsContainer.innerHTML = suggestions.slice(0, 8).map(s => `
         <button class="dose-chip-btn" data-dose-text="${escapeHtml(s.text)}">
             ${escapeHtml(s.text)} ${s.isPref ? '<i class="fas fa-history" style="opacity:0.6; margin-right:4px;"></i>' : ''}
@@ -707,7 +709,6 @@ function generateDoseSuggestions() {
         UI.doseSuggestionsContainer.innerHTML = '<small style="color:gray;">لا توجد اقتراحات سابقة</small>';
     }
 
-    // إضافة زر جرعة مخصصة دائمًا
     const customBtn = document.createElement('button');
     customBtn.id = 'customDoseTriggerBtn';
     customBtn.className = 'dose-chip-btn';
@@ -716,7 +717,6 @@ function generateDoseSuggestions() {
     customBtn.addEventListener('click', showCustomDoseInput);
     UI.doseSuggestionsContainer.appendChild(customBtn);
 
-    // ربط أزرار الاقتراحات
     document.querySelectorAll('.dose-chip-btn[data-dose-text]').forEach(btn => {
         btn.addEventListener('click', (e) => {
             const doseText = btn.dataset.doseText;
@@ -809,7 +809,7 @@ UI.clearPrescriptionBtn.addEventListener('click', () => {
         currentPrescription = [];
         loadedTemplateId = null;
         renderPrescriptionItems();
-        deleteActiveSession(currentAppointment?.id); // حذف الجلسة السحابية
+        deleteActiveSession(currentAppointment?.id);
         localStorage.removeItem('currentDoctorSession');
         showToast('تم مسح الوصفة وإلغاء الكشف');
     }
@@ -874,7 +874,6 @@ UI.finishBtn.addEventListener('click', async () => {
         
         await update(ref(db), updates);
         
-        // حذف الجلسة السحابية
         await remove(ref(db, `${ACTIVE_SESSIONS_PATH}/${currentAppointment.id}`)).catch(() => {});
         localStorage.removeItem('currentDoctorSession');
         
@@ -1051,15 +1050,12 @@ UI.logoutBtn.addEventListener('click', async () => {
     await loadDoctorData(currentUser.uid);
     addNewFormOptions();
     
-    // أولاً: محاولة تحميل الجلسة المحلية (لحفظ آخر حالة)
     const localLoaded = loadSavedSessionFromLocal();
     
-    // ثانيًا: الاستماع للجلسات السحابية (قد تعرض مودال الاختيار)
     listenToActiveSessions();
     
-    // إذا لم تكن هناك جلسة محلية، نستمع فقط (قد يعرض المودال)
     if (!localLoaded) {
-        // الاستماع سيُشغل وسيظهر المودال إذا وُجدت جلسات
+        // سيعمل المستمع وسيُحدث البيانات، ويمكن للمستخدم استخدام الزر اليدوي
     }
     
     loadAppointments();
