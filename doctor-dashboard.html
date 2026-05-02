@@ -169,7 +169,7 @@
             max-height: 300px;
             overflow-y: auto;
             margin-bottom: 24px;
-            padding-left: 4px; /* for scrollbar */
+            padding-left: 4px;
         }
         .rx-item {
             background: white;
@@ -255,6 +255,23 @@
             display: flex; align-items: center; justify-content: space-between;
             background: white; padding: 8px 12px; border-radius: 40px;
             border: 1px solid var(--border-light); margin-bottom: 8px;
+        }
+        .dose-chip-btn {
+            display: inline-block;
+            margin: 4px;
+            padding: 8px 16px;
+            border-radius: 30px;
+            border: 1px solid var(--border-light);
+            background: white;
+            font-family: 'Cairo', sans-serif;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: 0.2s;
+            color: var(--ink);
+        }
+        .dose-chip-btn:hover {
+            background: var(--primary-light);
+            border-color: var(--primary);
         }
         .timing-btn-sm {
             width: 32px; height: 32px; border-radius: 50%;
@@ -401,6 +418,15 @@
             <button type="button" class="queue-tab" data-queue-tab="done">تم الكشف <span class="count" id="doneTabCount">0</span></button>
         </div>
         <div class="queue-list-container" id="queueModalList"></div>
+    </div>
+</div>
+
+<!-- مودال الجلسات المعلقة -->
+<div id="pendingSessionsModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.3); backdrop-filter:blur(6px); align-items:center; justify-content:center; z-index:2500;">
+    <div style="background:white; border-radius:24px; padding:24px; max-width:500px; width:90%; max-height:80vh; overflow-y:auto;">
+        <h3 style="margin-bottom:16px;">استئناف كشف معلق</h3>
+        <div id="sessionsListContainer"></div>
+        <button id="closeSessionsModalBtn" class="btn btn-outline" style="margin-top:16px; width:100%;">إغلاق</button>
     </div>
 </div>
 
