@@ -2,14 +2,13 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>سُكُون · لوحة الممرض</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* ----- ألوان برتقالية دافئة (مشمش / كراميل) ----- */
         :root {
             --primary: #F8C471;
             --primary-light: #FDEBD0;
@@ -28,28 +27,46 @@
             --shadow-md: 0 12px 28px -6px rgba(230, 126, 34, 0.12);
             --shadow-lg: 0 20px 40px -10px rgba(230, 126, 34, 0.18);
             --radius-card: 28px;
+            --radius-sm: 20px;
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
+            --safe-top: env(safe-area-inset-top, 0px);
         }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
         body {
             font-family: 'Cairo', sans-serif;
             background: var(--bg);
             color: var(--ink);
             min-height: 100vh;
+            min-height: 100dvh;
             padding: 16px;
+            padding-bottom: calc(16px + var(--safe-bottom));
+            padding-top: calc(16px + var(--safe-top));
             position: relative;
+            -webkit-tap-highlight-color: transparent;
+            overflow-x: hidden;
         }
         body::before {
             content: '';
             position: fixed;
             inset: 0;
             background: radial-gradient(circle at 0% 0%, rgba(248, 196, 113, 0.1), transparent 50%),
-                        radial-gradient(circle at 100% 100%, rgba(230, 126, 34, 0.08), transparent 50%);
+                radial-gradient(circle at 100% 100%, rgba(230, 126, 34, 0.08), transparent 50%);
             pointer-events: none;
             z-index: -1;
         }
-        .container { max-width: 1400px; margin: 0 auto; }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
 
-        /* الهيدر - تطويره ليكون أكثر انسيابية */
+        /* ========== الهيدر ========== */
         .app-header {
             display: flex;
             align-items: center;
@@ -59,14 +76,12 @@
             -webkit-backdrop-filter: blur(24px);
             border-radius: 80px;
             padding: 10px 20px;
-            margin-bottom: 24px;
-            border: 1px solid rgba(255,255,255,0.7);
+            border: 1px solid rgba(255, 255, 255, 0.7);
             box-shadow: var(--shadow-lg);
             flex-wrap: wrap;
             gap: 12px;
-            position: sticky;
-            top: 16px;
             z-index: 50;
+            flex-shrink: 0;
         }
         .logo h2 {
             font-size: clamp(1.5rem, 5vw, 2rem);
@@ -77,7 +92,21 @@
             color: transparent;
             white-space: nowrap;
         }
-        .header-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .header-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        #welcomeMessage {
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 140px;
+        }
+
+        /* ========== الأزرار العامة ========== */
         .btn {
             padding: 10px 20px;
             border-radius: 60px;
@@ -94,9 +123,16 @@
             color: var(--ink);
             border: 1px solid var(--border-light);
             white-space: nowrap;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+            user-select: none;
         }
-        .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 18px rgba(0,0,0,0.06); }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.06);
+        }
+        .btn:active {
+            transform: scale(0.95);
+        }
         .btn-primary {
             background: linear-gradient(145deg, var(--primary), var(--accent));
             color: white;
@@ -104,17 +140,27 @@
             box-shadow: 0 8px 16px rgba(230, 126, 34, 0.25);
             font-weight: 700;
         }
-        .btn-primary:hover { background: linear-gradient(145deg, var(--primary-dark), var(--accent)); }
-        .btn-outline:hover { background: var(--primary-light); border-color: var(--primary); }
+        .btn-primary:hover {
+            background: linear-gradient(145deg, var(--primary-dark), var(--accent));
+        }
+        .btn-outline:hover {
+            background: var(--primary-light);
+            border-color: var(--primary);
+        }
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 0.8rem;
+            border-radius: 30px;
+        }
 
-        /* صف التحكم العلوي (الأطباء + أداة اليوم) */
+        /* ========== شريط الأطباء + أداة اليوم ========== */
         .controls-row {
             display: flex;
             align-items: center;
             justify-content: space-between;
             flex-wrap: wrap;
             gap: 16px;
-            margin-bottom: 20px;
+            flex-shrink: 0;
         }
         .doctors-toolbar {
             display: flex;
@@ -136,12 +182,17 @@
             align-items: center;
             gap: 6px;
         }
-        .doctor-tab-btn i { color: var(--accent); }
+        .doctor-tab-btn i {
+            color: var(--accent);
+        }
         .doctor-tab-btn.active {
             background: var(--primary);
             color: #4A3B2C;
             border-color: var(--primary);
             box-shadow: 0 8px 20px rgba(230, 126, 34, 0.2);
+        }
+        .doctor-tab-btn:active {
+            transform: scale(0.96);
         }
 
         /* أداة تحديد اليوم */
@@ -155,7 +206,9 @@
             box-shadow: var(--shadow-sm);
             transition: 0.2s;
         }
-        .date-picker-wrapper:hover { border-color: var(--primary); }
+        .date-picker-wrapper:hover {
+            border-color: var(--primary);
+        }
         .today-btn {
             background: transparent;
             border: none;
@@ -170,8 +223,12 @@
             gap: 6px;
             transition: 0.2s;
         }
-        .today-btn i { font-size: 1rem; }
-        .today-btn:hover { background: var(--primary-light); }
+        .today-btn i {
+            font-size: 1rem;
+        }
+        .today-btn:hover {
+            background: var(--primary-light);
+        }
         .date-input {
             border: none;
             padding: 8px 12px;
@@ -184,18 +241,19 @@
             outline: none;
         }
 
-        /* تبويبات الحالة مع عداد */
+        /* ========== تبويبات الحالة ========== */
         .tabs-container {
-            background: rgba(255,255,255,0.7);
+            background: rgba(255, 255, 255, 0.7);
             backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             border-radius: 80px;
             padding: 6px;
             display: inline-flex;
-            margin-bottom: 24px;
             border: 1px solid var(--border-light);
             flex-wrap: wrap;
             justify-content: center;
             box-shadow: var(--shadow-sm);
+            flex-shrink: 0;
         }
         .tab-btn {
             background: transparent;
@@ -211,9 +269,11 @@
             gap: 8px;
             font-size: 0.95rem;
         }
-        .tab-btn i { font-size: 0.95rem; }
+        .tab-btn i {
+            font-size: 0.95rem;
+        }
         .tab-btn .count {
-            background: rgba(0,0,0,0.04);
+            background: rgba(0, 0, 0, 0.04);
             border-radius: 30px;
             padding: 2px 10px;
             font-size: 0.8rem;
@@ -229,16 +289,19 @@
             color: var(--ink);
         }
 
-        /* جدول الحجوزات (مُحسّن) */
+        /* ========== جدول الحجوزات ========== */
         .table-wrapper {
             background: rgba(255, 255, 255, 0.8);
             backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
             border-radius: var(--radius-card);
             padding: 0;
             box-shadow: var(--shadow-lg);
-            border: 1px solid rgba(255,255,255,0.7);
+            border: 1px solid rgba(255, 255, 255, 0.7);
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
+            flex: 1;
+            min-height: 0;
         }
         table {
             width: 100%;
@@ -247,7 +310,10 @@
             min-width: 800px;
             font-size: 0.95rem;
         }
-        th, td { padding: 14px 10px; }
+        th,
+        td {
+            padding: 14px 10px;
+        }
         thead tr {
             background: linear-gradient(to bottom, #FEF5EC, #FCEBD9);
             border-bottom: 2px solid var(--primary);
@@ -260,11 +326,14 @@
             letter-spacing: 0.5px;
             white-space: nowrap;
         }
-        tbody tr { border-bottom: 1px solid var(--border-light); transition: all 0.2s; }
+        tbody tr {
+            border-bottom: 1px solid var(--border-light);
+            transition: all 0.2s;
+        }
         tbody tr:hover {
             background: rgba(248, 196, 113, 0.1);
             transform: scale(1.01);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
             position: relative;
             z-index: 1;
         }
@@ -279,46 +348,104 @@
             align-items: center;
             gap: 4px;
         }
-        .status-waiting { background: #FEF9E7; color: #9A6E1A; }
-        .status-inprogress { background: #D6F0F0; color: #1A5C5C; }
-        .status-done { background: #DCF5E8; color: #1E6F4C; }
-        .status-cancelled { background: #FDE2E2; color: #B23B3B; }
+        .status-waiting {
+            background: #FEF9E7;
+            color: #9A6E1A;
+        }
+        .status-inprogress {
+            background: #D6F0F0;
+            color: #1A5C5C;
+        }
+        .status-done {
+            background: #DCF5E8;
+            color: #1E6F4C;
+        }
+        .status-cancelled {
+            background: #FDE2E2;
+            color: #B23B3B;
+        }
 
-        .action-btns { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
+        .action-btns {
+            display: flex;
+            gap: 6px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
         .icon-btn {
-            width: 34px; height: 34px; border-radius: 12px; border: none;
-            background: white; color: var(--text-sec); cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            transition: all 0.15s; border: 1px solid var(--border-light);
+            width: 34px;
+            height: 34px;
+            border-radius: 12px;
+            border: none;
+            background: white;
+            color: var(--text-sec);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s;
+            border: 1px solid var(--border-light);
             font-size: 0.9rem;
         }
-        .icon-btn:hover { background: var(--primary); color: #4A3B2C; border-color: var(--primary); }
-        .icon-btn.danger:hover { background: var(--danger); color: white; border-color: var(--danger); }
-        .icon-btn.success:hover { background: var(--success); color: white; border-color: var(--success); }
-        .icon-btn.warning:hover { background: var(--warning); color: white; border-color: var(--warning); }
+        .icon-btn:hover {
+            background: var(--primary);
+            color: #4A3B2C;
+            border-color: var(--primary);
+        }
+        .icon-btn.danger:hover {
+            background: var(--danger);
+            color: white;
+            border-color: var(--danger);
+        }
+        .icon-btn.success:hover {
+            background: var(--success);
+            color: white;
+            border-color: var(--success);
+        }
+        .icon-btn.warning:hover {
+            background: var(--warning);
+            color: white;
+            border-color: var(--warning);
+        }
 
-        /* مودال */
+        /* ========== مودال ========== */
         .modal {
             display: none;
             position: fixed;
             inset: 0;
             background: rgba(60, 40, 20, 0.25);
             backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
             align-items: center;
             justify-content: center;
             z-index: 1000;
             padding: 16px;
         }
+        .modal.show {
+            display: flex;
+        }
         .modal-card {
             background: rgba(255, 255, 255, 0.97);
             backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
             border-radius: 40px;
             width: 100%;
             max-width: 600px;
             max-height: 85vh;
+            max-height: 85dvh;
             overflow-y: auto;
             box-shadow: 0 30px 50px rgba(160, 100, 40, 0.25);
-            border: 1px solid rgba(255,255,255,0.8);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            animation: modalIn 0.3s ease;
+        }
+        @keyframes modalIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px) scale(0.94);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
         }
         .modal-header {
             padding: 20px 24px;
@@ -329,10 +456,33 @@
             justify-content: space-between;
             align-items: center;
         }
-        .modal-body { padding: 20px 24px; }
-        .close-btn { background: none; border: none; font-size: 28px; color: var(--text-sec); cursor: pointer; }
-        .form-group { margin-bottom: 18px; }
-        .form-group label { display: block; margin-bottom: 6px; font-weight: 600; color: var(--ink); }
+        .modal-body {
+            padding: 20px 24px;
+        }
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 28px;
+            color: var(--text-sec);
+            cursor: pointer;
+            line-height: 1;
+            padding: 4px 8px;
+            border-radius: 50%;
+            transition: 0.2s;
+        }
+        .close-btn:hover {
+            background: rgba(0, 0, 0, 0.05);
+            color: var(--ink);
+        }
+        .form-group {
+            margin-bottom: 18px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: var(--ink);
+        }
         .form-control {
             width: 100%;
             padding: 12px 16px;
@@ -357,131 +507,834 @@
             overflow-y: auto;
             display: none;
         }
-        .search-item { padding: 10px 16px; cursor: pointer; border-bottom: 1px solid var(--border-light); }
-        .search-item:hover { background: #FEF5EC; }
+        .search-item {
+            padding: 10px 16px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border-light);
+        }
+        .search-item:hover {
+            background: #FEF5EC;
+        }
 
+        /* ========== شريط الأطباء الأفقي (للهاتف) ========== */
+        .doctors-strip-mobile {
+            display: none;
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 50px;
+            padding: 6px 4px;
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            box-shadow: var(--shadow-sm);
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+        .doctors-strip-mobile .strip-scroll {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scroll-behavior: smooth;
+            padding: 4px 8px;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        .doctors-strip-mobile .strip-scroll::-webkit-scrollbar {
+            display: none;
+        }
+        .doctor-pill {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 18px;
+            background: white;
+            border-radius: 50px;
+            border: 1px solid var(--border-light);
+            cursor: pointer;
+            white-space: nowrap;
+            flex-shrink: 0;
+            transition: all 0.2s;
+            user-select: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        .doctor-pill.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            font-weight: 700;
+            box-shadow: 0 4px 14px rgba(230, 126, 34, 0.25);
+        }
+        .doctor-pill i {
+            color: var(--accent);
+        }
+        .doctor-pill.active i {
+            color: #4A3B2C;
+        }
+
+        /* ========== التوست ========== */
         .toast {
             position: fixed;
-            bottom: 20px;
+            bottom: 24px;
+            bottom: calc(24px + var(--safe-bottom));
             left: 20px;
             right: 20px;
             background: #4A3B2C;
             color: white;
-            padding: 12px 24px;
+            padding: 14px 24px;
             border-radius: 60px;
             text-align: center;
-            z-index: 1300;
-            font-weight: 500;
+            z-index: 3000;
             max-width: 500px;
             margin: 0 auto;
-            box-shadow: 0 12px 28px rgba(0,0,0,0.2);
+            font-size: 0.9rem;
+            animation: slideUpToast 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+            font-weight: 500;
         }
-        .empty-state { text-align: center; padding: 40px; color: var(--text-sec); }
+        @keyframes slideUpToast {
+            from {
+                opacity: 0;
+                transform: translateY(30px) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-sec);
+        }
+        .empty-state i {
+            display: block;
+            font-size: 2.5rem;
+            margin-bottom: 12px;
+            opacity: 0.5;
+        }
 
-        /* Responsive */
-        @media (max-width: 640px) {
-            body { padding: 10px; }
-            .app-header { padding: 8px 16px; }
-            .logo h2 { font-size: 1.4rem; }
-            .btn { padding: 8px 14px; font-size: 0.8rem; }
-            .doctor-tab-btn { padding: 6px 14px; font-size: 0.8rem; }
-            .tab-btn { padding: 8px 14px; font-size: 0.8rem; }
-            .tab-btn .count { padding: 2px 6px; }
-            table { min-width: 700px; font-size: 0.8rem; }
-            th, td { padding: 10px 4px; }
-            .icon-btn { width: 30px; height: 30px; }
-            .controls-row { flex-direction: column; align-items: stretch; }
-            .date-picker-wrapper { width: 100%; }
+        /* ============================================== */
+        /* ========== تجاوب سطح المكتب (>= 1025px) ======= */
+        /* ============================================== */
+        @media (min-width: 1025px) {
+            .doctors-strip-mobile {
+                display: none !important;
+            }
+            .doctors-toolbar {
+                display: flex;
+            }
+            .table-wrapper {
+                overflow-x: auto;
+            }
+            table {
+                min-width: 800px;
+            }
+        }
+
+        /* ============================================== */
+        /* ========== الأجهزة اللوحية (768-1024px) ======= */
+        /* ============================================== */
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .doctors-strip-mobile {
+                display: none !important;
+            }
+            .doctors-toolbar {
+                display: flex;
+                flex-wrap: wrap;
+            }
+            .btn {
+                padding: 8px 14px;
+                font-size: 0.85rem;
+            }
+            .doctor-tab-btn {
+                padding: 6px 14px;
+                font-size: 0.8rem;
+            }
+            table {
+                min-width: 700px;
+                font-size: 0.85rem;
+            }
+            th,
+            td {
+                padding: 10px 6px;
+            }
+            .icon-btn {
+                width: 30px;
+                height: 30px;
+            }
+        }
+
+        /* ============================================== */
+        /* ========== الهواتف (<= 768px) ================= */
+        /* ============================================== */
+        @media (max-width: 768px) {
+            body {
+                padding: 8px;
+                padding-bottom: calc(8px + var(--safe-bottom));
+                padding-top: calc(8px + var(--safe-top));
+            }
+            .container {
+                gap: 10px;
+            }
+            .app-header {
+                border-radius: 40px;
+                padding: 10px 14px;
+                gap: 8px;
+            }
+            .logo h2 {
+                font-size: 1.2rem;
+            }
+            #welcomeMessage {
+                font-size: 0.8rem;
+                max-width: 90px;
+            }
+            .header-actions {
+                gap: 4px;
+            }
+            .btn {
+                font-size: 0.78rem;
+                padding: 7px 12px;
+                border-radius: 30px;
+                gap: 4px;
+            }
+            /* إخفاء شريط الأطباء الأفقي القديم وإظهار الشريط المتنقل */
+            .controls-row .doctors-toolbar {
+                display: none !important;
+            }
+            .doctors-strip-mobile {
+                display: block;
+                order: 2;
+            }
+            .controls-row {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+            }
+            .date-picker-wrapper {
+                width: 100%;
+                justify-content: space-between;
+            }
+            .date-input {
+                flex: 1;
+            }
+            .tabs-container {
+                width: 100%;
+                justify-content: space-around;
+                padding: 4px;
+                border-radius: 50px;
+            }
+            .tab-btn {
+                flex: 1;
+                justify-content: center;
+                padding: 10px 8px;
+                font-size: 0.8rem;
+                gap: 4px;
+            }
+            .tab-btn .count {
+                padding: 2px 6px;
+            }
+            .table-wrapper {
+                border-radius: 20px;
+            }
+            table {
+                min-width: 600px;
+                font-size: 0.8rem;
+            }
+            th,
+            td {
+                padding: 10px 4px;
+            }
+            .icon-btn {
+                width: 28px;
+                height: 28px;
+                border-radius: 10px;
+                font-size: 0.8rem;
+            }
+            .modal-card {
+                border-radius: 28px 28px 16px 16px;
+                max-height: 90dvh;
+                animation: modalInMobile 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            }
+            @keyframes modalInMobile {
+                from {
+                    opacity: 0;
+                    transform: translateY(60px) scale(0.95);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0) scale(1);
+                }
+            }
+            .modal-header {
+                padding: 14px 16px;
+                border-radius: 28px 28px 0 0;
+            }
+            .modal-body {
+                padding: 14px 16px;
+            }
+            .toast {
+                bottom: calc(16px + var(--safe-bottom));
+                left: 12px;
+                right: 12px;
+                padding: 12px 20px;
+                font-size: 0.85rem;
+            }
+        }
+
+        /* ============================================== */
+        /* ====== هواتف صغيرة جداً (<= 400px) ============ */
+        /* ============================================== */
+        @media (max-width: 400px) {
+            body {
+                padding: 4px;
+                padding-bottom: calc(4px + var(--safe-bottom));
+                padding-top: calc(4px + var(--safe-top));
+            }
+            .app-header {
+                padding: 8px 10px;
+                border-radius: 30px;
+                gap: 4px;
+            }
+            .logo h2 {
+                font-size: 1rem;
+            }
+            .btn {
+                font-size: 0.72rem;
+                padding: 6px 10px;
+                border-radius: 24px;
+            }
+            .doctor-pill {
+                padding: 8px 14px;
+                font-size: 0.78rem;
+            }
+            table {
+                min-width: 500px;
+                font-size: 0.7rem;
+            }
+            .icon-btn {
+                width: 24px;
+                height: 24px;
+                border-radius: 8px;
+                font-size: 0.7rem;
+            }
+            .tab-btn {
+                padding: 8px 4px;
+                font-size: 0.7rem;
+            }
+            .modal-card {
+                border-radius: 22px 22px 12px 12px;
+            }
+            .modal-header {
+                padding: 12px 14px;
+                border-radius: 22px 22px 0 0;
+            }
+            .modal-body {
+                padding: 12px 14px;
+            }
+        }
+
+        /* دعم شاشات اللمس */
+        @media (hover: none) and (pointer: coarse) {
+            .doctor-tab-btn:hover,
+            .btn:hover,
+            .doctor-pill:hover,
+            .icon-btn:hover {
+                transform: none;
+            }
+            .doctor-tab-btn:active,
+            .doctor-pill:active {
+                transform: scale(0.96);
+            }
+            .btn:active {
+                transform: scale(0.93);
+            }
         }
     </style>
 </head>
 <body>
-<div class="container">
-    <header class="app-header">
-        <div class="logo">
-            <h2><i class="fas fa-calendar-check" style="color:var(--primary); margin-left:8px;"></i>سُكُون · الممرض</h2>
-        </div>
-        <div class="header-actions">
-            <span id="welcomeMessage" style="font-weight:600;"></span>
-            <button class="btn btn-primary" id="openModalBtn"><i class="fas fa-plus"></i> حجز</button>
-            <button class="btn btn-outline" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> خروج</button>
-        </div>
-    </header>
+    <div class="container">
+        <!-- ========== الهيدر ========== -->
+        <header class="app-header">
+            <div class="logo">
+                <h2><i class="fas fa-calendar-check" style="color:var(--primary); margin-left:8px;"></i>سُكُون · الممرض</h2>
+            </div>
+            <div class="header-actions">
+                <span id="welcomeMessage">أهلاً ممرض</span>
+                <button class="btn btn-primary" id="openModalBtn"><i class="fas fa-plus"></i> حجز</button>
+                <button class="btn btn-outline btn-sm" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> خروج</button>
+            </div>
+        </header>
 
-    <!-- صف الأطباء وأداة اليوم -->
-    <div class="controls-row">
-        <div id="doctorsToolbar" class="doctors-toolbar"></div>
-        <div class="date-picker-wrapper">
-            <button class="today-btn" id="todayBtn"><i class="fas fa-calendar-alt"></i> اليوم</button>
-            <input type="date" id="filterDateInput" class="date-input">
+        <!-- ========== شريط الأطباء الأفقي (للهاتف) ========== -->
+        <div class="doctors-strip-mobile" id="doctorsStripMobile">
+            <div class="strip-scroll" id="doctorStripContainer"></div>
+        </div>
+
+        <!-- ========== صف التحكم: أطباء + تاريخ ========== -->
+        <div class="controls-row">
+            <div id="doctorsToolbar" class="doctors-toolbar"></div>
+            <div class="date-picker-wrapper">
+                <button class="today-btn" id="todayBtn"><i class="fas fa-calendar-alt"></i> اليوم</button>
+                <input type="date" id="filterDateInput" class="date-input">
+            </div>
+        </div>
+
+        <!-- ========== تبويبات الحالة ========== -->
+        <div class="tabs-container">
+            <button class="tab-btn active" data-tab="waiting"><i class="fas fa-hourglass-half"></i> قيد الانتظار <span id="waitingTabCount" class="count">0</span></button>
+            <button class="tab-btn" data-tab="inprogress"><i class="fas fa-stethoscope"></i> قيد الكشف <span id="inProgressTabCount" class="count">0</span></button>
+            <button class="tab-btn" data-tab="done"><i class="fas fa-check-circle"></i> منتهي <span id="doneTabCount" class="count">0</span></button>
+        </div>
+
+        <!-- ========== جدول الحجوزات ========== -->
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr><th>#</th><th>المريض</th><th>التاريخ</th><th>الوقت</th><th>الحالة</th><th>إجراءات</th></tr>
+                </thead>
+                <tbody id="bookingsBody">
+                    <tr><td colspan="6" class="empty-state"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ========== مودال الحجز ========== -->
+    <div id="bookingModal" class="modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 id="modalTitle"><i class="fas fa-calendar-plus"></i> حجز موعد جديد</h3>
+                <button class="close-btn" id="closeModalBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="bookingForm">
+                    <input type="hidden" id="editBookingId">
+                    <div class="form-group">
+                        <label>الطبيب *</label>
+                        <select id="bookingDoctorSelect" class="form-control" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label>البحث عن مريض</label>
+                        <input type="text" id="patientSearch" class="form-control" placeholder="اكتب اسم أو رقم الهاتف..." autocomplete="off">
+                        <div id="searchResults" class="search-results"></div>
+                    </div>
+                    <div class="form-group">
+                        <label>اسم المريض *</label>
+                        <input type="text" id="patientName" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>العمر</label>
+                        <input type="number" id="patientAge" class="form-control" min="0" max="150">
+                    </div>
+                    <div class="form-group">
+                        <label>رقم الهاتف</label>
+                        <input type="tel" id="patientPhone" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>تاريخ الموعد *</label>
+                        <input type="date" id="appointmentDate" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>الوقت *</label>
+                        <input type="time" id="appointmentTime" class="form-control" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width:100%;" id="submitBtn">تأكيد الحجز</button>
+                    <p id="formAlert" style="color:var(--danger); text-align:center; margin-top:12px;"></p>
+                </form>
+            </div>
         </div>
     </div>
 
-    <!-- تبويبات مع عداد -->
-    <div class="tabs-container">
-        <button class="tab-btn active" data-tab="waiting"><i class="fas fa-hourglass-half"></i> قيد الانتظار <span id="waitingTabCount" class="count">0</span></button>
-        <button class="tab-btn" data-tab="inprogress"><i class="fas fa-stethoscope"></i> قيد الكشف <span id="inProgressTabCount" class="count">0</span></button>
-        <button class="tab-btn" data-tab="done"><i class="fas fa-check-circle"></i> منتهي <span id="doneTabCount" class="count">0</span></button>
-    </div>
+    <!-- ========== حاوية التوست ========== -->
+    <div id="toastContainer"></div>
 
-    <!-- جدول الحجوزات (بدون العمر والهاتف) -->
-    <div class="table-wrapper">
-        <table>
-            <thead>
-                <tr><th>#</th><th>المريض</th><th>التاريخ</th><th>الوقت</th><th>الحالة</th><th>إجراءات</th></tr>
-            </thead>
-            <tbody id="bookingsBody"><tr><td colspan="6" class="empty-state"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</td></tr>
-        </table>
-    </div>
-</div>
+    <script>
+        (function() {
+            // ---------- عناصر DOM ----------
+            const doctorsToolbar = document.getElementById('doctorsToolbar');
+            const doctorStripContainer = document.getElementById('doctorStripContainer');
+            const filterDateInput = document.getElementById('filterDateInput');
+            const todayBtn = document.getElementById('todayBtn');
+            const tabBtns = document.querySelectorAll('.tab-btn');
+            const bookingsBody = document.getElementById('bookingsBody');
+            const bookingModal = document.getElementById('bookingModal');
+            const openModalBtn = document.getElementById('openModalBtn');
+            const closeModalBtn = document.getElementById('closeModalBtn');
+            const bookingForm = document.getElementById('bookingForm');
+            const editBookingId = document.getElementById('editBookingId');
+            const bookingDoctorSelect = document.getElementById('bookingDoctorSelect');
+            const patientSearch = document.getElementById('patientSearch');
+            const searchResults = document.getElementById('searchResults');
+            const patientName = document.getElementById('patientName');
+            const patientAge = document.getElementById('patientAge');
+            const patientPhone = document.getElementById('patientPhone');
+            const appointmentDate = document.getElementById('appointmentDate');
+            const appointmentTime = document.getElementById('appointmentTime');
+            const submitBtn = document.getElementById('submitBtn');
+            const modalTitle = document.getElementById('modalTitle');
+            const formAlert = document.getElementById('formAlert');
+            const waitingTabCount = document.getElementById('waitingTabCount');
+            const inProgressTabCount = document.getElementById('inProgressTabCount');
+            const doneTabCount = document.getElementById('doneTabCount');
+            const toastContainer = document.getElementById('toastContainer');
 
-<!-- مودال حجز / تعديل (يبقى العمر والهاتف موجودين) -->
-<div id="bookingModal" class="modal">
-    <div class="modal-card">
-        <div class="modal-header">
-            <h3 id="modalTitle"><i class="fas fa-calendar-plus"></i> حجز موعد جديد</h3>
-            <button class="close-btn" id="closeModalBtn">&times;</button>
-        </div>
-        <div class="modal-body">
-            <form id="bookingForm">
-                <input type="hidden" id="editBookingId">
-                <div class="form-group">
-                    <label>الطبيب *</label>
-                    <select id="bookingDoctorSelect" class="form-control" required></select>
-                </div>
-                <div class="form-group">
-                    <label>البحث عن مريض</label>
-                    <input type="text" id="patientSearch" class="form-control" placeholder="اكتب اسم أو رقم الهاتف..." autocomplete="off">
-                    <div id="searchResults" class="search-results"></div>
-                </div>
-                <div class="form-group">
-                    <label>اسم المريض *</label>
-                    <input type="text" id="patientName" class="form-control" required>
-                </div>
-                <div class="form-group">
-                    <label>العمر</label>
-                    <input type="number" id="patientAge" class="form-control" min="0" max="150">
-                </div>
-                <div class="form-group">
-                    <label>رقم الهاتف</label>
-                    <input type="tel" id="patientPhone" class="form-control">
-                </div>
-                <div class="form-group">
-                    <label>تاريخ الموعد *</label>
-                    <input type="date" id="appointmentDate" class="form-control" required>
-                </div>
-                <div class="form-group">
-                    <label>الوقت *</label>
-                    <input type="time" id="appointmentTime" class="form-control" required>
-                </div>
-                <button type="submit" class="btn btn-primary" style="width:100%;" id="submitBtn">تأكيد الحجز</button>
-                <p id="formAlert" style="color:var(--danger); text-align:center; margin-top:12px;"></p>
-            </form>
-        </div>
-    </div>
-</div>
+            // ---------- الحالة ----------
+            let doctors = [];
+            let bookings = [];
+            let currentDoctorId = null; // null = الكل
+            let activeTab = 'waiting'; // waiting, inprogress, done
+            let filterDate = new Date().toISOString().split('T')[0]; // تاريخ اليوم
 
-<!-- استدعاء ملف الجافاسكريبت الخارجي -->
-<script type="module" src="nurse-dashboard.js"></script>
+            // ---------- دوال مساعدة ----------
+            function showToast(msg, duration = 2500) {
+                const toast = document.createElement('div');
+                toast.className = 'toast';
+                toast.textContent = msg;
+                toastContainer.appendChild(toast);
+                setTimeout(() => {
+                    toast.style.opacity = '0';
+                    toast.style.transform = 'translateY(20px)';
+                    toast.style.transition = 'all 0.3s ease';
+                    setTimeout(() => toast.remove(), 300);
+                }, duration);
+            }
+
+            function openModal() { bookingModal.classList.add('show'); }
+
+            function closeModalFn() { bookingModal.classList.remove('show'); }
+
+            function resetForm() {
+                bookingForm.reset();
+                editBookingId.value = '';
+                modalTitle.innerHTML = '<i class="fas fa-calendar-plus"></i> حجز موعد جديد';
+                submitBtn.textContent = 'تأكيد الحجز';
+                formAlert.textContent = '';
+                searchResults.style.display = 'none';
+            }
+
+            // ---------- تحميل الأطباء ----------
+            function loadDoctors() {
+                doctors = [
+                    { id: 1, name: 'د. أحمد محمد' },
+                    { id: 2, name: 'د. سارة علي' },
+                    { id: 3, name: 'د. محمود إبراهيم' },
+                    { id: 4, name: 'د. فاطمة حسن' }
+                ];
+                renderDoctors();
+                populateDoctorSelect();
+            }
+
+            function renderDoctors() {
+                // شريط سطح المكتب
+                if (doctorsToolbar) {
+                    doctorsToolbar.innerHTML = `
+                        <button class="doctor-tab-btn ${currentDoctorId === null ? 'active' : ''}" data-doctor-id="all">
+                            <i class="fas fa-user-md"></i> الكل
+                        </button>
+                        ${doctors.map(d => `
+                            <button class="doctor-tab-btn ${d.id === currentDoctorId ? 'active' : ''}" data-doctor-id="${d.id}">
+                                <i class="fas fa-user-md"></i> ${d.name}
+                            </button>
+                        `).join('')}
+                    `;
+                    // أحداث النقر
+                    doctorsToolbar.querySelectorAll('.doctor-tab-btn').forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            const id = this.getAttribute('data-doctor-id');
+                            currentDoctorId = id === 'all' ? null : parseInt(id);
+                            renderDoctors();
+                            filterAndRenderBookings();
+                        });
+                    });
+                }
+                // شريط الهاتف المتنقل
+                if (doctorStripContainer) {
+                    doctorStripContainer.innerHTML = `
+                        <div class="doctor-pill ${currentDoctorId === null ? 'active' : ''}" data-doctor-id="all">
+                            <i class="fas fa-user-md"></i> الكل
+                        </div>
+                        ${doctors.map(d => `
+                            <div class="doctor-pill ${d.id === currentDoctorId ? 'active' : ''}" data-doctor-id="${d.id}">
+                                <i class="fas fa-user-md"></i> ${d.name.split(' ')[1] || d.name}
+                            </div>
+                        `).join('')}
+                    `;
+                    doctorStripContainer.querySelectorAll('.doctor-pill').forEach(pill => {
+                        pill.addEventListener('click', function() {
+                            const id = this.getAttribute('data-doctor-id');
+                            currentDoctorId = id === 'all' ? null : parseInt(id);
+                            renderDoctors();
+                            filterAndRenderBookings();
+                            // تمرير العنصر النشط
+                            const activePill = doctorStripContainer.querySelector('.doctor-pill.active');
+                            if (activePill) activePill.scrollIntoView({ behavior: 'smooth', block: 'nearest',
+                                inline: 'center' });
+                        });
+                    });
+                }
+            }
+
+            function populateDoctorSelect() {
+                if (bookingDoctorSelect) {
+                    bookingDoctorSelect.innerHTML = doctors.map(d => `<option value="${d.id}">${d.name}</option>`)
+                        .join('');
+                }
+            }
+
+            // ---------- تحميل الحجوزات (بيانات وهمية) ----------
+            function loadBookings() {
+                const today = new Date().toISOString().split('T')[0];
+                bookings = [
+                    { id: 1, patient: 'محمد سالم', date: today, time: '10:00', status: 'waiting', doctorId: 1,
+                        doctorName: 'د. أحمد محمد' },
+                    { id: 2, patient: 'علياء محمود', date: today, time: '10:30', status: 'inprogress', doctorId: 2,
+                        doctorName: 'د. سارة علي' },
+                    { id: 3, patient: 'خالد يوسف', date: today, time: '11:00', status: 'done', doctorId: 1,
+                        doctorName: 'د. أحمد محمد' },
+                    { id: 4, patient: 'نورا فؤاد', date: today, time: '11:30', status: 'waiting', doctorId: 3,
+                        doctorName: 'د. محمود إبراهيم' },
+                    { id: 5, patient: 'حسن عبدالله', date: '2026-04-30', time: '09:00', status: 'done', doctorId: 4,
+                        doctorName: 'د. فاطمة حسن' },
+                ];
+                filterAndRenderBookings();
+            }
+
+            function filterAndRenderBookings() {
+                let filtered = bookings.filter(b => {
+                    const dateMatch = b.date === filterDate;
+                    const doctorMatch = currentDoctorId === null || b.doctorId === currentDoctorId;
+                    const statusMatch = b.status === activeTab;
+                    return dateMatch && doctorMatch && statusMatch;
+                });
+                renderBookingsTable(filtered);
+                updateTabCounts();
+            }
+
+            function renderBookingsTable(filtered) {
+                if (!bookingsBody) return;
+                if (filtered.length === 0) {
+                    bookingsBody.innerHTML =
+                        '<tr><td colspan="6" class="empty-state"><i class="fas fa-calendar-times"></i> لا توجد حجوزات مطابقة</td></tr>';
+                    return;
+                }
+                bookingsBody.innerHTML = filtered.map((b, index) => {
+                    let statusClass = '';
+                    let statusIcon = '';
+                    switch (b.status) {
+                        case 'waiting':
+                            statusClass = 'status-waiting';
+                            statusIcon = '⏳';
+                            break;
+                        case 'inprogress':
+                            statusClass = 'status-inprogress';
+                            statusIcon = '🩺';
+                            break;
+                        case 'done':
+                            statusClass = 'status-done';
+                            statusIcon = '✅';
+                            break;
+                        case 'cancelled':
+                            statusClass = 'status-cancelled';
+                            statusIcon = '❌';
+                            break;
+                    }
+                    return `
+                        <tr data-booking-id="${b.id}">
+                            <td>${index + 1}</td>
+                            <td><strong>${b.patient}</strong></td>
+                            <td>${b.date}</td>
+                            <td>${b.time}</td>
+                            <td><span class="status-badge ${statusClass}">${statusIcon} ${b.status === 'waiting' ? 'قيد الانتظار' : b.status === 'inprogress' ? 'قيد الكشف' : b.status === 'done' ? 'منتهي' : 'ملغي'}</span></td>
+                            <td>
+                                <div class="action-btns">
+                                    <button class="icon-btn warning edit-booking" data-id="${b.id}" title="تعديل"><i class="fas fa-pen"></i></button>
+                                    <button class="icon-btn success start-booking" data-id="${b.id}" title="بدء الكشف" ${b.status !== 'waiting' ? 'disabled' : ''}><i class="fas fa-play"></i></button>
+                                    <button class="icon-btn danger delete-booking" data-id="${b.id}" title="حذف"><i class="fas fa-trash"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+
+                // ربط الأحداث
+                bookingsBody.querySelectorAll('.edit-booking').forEach(btn => {
+                    btn.addEventListener('click', () => editBooking(parseInt(btn.getAttribute('data-id'))));
+                });
+                bookingsBody.querySelectorAll('.start-booking').forEach(btn => {
+                    btn.addEventListener('click', () => startBooking(parseInt(btn.getAttribute('data-id'))));
+                });
+                bookingsBody.querySelectorAll('.delete-booking').forEach(btn => {
+                    btn.addEventListener('click', () => deleteBooking(parseInt(btn.getAttribute('data-id'))));
+                });
+            }
+
+            function updateTabCounts() {
+                const allFiltered = bookings.filter(b => b.date === filterDate && (currentDoctorId === null || b
+                    .doctorId === currentDoctorId));
+                const waiting = allFiltered.filter(b => b.status === 'waiting').length;
+                const inprogress = allFiltered.filter(b => b.status === 'inprogress').length;
+                const done = allFiltered.filter(b => b.status === 'done').length;
+                if (waitingTabCount) waitingTabCount.textContent = waiting;
+                if (inProgressTabCount) inProgressTabCount.textContent = inprogress;
+                if (doneTabCount) doneTabCount.textContent = done;
+            }
+
+            // ---------- عمليات الحجز ----------
+            function editBooking(id) {
+                const booking = bookings.find(b => b.id === id);
+                if (!booking) return;
+                editBookingId.value = booking.id;
+                bookingDoctorSelect.value = booking.doctorId;
+                patientName.value = booking.patient;
+                patientAge.value = '';
+                patientPhone.value = '';
+                appointmentDate.value = booking.date;
+                appointmentTime.value = booking.time;
+                modalTitle.innerHTML = '<i class="fas fa-edit"></i> تعديل الموعد';
+                submitBtn.textContent = 'تحديث الموعد';
+                openModal();
+            }
+
+            function startBooking(id) {
+                const booking = bookings.find(b => b.id === id);
+                if (!booking || booking.status !== 'waiting') return;
+                booking.status = 'inprogress';
+                showToast('🩺 تم بدء الكشف للمريض ' + booking.patient);
+                filterAndRenderBookings();
+            }
+
+            function deleteBooking(id) {
+                const booking = bookings.find(b => b.id === id);
+                if (!booking) return;
+                if (confirm(`هل تريد حذف حجز ${booking.patient}؟`)) {
+                    bookings = bookings.filter(b => b.id !== id);
+                    showToast('🗑️ تم حذف الحجز');
+                    filterAndRenderBookings();
+                }
+            }
+
+            function saveBooking(e) {
+                e.preventDefault();
+                const doctorId = parseInt(bookingDoctorSelect.value);
+                const doctor = doctors.find(d => d.id === doctorId);
+                const name = patientName.value.trim();
+                const age = patientAge.value.trim();
+                const phone = patientPhone.value.trim();
+                const date = appointmentDate.value;
+                const time = appointmentTime.value;
+
+                if (!name || !date || !time) {
+                    formAlert.textContent = 'الرجاء تعبئة الحقول المطلوبة';
+                    return;
+                }
+                const editingId = editBookingId.value;
+                if (editingId) {
+                    const booking = bookings.find(b => b.id === parseInt(editingId));
+                    if (booking) {
+                        booking.patient = name;
+                        booking.date = date;
+                        booking.time = time;
+                        booking.doctorId = doctorId;
+                        booking.doctorName = doctor?.name || '';
+                        showToast('✅ تم تحديث الموعد');
+                    }
+                } else {
+                    const newBooking = {
+                        id: Date.now(),
+                        patient: name,
+                        date,
+                        time,
+                        status: 'waiting',
+                        doctorId,
+                        doctorName: doctor?.name || '',
+                    };
+                    bookings.push(newBooking);
+                    showToast('🎉 تم إضافة حجز جديد');
+                }
+                closeModalFn();
+                filterAndRenderBookings();
+            }
+
+            // ---------- البحث عن مريض (محاكاة) ----------
+            patientSearch?.addEventListener('input', function() {
+                const q = this.value.trim();
+                if (q.length < 2) {
+                    searchResults.style.display = 'none';
+                    return;
+                }
+                // بيانات وهمية
+                const mockPatients = [
+                    { name: 'محمد سالم', phone: '01001234567', age: 34 },
+                    { name: 'علياء محمود', phone: '01112223334', age: 28 },
+                ];
+                const filtered = mockPatients.filter(p => p.name.includes(q) || p.phone.includes(q));
+                if (filtered.length > 0) {
+                    searchResults.innerHTML = filtered.map(p => `
+                        <div class="search-item" data-name="${p.name}" data-age="${p.age}" data-phone="${p.phone}">
+                            <strong>${p.name}</strong> - ${p.phone}
+                        </div>
+                    `).join('');
+                    searchResults.style.display = 'block';
+                    searchResults.querySelectorAll('.search-item').forEach(item => {
+                        item.addEventListener('click', function() {
+                            patientName.value = this.getAttribute('data-name');
+                            patientAge.value = this.getAttribute('data-age');
+                            patientPhone.value = this.getAttribute('data-phone');
+                            searchResults.style.display = 'none';
+                            patientSearch.value = '';
+                        });
+                    });
+                } else {
+                    searchResults.innerHTML =
+                        '<div class="search-item" style="color:var(--text-sec);">لا توجد نتائج</div>';
+                    searchResults.style.display = 'block';
+                }
+            });
+
+            // إخفاء نتائج البحث عند النقر خارجاً
+            document.addEventListener('click', function(e) {
+                if (!patientSearch?.contains(e.target) && !searchResults?.contains(e.target)) {
+                    searchResults.style.display = 'none';
+                }
+            });
+
+            // ---------- الأحداث العامة ----------
+            openModalBtn?.addEventListener('click', () => { resetForm();
+                openModal(); });
+            closeModalBtn?.addEventListener('click', closeModalFn);
+            bookingModal?.addEventListener('click', function(e) { if (e.target === this) closeModalFn(); });
+            bookingForm?.addEventListener('submit', saveBooking);
+
+            todayBtn?.addEventListener('click', () => {
+                filterDateInput.value = new Date().toISOString().split('T')[0];
+                filterDate = filterDateInput.value;
+                filterAndRenderBookings();
+            });
+            filterDateInput?.addEventListener('change', function() {
+                filterDate = this.value;
+                filterAndRenderBookings();
+            });
+
+            tabBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    tabBtns.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    activeTab = this.getAttribute('data-tab');
+                    filterAndRenderBookings();
+                });
+            });
+
+            document.getElementById('logoutBtn')?.addEventListener('click', () => showToast('👋 تم تسجيل الخروج'));
+            document.getElementById('welcomeMessage').textContent = '👋 أهلاً ممرض';
+
+            // تعيين تاريخ اليوم
+            filterDateInput.value = filterDate;
+
+            // بدء التطبيق
+            loadDoctors();
+            loadBookings();
+            console.log('🚀 لوحة سُكُون · الممرض جاهزة | متكيّفة مع جميع الأجهزة');
+        })();
+    </script>
 </body>
 </html>
