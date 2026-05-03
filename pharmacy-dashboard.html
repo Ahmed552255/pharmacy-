@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>سُكُون · لوحة الصيدلي</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -25,9 +25,12 @@
             --border-light: #F0E0D0;
             --shadow-sm: 0 6px 12px -4px rgba(230, 126, 34, 0.08);
             --shadow-md: 0 12px 28px -6px rgba(230, 126, 34, 0.12);
+            --shadow-lg: 0 20px 40px -10px rgba(160, 100, 40, 0.2);
             --radius-card: 24px;
             --radius-sm: 16px;
             --radius-xs: 12px;
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
+            --safe-top: env(safe-area-inset-top, 0px);
         }
 
         * {
@@ -41,9 +44,15 @@
             background: var(--bg);
             color: var(--ink);
             min-height: 100vh;
+            min-height: 100dvh;
             padding: 16px;
+            padding-bottom: calc(16px + var(--safe-bottom));
+            padding-top: calc(16px + var(--safe-top));
             position: relative;
             -webkit-tap-highlight-color: transparent;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            overflow-x: hidden;
         }
 
         body::before {
@@ -56,33 +65,44 @@
             z-index: -1;
         }
 
+        /* ========== الحاوية الرئيسية ========== */
         .app-container {
             display: flex;
             gap: 20px;
             max-width: 1600px;
             margin: 0 auto;
             height: calc(100vh - 32px);
+            height: calc(100dvh - 32px - var(--safe-bottom) - var(--safe-top));
+            position: relative;
         }
 
-        /* الشريط الجانبي للأطباء */
+        /* ========== الشريط الجانبي للأطباء (وضع الكمبيوتر) ========== */
         .doctors-sidebar {
             width: 280px;
             min-width: 260px;
             background: rgba(255, 255, 255, 0.6);
             backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             border-radius: var(--radius-card);
             padding: 20px 12px;
             border: 1px solid rgba(255, 255, 255, 0.7);
             box-shadow: var(--shadow-md);
-            display: none;
+            display: flex;
             flex-direction: column;
             overflow-y: auto;
-            transition: all 0.3s ease;
+            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
             flex-shrink: 0;
             max-height: 100%;
+            z-index: 10;
         }
-        .doctors-sidebar.show {
-            display: flex;
+        .doctors-sidebar.collapsed {
+            width: 0;
+            min-width: 0;
+            padding: 20px 0;
+            opacity: 0;
+            overflow: hidden;
+            border: none;
+            margin: 0;
         }
 
         .sidebar-header {
@@ -98,6 +118,9 @@
             font-weight: 700;
             white-space: nowrap;
         }
+        .sidebar-header h3 i {
+            color: var(--accent);
+        }
 
         .doctor-list {
             flex: 1;
@@ -105,6 +128,14 @@
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
             min-height: 0;
+            scroll-behavior: smooth;
+        }
+        .doctor-list::-webkit-scrollbar {
+            width: 4px;
+        }
+        .doctor-list::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 10px;
         }
         .doctor-item {
             display: flex;
@@ -118,16 +149,22 @@
             border: 1px solid var(--border-light);
             transition: all 0.2s;
             gap: 8px;
+            user-select: none;
         }
         .doctor-item:hover {
             background: var(--primary-light);
             border-color: var(--primary);
+            transform: translateX(-2px);
+        }
+        .doctor-item:active {
+            transform: scale(0.97);
         }
         .doctor-item.active {
             background: var(--primary);
             color: #4A3B2C;
             border-color: var(--primary);
             font-weight: 700;
+            box-shadow: 0 4px 14px rgba(230, 126, 34, 0.25);
         }
         .doctor-info {
             display: flex;
@@ -147,6 +184,11 @@
             justify-content: center;
             color: var(--ink);
             font-size: 1rem;
+            font-weight: 700;
+        }
+        .doctor-item.active .doctor-avatar {
+            background: white;
+            color: var(--accent);
         }
         .doctor-name {
             font-weight: 600;
@@ -163,9 +205,19 @@
             font-weight: 700;
             white-space: nowrap;
             flex-shrink: 0;
+            animation: pulse 2.5s infinite;
+        }
+        @keyframes pulse {
+            0%,
+            100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.08);
+            }
         }
 
-        /* المحتوى الرئيسي */
+        /* ========== المحتوى الرئيسي ========== */
         .main-content {
             flex: 1;
             display: flex;
@@ -175,13 +227,14 @@
             min-width: 0;
         }
 
-        /* الشريط العلوي */
+        /* ========== الشريط العلوي ========== */
         .top-bar {
             display: flex;
             align-items: center;
             justify-content: space-between;
             background: rgba(255, 255, 255, 0.6);
             backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             border-radius: 60px;
             padding: 10px 20px;
             border: 1px solid rgba(255, 255, 255, 0.6);
@@ -189,12 +242,20 @@
             gap: 12px;
             flex-wrap: wrap;
             flex-shrink: 0;
+            z-index: 5;
         }
         .logo h2 {
             font-size: 1.5rem;
             font-weight: 800;
             color: var(--accent);
             white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .logo h2 i {
+            color: var(--primary);
+            font-size: 1.4rem;
         }
         .header-actions {
             display: flex;
@@ -202,7 +263,16 @@
             gap: 8px;
             flex-wrap: wrap;
         }
+        #welcomeMessage {
+            font-weight: 600;
+            color: var(--ink);
+            max-width: 180px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
 
+        /* ========== الأزرار ========== */
         .btn {
             padding: 10px 18px;
             border-radius: 40px;
@@ -220,15 +290,21 @@
             border: 1px solid var(--border-light);
             white-space: nowrap;
             user-select: none;
+            text-decoration: none;
         }
         .btn:hover {
             background: var(--primary-light);
+            transform: translateY(-1px);
+        }
+        .btn:active {
+            transform: scale(0.95);
         }
         .btn-primary {
             background: var(--primary);
             color: #4A3B2C;
             border: none;
             box-shadow: 0 6px 14px rgba(230, 126, 34, 0.2);
+            font-weight: 700;
         }
         .btn-primary:hover {
             background: var(--primary-dark);
@@ -240,18 +316,25 @@
             padding: 0;
             justify-content: center;
             flex-shrink: 0;
+            border-radius: 50%;
         }
         .btn-sm {
             padding: 6px 12px;
             font-size: 0.8rem;
             border-radius: 30px;
         }
+        .btn-icon.btn-sm {
+            width: 36px;
+            height: 36px;
+            padding: 0;
+        }
 
-        /* لوحة الروشتات */
+        /* ========== لوحة الروشتات ========== */
         .prescriptions-panel {
             flex: 1;
             background: rgba(255, 255, 255, 0.6);
             backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
             border-radius: var(--radius-card);
             padding: 20px;
             border: 1px solid rgba(255, 255, 255, 0.7);
@@ -277,10 +360,16 @@
             align-items: center;
             gap: 8px;
         }
+        .panel-header h3 i {
+            color: var(--accent);
+        }
         .tabs {
             display: flex;
             gap: 8px;
             flex-shrink: 0;
+            background: rgba(0, 0, 0, 0.03);
+            border-radius: 40px;
+            padding: 4px;
         }
         .tab-btn {
             background: transparent;
@@ -309,6 +398,14 @@
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
             min-height: 0;
+            scroll-behavior: smooth;
+        }
+        .rx-list::-webkit-scrollbar {
+            width: 5px;
+        }
+        .rx-list::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 10px;
         }
         .rx-item-card {
             background: white;
@@ -323,6 +420,10 @@
         .rx-item-card:hover {
             background: var(--primary-light);
             border-color: var(--primary);
+            box-shadow: 0 4px 12px rgba(230, 126, 34, 0.08);
+        }
+        .rx-item-card:active {
+            transform: scale(0.98);
         }
         .rx-item-header {
             display: flex;
@@ -334,6 +435,7 @@
         .rx-patient {
             font-weight: 700;
             font-size: 1.05rem;
+            color: var(--ink);
         }
         .rx-date {
             color: var(--text-sec);
@@ -349,11 +451,11 @@
         .rx-items-preview {
             color: var(--text-sec);
             font-size: 0.9rem;
+            line-height: 1.5;
         }
         .open-details-btn {
-            position: absolute;
-            top: 16px;
-            left: 16px;
+            display: inline-block;
+            margin-top: 8px;
             background: var(--primary-light);
             border: none;
             border-radius: 20px;
@@ -367,15 +469,94 @@
         }
         .open-details-btn:hover {
             background: var(--primary);
+            color: #4A3B2C;
         }
 
-        /* المودال */
+        /* ========== شريط الأطباء الأفقي للهاتف ========== */
+        .doctors-strip-mobile {
+            display: none;
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 50px;
+            padding: 8px 6px;
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            box-shadow: var(--shadow-sm);
+            flex-shrink: 0;
+            z-index: 8;
+            overflow: hidden;
+        }
+        .doctors-strip-mobile .strip-scroll {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scroll-behavior: smooth;
+            padding: 4px 8px;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        .doctors-strip-mobile .strip-scroll::-webkit-scrollbar {
+            display: none;
+        }
+        .doctor-pill {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            background: white;
+            border-radius: 50px;
+            border: 1px solid var(--border-light);
+            cursor: pointer;
+            white-space: nowrap;
+            flex-shrink: 0;
+            transition: all 0.2s;
+            user-select: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        .doctor-pill:active {
+            transform: scale(0.94);
+        }
+        .doctor-pill.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            font-weight: 700;
+            box-shadow: 0 4px 14px rgba(230, 126, 34, 0.25);
+        }
+        .doctor-pill .pill-avatar {
+            width: 28px;
+            height: 28px;
+            min-width: 28px;
+            background: var(--accent-soft);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+        .doctor-pill.active .pill-avatar {
+            background: white;
+            color: var(--accent);
+        }
+        .doctor-pill .pill-badge {
+            background: var(--danger);
+            color: white;
+            border-radius: 20px;
+            padding: 2px 8px;
+            font-size: 0.7rem;
+            font-weight: 700;
+        }
+
+        /* ========== المودال ========== */
         .modal {
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(60, 40, 20, 0.25);
+            background: rgba(60, 40, 20, 0.3);
             backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
             align-items: center;
             justify-content: center;
             z-index: 2000;
@@ -389,9 +570,21 @@
             border-radius: 32px;
             width: 100%;
             max-width: 580px;
-            max-height: 80vh;
+            max-height: 85vh;
+            max-height: 85dvh;
             overflow-y: auto;
-            box-shadow: 0 30px 50px rgba(160, 100, 40, 0.2);
+            box-shadow: var(--shadow-lg);
+            animation: modalIn 0.3s ease;
+        }
+        @keyframes modalIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px) scale(0.94);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
         }
         .modal-header {
             padding: 20px 24px;
@@ -419,7 +612,7 @@
             cursor: pointer;
             color: var(--text-sec);
             line-height: 1;
-            padding: 4px 8px;
+            padding: 4px 10px;
             border-radius: 50%;
             transition: 0.2s;
             font-family: 'Cairo', sans-serif;
@@ -427,6 +620,9 @@
         .close-btn:hover {
             background: rgba(0, 0, 0, 0.05);
             color: var(--ink);
+        }
+        .close-btn:active {
+            transform: scale(0.9);
         }
         .modal-body {
             padding: 20px 24px;
@@ -446,9 +642,11 @@
             font-size: 0.95rem;
             outline: none;
             transition: border-color 0.2s;
+            background: #FAFAFA;
         }
         .search-input-group input:focus {
             border-color: var(--primary);
+            background: white;
         }
         .search-result-item {
             padding: 14px 16px;
@@ -460,6 +658,9 @@
         .search-result-item:hover {
             background: var(--primary-light);
         }
+        .search-result-item:active {
+            background: var(--primary);
+        }
         .search-result-item:last-child {
             border-bottom: none;
         }
@@ -468,10 +669,11 @@
             font-size: 1rem;
         }
 
-        /* التوست */
+        /* ========== التوست ========== */
         .toast {
             position: fixed;
-            bottom: 20px;
+            bottom: 24px;
+            bottom: calc(24px + var(--safe-bottom));
             left: 20px;
             right: 20px;
             background: #4A3B2C;
@@ -483,19 +685,22 @@
             max-width: 500px;
             margin: 0 auto;
             font-size: 0.9rem;
-            animation: slideUp 0.3s ease;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+            animation: slideUpToast 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+            font-weight: 500;
         }
-        @keyframes slideUp {
+        @keyframes slideUpToast {
             from {
                 opacity: 0;
-                transform: translateY(20px);
+                transform: translateY(30px) scale(0.9);
             }
             to {
                 opacity: 1;
-                transform: translateY(0);
+                transform: translateY(0) scale(1);
             }
         }
+
+        /* ========== الحالات الفارغة ========== */
         .empty-state {
             text-align: center;
             padding: 40px 20px;
@@ -508,21 +713,8 @@
             margin-bottom: 12px;
             opacity: 0.5;
         }
-        .badge-pulse {
-            animation: pulse 2s infinite;
-        }
-        @keyframes pulse {
-            0% {
-                transform: scale(1);
-            }
-            50% {
-                transform: scale(1.1);
-            }
-            100% {
-                transform: scale(1);
-            }
-        }
 
+        /* ========== أدوات مساعدة ========== */
         .text-success {
             color: var(--success);
             font-weight: 600;
@@ -550,29 +742,61 @@
             display: flex;
             align-items: center;
         }
+        .hide-mobile {
+            display: inline;
+        }
 
-        /* ========== التجاوب مع الأجهزة ========== */
-
-        /* شاشات كبيرة جداً */
-        @media (min-width: 1400px) {
+        /* ============================================== */
+        /* ========== التكيّف مع شاشات الكمبيوتر ========== */
+        /* ============================================== */
+        @media (min-width: 1025px) {
+            .app-container {
+                flex-direction: row;
+            }
             .doctors-sidebar {
-                width: 320px;
+                display: flex !important;
+            }
+            .doctors-strip-mobile {
+                display: none !important;
+            }
+            .main-content {
+                overflow: hidden;
+            }
+            .rx-item-card .open-details-btn {
+                position: absolute;
+                top: 16px;
+                left: 16px;
+                margin-top: 0;
+                width: auto;
             }
             .rx-item-card {
-                padding: 20px 24px;
+                padding-left: 100px;
             }
-            .logo h2 {
-                font-size: 1.7rem;
+            #toggleSidebarBtn {
+                display: flex;
+            }
+            .hide-desktop {
+                display: none !important;
             }
         }
 
-        /* الأجهزة اللوحية */
-        @media (max-width: 1024px) {
+        /* ============================================== */
+        /* ============ التكيّف مع الأجهزة اللوحية ========= */
+        /* ============================================== */
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .app-container {
+                flex-direction: row;
+                gap: 14px;
+            }
             .doctors-sidebar {
-                width: 250px;
-                min-width: 230px;
+                width: 240px;
+                min-width: 220px;
                 border-radius: 20px;
-                padding: 16px 10px;
+                padding: 14px 8px;
+                display: flex !important;
+            }
+            .doctors-strip-mobile {
+                display: none !important;
             }
             .top-bar {
                 padding: 8px 16px;
@@ -598,112 +822,141 @@
             }
             .rx-item-card {
                 padding: 14px 16px;
+                padding-left: 80px;
             }
             .rx-patient {
                 font-size: 1rem;
-            }
-            .open-details-btn {
-                position: static;
-                margin-top: 8px;
-                width: 100%;
-                text-align: center;
-                border-radius: 16px;
             }
             .prescriptions-panel {
                 padding: 16px;
                 border-radius: 20px;
             }
+            .open-details-btn {
+                position: absolute;
+                top: 14px;
+                left: 14px;
+                margin-top: 0;
+                width: auto;
+            }
+            #welcomeMessage {
+                max-width: 120px;
+                font-size: 0.85rem;
+            }
+            #toggleSidebarBtn {
+                display: flex;
+            }
+            .hide-desktop {
+                display: none !important;
+            }
         }
 
-        /* الأجهزة الصغيرة - الهواتف */
-        @media (max-width: 800px) {
+        /* ============================================== */
+        /* ======== التكيّف مع الهواتف (تحت 768px) ======== */
+        /* ============================================== */
+        @media (max-width: 768px) {
             body {
                 padding: 8px;
+                padding-bottom: calc(8px + var(--safe-bottom));
+                padding-top: calc(8px + var(--safe-top));
             }
             .app-container {
                 flex-direction: column;
                 height: auto;
-                min-height: calc(100vh - 16px);
-                gap: 12px;
+                min-height: calc(100dvh - 16px - var(--safe-bottom) - var(--safe-top));
+                gap: 10px;
             }
+
+            /* إخفاء الشريط الجانبي العمودي */
             .doctors-sidebar {
-                width: 100%;
-                min-width: unset;
-                max-height: 320px;
-                border-radius: 20px;
-                padding: 14px 10px;
+                display: none !important;
             }
-            .doctors-sidebar.show {
-                display: flex;
+
+            /* إظهار شريط الأطباء الأفقي */
+            .doctors-strip-mobile {
+                display: block;
+                order: 2;
+                margin: 0;
             }
-            .doctor-item {
-                padding: 12px 14px;
-                border-radius: 50px;
-            }
-            .doctor-avatar {
-                width: 34px;
-                height: 34px;
-                min-width: 34px;
-                font-size: 0.85rem;
-            }
-            .doctor-name {
-                font-size: 0.9rem;
+
+            /* إعادة ترتيب العناصر */
+            .main-content {
+                order: 3;
+                gap: 10px;
             }
             .top-bar {
+                order: 1;
+                border-radius: 40px;
+                padding: 10px 14px;
+                gap: 6px;
                 flex-direction: row;
                 flex-wrap: wrap;
-                padding: 10px 14px;
-                border-radius: 40px;
-                gap: 6px;
             }
-            .logo h2 {
+
+            .top-bar .logo h2 {
                 font-size: 1.1rem;
+            }
+            .top-bar .logo h2 i {
+                font-size: 1.1rem;
+            }
+            #welcomeMessage {
+                font-size: 0.8rem;
+                max-width: 100px;
             }
             .header-actions {
                 gap: 4px;
             }
             .btn {
-                font-size: 0.8rem;
+                font-size: 0.78rem;
                 padding: 7px 12px;
                 border-radius: 30px;
                 gap: 4px;
             }
             .btn-icon {
-                width: 34px;
-                height: 34px;
+                width: 36px;
+                height: 36px;
+                border-radius: 50%;
             }
-            #welcomeMessage {
-                font-size: 0.85rem;
-                max-width: 120px;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-                display: inline-block;
+            .btn-icon.btn-sm {
+                width: 32px;
+                height: 32px;
             }
+            .hide-mobile {
+                display: none;
+            }
+            #toggleSidebarBtn {
+                display: none !important;
+            }
+
+            /* لوحة الروشتات */
             .prescriptions-panel {
-                padding: 14px;
+                padding: 12px;
                 border-radius: 20px;
             }
             .panel-header {
                 flex-direction: column;
                 align-items: flex-start;
-                gap: 10px;
+                gap: 8px;
+                margin-bottom: 12px;
             }
             .panel-header h3 {
-                font-size: 0.95rem;
+                font-size: 0.9rem;
             }
             .tabs {
                 width: 100%;
+                border-radius: 40px;
+                padding: 3px;
             }
             .tab-btn {
                 flex: 1;
                 text-align: center;
-                padding: 8px 10px;
-                font-size: 0.85rem;
+                padding: 8px 8px;
+                font-size: 0.82rem;
+                border-radius: 40px;
             }
             .rx-item-card {
                 padding: 14px 14px;
                 border-radius: 16px;
+                margin-bottom: 8px;
             }
             .rx-patient {
                 font-size: 0.95rem;
@@ -718,44 +971,91 @@
                 font-size: 0.75rem;
             }
             .open-details-btn {
-                position: static;
-                margin-top: 8px;
+                display: block;
                 width: 100%;
                 text-align: center;
+                margin-top: 8px;
+                position: static;
                 border-radius: 14px;
                 font-size: 0.8rem;
+                padding: 8px 14px;
+            }
+            .rx-item-card {
+                padding-left: 14px !important;
+            }
+
+            /* مودال الهاتف */
+            .modal {
+                padding: 8px;
+                align-items: flex-end;
             }
             .modal-card {
-                border-radius: 24px;
-                max-height: 85vh;
+                border-radius: 24px 24px 12px 12px;
+                max-height: 90dvh;
+                max-width: 100%;
+                animation: modalInMobile 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            }
+            @keyframes modalInMobile {
+                from {
+                    opacity: 0;
+                    transform: translateY(60px) scale(0.95);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0) scale(1);
+                }
             }
             .modal-header {
-                padding: 16px 18px;
+                padding: 14px 16px;
                 border-radius: 24px 24px 0 0;
             }
+            .modal-header h3 {
+                font-size: 1rem;
+            }
             .modal-body {
-                padding: 16px 18px;
+                padding: 14px 16px;
             }
             .search-input-group {
                 flex-direction: column;
-                gap: 8px;
+                gap: 6px;
             }
             .search-input-group input {
                 width: 100%;
+                padding: 14px 16px;
+                font-size: 1rem;
             }
             .search-input-group .btn {
                 width: 100%;
                 justify-content: center;
+                padding: 12px;
+                font-size: 0.95rem;
+            }
+            .search-result-item {
+                padding: 16px 14px;
+            }
+
+            /* توست الهاتف */
+            .toast {
+                bottom: calc(16px + var(--safe-bottom));
+                left: 12px;
+                right: 12px;
+                padding: 12px 20px;
+                font-size: 0.85rem;
+                border-radius: 50px;
             }
         }
 
-        /* هواتف صغيرة جداً */
+        /* ============================================== */
+        /* ====== هواتف صغيرة جداً (تحت 400px) ========== */
+        /* ============================================== */
         @media (max-width: 400px) {
             body {
                 padding: 4px;
+                padding-bottom: calc(4px + var(--safe-bottom));
+                padding-top: calc(4px + var(--safe-top));
             }
             .app-container {
-                gap: 8px;
+                gap: 6px;
             }
             .top-bar {
                 padding: 8px 10px;
@@ -763,39 +1063,48 @@
                 gap: 4px;
             }
             .logo h2 {
-                font-size: 1rem;
+                font-size: 0.95rem;
+            }
+            .logo h2 i {
+                font-size: 0.9rem;
             }
             .btn {
-                font-size: 0.75rem;
-                padding: 6px 10px;
+                font-size: 0.7rem;
+                padding: 5px 9px;
                 border-radius: 24px;
+                gap: 3px;
             }
             .btn-icon {
                 width: 30px;
                 height: 30px;
-                font-size: 0.75rem;
             }
-            .doctors-sidebar {
-                max-height: 250px;
-                border-radius: 16px;
-                padding: 10px 8px;
-            }
-            .doctor-item {
-                padding: 10px 12px;
-                border-radius: 40px;
-            }
-            .doctor-avatar {
+            .btn-icon.btn-sm {
                 width: 28px;
                 height: 28px;
-                min-width: 28px;
                 font-size: 0.7rem;
             }
-            .doctor-name {
-                font-size: 0.8rem;
-            }
-            .new-badge {
+            #welcomeMessage {
                 font-size: 0.7rem;
-                padding: 2px 8px;
+                max-width: 70px;
+            }
+            .doctors-strip-mobile {
+                border-radius: 40px;
+                padding: 5px 4px;
+            }
+            .doctor-pill {
+                padding: 8px 12px;
+                font-size: 0.78rem;
+                gap: 5px;
+            }
+            .doctor-pill .pill-avatar {
+                width: 24px;
+                height: 24px;
+                min-width: 24px;
+                font-size: 0.65rem;
+            }
+            .doctor-pill .pill-badge {
+                font-size: 0.65rem;
+                padding: 1px 6px;
             }
             .prescriptions-panel {
                 padding: 10px;
@@ -804,41 +1113,103 @@
             .rx-item-card {
                 padding: 12px;
                 border-radius: 14px;
+                margin-bottom: 6px;
             }
             .rx-patient {
-                font-size: 0.9rem;
-            }
-            .panel-header h3 {
                 font-size: 0.85rem;
             }
+            .rx-doctor {
+                font-size: 0.78rem;
+            }
+            .rx-items-preview {
+                font-size: 0.75rem;
+            }
+            .rx-date {
+                font-size: 0.7rem;
+            }
+            .panel-header h3 {
+                font-size: 0.82rem;
+            }
             .tab-btn {
-                font-size: 0.8rem;
-                padding: 6px 8px;
+                font-size: 0.75rem;
+                padding: 7px 6px;
+            }
+            .open-details-btn {
+                font-size: 0.72rem;
+                padding: 6px 12px;
+            }
+            .modal-card {
+                border-radius: 20px 20px 8px 8px;
+            }
+            .modal-header {
+                padding: 12px 14px;
+                border-radius: 20px 20px 0 0;
+            }
+            .modal-body {
+                padding: 12px 14px;
+            }
+            .search-input-group input {
+                padding: 12px 14px;
+                font-size: 0.9rem;
+            }
+            .search-input-group .btn {
+                padding: 10px;
+                font-size: 0.85rem;
             }
         }
 
-        /* دعم شاشات اللمس */
+        /* ============================================== */
+        /* ====== دعم شاشات اللمس (جميع الأجهزة) ======== */
+        /* ============================================== */
         @media (hover: none) and (pointer: coarse) {
-            .doctor-item,
-            .rx-item-card,
-            .btn,
-            .tab-btn,
-            .search-result-item {
-                cursor: default;
+            .doctor-item:hover,
+            .rx-item-card:hover,
+            .btn:hover,
+            .tab-btn:hover,
+            .search-result-item:hover,
+            .doctor-pill:hover {
+                transform: none;
+                background: inherit;
             }
             .doctor-item:active,
-            .rx-item-card:active {
+            .rx-item-card:active,
+            .doctor-pill:active {
+                transform: scale(0.96);
                 background: var(--primary-light);
             }
             .btn:active {
-                transform: scale(0.96);
+                transform: scale(0.93);
+            }
+            .tab-btn:active {
+                transform: scale(0.95);
+            }
+            .open-details-btn:active {
+                transform: scale(0.95);
+                background: var(--primary);
+            }
+        }
+
+        /* ========== دعم الوضع الليلي المحتمل ========== */
+        @media (prefers-color-scheme: dark) {
+            /* يمكن إضافة ألوان داكنة هنا لو أردت */
+            /* حالياً نحافظ على التصميم الفاتح الدافئ */
+        }
+
+        /* ========== دعم تقليل الحركة ========== */
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
             }
         }
     </style>
 </head>
 <body>
     <div class="app-container">
-        <!-- الشريط الجانبي للأطباء -->
+        <!-- ========== الشريط الجانبي للأطباء (للكمبيوتر واللوحي) ========== -->
         <div class="doctors-sidebar" id="doctorsSidebar">
             <div class="sidebar-header">
                 <h3><i class="fas fa-user-md"></i> الأطباء</h3>
@@ -849,28 +1220,35 @@
             </div>
         </div>
 
-        <!-- المحتوى الرئيسي -->
+        <!-- ========== المحتوى الرئيسي ========== -->
         <div class="main-content">
             <!-- الشريط العلوي -->
             <div class="top-bar">
                 <div class="logo">
-                    <h2><i class="fas fa-pills" style="color:var(--primary);"></i> سُكُون · الصيدلي</h2>
+                    <h2><i class="fas fa-pills"></i> سُكُون · الصيدلي</h2>
                 </div>
                 <div class="header-actions">
-                    <span id="welcomeMessage" style="font-weight:600;"></span>
+                    <span id="welcomeMessage" style="font-weight:600;">مرحباً</span>
                     <button class="btn btn-sm" id="searchPatientBtn"><i class="fas fa-search"></i> <span class="hide-mobile">بحث عن مريض</span></button>
                     <button class="btn btn-icon btn-sm" id="toggleSidebarBtn" title="إظهار/إخفاء الأطباء"><i class="fas fa-user-md"></i></button>
                     <button class="btn btn-icon btn-sm" id="logoutBtn" title="خروج"><i class="fas fa-sign-out-alt"></i></button>
                 </div>
             </div>
 
+            <!-- شريط الأطباء الأفقي (للهاتف فقط) -->
+            <div class="doctors-strip-mobile" id="doctorsStripMobile">
+                <div class="strip-scroll" id="doctorStripContainer">
+                    <div class="empty-state" style="padding:10px;"><i class="fas fa-spinner fa-pulse"></i> تحميل الأطباء...</div>
+                </div>
+            </div>
+
             <!-- لوحة الروشتات -->
             <div class="prescriptions-panel">
                 <div class="panel-header">
-                    <h3 id="selectedDoctorTitle">اختر طبيباً من القائمة</h3>
+                    <h3 id="selectedDoctorTitle"><i class="fas fa-user-md"></i> اختر طبيباً من القائمة</h3>
                     <div class="tabs">
-                        <button class="tab-btn active" data-doctor-tab="لم تصرف بعد">جديدة</button>
-                        <button class="tab-btn" data-doctor-tab="تم الصرف">مصروفة</button>
+                        <button class="tab-btn active" data-doctor-tab="لم تصرف بعد">🆕 جديدة</button>
+                        <button class="tab-btn" data-doctor-tab="تم الصرف">✅ مصروفة</button>
                     </div>
                 </div>
                 <div class="rx-list" id="prescriptionsListContainer">
@@ -880,7 +1258,7 @@
         </div>
     </div>
 
-    <!-- مودال البحث عن مريض -->
+    <!-- ========== مودال البحث عن مريض ========== -->
     <div id="searchPatientModal" class="modal">
         <div class="modal-card">
             <div class="modal-header">
@@ -899,7 +1277,276 @@
         </div>
     </div>
 
+    <!-- ========== حاوية التوست ========== -->
+    <div id="toastContainer"></div>
+
     <!-- استدعاء ملف JavaScript الخارجي -->
     <script type="module" src="pharmacist-dashboard.js"></script>
+
+    <!-- ========== سكريبت بسيط لإدارة الواجهة ========== -->
+    <script>
+        (function() {
+            // عناصر DOM
+            const doctorsSidebar = document.getElementById('doctorsSidebar');
+            const toggleSidebarBtn = document.getElementById('toggleSidebarBtn');
+            const doctorsStripMobile = document.getElementById('doctorsStripMobile');
+            const doctorStripContainer = document.getElementById('doctorStripContainer');
+            const doctorListContainer = document.getElementById('doctorListContainer');
+            const selectedDoctorTitle = document.getElementById('selectedDoctorTitle');
+            const prescriptionsListContainer = document.getElementById('prescriptionsListContainer');
+            const searchPatientModal = document.getElementById('searchPatientModal');
+            const closeSearchModalBtn = document.getElementById('closeSearchModalBtn');
+            const searchPatientBtn = document.getElementById('searchPatientBtn');
+            const executeSearchBtn = document.getElementById('executeSearchBtn');
+            const patientSearchInput = document.getElementById('patientSearchInput');
+            const searchResultsContainer = document.getElementById('searchResultsContainer');
+            const toastContainer = document.getElementById('toastContainer');
+            const refreshDoctorsBtn = document.getElementById('refreshDoctorsBtn');
+            const logoutBtn = document.getElementById('logoutBtn');
+            const welcomeMessage = document.getElementById('welcomeMessage');
+            const tabBtns = document.querySelectorAll('.tab-btn');
+
+            let currentDoctorId = null;
+            let activeTab = 'لم تصرف بعد';
+            let doctorsData = [];
+            let prescriptionsData = [];
+
+            // ========== دالة عرض التوست ==========
+            function showToast(message, duration = 2500) {
+                const toast = document.createElement('div');
+                toast.className = 'toast';
+                toast.textContent = message;
+                toastContainer.appendChild(toast);
+                setTimeout(() => {
+                    toast.style.opacity = '0';
+                    toast.style.transform = 'translateY(20px)';
+                    toast.style.transition = 'all 0.3s ease';
+                    setTimeout(() => toast.remove(), 300);
+                }, duration);
+            }
+
+            // ========== تبديل الشريط الجانبي (للكمبيوتر) ==========
+            if (toggleSidebarBtn) {
+                toggleSidebarBtn.addEventListener('click', () => {
+                    if (window.innerWidth > 768) {
+                        doctorsSidebar.classList.toggle('collapsed');
+                    }
+                });
+            }
+
+            // ========== تحميل الأطباء ==========
+            function loadDoctors() {
+                const mockDoctors = [
+                    { id: 1, name: 'د. أحمد محمد', specialty: 'قلب', newCount: 3 },
+                    { id: 2, name: 'د. سارة علي', specialty: 'جلدية', newCount: 0 },
+                    { id: 3, name: 'د. محمود إبراهيم', specialty: 'عظام', newCount: 5 },
+                    { id: 4, name: 'د. فاطمة حسن', specialty: 'أطفال', newCount: 1 },
+                    { id: 5, name: 'د. عمر خالد', specialty: 'باطنة', newCount: 0 },
+                ];
+                doctorsData = mockDoctors;
+                renderDoctors();
+            }
+
+            function renderDoctors() {
+                // الشريط الجانبي (كمبيوتر)
+                if (doctorListContainer) {
+                    if (doctorsData.length === 0) {
+                        doctorListContainer.innerHTML =
+                            '<div class="empty-state"><i class="fas fa-user-md"></i>لا يوجد أطباء</div>';
+                    } else {
+                        doctorListContainer.innerHTML = doctorsData.map(d => `
+                            <div class="doctor-item ${d.id === currentDoctorId ? 'active' : ''}" data-doctor-id="${d.id}">
+                                <div class="doctor-info">
+                                    <div class="doctor-avatar">${d.name.charAt(2)}</div>
+                                    <span class="doctor-name">${d.name}</span>
+                                </div>
+                                ${d.newCount > 0 ? `<span class="new-badge">${d.newCount} جديدة</span>` : ''}
+                            </div>
+                        `).join('');
+                    }
+                }
+
+                // الشريط الأفقي (هاتف)
+                if (doctorStripContainer) {
+                    if (doctorsData.length === 0) {
+                        doctorStripContainer.innerHTML =
+                            '<div class="empty-state" style="padding:10px;width:100%;"><i class="fas fa-user-md"></i>لا يوجد أطباء</div>';
+                    } else {
+                        doctorStripContainer.innerHTML = doctorsData.map(d => `
+                            <div class="doctor-pill ${d.id === currentDoctorId ? 'active' : ''}" data-doctor-id="${d.id}">
+                                <div class="pill-avatar">${d.name.charAt(2)}</div>
+                                <span>${d.name.split(' ')[1] || d.name}</span>
+                                ${d.newCount > 0 ? `<span class="pill-badge">${d.newCount}</span>` : ''}
+                            </div>
+                        `).join('');
+                    }
+                }
+
+                // إعادة ربط الأحداث
+                document.querySelectorAll('.doctor-item, .doctor-pill').forEach(el => {
+                    el.addEventListener('click', function() {
+                        const id = parseInt(this.getAttribute('data-doctor-id'));
+                        selectDoctor(id);
+                    });
+                });
+            }
+
+            function selectDoctor(id) {
+                currentDoctorId = id;
+                const doctor = doctorsData.find(d => d.id === id);
+                if (doctor) {
+                    if (selectedDoctorTitle) {
+                        selectedDoctorTitle.innerHTML =
+                            `<i class="fas fa-user-md"></i> روشتات ${doctor.name}`;
+                    }
+                    renderDoctors();
+                    loadPrescriptionsForDoctor(id);
+                    // تمرير الشريط الأفقي للطبيب المحدد
+                    if (window.innerWidth <= 768 && doctorStripContainer) {
+                        const activePill = doctorStripContainer.querySelector('.doctor-pill.active');
+                        if (activePill) {
+                            activePill.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                        }
+                    }
+                }
+            }
+
+            function loadPrescriptionsForDoctor(doctorId) {
+                const mockPrescriptions = [
+                    { id: 101, patient: 'محمد سالم', doctor: 'د. أحمد محمد', items: 'باراسيتامول 500mg - 20 قرص', date: '2026-05-01',
+                        status: 'لم تصرف بعد' },
+                    { id: 102, patient: 'علياء محمود', doctor: 'د. أحمد محمد', items: 'أموكسيسيلين 250mg - 10 كبسولات',
+                        date: '2026-05-02', status: 'لم تصرف بعد' },
+                    { id: 103, patient: 'خالد يوسف', doctor: 'د. أحمد محمد', items: 'فيتامين د 1000IU - 30 قرص',
+                        date: '2026-04-28', status: 'تم الصرف' },
+                    { id: 104, patient: 'نورا فؤاد', doctor: 'د. سارة علي', items: 'كريم مرطب - عبوة واحدة',
+                    date: '2026-05-03', status: 'لم تصرف بعد' },
+                    { id: 105, patient: 'حسن عبدالله', doctor: 'د. محمود إبراهيم', items: 'ديكلوفيناك 50mg - 15 قرص',
+                        date: '2026-04-30', status: 'تم الصرف' },
+                ];
+                prescriptionsData = mockPrescriptions.filter(p => p.doctor === doctorsData.find(d => d.id ===
+                    doctorId)?.name);
+                filterAndRenderPrescriptions();
+            }
+
+            function filterAndRenderPrescriptions() {
+                const filtered = prescriptionsData.filter(p => p.status === activeTab);
+                if (prescriptionsListContainer) {
+                    if (filtered.length === 0) {
+                        prescriptionsListContainer.innerHTML =
+                            `<div class="empty-state"><i class="fas fa-prescription"></i>لا توجد روشتات ${activeTab === 'لم تصرف بعد' ? 'جديدة' : 'مصروفة'} لهذا الطبيب</div>`;
+                    } else {
+                        prescriptionsListContainer.innerHTML = filtered.map(p => `
+                            <div class="rx-item-card" data-rx-id="${p.id}">
+                                <div class="rx-item-header">
+                                    <span class="rx-patient">🧑‍⚕️ ${p.patient}</span>
+                                    <span class="rx-date">📅 ${p.date}</span>
+                                </div>
+                                <div class="rx-doctor">👨‍⚕️ ${p.doctor}</div>
+                                <div class="rx-items-preview">💊 ${p.items}</div>
+                                <button class="open-details-btn">📋 تفاصيل الروشتة</button>
+                            </div>
+                        `).join('');
+                        // ربط أزرار التفاصيل
+                        prescriptionsListContainer.querySelectorAll('.open-details-btn').forEach(btn => {
+                            btn.addEventListener('click', function(e) {
+                                e.stopPropagation();
+                                const rxId = parseInt(this.closest('.rx-item-card').getAttribute(
+                                    'data-rx-id'));
+                                showToast(`🔍 جاري عرض تفاصيل الروشتة #${rxId}`);
+                            });
+                        });
+                        prescriptionsListContainer.querySelectorAll('.rx-item-card').forEach(card => {
+                            card.addEventListener('click', function() {
+                                const rxId = parseInt(this.getAttribute('data-rx-id'));
+                                showToast(`📝 تم تحديد الروشتة #${rxId}`);
+                            });
+                        });
+                    }
+                }
+            }
+
+            // ========== التبويبات ==========
+            tabBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    tabBtns.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    activeTab = this.getAttribute('data-doctor-tab');
+                    filterAndRenderPrescriptions();
+                });
+            });
+
+            // ========== مودال البحث ==========
+            searchPatientBtn.addEventListener('click', () => {
+                searchPatientModal.classList.add('show');
+                patientSearchInput.focus();
+            });
+            closeSearchModalBtn.addEventListener('click', () => {
+                searchPatientModal.classList.remove('show');
+            });
+            searchPatientModal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.remove('show');
+                }
+            });
+            executeSearchBtn.addEventListener('click', performSearch);
+            patientSearchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') performSearch();
+            });
+
+            function performSearch() {
+                const query = patientSearchInput.value.trim();
+                if (!query) {
+                    showToast('⚠️ الرجاء إدخال اسم المريض أو رقم الهاتف');
+                    return;
+                }
+                searchResultsContainer.innerHTML = `
+                    <div class="search-result-item">
+                        <strong>🧑 محمد أحمد</strong>
+                        <span class="text-muted">📞 01001234567</span>
+                        <div class="mt-2"><span class="text-success">3 روشتات نشطة</span></div>
+                    </div>
+                    <div class="search-result-item">
+                        <strong>🧑 فاطمة علي</strong>
+                        <span class="text-muted">📞 01112223334</span>
+                        <div class="mt-2"><span class="text-success">1 روشتة نشطة</span></div>
+                    </div>
+                `;
+                searchResultsContainer.querySelectorAll('.search-result-item').forEach(item => {
+                    item.addEventListener('click', function() {
+                        showToast('✅ تم العثور على المريض');
+                        searchPatientModal.classList.remove('show');
+                    });
+                });
+            }
+
+            // ========== أزرار أخرى ==========
+            refreshDoctorsBtn.addEventListener('click', () => {
+                showToast('🔄 جاري تحديث قائمة الأطباء...');
+                loadDoctors();
+            });
+            logoutBtn.addEventListener('click', () => {
+                showToast('👋 تم تسجيل الخروج بنجاح');
+            });
+
+            // ========== تحديث الترحيب ==========
+            if (welcomeMessage) {
+                welcomeMessage.textContent = '👋 أهلاً د. صيدلي';
+            }
+
+            // ========== كشف تغيير حجم الشاشة ==========
+            function handleResize() {
+                if (window.innerWidth <= 768) {
+                    doctorsSidebar?.classList.remove('collapsed');
+                }
+            }
+            window.addEventListener('resize', handleResize);
+            handleResize();
+
+            // ========== بدء التطبيق ==========
+            loadDoctors();
+            console.log('🚀 لوحة سُكُون · الصيدلي جاهزة | متكيّفة مع جميع الأجهزة');
+        })();
+    </script>
 </body>
 </html>
