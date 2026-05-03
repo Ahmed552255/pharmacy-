@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>سُكُون · لوحة الطبيب</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -27,29 +27,241 @@
             --shadow-md: 0 12px 28px -6px rgba(230, 126, 34, 0.12);
             --shadow-lg: 0 20px 40px -10px rgba(230, 126, 34, 0.15);
             --radius-card: 32px;
+            --radius-sm: 24px;
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
+            --safe-top: env(safe-area-inset-top, 0px);
         }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
         body {
             font-family: 'Cairo', sans-serif;
             background: var(--bg);
             color: var(--ink);
             min-height: 100vh;
+            min-height: 100dvh;
             padding: 16px;
+            padding-bottom: calc(16px + var(--safe-bottom));
+            padding-top: calc(16px + var(--safe-top));
             position: relative;
             animation: fadeIn 0.4s ease;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
         }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
         body::before {
             content: '';
             position: fixed;
             inset: 0;
             background: radial-gradient(circle at 0% 0%, rgba(248, 196, 113, 0.08), transparent 50%),
-                        radial-gradient(circle at 100% 100%, rgba(230, 126, 34, 0.06), transparent 50%);
+                radial-gradient(circle at 100% 100%, rgba(230, 126, 34, 0.06), transparent 50%);
             pointer-events: none;
             z-index: -1;
         }
-        .container { max-width: 1400px; margin: 0 auto; }
 
+        /* ========== الحاوية الرئيسية ========== */
+        .app-layout {
+            display: flex;
+            gap: 20px;
+            max-width: 1500px;
+            margin: 0 auto;
+            min-height: calc(100vh - 32px);
+            min-height: calc(100dvh - 32px - var(--safe-bottom) - var(--safe-top));
+            position: relative;
+        }
+
+        /* ========== الشريط الجانبي للمرضى (كمبيوتر) ========== */
+        .queue-sidebar {
+            width: 320px;
+            min-width: 300px;
+            background: rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: var(--radius-card);
+            padding: 16px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            box-shadow: var(--shadow-md);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            flex-shrink: 0;
+            max-height: calc(100vh - 32px);
+            max-height: calc(100dvh - 32px - var(--safe-bottom) - var(--safe-top));
+            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 10;
+        }
+        .queue-sidebar.collapsed {
+            width: 0;
+            min-width: 0;
+            padding: 16px 0;
+            opacity: 0;
+            overflow: hidden;
+            border: none;
+            margin: 0;
+        }
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 8px 14px;
+            border-bottom: 1px solid var(--border-light);
+            flex-shrink: 0;
+        }
+        .sidebar-header h3 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .sidebar-header h3 i {
+            color: var(--accent);
+        }
+        .sidebar-tabs {
+            display: flex;
+            gap: 4px;
+            background: rgba(0, 0, 0, 0.03);
+            border-radius: 40px;
+            padding: 3px;
+            margin-top: 8px;
+            flex-shrink: 0;
+        }
+        .sidebar-tab {
+            flex: 1;
+            padding: 8px 10px;
+            text-align: center;
+            background: transparent;
+            border: none;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
+            color: var(--text-sec);
+            font-family: 'Cairo', sans-serif;
+            font-size: 0.85rem;
+            transition: 0.2s;
+            white-space: nowrap;
+        }
+        .sidebar-tab.active {
+            background: white;
+            color: var(--accent);
+            box-shadow: var(--shadow-sm);
+        }
+        .sidebar-tab .count {
+            background: rgba(0, 0, 0, 0.04);
+            padding: 1px 7px;
+            border-radius: 20px;
+            margin-right: 4px;
+            font-size: 0.8rem;
+        }
+        .queue-list {
+            flex: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            margin-top: 10px;
+            min-height: 0;
+        }
+        .queue-list::-webkit-scrollbar {
+            width: 4px;
+        }
+        .queue-list::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 10px;
+        }
+        .queue-patient-card {
+            background: white;
+            border-radius: 20px;
+            padding: 14px 16px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            border: 1px solid var(--border-light);
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        .queue-patient-card:hover {
+            background: var(--primary-light);
+            border-color: var(--primary);
+            transform: translateX(-2px);
+        }
+        .queue-patient-card:active {
+            transform: scale(0.97);
+        }
+        .queue-patient-card.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            font-weight: 700;
+            box-shadow: 0 4px 14px rgba(230, 126, 34, 0.25);
+        }
+        .queue-patient-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+            flex: 1;
+        }
+        .queue-avatar {
+            width: 38px;
+            height: 38px;
+            min-width: 38px;
+            background: var(--accent-soft);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+        .queue-patient-card.active .queue-avatar {
+            background: white;
+            color: var(--accent);
+        }
+        .queue-patient-name {
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .queue-patient-age {
+            font-size: 0.8rem;
+            color: var(--text-sec);
+            white-space: nowrap;
+        }
+        .queue-status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .queue-status-dot.waiting {
+            background: var(--warning);
+        }
+        .queue-status-dot.done {
+            background: var(--success);
+        }
+
+        /* ========== المحتوى الرئيسي ========== */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            overflow: hidden;
+            min-width: 0;
+        }
+
+        /* ========== الشريط العلوي ========== */
         .app-header {
             display: flex;
             align-items: center;
@@ -59,18 +271,20 @@
             -webkit-backdrop-filter: blur(20px);
             border-radius: 60px;
             padding: 10px 20px;
-            margin-bottom: 20px;
-            border: 1px solid rgba(255,255,255,0.7);
+            border: 1px solid rgba(255, 255, 255, 0.7);
             box-shadow: var(--shadow-md);
             flex-wrap: wrap;
             gap: 12px;
-            position: sticky;
-            top: 16px;
+            flex-shrink: 0;
             z-index: 50;
         }
-        .logo-area { display: flex; align-items: center; gap: 12px; }
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
         .logo h2 {
-            font-size: clamp(1.5rem, 5vw, 2rem);
+            font-size: clamp(1.5rem, 4vw, 2rem);
             font-weight: 800;
             background: linear-gradient(145deg, #D35400, #E67E22);
             -webkit-background-clip: text;
@@ -79,97 +293,219 @@
             white-space: nowrap;
         }
         .queue-btn {
-            width: 48px; height: 48px; border-radius: 30px;
-            background: var(--white); border: 1px solid var(--border-light);
-            box-shadow: var(--shadow-sm); display: flex; align-items: center;
-            justify-content: center; cursor: pointer; transition: all 0.3s;
-            position: relative; border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--white);
+            border: 1px solid var(--border-light);
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
         }
-        .queue-btn:hover { background: var(--primary-light); transform: scale(1.05); }
+        .queue-btn:hover {
+            background: var(--primary-light);
+            transform: scale(1.05);
+        }
         .queue-badge {
-            position: absolute; top: -5px; right: -5px;
-            background: var(--primary); color: #4A3B2C;
-            border-radius: 30px; padding: 2px 8px; font-size: 0.75rem; font-weight: 800;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            background: var(--primary);
+            color: #4A3B2C;
+            border-radius: 30px;
+            padding: 2px 8px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            animation: pulseBadge 2.5s infinite;
         }
-        .header-actions { display: flex; gap: 8px; align-items: center; }
-        .btn {
-            padding: 10px 20px; border-radius: 60px; border: none;
-            font-weight: 600; font-family: 'Cairo', sans-serif; cursor: pointer;
-            display: inline-flex; align-items: center; gap: 8px;
-            font-size: 0.9rem; transition: all 0.25s;
-            background: white; color: var(--ink);
-            border: 1px solid var(--border-light); white-space: nowrap;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+        @keyframes pulseBadge {
+            0%,
+            100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.12);
+            }
         }
-        .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.06); }
-        .btn-primary {
-            background: var(--primary); color: #4A3B2C; border: none;
-            box-shadow: 0 6px 14px rgba(230, 126, 34, 0.2); font-weight: 700;
+        .header-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
         }
-        .btn-primary:hover { background: var(--primary-dark); color: white; }
+        #welcomeMessage {
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 140px;
+        }
 
+        /* ========== الأزرار ========== */
+        .btn {
+            padding: 10px 20px;
+            border-radius: 60px;
+            border: none;
+            font-weight: 600;
+            font-family: 'Cairo', sans-serif;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            transition: all 0.25s;
+            background: white;
+            color: var(--ink);
+            border: 1px solid var(--border-light);
+            white-space: nowrap;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+            user-select: none;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+        }
+        .btn:active {
+            transform: scale(0.95);
+        }
+        .btn-primary {
+            background: var(--primary);
+            color: #4A3B2C;
+            border: none;
+            box-shadow: 0 6px 14px rgba(230, 126, 34, 0.2);
+            font-weight: 700;
+        }
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            color: white;
+        }
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border-light);
+        }
+        .btn-outline:hover {
+            background: var(--primary-light);
+        }
+        .btn-icon {
+            width: 44px;
+            height: 44px;
+            padding: 0;
+            justify-content: center;
+            border-radius: 50%;
+        }
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 0.8rem;
+            border-radius: 30px;
+        }
+
+        /* ========== بطاقة المريض الحالي ========== */
         .current-patient-card {
             background: rgba(255, 255, 255, 0.8);
             backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             border-radius: 40px;
             padding: 14px 24px;
-            margin-bottom: 20px;
             display: flex;
             align-items: center;
             justify-content: space-between;
             border: 1px solid var(--border-light);
             box-shadow: var(--shadow-sm);
             transition: transform 0.2s;
+            flex-shrink: 0;
         }
         .patient-name-clickable {
-            font-weight: 800; font-size: 1.3rem; color: var(--ink);
-            cursor: pointer; display: flex; align-items: center; gap: 10px;
+            font-weight: 800;
+            font-size: 1.3rem;
+            color: var(--ink);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
-        .patient-name-clickable i { color: var(--accent); font-size: 1rem; }
+        .patient-name-clickable i {
+            color: var(--accent);
+            font-size: 1rem;
+        }
         .patient-age-badge {
-            background: var(--primary-light); padding: 4px 14px;
-            border-radius: 60px; font-size: 0.9rem; font-weight: 600;
+            background: var(--primary-light);
+            padding: 4px 14px;
+            border-radius: 60px;
+            font-size: 0.9rem;
+            font-weight: 600;
         }
 
+        /* ========== قسم التشخيص ========== */
         .diagnosis-section {
             background: rgba(255, 255, 255, 0.7);
             backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             border-radius: 24px;
             padding: 16px 20px;
-            margin-bottom: 24px;
             border: 1px solid var(--border-light);
             box-shadow: var(--shadow-sm);
+            flex-shrink: 0;
         }
         .diagnosis-header {
-            display: flex; align-items: center; gap: 8px; margin-bottom: 12px;
-            color: var(--ink); font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+            color: var(--ink);
+            font-weight: 600;
         }
         .diagnosis-textarea {
-            width: 100%; padding: 14px 18px; border-radius: 20px;
-            border: 1.5px solid var(--border-light); font-family: 'Cairo', sans-serif;
-            font-size: 0.95rem; resize: vertical; min-height: 80px;
+            width: 100%;
+            padding: 14px 18px;
+            border-radius: 20px;
+            border: 1.5px solid var(--border-light);
+            font-family: 'Cairo', sans-serif;
+            font-size: 0.95rem;
+            resize: vertical;
+            min-height: 80px;
             transition: border-color 0.2s, box-shadow 0.2s;
+            background: #FAFAFA;
         }
         .diagnosis-textarea:focus {
             outline: none;
             border-color: var(--primary);
             box-shadow: 0 0 0 3px rgba(248, 196, 113, 0.2);
+            background: white;
         }
 
+        /* ========== لوحة الوصفة ========== */
         .prescription-panel {
             background: rgba(255, 255, 255, 0.75);
             backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             border-radius: var(--radius-card);
             padding: 20px;
-            border: 1px solid rgba(255,255,255,0.7);
+            border: 1px solid rgba(255, 255, 255, 0.7);
             box-shadow: var(--shadow-md);
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            min-height: 0;
         }
         .rx-items-container {
-            max-height: 300px;
+            flex: 1;
             overflow-y: auto;
-            margin-bottom: 24px;
-            padding-left: 4px;
+            -webkit-overflow-scrolling: touch;
+            margin-bottom: 16px;
+            min-height: 0;
+        }
+        .rx-items-container::-webkit-scrollbar {
+            width: 5px;
+        }
+        .rx-items-container::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 10px;
         }
         .rx-item {
             background: white;
@@ -191,70 +527,128 @@
             flex-wrap: wrap;
             gap: 10px;
         }
-        .rx-drug-info { display: flex; align-items: center; gap: 12px; }
-        .rx-drug-name { font-weight: 700; font-size: 1rem; }
+        .rx-drug-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .rx-drug-name {
+            font-weight: 700;
+            font-size: 1rem;
+        }
         .rx-form-badge {
             background: var(--primary-light);
             padding: 4px 10px;
             border-radius: 30px;
             font-size: 0.8rem;
         }
-        .rx-dose-info { display: flex; align-items: center; gap: 8px; }
+        .rx-dose-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
         .rx-dose-text {
             background: var(--primary-light);
             padding: 6px 16px;
             border-radius: 60px;
             font-size: 0.9rem;
         }
-        .rx-actions { display: flex; gap: 8px; }
+        .rx-actions {
+            display: flex;
+            gap: 8px;
+        }
         .icon-btn-sm {
-            width: 34px; height: 34px; border-radius: 12px;
+            width: 34px;
+            height: 34px;
+            border-radius: 12px;
             border: 1px solid var(--border-light);
-            background: white; color: var(--text-sec);
-            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            background: white;
+            color: var(--text-sec);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             transition: all 0.2s;
         }
-        .icon-btn-sm:hover { background: var(--danger); color: white; border-color: var(--danger); }
-        .icon-btn-sm.edit:hover { background: var(--primary); color: #4A3B2C; border-color: var(--primary); }
+        .icon-btn-sm:hover {
+            background: var(--danger);
+            color: white;
+            border-color: var(--danger);
+        }
+        .icon-btn-sm.edit:hover {
+            background: var(--primary);
+            color: #4A3B2C;
+            border-color: var(--primary);
+        }
 
+        /* ========== إضافة دواء ========== */
         .drug-add-section {
             display: flex;
             gap: 10px;
             align-items: center;
             flex-wrap: wrap;
-            margin-bottom: 12px;
+            flex-shrink: 0;
         }
-        .drug-search-wrapper { flex: 1; position: relative; }
+        .drug-search-wrapper {
+            flex: 1;
+            position: relative;
+            min-width: 150px;
+        }
         .drug-search-wrapper input {
-            width: 100%; padding: 14px 18px; border-radius: 60px;
-            border: 1.5px solid var(--border-light); font-family: 'Cairo', sans-serif;
+            width: 100%;
+            padding: 14px 18px;
+            border-radius: 60px;
+            border: 1.5px solid var(--border-light);
+            font-family: 'Cairo', sans-serif;
             transition: border-color 0.2s, box-shadow 0.2s;
+            background: #FAFAFA;
         }
         .drug-search-wrapper input:focus {
             outline: none;
             border-color: var(--primary);
             box-shadow: 0 0 0 3px rgba(248, 196, 113, 0.2);
+            background: white;
         }
         .suggestions-dropdown {
-            position: absolute; top: 100%; left: 0; right: 0;
-            background: white; border-radius: 20px; box-shadow: var(--shadow-md);
-            margin-top: 8px; z-index: 100; max-height: 250px; overflow-y: auto;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border-radius: 20px;
+            box-shadow: var(--shadow-md);
+            margin-top: 8px;
+            z-index: 100;
+            max-height: 250px;
+            overflow-y: auto;
             display: none;
         }
         .suggestion-item {
-            padding: 12px 16px; cursor: pointer; border-bottom: 1px solid var(--border-light);
+            padding: 12px 16px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border-light);
             transition: background 0.15s;
         }
-        .suggestion-item:hover { background: var(--primary-light); }
-
+        .suggestion-item:hover {
+            background: var(--primary-light);
+        }
         .dose-panel {
-            margin-top: 16px; background: #FEF5EC; border-radius: 24px; padding: 16px;
+            margin-top: 16px;
+            background: #FEF5EC;
+            border-radius: 24px;
+            padding: 16px;
             border: 1px solid var(--border-light);
+            flex-shrink: 0;
         }
         .dose-suggestion-row {
-            display: flex; align-items: center; justify-content: space-between;
-            background: white; padding: 8px 12px; border-radius: 40px;
-            border: 1px solid var(--border-light); margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: white;
+            padding: 8px 12px;
+            border-radius: 40px;
+            border: 1px solid var(--border-light);
+            margin-bottom: 8px;
         }
         .dose-chip-btn {
             display: inline-block;
@@ -268,189 +662,998 @@
             font-size: 0.85rem;
             transition: 0.2s;
         }
-        .dose-chip-btn:hover { background: var(--primary-light); border-color: var(--primary); }
+        .dose-chip-btn:hover {
+            background: var(--primary-light);
+            border-color: var(--primary);
+        }
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+            flex-shrink: 0;
+        }
 
-        .queue-modal {
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.2); backdrop-filter: blur(6px);
-            display: none; align-items: center; justify-content: center;
-            z-index: 2000; padding: 16px;
+        /* ========== شريط المرضى الأفقي (للهاتف) ========== */
+        .queue-strip-mobile {
+            display: none;
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 50px;
+            padding: 8px 6px;
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            box-shadow: var(--shadow-sm);
+            flex-shrink: 0;
+            z-index: 8;
+            overflow: hidden;
         }
-        .queue-modal-card {
-            background: white; border-radius: 40px; width: 100%;
-            max-width: 500px; max-height: 80vh; overflow: hidden;
-            display: flex; flex-direction: column;
+        .queue-strip-mobile .strip-scroll {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scroll-behavior: smooth;
+            padding: 4px 8px;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
         }
-        .queue-modal-header {
-            padding: 20px 24px; border-bottom: 1px solid var(--border-light);
-            display: flex; justify-content: space-between; align-items: center;
+        .queue-strip-mobile .strip-scroll::-webkit-scrollbar {
+            display: none;
         }
-        .queue-tabs { display: flex; padding: 8px 16px; gap: 8px; }
-        .queue-tab {
-            flex: 1; padding: 10px; text-align: center; background: transparent;
-            border: none; border-radius: 40px; font-weight: 600; cursor: pointer;
-            color: var(--text-sec); transition: 0.2s;
-        }
-        .queue-tab.active { background: var(--primary-light); color: var(--ink); }
-        .queue-tab .count { background: rgba(0,0,0,0.05); padding: 2px 8px; border-radius: 20px; margin-right: 6px; }
-        .queue-list-container { flex: 1; overflow-y: auto; padding: 16px; }
-        .queue-item-modal {
-            background: #FEF5EC; border-radius: 20px; padding: 14px 18px;
-            margin-bottom: 10px; cursor: pointer; border: 1px solid var(--border-light);
+        .queue-pill {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            background: white;
+            border-radius: 50px;
+            border: 1px solid var(--border-light);
+            cursor: pointer;
+            white-space: nowrap;
+            flex-shrink: 0;
             transition: all 0.2s;
+            user-select: none;
+            font-weight: 600;
+            font-size: 0.9rem;
         }
-        .queue-item-modal:hover { background: var(--primary-light); border-color: var(--primary); }
+        .queue-pill:active {
+            transform: scale(0.94);
+        }
+        .queue-pill.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            font-weight: 700;
+            box-shadow: 0 4px 14px rgba(230, 126, 34, 0.25);
+        }
+        .queue-pill .pill-avatar {
+            width: 28px;
+            height: 28px;
+            min-width: 28px;
+            background: var(--accent-soft);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+        .queue-pill.active .pill-avatar {
+            background: white;
+            color: var(--accent);
+        }
+        .queue-pill .pill-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .queue-pill .pill-dot.waiting {
+            background: var(--warning);
+        }
+        .queue-pill .pill-dot.done {
+            background: var(--success);
+        }
 
+        /* ========== المودالات ========== */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(60, 40, 20, 0.25);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            padding: 16px;
+            display: none;
+        }
+        .modal-overlay.show {
+            display: flex;
+        }
+        .modal-card {
+            background: white;
+            border-radius: 32px;
+            width: 100%;
+            max-width: 520px;
+            max-height: 85vh;
+            max-height: 85dvh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-lg);
+            animation: modalIn 0.3s ease;
+        }
+        @keyframes modalIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px) scale(0.94);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        .modal-header {
+            padding: 18px 22px;
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            background: #FEF5EC;
+            z-index: 1;
+            border-radius: 32px 32px 0 0;
+        }
+        .modal-header h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .modal-close-btn {
+            background: none;
+            border: none;
+            font-size: 1.8rem;
+            cursor: pointer;
+            color: var(--text-sec);
+            line-height: 1;
+            padding: 4px 10px;
+            border-radius: 50%;
+            transition: 0.2s;
+            font-family: 'Cairo', sans-serif;
+        }
+        .modal-close-btn:hover {
+            background: rgba(0, 0, 0, 0.05);
+            color: var(--ink);
+        }
+        .modal-body {
+            padding: 20px 22px;
+        }
+
+        /* ========== التوست ========== */
         .toast {
-            position: fixed; bottom: 20px; left: 20px; right: 20px;
-            background: #4A3B2C; color: white; padding: 12px 24px;
-            border-radius: 60px; text-align: center; z-index: 1300;
-            max-width: 500px; margin: 0 auto; font-weight: 500;
-            box-shadow: 0 12px 28px rgba(0,0,0,0.2);
+            position: fixed;
+            bottom: 24px;
+            bottom: calc(24px + var(--safe-bottom));
+            left: 20px;
+            right: 20px;
+            background: #4A3B2C;
+            color: white;
+            padding: 14px 24px;
+            border-radius: 60px;
+            text-align: center;
+            z-index: 3000;
+            max-width: 500px;
+            margin: 0 auto;
+            font-size: 0.9rem;
+            animation: slideUpToast 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+            font-weight: 500;
         }
-        .empty-state { text-align: center; padding: 40px; color: var(--text-sec); }
+        @keyframes slideUpToast {
+            from {
+                opacity: 0;
+                transform: translateY(30px) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-sec);
+            font-size: 0.95rem;
+        }
+        .empty-state i {
+            display: block;
+            font-size: 2.5rem;
+            margin-bottom: 12px;
+            opacity: 0.5;
+        }
 
-        @media (max-width: 640px) {
-            body { padding: 10px; }
-            .btn { padding: 8px 14px; }
+        /* ============================================== */
+        /* ========== شاشات الكمبيوتر (>= 1025px) ======== */
+        /* ============================================== */
+        @media (min-width: 1025px) {
+            .app-layout {
+                flex-direction: row;
+            }
+            .queue-sidebar {
+                display: flex !important;
+            }
+            .queue-strip-mobile {
+                display: none !important;
+            }
+            .queue-btn {
+                display: none;
+            }
+            #toggleQueueSidebarBtn {
+                display: flex;
+            }
+            .hide-desktop {
+                display: none !important;
+            }
+        }
+
+        /* ============================================== */
+        /* ========== الأجهزة اللوحية (769-1024px) ======= */
+        /* ============================================== */
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .app-layout {
+                flex-direction: row;
+                gap: 14px;
+            }
+            .queue-sidebar {
+                width: 270px;
+                min-width: 250px;
+                border-radius: 24px;
+                padding: 14px 10px;
+                display: flex !important;
+            }
+            .queue-strip-mobile {
+                display: none !important;
+            }
+            .queue-btn {
+                display: none;
+            }
+            #toggleQueueSidebarBtn {
+                display: flex;
+            }
+            .btn {
+                font-size: 0.85rem;
+                padding: 8px 14px;
+            }
+            .app-header {
+                padding: 8px 16px;
+                gap: 8px;
+            }
+            .logo h2 {
+                font-size: 1.3rem;
+            }
+            .queue-patient-card {
+                padding: 12px 14px;
+            }
+            .prescription-panel {
+                padding: 16px;
+                border-radius: 24px;
+            }
+            .hide-desktop {
+                display: none !important;
+            }
+        }
+
+        /* ============================================== */
+        /* ========== الهواتف (<= 768px) ================= */
+        /* ============================================== */
+        @media (max-width: 768px) {
+            body {
+                padding: 8px;
+                padding-bottom: calc(8px + var(--safe-bottom));
+                padding-top: calc(8px + var(--safe-top));
+            }
+            .app-layout {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .queue-sidebar {
+                display: none !important;
+            }
+            .queue-strip-mobile {
+                display: block;
+                order: 2;
+                margin: 0;
+            }
+            .main-content {
+                order: 3;
+                gap: 10px;
+            }
+            .app-header {
+                order: 1;
+                border-radius: 40px;
+                padding: 10px 14px;
+                gap: 6px;
+            }
+            .queue-btn {
+                display: flex;
+            }
+            #toggleQueueSidebarBtn {
+                display: none !important;
+            }
+            .logo h2 {
+                font-size: 1.1rem;
+            }
+            #welcomeMessage {
+                font-size: 0.8rem;
+                max-width: 90px;
+            }
+            .header-actions {
+                gap: 4px;
+            }
+            .btn {
+                font-size: 0.78rem;
+                padding: 7px 12px;
+                border-radius: 30px;
+                gap: 4px;
+            }
+            .btn-icon {
+                width: 36px;
+                height: 36px;
+            }
+            .current-patient-card {
+                border-radius: 30px;
+                padding: 12px 16px;
+            }
+            .patient-name-clickable {
+                font-size: 1.1rem;
+            }
+            .diagnosis-section {
+                padding: 12px 16px;
+                border-radius: 20px;
+            }
+            .diagnosis-textarea {
+                min-height: 70px;
+                font-size: 0.9rem;
+            }
+            .prescription-panel {
+                padding: 14px;
+                border-radius: 24px;
+            }
+            .rx-item {
+                padding: 12px 14px;
+                border-radius: 16px;
+            }
+            .rx-drug-name {
+                font-size: 0.9rem;
+            }
+            .drug-add-section {
+                flex-direction: column;
+                gap: 8px;
+            }
+            .drug-search-wrapper {
+                width: 100%;
+            }
+            .drug-add-section select,
+            .drug-add-section .btn {
+                width: 100%;
+                justify-content: center;
+            }
+            .action-buttons {
+                flex-direction: column;
+            }
+            .action-buttons .btn {
+                width: 100%;
+                justify-content: center;
+            }
+            .dose-panel {
+                padding: 12px;
+                border-radius: 20px;
+            }
+            .modal-overlay {
+                padding: 8px;
+                align-items: flex-end;
+            }
+            .modal-card {
+                border-radius: 28px 28px 16px 16px;
+                max-height: 90dvh;
+                animation: modalInMobile 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            }
+            @keyframes modalInMobile {
+                from {
+                    opacity: 0;
+                    transform: translateY(60px) scale(0.95);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0) scale(1);
+                }
+            }
+            .modal-header {
+                padding: 14px 16px;
+                border-radius: 28px 28px 0 0;
+            }
+            .modal-body {
+                padding: 14px 16px;
+            }
+            .toast {
+                bottom: calc(16px + var(--safe-bottom));
+                left: 12px;
+                right: 12px;
+                padding: 12px 20px;
+                font-size: 0.85rem;
+            }
+        }
+
+        /* ============================================== */
+        /* ====== هواتف صغيرة جداً (<= 400px) ============ */
+        /* ============================================== */
+        @media (max-width: 400px) {
+            body {
+                padding: 4px;
+                padding-bottom: calc(4px + var(--safe-bottom));
+                padding-top: calc(4px + var(--safe-top));
+            }
+            .app-layout {
+                gap: 6px;
+            }
+            .app-header {
+                padding: 8px 10px;
+                border-radius: 30px;
+                gap: 4px;
+            }
+            .logo h2 {
+                font-size: 0.95rem;
+            }
+            .btn {
+                font-size: 0.72rem;
+                padding: 6px 10px;
+                border-radius: 24px;
+            }
+            .queue-btn {
+                width: 38px;
+                height: 38px;
+            }
+            .queue-badge {
+                font-size: 0.7rem;
+                padding: 1px 6px;
+                top: -4px;
+                right: -4px;
+            }
+            .queue-pill {
+                padding: 8px 12px;
+                font-size: 0.78rem;
+                gap: 5px;
+            }
+            .queue-pill .pill-avatar {
+                width: 24px;
+                height: 24px;
+                min-width: 24px;
+                font-size: 0.65rem;
+            }
+            .current-patient-card {
+                border-radius: 24px;
+                padding: 10px 14px;
+            }
+            .patient-name-clickable {
+                font-size: 0.95rem;
+            }
+            .diagnosis-textarea {
+                font-size: 0.85rem;
+                padding: 12px 14px;
+            }
+            .rx-drug-name {
+                font-size: 0.82rem;
+            }
+            .modal-card {
+                border-radius: 22px 22px 12px 12px;
+            }
+            .modal-header {
+                padding: 12px 14px;
+                border-radius: 22px 22px 0 0;
+            }
+            .modal-body {
+                padding: 12px 14px;
+            }
+        }
+
+        /* ========== دعم شاشات اللمس ========== */
+        @media (hover: none) and (pointer: coarse) {
+            .queue-patient-card:hover,
+            .btn:hover,
+            .queue-pill:hover,
+            .suggestion-item:hover {
+                transform: none;
+                background: inherit;
+            }
+            .queue-patient-card:active,
+            .queue-pill:active {
+                transform: scale(0.96);
+            }
+            .btn:active {
+                transform: scale(0.93);
+            }
         }
     </style>
 </head>
 <body>
-<div class="container">
-    <header class="app-header">
-        <div class="logo-area">
-            <div class="logo"><h2><i class="fas fa-stethoscope" style="color:var(--primary); margin-left:8px;"></i>سُكُون</h2></div>
-            <button type="button" class="queue-btn" id="queueModalBtn" title="قائمة الانتظار">
-                <i class="fas fa-users"></i>
-                <span class="queue-badge" id="queueBadgeCount">0</span>
-            </button>
-        </div>
-        <div class="header-actions">
-            <span id="welcomeMessage" style="font-weight:600;"></span>
-            <!-- تم تغيير id إلى savedSessionsBtn ليتوافق مع كود JavaScript الجديد -->
-            <button type="button" class="btn btn-outline" id="savedSessionsBtn" title="المرضى الذين لديهم كشف معلق">
-                <i class="fas fa-clock"></i> <span>مرضى معلقون</span>
-            </button>
-            <button type="button" class="btn btn-outline" id="templatesBtn"><i class="fas fa-folder-open"></i> القوالب</button>
-            <button type="button" class="btn btn-outline" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> خروج</button>
-        </div>
-    </header>
-
-    <div id="currentPatientCard" class="current-patient-card" style="display: none;">
-        <div class="patient-name-clickable" id="patientNameClickable">
-            <span id="currentPatientNameDisplay">---</span>
-            <i class="fas fa-external-link-alt"></i>
-        </div>
-        <span class="patient-age-badge" id="currentPatientAgeDisplay">-- سنة</span>
-    </div>
-
-    <div class="diagnosis-section">
-        <div class="diagnosis-header">
-            <i class="fas fa-notes-medical"></i>
-            <span>التشخيص والملاحظات</span>
-        </div>
-        <textarea id="diagnosisTextarea" class="diagnosis-textarea" placeholder="اكتب التشخيص، الأعراض، أو أي ملاحظات إضافية..."></textarea>
-    </div>
-
-    <div class="prescription-panel">
-        <div id="emptyPrescriptionMsg" class="empty-state">
-            <i class="fas fa-prescription-bottle-medical" style="font-size: 48px; opacity: 0.5;"></i>
-            <p>اختر مريضاً من قائمة الانتظار لبدء الكشف</p>
-        </div>
-        <div id="prescriptionContent" style="display: none;">
-            <div class="rx-items-container" id="rxItemsContainer"></div>
-            <div class="drug-add-section">
-                <div class="drug-search-wrapper">
-                    <input type="text" id="drugSearchInput" placeholder="ابحث عن دواء..." autocomplete="off">
-                    <div id="drugSuggestions" class="suggestions-dropdown"></div>
-                </div>
-                <select id="drugFormSelect" class="btn" style="padding:12px 16px;">
-                    <option value="tablet">💊 أقراص</option>
-                    <option value="syrup">🥄 شراب</option>
-                    <option value="injection">💉 حقن</option>
-                    <option value="suppository">🧴 لبوس</option>
-                    <option value="drops">💧 نقط</option>
-                </select>
-                <button type="button" class="btn btn-primary" id="startAddDrugBtn"><i class="fas fa-plus"></i> إضافة</button>
+    <div class="app-layout">
+        <!-- ========== الشريط الجانبي للمرضى (كمبيوتر / لوحي) ========== -->
+        <div class="queue-sidebar" id="queueSidebar">
+            <div class="sidebar-header">
+                <h3><i class="fas fa-users"></i> قائمة المرضى</h3>
+                <button class="btn btn-icon btn-sm" id="refreshQueueBtn" title="تحديث"><i class="fas fa-sync-alt"></i></button>
             </div>
-            <div id="dosePanel" class="dose-panel" style="display: none;">
-                <div style="display:flex; justify-content:space-between; margin-bottom:12px;">
-                    <span id="selectedDrugDisplay" style="font-weight:700;"></span>
-                    <span id="selectedFormDisplay" style="background:var(--primary-light); padding:2px 12px; border-radius:20px;"></span>
-                </div>
-                <div style="display:flex; align-items:center; gap:8px; margin-bottom:16px;">
-                    <input type="text" id="doseNumberInput" placeholder="الكمية (مثلاً 5)" style="width:120px; padding:10px; border-radius:20px; border:1px solid var(--border-light);">
-                    <span id="unitLabel">قرص</span>
-                </div>
-                <div id="doseSuggestionsContainer"></div>
-                <div style="display:flex; gap:10px; margin-top:16px;">
-                    <button type="button" class="btn btn-primary" id="applyDoseBtn">تأكيد وإضافة</button>
-                    <button type="button" class="btn btn-outline" id="cancelDoseBtn">إلغاء</button>
-                </div>
+            <div class="sidebar-tabs">
+                <button class="sidebar-tab active" data-queue-tab="waiting">قيد الانتظار <span class="count" id="waitingTabCount">0</span></button>
+                <button class="sidebar-tab" data-queue-tab="done">تم الكشف <span class="count" id="doneTabCount">0</span></button>
             </div>
-            <div style="display:flex; gap:10px; margin-top:24px;">
-                <button type="button" class="btn btn-primary" id="finishBtn" style="flex:1;"><i class="fas fa-check-circle"></i> إنهاء الكشف</button>
-                <button type="button" class="btn btn-outline" id="saveTemplateBtn"><i class="fas fa-save"></i> حفظ كقالب</button>
-                <button type="button" class="btn btn-outline" id="clearPrescriptionBtn"><i class="fas fa-trash-alt"></i> مسح الوصفة</button>
+            <div class="queue-list" id="queueListContainer">
+                <div class="empty-state"><i class="fas fa-spinner fa-pulse"></i> جاري التحميل...</div>
             </div>
         </div>
-    </div>
-</div>
 
-<!-- مودال قائمة الانتظار -->
-<div id="queueModal" class="queue-modal">
-    <div class="queue-modal-card">
-        <div class="queue-modal-header">
-            <h3>قائمة المرضى</h3>
-            <button type="button" id="closeQueueModalBtn" style="background:none; border:none; font-size:28px; cursor:pointer;">&times;</button>
-        </div>
-        <div class="queue-tabs">
-            <button type="button" class="queue-tab active" data-queue-tab="waiting">قيد الانتظار <span class="count" id="waitingTabCount">0</span></button>
-            <button type="button" class="queue-tab" data-queue-tab="done">تم الكشف <span class="count" id="doneTabCount">0</span></button>
-        </div>
-        <div class="queue-list-container" id="queueModalList"></div>
-    </div>
-</div>
+        <!-- ========== المحتوى الرئيسي ========== -->
+        <div class="main-content">
+            <!-- الشريط العلوي -->
+            <header class="app-header">
+                <div class="logo-area">
+                    <div class="logo"><h2><i class="fas fa-stethoscope" style="color:var(--primary); margin-left:8px;"></i>سُكُون</h2></div>
+                    <button type="button" class="queue-btn hide-desktop" id="queueModalBtnMobile" title="قائمة الانتظار">
+                        <i class="fas fa-users"></i>
+                        <span class="queue-badge" id="queueBadgeCountMobile">0</span>
+                    </button>
+                    <button type="button" class="btn btn-icon btn-sm hide-mobile" id="toggleQueueSidebarBtn" title="إظهار/إخفاء القائمة">
+                        <i class="fas fa-users"></i>
+                    </button>
+                </div>
+                <div class="header-actions">
+                    <span id="welcomeMessage" style="font-weight:600;">د. أحمد</span>
+                    <button type="button" class="btn btn-outline btn-sm" id="savedSessionsBtn" title="المرضى المعلقون">
+                        <i class="fas fa-clock"></i> <span class="hide-mobile">معلقون</span>
+                    </button>
+                    <button type="button" class="btn btn-outline btn-sm" id="templatesBtn"><i class="fas fa-folder-open"></i> <span class="hide-mobile">القوالب</span></button>
+                    <button type="button" class="btn btn-outline btn-sm" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> <span class="hide-mobile">خروج</span></button>
+                </div>
+            </header>
 
-<!-- مودال القوالب -->
-<div id="templatesModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.2); backdrop-filter:blur(6px); align-items:center; justify-content:center; z-index:2000;">
-    <div style="background:white; border-radius:32px; width:90%; max-width:500px; padding:24px;">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-            <h3>الروشتات المحفوظة</h3>
-            <button type="button" id="closeTemplatesModalBtn" style="background:none; border:none; font-size:28px; cursor:pointer;">&times;</button>
-        </div>
-        <div id="templatesList" style="max-height:300px; overflow-y:auto; margin-top:16px;"></div>
-    </div>
-</div>
+            <!-- شريط المرضى الأفقي (للهاتف) -->
+            <div class="queue-strip-mobile" id="queueStripMobile">
+                <div class="strip-scroll" id="queueStripContainer">
+                    <div class="empty-state" style="padding:10px;width:100%;"><i class="fas fa-spinner fa-pulse"></i> تحميل المرضى...</div>
+                </div>
+            </div>
 
-<!-- مودال حفظ القالب -->
-<div id="saveTemplateModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.2); backdrop-filter:blur(6px); align-items:center; justify-content:center; z-index:2000;">
-    <div style="background:white; border-radius:32px; width:90%; max-width:500px; padding:24px;">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-            <h3>حفظ القالب</h3>
-            <button type="button" id="closeSaveTemplateModalBtn" style="background:none; border:none; font-size:28px; cursor:pointer;">&times;</button>
-        </div>
-        <input type="text" id="templateNameInput" placeholder="اسم القالب (مثلاً: روتين إلتهاب الحلق)" style="width:100%; padding:12px; border-radius:40px; margin:20px 0; border:1px solid var(--border-light); font-family:'Cairo', sans-serif;">
-        <div style="display:flex; gap:10px;">
-            <button type="button" class="btn btn-primary" id="saveAsNewTemplateBtn" style="flex:1;">حفظ كجديد</button>
-            <button type="button" class="btn btn-outline" id="overwriteTemplateBtn" style="flex:1;">تحديث المحدد</button>
-        </div>
-        <p style="color:var(--text-sec); font-size:0.8rem; margin-top:12px;">في حالة التحديث، سيتم تعديل القالب الحالي لو تم تحميله.</p>
-    </div>
-</div>
+            <!-- بطاقة المريض الحالي -->
+            <div id="currentPatientCard" class="current-patient-card" style="display: none;">
+                <div class="patient-name-clickable" id="patientNameClickable">
+                    <span id="currentPatientNameDisplay">---</span>
+                    <i class="fas fa-external-link-alt"></i>
+                </div>
+                <span class="patient-age-badge" id="currentPatientAgeDisplay">-- سنة</span>
+            </div>
 
-<!-- مودال الجلسات المحفوظة محلياً (المرضى المعلقون) -->
-<div id="savedSessionsModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.2); backdrop-filter:blur(6px); align-items:center; justify-content:center; z-index:2000;">
-    <div style="background:white; border-radius:32px; width:90%; max-width:500px; padding:24px;">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-            <h3>المرضى المعلقون (محلياً)</h3>
-            <button type="button" id="closeSavedSessionsModalBtn" style="background:none; border:none; font-size:28px; cursor:pointer;">&times;</button>
-        </div>
-        <div id="savedSessionsList" style="max-height:300px; overflow-y:auto; margin-top:16px;"></div>
-    </div>
-</div>
+            <!-- قسم التشخيص -->
+            <div class="diagnosis-section">
+                <div class="diagnosis-header">
+                    <i class="fas fa-notes-medical"></i>
+                    <span>التشخيص والملاحظات</span>
+                </div>
+                <textarea id="diagnosisTextarea" class="diagnosis-textarea" placeholder="اكتب التشخيص، الأعراض، أو أي ملاحظات إضافية..."></textarea>
+            </div>
 
-<script type="module" src="doctor-dashboard.js"></script>
+            <!-- لوحة الوصفة -->
+            <div class="prescription-panel">
+                <div id="emptyPrescriptionMsg" class="empty-state">
+                    <i class="fas fa-prescription-bottle-medical" style="font-size: 48px; opacity: 0.5;"></i>
+                    <p>اختر مريضاً من قائمة الانتظار لبدء الكشف</p>
+                </div>
+                <div id="prescriptionContent" style="display: none; flex:1; display:flex; flex-direction:column; min-height:0;">
+                    <div class="rx-items-container" id="rxItemsContainer"></div>
+                    <div class="drug-add-section">
+                        <div class="drug-search-wrapper">
+                            <input type="text" id="drugSearchInput" placeholder="ابحث عن دواء..." autocomplete="off">
+                            <div id="drugSuggestions" class="suggestions-dropdown"></div>
+                        </div>
+                        <select id="drugFormSelect" class="btn" style="padding:12px 16px;">
+                            <option value="tablet">💊 أقراص</option>
+                            <option value="syrup">🥄 شراب</option>
+                            <option value="injection">💉 حقن</option>
+                            <option value="suppository">🧴 لبوس</option>
+                            <option value="drops">💧 نقط</option>
+                        </select>
+                        <button type="button" class="btn btn-primary" id="startAddDrugBtn"><i class="fas fa-plus"></i> إضافة</button>
+                    </div>
+                    <div id="dosePanel" class="dose-panel" style="display: none;">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:12px;">
+                            <span id="selectedDrugDisplay" style="font-weight:700;"></span>
+                            <span id="selectedFormDisplay" style="background:var(--primary-light); padding:2px 12px; border-radius:20px;"></span>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:8px; margin-bottom:16px;">
+                            <input type="text" id="doseNumberInput" placeholder="الكمية (مثلاً 5)" style="width:120px; padding:10px; border-radius:20px; border:1px solid var(--border-light);">
+                            <span id="unitLabel">قرص</span>
+                        </div>
+                        <div id="doseSuggestionsContainer"></div>
+                        <div style="display:flex; gap:10px; margin-top:16px;">
+                            <button type="button" class="btn btn-primary" id="applyDoseBtn">تأكيد وإضافة</button>
+                            <button type="button" class="btn btn-outline" id="cancelDoseBtn">إلغاء</button>
+                        </div>
+                    </div>
+                    <div class="action-buttons">
+                        <button type="button" class="btn btn-primary" id="finishBtn" style="flex:1;"><i class="fas fa-check-circle"></i> إنهاء الكشف</button>
+                        <button type="button" class="btn btn-outline" id="saveTemplateBtn"><i class="fas fa-save"></i> حفظ كقالب</button>
+                        <button type="button" class="btn btn-outline" id="clearPrescriptionBtn"><i class="fas fa-trash-alt"></i> مسح الوصفة</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== مودال قائمة الانتظار (للهاتف) ========== -->
+    <div id="queueModal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>قائمة المرضى</h3>
+                <button type="button" class="modal-close-btn" id="closeQueueModalBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="sidebar-tabs" style="margin-bottom:12px;">
+                    <button class="sidebar-tab active" data-queue-tab="waiting">قيد الانتظار <span class="count" id="waitingTabCountModal">0</span></button>
+                    <button class="sidebar-tab" data-queue-tab="done">تم الكشف <span class="count" id="doneTabCountModal">0</span></button>
+                </div>
+                <div id="queueModalList" style="max-height:50vh; overflow-y:auto;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== مودال القوالب ========== -->
+    <div id="templatesModal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>الروشتات المحفوظة</h3>
+                <button type="button" class="modal-close-btn" id="closeTemplatesModalBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="templatesList" style="max-height:300px; overflow-y:auto;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== مودال حفظ القالب ========== -->
+    <div id="saveTemplateModal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>حفظ القالب</h3>
+                <button type="button" class="modal-close-btn" id="closeSaveTemplateModalBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="text" id="templateNameInput" placeholder="اسم القالب (مثلاً: روتين إلتهاب الحلق)" style="width:100%; padding:12px; border-radius:40px; margin-bottom:16px; border:1px solid var(--border-light); font-family:'Cairo', sans-serif;">
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <button type="button" class="btn btn-primary" id="saveAsNewTemplateBtn" style="flex:1;">حفظ كجديد</button>
+                    <button type="button" class="btn btn-outline" id="overwriteTemplateBtn" style="flex:1;">تحديث المحدد</button>
+                </div>
+                <p style="color:var(--text-sec); font-size:0.8rem; margin-top:12px;">في حالة التحديث، سيتم تعديل القالب الحالي لو تم تحميله.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== مودال الجلسات المحفوظة ========== -->
+    <div id="savedSessionsModal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>المرضى المعلقون (محلياً)</h3>
+                <button type="button" class="modal-close-btn" id="closeSavedSessionsModalBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="savedSessionsList" style="max-height:300px; overflow-y:auto;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== حاوية التوست ========== -->
+    <div id="toastContainer"></div>
+
+    <script type="module" src="doctor-dashboard.js"></script>
+
+    <!-- ========== سكريبت إدارة الواجهة ========== -->
+    <script>
+        (function() {
+            // عناصر DOM
+            const queueSidebar = document.getElementById('queueSidebar');
+            const toggleQueueSidebarBtn = document.getElementById('toggleQueueSidebarBtn');
+            const queueStripMobile = document.getElementById('queueStripMobile');
+            const queueStripContainer = document.getElementById('queueStripContainer');
+            const queueListContainer = document.getElementById('queueListContainer');
+            const queueModal = document.getElementById('queueModal');
+            const queueModalList = document.getElementById('queueModalList');
+            const queueModalBtnMobile = document.getElementById('queueModalBtnMobile');
+            const closeQueueModalBtn = document.getElementById('closeQueueModalBtn');
+            const queueBadgeCountMobile = document.getElementById('queueBadgeCountMobile');
+            const currentPatientCard = document.getElementById('currentPatientCard');
+            const currentPatientNameDisplay = document.getElementById('currentPatientNameDisplay');
+            const currentPatientAgeDisplay = document.getElementById('currentPatientAgeDisplay');
+            const emptyPrescriptionMsg = document.getElementById('emptyPrescriptionMsg');
+            const prescriptionContent = document.getElementById('prescriptionContent');
+            const toastContainer = document.getElementById('toastContainer');
+            const welcomeMessage = document.getElementById('welcomeMessage');
+            const refreshQueueBtn = document.getElementById('refreshQueueBtn');
+            const savedSessionsBtn = document.getElementById('savedSessionsBtn');
+            const templatesBtn = document.getElementById('templatesBtn');
+            const logoutBtn = document.getElementById('logoutBtn');
+            const savedSessionsModal = document.getElementById('savedSessionsModal');
+            const closeSavedSessionsModalBtn = document.getElementById('closeSavedSessionsModalBtn');
+            const templatesModal = document.getElementById('templatesModal');
+            const closeTemplatesModalBtn = document.getElementById('closeTemplatesModalBtn');
+            const saveTemplateModal = document.getElementById('saveTemplateModal');
+            const closeSaveTemplateModalBtn = document.getElementById('closeSaveTemplateModalBtn');
+            const finishBtn = document.getElementById('finishBtn');
+            const clearPrescriptionBtn = document.getElementById('clearPrescriptionBtn');
+            const saveTemplateBtn = document.getElementById('saveTemplateBtn');
+
+            let currentPatientId = null;
+            let activeQueueTab = 'waiting';
+            let queueData = [];
+            let prescriptionsData = [];
+
+            
+            // ========== دوال مساعدة ==========
+            function showToast(message, duration = 2500) {
+                const toast = document.createElement('div');
+                toast.className = 'toast';
+                toast.textContent = message;
+                toastContainer.appendChild(toast);
+                setTimeout(() => {
+                    toast.style.opacity = '0';
+                    toast.style.transform = 'translateY(20px)';
+                    toast.style.transition = 'all 0.3s ease';
+                    setTimeout(() => toast.remove(), 300);
+                }, duration);
+            }
+
+            function openModal(modal) {
+                modal.classList.add('show');
+            }
+
+            function closeModal(modal) {
+                modal.classList.remove('show');
+            }
+
+            function updateQueueBadges() {
+                const waitingCount = queueData.filter(p => p.status === 'waiting').length;
+                const doneCount = queueData.filter(p => p.status === 'done').length;
+                if (queueBadgeCountMobile) queueBadgeCountMobile.textContent = waitingCount;
+                document.querySelectorAll('#waitingTabCount, #waitingTabCountModal').forEach(el => el.textContent = waitingCount);
+                document.querySelectorAll('#doneTabCount, #doneTabCountModal').forEach(el => el.textContent = doneCount);
+            }
+
+            // ========== تحميل قائمة الانتظار ==========
+            function loadQueue() {
+                const mockQueue = [
+                    { id: 1, name: 'محمد سالم', age: 34, status: 'waiting', hasPending: false },
+                    { id: 2, name: 'علياء محمود', age: 28, status: 'waiting', hasPending: true },
+                    { id: 3, name: 'خالد يوسف', age: 45, status: 'done', hasPending: false },
+                    { id: 4, name: 'نورا فؤاد', age: 22, status: 'waiting', hasPending: false },
+                    { id: 5, name: 'حسن عبدالله', age: 52, status: 'done', hasPending: true },
+                ];
+                queueData = mockQueue;
+                updateQueueBadges();
+                renderQueue();
+            }
+
+            function renderQueue() {
+                const filtered = queueData.filter(p => p.status === activeQueueTab);
+
+                // الشريط الجانبي
+                if (queueListContainer) {
+                    if (filtered.length === 0) {
+                        queueListContainer.innerHTML = '<div class="empty-state"><i class="fas fa-users"></i>لا يوجد مرضى</div>';
+                    } else {
+                        queueListContainer.innerHTML = filtered.map(p => `
+                            <div class="queue-patient-card ${p.id === currentPatientId ? 'active' : ''}" data-patient-id="${p.id}">
+                                <div class="queue-patient-info">
+                                    <div class="queue-avatar">${p.name.charAt(0)}</div>
+                                    <div>
+                                        <div class="queue-patient-name">${p.name}</div>
+                                        <div class="queue-patient-age">${p.age} سنة</div>
+                                    </div>
+                                </div>
+                                <span class="queue-status-dot ${p.status}"></span>
+                                ${p.hasPending ? '<span style="font-size:0.7rem; background:#FFF3CD; padding:2px 8px; border-radius:20px;">معلق</span>' : ''}
+                            </div>
+                        `).join('');
+                    }
+                }
+
+                // الشريط الأفقي (هاتف)
+                if (queueStripContainer) {
+                    const allPatients = queueData;
+                    if (allPatients.length === 0) {
+                        queueStripContainer.innerHTML = '<div class="empty-state" style="padding:10px;width:100%;"><i class="fas fa-users"></i>لا يوجد مرضى</div>';
+                    } else {
+                        queueStripContainer.innerHTML = allPatients.map(p => `
+                            <div class="queue-pill ${p.id === currentPatientId ? 'active' : ''}" data-patient-id="${p.id}">
+                                <div class="pill-avatar">${p.name.charAt(0)}</div>
+                                <span>${p.name.split(' ')[1] || p.name}</span>
+                                <span class="pill-dot ${p.status}"></span>
+                            </div>
+                        `).join('');
+                    }
+                }
+
+                // مودال الهاتف
+                if (queueModalList) {
+                    if (filtered.length === 0) {
+                        queueModalList.innerHTML = '<div class="empty-state"><i class="fas fa-users"></i>لا يوجد مرضى</div>';
+                    } else {
+                        queueModalList.innerHTML = filtered.map(p => `
+                            <div class="queue-patient-card ${p.id === currentPatientId ? 'active' : ''}" data-patient-id="${p.id}" style="cursor:pointer;">
+                                <div class="queue-patient-info">
+                                    <div class="queue-avatar">${p.name.charAt(0)}</div>
+                                    <div>
+                                        <div class="queue-patient-name">${p.name}</div>
+                                        <div class="queue-patient-age">${p.age} سنة</div>
+                                    </div>
+                                </div>
+                                <span class="queue-status-dot ${p.status}"></span>
+                            </div>
+                        `).join('');
+                    }
+                }
+
+                // إعادة ربط الأحداث
+                document.querySelectorAll('.queue-patient-card, .queue-pill').forEach(el => {
+                    el.addEventListener('click', function() {
+                        const id = parseInt(this.getAttribute('data-patient-id'));
+                        selectPatient(id);
+                        if (window.innerWidth <= 768) closeModal(queueModal);
+                    });
+                });
+            }
+
+            function selectPatient(id) {
+                currentPatientId = id;
+                const patient = queueData.find(p => p.id === id);
+                if (patient) {
+                    currentPatientCard.style.display = 'flex';
+                    currentPatientNameDisplay.textContent = patient.name;
+                    currentPatientAgeDisplay.textContent = patient.age + ' سنة';
+                    emptyPrescriptionMsg.style.display = 'none';
+                    prescriptionContent.style.display = 'flex';
+                    prescriptionContent.style.flexDirection = 'column';
+                    prescriptionContent.style.minHeight = '0';
+                    renderQueue();
+                    loadPrescriptionForPatient(id);
+                    // تمرير الشريط الأفقي
+                    if (window.innerWidth <= 768 && queueStripContainer) {
+                        const activePill = queueStripContainer.querySelector('.queue-pill.active');
+                        if (activePill) activePill.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                    }
+                }
+            }
+
+            function loadPrescriptionForPatient(patientId) {
+                const rxItemsContainer = document.getElementById('rxItemsContainer');
+                const mockRx = [
+                    { drug: 'باراسيتامول', form: 'tablet', dose: '500mg - 3 مرات يومياً' },
+                    { drug: 'أموكسيسيلين', form: 'capsule', dose: '250mg - مرتين يومياً' },
+                ];
+                prescriptionsData = mockRx;
+                rxItemsContainer.innerHTML = mockRx.map((item, idx) => `
+                    <div class="rx-item">
+                        <div class="rx-main-row">
+                            <div class="rx-drug-info">
+                                <span class="rx-drug-name">${item.drug}</span>
+                                <span class="rx-form-badge">${item.form}</span>
+                            </div>
+                            <div class="rx-dose-info">
+                                <span class="rx-dose-text">${item.dose}</span>
+                                <div class="rx-actions">
+                                    <button class="icon-btn-sm edit" data-edit="${idx}"><i class="fas fa-pen"></i></button>
+                                    <button class="icon-btn-sm" data-remove="${idx}"><i class="fas fa-trash"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+                // ربط أزرار الحذف
+                rxItemsContainer.querySelectorAll('[data-remove]').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const idx = parseInt(this.getAttribute('data-remove'));
+                        prescriptionsData.splice(idx, 1);
+                        loadPrescriptionForPatient(patientId);
+                        showToast('🗑️ تم حذف الدواء');
+                    });
+                });
+            }
+
+            // ========== التبويبات ==========
+            document.querySelectorAll('.sidebar-tab, [data-queue-tab]').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const tabValue = this.getAttribute('data-queue-tab');
+                    if (tabValue) {
+                        activeQueueTab = tabValue;
+                        document.querySelectorAll('.sidebar-tab, [data-queue-tab]').forEach(t => t.classList.remove('active'));
+                        document.querySelectorAll(`[data-queue-tab="${tabValue}"]`).forEach(t => t.classList.add('active'));
+                        renderQueue();
+                    }
+                });
+            });
+
+            // ========== تبديل الشريط الجانبي ==========
+            if (toggleQueueSidebarBtn) {
+                toggleQueueSidebarBtn.addEventListener('click', () => {
+                    if (window.innerWidth > 768) {
+                        queueSidebar.classList.toggle('collapsed');
+                    }
+                });
+            }
+
+            // ========== مودال الهاتف ==========
+            if (queueModalBtnMobile) {
+                queueModalBtnMobile.addEventListener('click', () => openModal(queueModal));
+            }
+            if (closeQueueModalBtn) {
+                closeQueueModalBtn.addEventListener('click', () => closeModal(queueModal));
+            }
+            if (queueModal) {
+                queueModal.addEventListener('click', function(e) {
+                    if (e.target === this) closeModal(queueModal);
+                });
+            }
+
+            // ========== المودالات الأخرى ==========
+            if (savedSessionsBtn) savedSessionsBtn.addEventListener('click', () => openModal(savedSessionsModal));
+            if (closeSavedSessionsModalBtn) closeSavedSessionsModalBtn.addEventListener('click', () => closeModal(savedSessionsModal));
+            if (savedSessionsModal) savedSessionsModal.addEventListener('click', function(e) { if (e.target === this) closeModal(savedSessionsModal); });
+
+            if (templatesBtn) templatesBtn.addEventListener('click', () => openModal(templatesModal));
+            if (closeTemplatesModalBtn) closeTemplatesModalBtn.addEventListener('click', () => closeModal(templatesModal));
+            if (templatesModal) templatesModal.addEventListener('click', function(e) { if (e.target === this) closeModal(templatesModal); });
+
+            if (saveTemplateBtn) saveTemplateBtn.addEventListener('click', () => openModal(saveTemplateModal));
+            if (closeSaveTemplateModalBtn) closeSaveTemplateModalBtn.addEventListener('click', () => closeModal(saveTemplateModal));
+            if (saveTemplateModal) saveTemplateModal.addEventListener('click', function(e) { if (e.target === this) closeModal(saveTemplateModal); });
+
+            // ========== أزرار الإجراءات ==========
+            if (finishBtn) finishBtn.addEventListener('click', () => {
+                if (currentPatientId) {
+                    const patient = queueData.find(p => p.id === currentPatientId);
+                    if (patient) {
+                        patient.status = 'done';
+                        updateQueueBadges();
+                        renderQueue();
+                        showToast('✅ تم إنهاء الكشف بنجاح');
+                    }
+                } else {
+                    showToast('⚠️ الرجاء اختيار مريض أولاً');
+                }
+            });
+            if (clearPrescriptionBtn) clearPrescriptionBtn.addEventListener('click', () => {
+                prescriptionsData = [];
+                if (currentPatientId) loadPrescriptionForPatient(currentPatientId);
+                showToast('🗑️ تم مسح الوصفة');
+            });
+            if (refreshQueueBtn) refreshQueueBtn.addEventListener('click', () => {
+                showToast('🔄 جاري تحديث القائمة...');
+                loadQueue();
+            });
+            if (logoutBtn) logoutBtn.addEventListener('click', () => showToast('👋 تم تسجيل الخروج'));
+            if (welcomeMessage) welcomeMessage.textContent = '👋 د. أحمد';
+
+            // ========== كشف تغيير حجم الشاشة ==========
+            function handleResize() {
+                if (window.innerWidth <= 768 && queueSidebar) {
+                    queueSidebar.classList.remove('collapsed');
+                }
+            }
+            window.addEventListener('resize', handleResize);
+            handleResize();
+
+            // ========== بدء التطبيق ==========
+            loadQueue();
+            console.log('🚀 لوحة سُكُون · الطبيب جاهزة | متكيّفة مع جميع الأجهزة');
+        })();
+    </script>
 </body>
 </html>
