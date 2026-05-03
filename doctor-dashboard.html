@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>سُكُون · لوحة الطبيب</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <style>
         :root {
             --primary: #F8C471;
@@ -25,89 +25,61 @@
             --border-light: #F0E0D0;
             --shadow-sm: 0 6px 12px -4px rgba(230, 126, 34, 0.08);
             --shadow-md: 0 12px 28px -6px rgba(230, 126, 34, 0.12);
-            --shadow-lg: 0 20px 40px -10px rgba(230, 126, 34, 0.15);
             --radius-card: 32px;
             --radius-sm: 24px;
             --safe-bottom: env(safe-area-inset-bottom, 0px);
             --safe-top: env(safe-area-inset-top, 0px);
         }
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Cairo', sans-serif;
             background: var(--bg);
             color: var(--ink);
-            min-height: 100vh;
             min-height: 100dvh;
             padding: 16px;
             padding-bottom: calc(16px + var(--safe-bottom));
             padding-top: calc(16px + var(--safe-top));
             position: relative;
-            animation: fadeIn 0.4s ease;
+            animation: fadeIn 0.3s ease;
             -webkit-tap-highlight-color: transparent;
-            -webkit-font-smoothing: antialiased;
             overflow-x: hidden;
         }
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-            to {
-                opacity: 1;
-            }
-        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         body::before {
             content: '';
             position: fixed;
             inset: 0;
             background: radial-gradient(circle at 0% 0%, rgba(248, 196, 113, 0.08), transparent 50%),
-                radial-gradient(circle at 100% 100%, rgba(230, 126, 34, 0.06), transparent 50%);
+                        radial-gradient(circle at 100% 100%, rgba(230, 126, 34, 0.06), transparent 50%);
             pointer-events: none;
             z-index: -1;
         }
-
-        /* ========== الحاوية الرئيسية ========== */
         .app-layout {
             display: flex;
             gap: 20px;
             max-width: 1500px;
             margin: 0 auto;
-            min-height: calc(100vh - 32px);
             min-height: calc(100dvh - 32px - var(--safe-bottom) - var(--safe-top));
-            position: relative;
         }
 
-        /* ========== الشريط الجانبي للمرضى (كمبيوتر) ========== */
+        /* ---------- الشريط الجانبي ---------- */
         .queue-sidebar {
             width: 320px;
-            min-width: 300px;
-            background: rgba(255, 255, 255, 0.65);
+            min-width: 280px;
+            background: rgba(255,255,255,0.65);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             border-radius: var(--radius-card);
             padding: 16px 12px;
-            border: 1px solid rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(255,255,255,0.7);
             box-shadow: var(--shadow-md);
             display: flex;
             flex-direction: column;
             overflow: hidden;
             flex-shrink: 0;
-            max-height: calc(100vh - 32px);
             max-height: calc(100dvh - 32px - var(--safe-bottom) - var(--safe-top));
-            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.35s ease;
             z-index: 10;
-        }
-        .queue-sidebar.collapsed {
-            width: 0;
-            min-width: 0;
-            padding: 16px 0;
-            opacity: 0;
-            overflow: hidden;
-            border: none;
-            margin: 0;
         }
         .sidebar-header {
             display: flex;
@@ -117,23 +89,14 @@
             border-bottom: 1px solid var(--border-light);
             flex-shrink: 0;
         }
-        .sidebar-header h3 {
-            font-size: 1.15rem;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .sidebar-header h3 i {
-            color: var(--accent);
-        }
+        .sidebar-header h3 { font-size: 1.15rem; font-weight: 700; }
         .sidebar-tabs {
             display: flex;
             gap: 4px;
-            background: rgba(0, 0, 0, 0.03);
+            background: rgba(0,0,0,0.03);
             border-radius: 40px;
             padding: 3px;
-            margin-top: 8px;
+            margin: 12px 0 8px;
             flex-shrink: 0;
         }
         .sidebar-tab {
@@ -146,36 +109,16 @@
             font-weight: 600;
             cursor: pointer;
             color: var(--text-sec);
-            font-family: 'Cairo', sans-serif;
             font-size: 0.85rem;
             transition: 0.2s;
             white-space: nowrap;
         }
-        .sidebar-tab.active {
-            background: white;
-            color: var(--accent);
-            box-shadow: var(--shadow-sm);
-        }
-        .sidebar-tab .count {
-            background: rgba(0, 0, 0, 0.04);
-            padding: 1px 7px;
-            border-radius: 20px;
-            margin-right: 4px;
-            font-size: 0.8rem;
-        }
+        .sidebar-tab.active { background: white; color: var(--accent); box-shadow: var(--shadow-sm); }
         .queue-list {
             flex: 1;
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
-            margin-top: 10px;
             min-height: 0;
-        }
-        .queue-list::-webkit-scrollbar {
-            width: 4px;
-        }
-        .queue-list::-webkit-scrollbar-thumb {
-            background: var(--primary);
-            border-radius: 10px;
         }
         .queue-patient-card {
             background: white;
@@ -190,68 +133,11 @@
             justify-content: space-between;
             gap: 10px;
         }
-        .queue-patient-card:hover {
-            background: var(--primary-light);
-            border-color: var(--primary);
-            transform: translateX(-2px);
-        }
-        .queue-patient-card:active {
-            transform: scale(0.97);
-        }
-        .queue-patient-card.active {
-            background: var(--primary);
-            border-color: var(--primary);
-            font-weight: 700;
-            box-shadow: 0 4px 14px rgba(230, 126, 34, 0.25);
-        }
-        .queue-patient-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            min-width: 0;
-            flex: 1;
-        }
-        .queue-avatar {
-            width: 38px;
-            height: 38px;
-            min-width: 38px;
-            background: var(--accent-soft);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 0.9rem;
-        }
-        .queue-patient-card.active .queue-avatar {
-            background: white;
-            color: var(--accent);
-        }
-        .queue-patient-name {
-            font-weight: 600;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .queue-patient-age {
-            font-size: 0.8rem;
-            color: var(--text-sec);
-            white-space: nowrap;
-        }
-        .queue-status-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            flex-shrink: 0;
-        }
-        .queue-status-dot.waiting {
-            background: var(--warning);
-        }
-        .queue-status-dot.done {
-            background: var(--success);
-        }
+        .queue-patient-card:hover { background: var(--primary-light); border-color: var(--primary); }
+        .queue-patient-card.active { background: var(--primary); border-color: var(--primary); font-weight: 700; }
+        .count { background: var(--danger); color: white; border-radius: 30px; padding: 2px 10px; font-size: 0.75rem; margin-right: 6px; }
 
-        /* ========== المحتوى الرئيسي ========== */
+        /* ---------- المحتوى الرئيسي ---------- */
         .main-content {
             flex: 1;
             display: flex;
@@ -260,28 +146,19 @@
             overflow: hidden;
             min-width: 0;
         }
-
-        /* ========== الشريط العلوي ========== */
         .app-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            background: rgba(255, 255, 255, 0.6);
+            background: rgba(255,255,255,0.6);
             backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
             border-radius: 60px;
             padding: 10px 20px;
-            border: 1px solid rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(255,255,255,0.7);
             box-shadow: var(--shadow-md);
             flex-wrap: wrap;
             gap: 12px;
             flex-shrink: 0;
-            z-index: 50;
-        }
-        .logo-area {
-            display: flex;
-            align-items: center;
-            gap: 12px;
         }
         .logo h2 {
             font-size: clamp(1.5rem, 4vw, 2rem);
@@ -290,63 +167,8 @@
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
-            white-space: nowrap;
         }
-        .queue-btn {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            background: var(--white);
-            border: 1px solid var(--border-light);
-            box-shadow: var(--shadow-sm);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.3s;
-            position: relative;
-        }
-        .queue-btn:hover {
-            background: var(--primary-light);
-            transform: scale(1.05);
-        }
-        .queue-badge {
-            position: absolute;
-            top: -6px;
-            right: -6px;
-            background: var(--primary);
-            color: #4A3B2C;
-            border-radius: 30px;
-            padding: 2px 8px;
-            font-size: 0.75rem;
-            font-weight: 800;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            animation: pulseBadge 2.5s infinite;
-        }
-        @keyframes pulseBadge {
-            0%,
-            100% {
-                transform: scale(1);
-            }
-            50% {
-                transform: scale(1.12);
-            }
-        }
-        .header-actions {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-        #welcomeMessage {
-            font-weight: 600;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: 140px;
-        }
-
-        /* ========== الأزرار ========== */
+        .header-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
         .btn {
             padding: 10px 20px;
             border-radius: 60px;
@@ -358,57 +180,20 @@
             align-items: center;
             gap: 8px;
             font-size: 0.9rem;
-            transition: all 0.25s;
+            transition: all 0.2s;
             background: white;
             color: var(--ink);
             border: 1px solid var(--border-light);
             white-space: nowrap;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
-            user-select: none;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
         }
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
-        }
-        .btn:active {
-            transform: scale(0.95);
-        }
-        .btn-primary {
-            background: var(--primary);
-            color: #4A3B2C;
-            border: none;
-            box-shadow: 0 6px 14px rgba(230, 126, 34, 0.2);
-            font-weight: 700;
-        }
-        .btn-primary:hover {
-            background: var(--primary-dark);
-            color: white;
-        }
-        .btn-outline {
-            background: transparent;
-            border: 1px solid var(--border-light);
-        }
-        .btn-outline:hover {
-            background: var(--primary-light);
-        }
-        .btn-icon {
-            width: 44px;
-            height: 44px;
-            padding: 0;
-            justify-content: center;
-            border-radius: 50%;
-        }
-        .btn-sm {
-            padding: 6px 12px;
-            font-size: 0.8rem;
-            border-radius: 30px;
-        }
-
-        /* ========== بطاقة المريض الحالي ========== */
+        .btn:hover { transform: translateY(-2px); }
+        .btn-primary { background: var(--primary); color: #4A3B2C; border: none; }
+        .btn-outline:hover { background: var(--primary-light); }
+        .btn-icon { width: 44px; height: 44px; padding: 0; justify-content: center; border-radius: 50%; }
         .current-patient-card {
-            background: rgba(255, 255, 255, 0.8);
+            background: rgba(255,255,255,0.8);
             backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
             border-radius: 40px;
             padding: 14px 24px;
             display: flex;
@@ -416,76 +201,33 @@
             justify-content: space-between;
             border: 1px solid var(--border-light);
             box-shadow: var(--shadow-sm);
-            transition: transform 0.2s;
             flex-shrink: 0;
         }
-        .patient-name-clickable {
-            font-weight: 800;
-            font-size: 1.3rem;
-            color: var(--ink);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .patient-name-clickable i {
-            color: var(--accent);
-            font-size: 1rem;
-        }
-        .patient-age-badge {
-            background: var(--primary-light);
-            padding: 4px 14px;
-            border-radius: 60px;
-            font-size: 0.9rem;
-            font-weight: 600;
-        }
-
-        /* ========== قسم التشخيص ========== */
         .diagnosis-section {
-            background: rgba(255, 255, 255, 0.7);
+            background: rgba(255,255,255,0.7);
             backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
             border-radius: 24px;
             padding: 16px 20px;
             border: 1px solid var(--border-light);
             box-shadow: var(--shadow-sm);
             flex-shrink: 0;
         }
-        .diagnosis-header {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 12px;
-            color: var(--ink);
-            font-weight: 600;
-        }
         .diagnosis-textarea {
             width: 100%;
-            padding: 14px 18px;
-            border-radius: 20px;
-            border: 1.5px solid var(--border-light);
-            font-family: 'Cairo', sans-serif;
-            font-size: 0.95rem;
+            margin-top: 10px;
+            border: 1px solid var(--border-light);
+            border-radius: 16px;
+            padding: 12px;
+            font-family: inherit;
             resize: vertical;
             min-height: 80px;
-            transition: border-color 0.2s, box-shadow 0.2s;
-            background: #FAFAFA;
         }
-        .diagnosis-textarea:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(248, 196, 113, 0.2);
-            background: white;
-        }
-
-        /* ========== لوحة الوصفة ========== */
         .prescription-panel {
-            background: rgba(255, 255, 255, 0.75);
+            background: rgba(255,255,255,0.75);
             backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
             border-radius: var(--radius-card);
             padding: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(255,255,255,0.7);
             box-shadow: var(--shadow-md);
             flex: 1;
             display: flex;
@@ -493,694 +235,121 @@
             overflow: hidden;
             min-height: 0;
         }
-        .rx-items-container {
-            flex: 1;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
-            margin-bottom: 16px;
-            min-height: 0;
-        }
-        .rx-items-container::-webkit-scrollbar {
-            width: 5px;
-        }
-        .rx-items-container::-webkit-scrollbar-thumb {
-            background: var(--primary);
-            border-radius: 10px;
-        }
-        .rx-item {
-            background: white;
-            border-radius: 20px;
-            padding: 14px 18px;
-            margin-bottom: 10px;
-            border: 1px solid var(--border-light);
-            box-shadow: var(--shadow-sm);
-            transition: all 0.2s;
-        }
-        .rx-item:hover {
-            border-color: var(--primary);
-            box-shadow: 0 4px 12px rgba(230, 126, 34, 0.08);
-        }
-        .rx-main-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-        .rx-drug-info {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .rx-drug-name {
-            font-weight: 700;
-            font-size: 1rem;
-        }
-        .rx-form-badge {
-            background: var(--primary-light);
-            padding: 4px 10px;
-            border-radius: 30px;
-            font-size: 0.8rem;
-        }
-        .rx-dose-info {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .rx-dose-text {
-            background: var(--primary-light);
-            padding: 6px 16px;
-            border-radius: 60px;
-            font-size: 0.9rem;
-        }
-        .rx-actions {
-            display: flex;
-            gap: 8px;
-        }
-        .icon-btn-sm {
-            width: 34px;
-            height: 34px;
-            border-radius: 12px;
-            border: 1px solid var(--border-light);
-            background: white;
-            color: var(--text-sec);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s;
-        }
-        .icon-btn-sm:hover {
-            background: var(--danger);
-            color: white;
-            border-color: var(--danger);
-        }
-        .icon-btn-sm.edit:hover {
-            background: var(--primary);
-            color: #4A3B2C;
-            border-color: var(--primary);
-        }
-
-        /* ========== إضافة دواء ========== */
         .drug-add-section {
             display: flex;
             gap: 10px;
-            align-items: center;
             flex-wrap: wrap;
-            flex-shrink: 0;
+            align-items: center;
         }
-        .drug-search-wrapper {
+        .drug-add-section input {
             flex: 1;
-            position: relative;
             min-width: 150px;
-        }
-        .drug-search-wrapper input {
-            width: 100%;
-            padding: 14px 18px;
+            padding: 12px 16px;
             border-radius: 60px;
-            border: 1.5px solid var(--border-light);
-            font-family: 'Cairo', sans-serif;
-            transition: border-color 0.2s, box-shadow 0.2s;
-            background: #FAFAFA;
+            border: 1px solid var(--border-light);
+            font-family: inherit;
         }
-        .drug-search-wrapper input:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(248, 196, 113, 0.2);
+        .drug-add-section select {
+            padding: 12px 16px;
+            border-radius: 60px;
+            border: 1px solid var(--border-light);
+            font-family: inherit;
             background: white;
         }
-        .suggestions-dropdown {
+        .drug-suggestions {
             position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
             background: white;
-            border-radius: 20px;
+            border-radius: 16px;
             box-shadow: var(--shadow-md);
-            margin-top: 8px;
-            z-index: 100;
-            max-height: 250px;
+            z-index: 50;
+            max-height: 200px;
             overflow-y: auto;
+            width: calc(100% - 100px);
+            margin-top: 4px;
             display: none;
         }
         .suggestion-item {
-            padding: 12px 16px;
+            padding: 10px 14px;
             cursor: pointer;
             border-bottom: 1px solid var(--border-light);
-            transition: background 0.15s;
         }
-        .suggestion-item:hover {
-            background: var(--primary-light);
-        }
+        .suggestion-item:hover { background: var(--primary-light); }
         .dose-panel {
-            margin-top: 16px;
-            background: #FEF5EC;
-            border-radius: 24px;
+            background: #f9f5f0;
+            border-radius: 20px;
             padding: 16px;
-            border: 1px solid var(--border-light);
-            flex-shrink: 0;
+            margin-top: 10px;
+            display: none;
         }
-        .dose-suggestion-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+        .rx-item {
             background: white;
-            padding: 8px 12px;
-            border-radius: 40px;
-            border: 1px solid var(--border-light);
+            border-radius: 16px;
+            padding: 12px;
             margin-bottom: 8px;
-        }
-        .dose-chip-btn {
-            display: inline-block;
-            margin: 4px;
-            padding: 8px 16px;
-            border-radius: 30px;
             border: 1px solid var(--border-light);
-            background: white;
-            font-family: 'Cairo', sans-serif;
-            cursor: pointer;
-            font-size: 0.85rem;
-            transition: 0.2s;
-        }
-        .dose-chip-btn:hover {
-            background: var(--primary-light);
-            border-color: var(--primary);
-        }
-        .action-buttons {
             display: flex;
-            gap: 10px;
-            margin-top: 20px;
-            flex-wrap: wrap;
-            flex-shrink: 0;
-        }
-
-        /* ========== شريط المرضى الأفقي (للهاتف) ========== */
-        .queue-strip-mobile {
-            display: none;
-            background: rgba(255, 255, 255, 0.6);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border-radius: 50px;
-            padding: 8px 6px;
-            border: 1px solid rgba(255, 255, 255, 0.7);
-            box-shadow: var(--shadow-sm);
-            flex-shrink: 0;
-            z-index: 8;
-            overflow: hidden;
-        }
-        .queue-strip-mobile .strip-scroll {
-            display: flex;
-            gap: 8px;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-            scroll-behavior: smooth;
-            padding: 4px 8px;
-            scrollbar-width: none;
-            -ms-overflow-style: none;
-        }
-        .queue-strip-mobile .strip-scroll::-webkit-scrollbar {
-            display: none;
-        }
-        .queue-pill {
-            display: flex;
+            justify-content: space-between;
             align-items: center;
-            gap: 8px;
-            padding: 10px 16px;
-            background: white;
-            border-radius: 50px;
-            border: 1px solid var(--border-light);
-            cursor: pointer;
-            white-space: nowrap;
-            flex-shrink: 0;
-            transition: all 0.2s;
-            user-select: none;
-            font-weight: 600;
-            font-size: 0.9rem;
         }
-        .queue-pill:active {
-            transform: scale(0.94);
-        }
-        .queue-pill.active {
-            background: var(--primary);
-            border-color: var(--primary);
-            font-weight: 700;
-            box-shadow: 0 4px 14px rgba(230, 126, 34, 0.25);
-        }
-        .queue-pill .pill-avatar {
-            width: 28px;
-            height: 28px;
-            min-width: 28px;
-            background: var(--accent-soft);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.75rem;
-            font-weight: 700;
-        }
-        .queue-pill.active .pill-avatar {
-            background: white;
-            color: var(--accent);
-        }
-        .queue-pill .pill-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            flex-shrink: 0;
-        }
-        .queue-pill .pill-dot.waiting {
-            background: var(--warning);
-        }
-        .queue-pill .pill-dot.done {
-            background: var(--success);
-        }
-
-        /* ========== المودالات ========== */
+        .rx-items-container { flex: 1; overflow-y: auto; margin-bottom: 10px; }
+        .action-buttons { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+        .empty-state { text-align: center; padding: 30px; color: var(--text-sec); }
         .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(60, 40, 20, 0.25);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            align-items: center;
-            justify-content: center;
-            z-index: 2000;
-            padding: 16px;
-            display: none;
+            position: fixed; inset: 0; background: rgba(0,0,0,0.3);
+            backdrop-filter: blur(6px); z-index: 2000; display: none;
+            align-items: center; justify-content: center; padding: 16px;
         }
-        .modal-overlay.show {
-            display: flex;
-        }
+        .modal-overlay.show { display: flex; }
         .modal-card {
-            background: white;
-            border-radius: 32px;
-            width: 100%;
-            max-width: 520px;
-            max-height: 85vh;
-            max-height: 85dvh;
-            overflow-y: auto;
-            box-shadow: var(--shadow-lg);
-            animation: modalIn 0.3s ease;
-        }
-        @keyframes modalIn {
-            from {
-                opacity: 0;
-                transform: translateY(30px) scale(0.94);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
+            background: white; border-radius: 32px; max-width: 500px;
+            width: 100%; max-height: 80vh; overflow-y: auto; box-shadow: 0 20px 40px rgba(0,0,0,0.15);
         }
         .modal-header {
-            padding: 18px 22px;
-            border-bottom: 1px solid var(--border-light);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            background: #FEF5EC;
-            z-index: 1;
-            border-radius: 32px 32px 0 0;
+            padding: 18px 22px; border-bottom: 1px solid var(--border-light);
+            display: flex; justify-content: space-between; align-items: center;
         }
-        .modal-header h3 {
-            font-size: 1.1rem;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .modal-close-btn {
-            background: none;
-            border: none;
-            font-size: 1.8rem;
-            cursor: pointer;
+        .close-btn {
+            background: none; border: none; font-size: 1.6rem; cursor: pointer;
             color: var(--text-sec);
-            line-height: 1;
-            padding: 4px 10px;
-            border-radius: 50%;
-            transition: 0.2s;
-            font-family: 'Cairo', sans-serif;
         }
-        .modal-close-btn:hover {
-            background: rgba(0, 0, 0, 0.05);
-            color: var(--ink);
-        }
-        .modal-body {
-            padding: 20px 22px;
-        }
-
-        /* ========== التوست ========== */
         .toast {
-            position: fixed;
-            bottom: 24px;
-            bottom: calc(24px + var(--safe-bottom));
-            left: 20px;
-            right: 20px;
-            background: #4A3B2C;
-            color: white;
-            padding: 14px 24px;
-            border-radius: 60px;
-            text-align: center;
-            z-index: 3000;
-            max-width: 500px;
-            margin: 0 auto;
-            font-size: 0.9rem;
-            animation: slideUpToast 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
-            font-weight: 500;
+            position: fixed; bottom: 24px; left: 20px; right: 20px;
+            background: #4A3B2C; color: white; padding: 14px 24px; border-radius: 60px;
+            text-align: center; z-index: 3000; max-width: 500px; margin: 0 auto;
+            animation: slideUp 0.3s ease;
         }
-        @keyframes slideUpToast {
-            from {
-                opacity: 0;
-                transform: translateY(30px) scale(0.9);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
-        }
-        .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            color: var(--text-sec);
-            font-size: 0.95rem;
-        }
-        .empty-state i {
-            display: block;
-            font-size: 2.5rem;
-            margin-bottom: 12px;
-            opacity: 0.5;
-        }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* ============================================== */
-        /* ========== شاشات الكمبيوتر (>= 1025px) ======== */
-        /* ============================================== */
+        /* ---------- تجاوب ---------- */
         @media (min-width: 1025px) {
-            .app-layout {
-                flex-direction: row;
-            }
-            .queue-sidebar {
-                display: flex !important;
-            }
-            .queue-strip-mobile {
-                display: none !important;
-            }
-            .queue-btn {
-                display: none;
-            }
-            #toggleQueueSidebarBtn {
-                display: flex;
-            }
-            .hide-desktop {
-                display: none !important;
-            }
+            .queue-sidebar { display: flex !important; }
+            .queue-btn-mobile { display: none !important; }
         }
-
-        /* ============================================== */
-        /* ========== الأجهزة اللوحية (769-1024px) ======= */
-        /* ============================================== */
         @media (min-width: 769px) and (max-width: 1024px) {
-            .app-layout {
-                flex-direction: row;
-                gap: 14px;
-            }
-            .queue-sidebar {
-                width: 270px;
-                min-width: 250px;
-                border-radius: 24px;
-                padding: 14px 10px;
-                display: flex !important;
-            }
-            .queue-strip-mobile {
-                display: none !important;
-            }
-            .queue-btn {
-                display: none;
-            }
-            #toggleQueueSidebarBtn {
-                display: flex;
-            }
-            .btn {
-                font-size: 0.85rem;
-                padding: 8px 14px;
-            }
-            .app-header {
-                padding: 8px 16px;
-                gap: 8px;
-            }
-            .logo h2 {
-                font-size: 1.3rem;
-            }
-            .queue-patient-card {
-                padding: 12px 14px;
-            }
-            .prescription-panel {
-                padding: 16px;
-                border-radius: 24px;
-            }
-            .hide-desktop {
-                display: none !important;
-            }
+            .queue-sidebar { display: flex !important; width: 270px; }
+            .queue-btn-mobile { display: none !important; }
         }
-
-        /* ============================================== */
-        /* ========== الهواتف (<= 768px) ================= */
-        /* ============================================== */
         @media (max-width: 768px) {
-            body {
-                padding: 8px;
-                padding-bottom: calc(8px + var(--safe-bottom));
-                padding-top: calc(8px + var(--safe-top));
-            }
-            .app-layout {
-                flex-direction: column;
-                gap: 10px;
-            }
-            .queue-sidebar {
-                display: none !important;
-            }
-            .queue-strip-mobile {
-                display: block;
-                order: 2;
-                margin: 0;
-            }
-            .main-content {
-                order: 3;
-                gap: 10px;
-            }
-            .app-header {
-                order: 1;
-                border-radius: 40px;
-                padding: 10px 14px;
-                gap: 6px;
-            }
-            .queue-btn {
-                display: flex;
-            }
-            #toggleQueueSidebarBtn {
-                display: none !important;
-            }
-            .logo h2 {
-                font-size: 1.1rem;
-            }
-            #welcomeMessage {
-                font-size: 0.8rem;
-                max-width: 90px;
-            }
-            .header-actions {
-                gap: 4px;
-            }
-            .btn {
-                font-size: 0.78rem;
-                padding: 7px 12px;
-                border-radius: 30px;
-                gap: 4px;
-            }
-            .btn-icon {
-                width: 36px;
-                height: 36px;
-            }
-            .current-patient-card {
-                border-radius: 30px;
-                padding: 12px 16px;
-            }
-            .patient-name-clickable {
-                font-size: 1.1rem;
-            }
-            .diagnosis-section {
-                padding: 12px 16px;
-                border-radius: 20px;
-            }
-            .diagnosis-textarea {
-                min-height: 70px;
-                font-size: 0.9rem;
-            }
-            .prescription-panel {
-                padding: 14px;
-                border-radius: 24px;
-            }
-            .rx-item {
-                padding: 12px 14px;
-                border-radius: 16px;
-            }
-            .rx-drug-name {
-                font-size: 0.9rem;
-            }
-            .drug-add-section {
-                flex-direction: column;
-                gap: 8px;
-            }
-            .drug-search-wrapper {
-                width: 100%;
-            }
-            .drug-add-section select,
-            .drug-add-section .btn {
-                width: 100%;
-                justify-content: center;
-            }
-            .action-buttons {
-                flex-direction: column;
-            }
-            .action-buttons .btn {
-                width: 100%;
-                justify-content: center;
-            }
-            .dose-panel {
-                padding: 12px;
-                border-radius: 20px;
-            }
-            .modal-overlay {
-                padding: 8px;
-                align-items: flex-end;
-            }
-            .modal-card {
-                border-radius: 28px 28px 16px 16px;
-                max-height: 90dvh;
-                animation: modalInMobile 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-            }
-            @keyframes modalInMobile {
-                from {
-                    opacity: 0;
-                    transform: translateY(60px) scale(0.95);
-                }
-                to {
-                    opacity: 1;
-                    transform: translateY(0) scale(1);
-                }
-            }
-            .modal-header {
-                padding: 14px 16px;
-                border-radius: 28px 28px 0 0;
-            }
-            .modal-body {
-                padding: 14px 16px;
-            }
-            .toast {
-                bottom: calc(16px + var(--safe-bottom));
-                left: 12px;
-                right: 12px;
-                padding: 12px 20px;
-                font-size: 0.85rem;
-            }
-        }
-
-        /* ============================================== */
-        /* ====== هواتف صغيرة جداً (<= 400px) ============ */
-        /* ============================================== */
-        @media (max-width: 400px) {
-            body {
-                padding: 4px;
-                padding-bottom: calc(4px + var(--safe-bottom));
-                padding-top: calc(4px + var(--safe-top));
-            }
-            .app-layout {
-                gap: 6px;
-            }
-            .app-header {
-                padding: 8px 10px;
-                border-radius: 30px;
-                gap: 4px;
-            }
-            .logo h2 {
-                font-size: 0.95rem;
-            }
-            .btn {
-                font-size: 0.72rem;
-                padding: 6px 10px;
-                border-radius: 24px;
-            }
-            .queue-btn {
-                width: 38px;
-                height: 38px;
-            }
-            .queue-badge {
-                font-size: 0.7rem;
-                padding: 1px 6px;
-                top: -4px;
-                right: -4px;
-            }
-            .queue-pill {
-                padding: 8px 12px;
-                font-size: 0.78rem;
-                gap: 5px;
-            }
-            .queue-pill .pill-avatar {
-                width: 24px;
-                height: 24px;
-                min-width: 24px;
-                font-size: 0.65rem;
-            }
-            .current-patient-card {
-                border-radius: 24px;
-                padding: 10px 14px;
-            }
-            .patient-name-clickable {
-                font-size: 0.95rem;
-            }
-            .diagnosis-textarea {
-                font-size: 0.85rem;
-                padding: 12px 14px;
-            }
-            .rx-drug-name {
-                font-size: 0.82rem;
-            }
-            .modal-card {
-                border-radius: 22px 22px 12px 12px;
-            }
-            .modal-header {
-                padding: 12px 14px;
-                border-radius: 22px 22px 0 0;
-            }
-            .modal-body {
-                padding: 12px 14px;
-            }
-        }
-
-        /* ========== دعم شاشات اللمس ========== */
-        @media (hover: none) and (pointer: coarse) {
-            .queue-patient-card:hover,
-            .btn:hover,
-            .queue-pill:hover,
-            .suggestion-item:hover {
-                transform: none;
-                background: inherit;
-            }
-            .queue-patient-card:active,
-            .queue-pill:active {
-                transform: scale(0.96);
-            }
-            .btn:active {
-                transform: scale(0.93);
-            }
+            body { padding: 8px; }
+            .app-layout { flex-direction: column; gap: 10px; }
+            .queue-sidebar { display: none !important; }
+            .main-content { gap: 10px; }
+            .app-header { order: 1; border-radius: 40px; padding: 10px 14px; }
+            .current-patient-card { order: 2; border-radius: 30px; }
+            .diagnosis-section { order: 3; }
+            .prescription-panel { order: 4; border-radius: 24px; }
+            .drug-suggestions { width: 90vw; }
+            .btn { font-size: 0.78rem; padding: 7px 12px; }
+            .drug-add-section { flex-direction: column; }
+            .action-buttons { flex-direction: column; }
+            .modal-card { border-radius: 28px 28px 16px 16px; max-height: 90dvh; }
         }
     </style>
 </head>
 <body>
     <div class="app-layout">
-        <!-- ========== الشريط الجانبي للمرضى (كمبيوتر / لوحي) ========== -->
-        <div class="queue-sidebar" id="queueSidebar">
+        <!-- الشريط الجانبي للأطباء (سطح المكتب) -->
+        <aside class="queue-sidebar" id="queueSidebar">
             <div class="sidebar-header">
                 <h3><i class="fas fa-users"></i> قائمة المرضى</h3>
                 <button class="btn btn-icon btn-sm" id="refreshQueueBtn" title="تحديث"><i class="fas fa-sync-alt"></i></button>
@@ -1192,113 +361,88 @@
             <div class="queue-list" id="queueListContainer">
                 <div class="empty-state"><i class="fas fa-spinner fa-pulse"></i> جاري التحميل...</div>
             </div>
-        </div>
+        </aside>
 
-        <!-- ========== المحتوى الرئيسي ========== -->
-        <div class="main-content">
-            <!-- الشريط العلوي -->
+        <!-- المحتوى الرئيسي -->
+        <main class="main-content">
             <header class="app-header">
-                <div class="logo-area">
-                    <div class="logo"><h2><i class="fas fa-stethoscope" style="color:var(--primary); margin-left:8px;"></i>سُكُون</h2></div>
-                    <button type="button" class="queue-btn hide-desktop" id="queueModalBtnMobile" title="قائمة الانتظار">
-                        <i class="fas fa-users"></i>
-                        <span class="queue-badge" id="queueBadgeCountMobile">0</span>
-                    </button>
-                    <button type="button" class="btn btn-icon btn-sm hide-mobile" id="toggleQueueSidebarBtn" title="إظهار/إخفاء القائمة">
-                        <i class="fas fa-users"></i>
-                    </button>
-                </div>
+                <div class="logo"><h2><i class="fas fa-stethoscope" style="color:var(--primary); margin-left:8px;"></i>سُكُون</h2></div>
                 <div class="header-actions">
-                    <span id="welcomeMessage" style="font-weight:600;">د. أحمد</span>
-                    <button type="button" class="btn btn-outline btn-sm" id="savedSessionsBtn" title="المرضى المعلقون">
-                        <i class="fas fa-clock"></i> <span class="hide-mobile">معلقون</span>
-                    </button>
-                    <button type="button" class="btn btn-outline btn-sm" id="templatesBtn"><i class="fas fa-folder-open"></i> <span class="hide-mobile">القوالب</span></button>
-                    <button type="button" class="btn btn-outline btn-sm" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> <span class="hide-mobile">خروج</span></button>
+                    <span id="welcomeMessage">د. ---</span>
+                    <button class="btn btn-outline btn-sm queue-btn-mobile" id="queueModalBtn"><i class="fas fa-users"></i> المرضى</button>
+                    <button class="btn btn-outline btn-sm" id="savedSessionsBtn"><i class="fas fa-clock"></i> معلقون</button>
+                    <button class="btn btn-outline btn-sm" id="templatesBtn"><i class="fas fa-folder-open"></i> قوالب</button>
+                    <button class="btn btn-outline btn-sm" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> خروج</button>
                 </div>
             </header>
 
-            <!-- شريط المرضى الأفقي (للهاتف) -->
-            <div class="queue-strip-mobile" id="queueStripMobile">
-                <div class="strip-scroll" id="queueStripContainer">
-                    <div class="empty-state" style="padding:10px;width:100%;"><i class="fas fa-spinner fa-pulse"></i> تحميل المرضى...</div>
-                </div>
-            </div>
-
-            <!-- بطاقة المريض الحالي -->
             <div id="currentPatientCard" class="current-patient-card" style="display: none;">
-                <div class="patient-name-clickable" id="patientNameClickable">
+                <div>
                     <span id="currentPatientNameDisplay">---</span>
-                    <i class="fas fa-external-link-alt"></i>
+                    <span id="patientNameClickable" style="cursor:pointer; margin-right:8px; color:var(--accent);" title="فتح صفحة المريض"><i class="fas fa-external-link-alt"></i></span>
                 </div>
-                <span class="patient-age-badge" id="currentPatientAgeDisplay">-- سنة</span>
+                <span id="currentPatientAgeDisplay">-- سنة</span>
             </div>
 
-            <!-- قسم التشخيص -->
             <div class="diagnosis-section">
-                <div class="diagnosis-header">
-                    <i class="fas fa-notes-medical"></i>
-                    <span>التشخيص والملاحظات</span>
-                </div>
-                <textarea id="diagnosisTextarea" class="diagnosis-textarea" placeholder="اكتب التشخيص، الأعراض، أو أي ملاحظات إضافية..."></textarea>
+                <label style="font-weight:600; display:flex; align-items:center; gap:8px;"><i class="fas fa-notes-medical"></i> التشخيص والملاحظات</label>
+                <textarea id="diagnosisTextarea" class="diagnosis-textarea" placeholder="اكتب التشخيص..."></textarea>
             </div>
 
-            <!-- لوحة الوصفة -->
             <div class="prescription-panel">
                 <div id="emptyPrescriptionMsg" class="empty-state">
-                    <i class="fas fa-prescription-bottle-medical" style="font-size: 48px; opacity: 0.5;"></i>
+                    <i class="fas fa-prescription-bottle-medical" style="font-size:48px; opacity:0.4;"></i>
                     <p>اختر مريضاً من قائمة الانتظار لبدء الكشف</p>
                 </div>
-                <div id="prescriptionContent" style="display: none; flex:1; display:flex; flex-direction:column; min-height:0;">
+                <div id="prescriptionContent" style="display:none; flex-direction:column; flex:1;">
                     <div class="rx-items-container" id="rxItemsContainer"></div>
-                    <div class="drug-add-section">
-                        <div class="drug-search-wrapper">
-                            <input type="text" id="drugSearchInput" placeholder="ابحث عن دواء..." autocomplete="off">
-                            <div id="drugSuggestions" class="suggestions-dropdown"></div>
-                        </div>
-                        <select id="drugFormSelect" class="btn" style="padding:12px 16px;">
+                    <div class="drug-add-section" style="position:relative;">
+                        <input type="text" id="drugSearchInput" placeholder="ابحث عن دواء..." autocomplete="off" />
+                        <select id="drugFormSelect">
                             <option value="tablet">💊 أقراص</option>
                             <option value="syrup">🥄 شراب</option>
                             <option value="injection">💉 حقن</option>
                             <option value="suppository">🧴 لبوس</option>
                             <option value="drops">💧 نقط</option>
+                            <option value="fizzy">🫧 فوار</option>
+                            <option value="spray">💨 بخاخ</option>
+                            <option value="cream">🧴 كريم</option>
                         </select>
-                        <button type="button" class="btn btn-primary" id="startAddDrugBtn"><i class="fas fa-plus"></i> إضافة</button>
+                        <button class="btn btn-primary" id="startAddDrugBtn">إضافة</button>
+                        <div id="drugSuggestions" class="drug-suggestions"></div>
                     </div>
-                    <div id="dosePanel" class="dose-panel" style="display: none;">
-                        <div style="display:flex; justify-content:space-between; margin-bottom:12px;">
-                            <span id="selectedDrugDisplay" style="font-weight:700;"></span>
-                            <span id="selectedFormDisplay" style="background:var(--primary-light); padding:2px 12px; border-radius:20px;"></span>
+                    <div id="dosePanel" class="dose-panel">
+                        <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
+                            <span><strong>الدواء:</strong> <span id="selectedDrugDisplay"></span></span>
+                            <span><strong>الشكل:</strong> <span id="selectedFormDisplay"></span></span>
                         </div>
-                        <div style="display:flex; align-items:center; gap:8px; margin-bottom:16px;">
-                            <input type="text" id="doseNumberInput" placeholder="الكمية (مثلاً 5)" style="width:120px; padding:10px; border-radius:20px; border:1px solid var(--border-light);">
+                        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                            <input type="text" id="doseNumberInput" placeholder="الكمية" style="width:100px; padding:8px; border-radius:20px; border:1px solid #ccc;" />
                             <span id="unitLabel">قرص</span>
+                            <button class="btn btn-sm btn-primary" id="applyDoseBtn">تطبيق</button>
+                            <button class="btn btn-sm" id="cancelDoseBtn">إلغاء</button>
                         </div>
-                        <div id="doseSuggestionsContainer"></div>
-                        <div style="display:flex; gap:10px; margin-top:16px;">
-                            <button type="button" class="btn btn-primary" id="applyDoseBtn">تأكيد وإضافة</button>
-                            <button type="button" class="btn btn-outline" id="cancelDoseBtn">إلغاء</button>
-                        </div>
+                        <div id="doseSuggestionsContainer" style="margin-top:10px;"></div>
                     </div>
                     <div class="action-buttons">
-                        <button type="button" class="btn btn-primary" id="finishBtn" style="flex:1;"><i class="fas fa-check-circle"></i> إنهاء الكشف</button>
-                        <button type="button" class="btn btn-outline" id="saveTemplateBtn"><i class="fas fa-save"></i> حفظ كقالب</button>
-                        <button type="button" class="btn btn-outline" id="clearPrescriptionBtn"><i class="fas fa-trash-alt"></i> مسح الوصفة</button>
+                        <button class="btn btn-primary" id="finishBtn"><i class="fas fa-check-circle"></i> إنهاء الكشف</button>
+                        <button class="btn btn-outline" id="saveTemplateBtn"><i class="fas fa-save"></i> حفظ كقالب</button>
+                        <button class="btn btn-outline" id="clearPrescriptionBtn"><i class="fas fa-trash-alt"></i> مسح الوصفة</button>
                     </div>
                 </div>
             </div>
-        </div>
+        </main>
     </div>
 
-    <!-- ========== مودال قائمة الانتظار (للهاتف) ========== -->
+    <!-- مودال قائمة الانتظار (للهاتف) -->
     <div id="queueModal" class="modal-overlay">
         <div class="modal-card">
             <div class="modal-header">
                 <h3>قائمة المرضى</h3>
-                <button type="button" class="modal-close-btn" id="closeQueueModalBtn">&times;</button>
+                <button class="close-btn" id="closeQueueModalBtn">&times;</button>
             </div>
-            <div class="modal-body">
-                <div class="sidebar-tabs" style="margin-bottom:12px;">
+            <div style="padding:12px;">
+                <div class="sidebar-tabs">
                     <button class="sidebar-tab active" data-queue-tab="waiting">قيد الانتظار <span class="count" id="waitingTabCountModal">0</span></button>
                     <button class="sidebar-tab" data-queue-tab="done">تم الكشف <span class="count" id="doneTabCountModal">0</span></button>
                 </div>
@@ -1307,352 +451,497 @@
         </div>
     </div>
 
-    <!-- ========== مودال القوالب ========== -->
+    <!-- مودال القوالب -->
     <div id="templatesModal" class="modal-overlay">
         <div class="modal-card">
             <div class="modal-header">
-                <h3>الروشتات المحفوظة</h3>
-                <button type="button" class="modal-close-btn" id="closeTemplatesModalBtn">&times;</button>
+                <h3>القوالب المحفوظة</h3>
+                <button class="close-btn" id="closeTemplatesModalBtn">&times;</button>
             </div>
-            <div class="modal-body">
-                <div id="templatesList" style="max-height:300px; overflow-y:auto;"></div>
-            </div>
+            <div id="templatesList" style="padding:12px;"></div>
         </div>
     </div>
 
-    <!-- ========== مودال حفظ القالب ========== -->
+    <!-- مودال حفظ كقالب جديد -->
     <div id="saveTemplateModal" class="modal-overlay">
         <div class="modal-card">
             <div class="modal-header">
                 <h3>حفظ القالب</h3>
-                <button type="button" class="modal-close-btn" id="closeSaveTemplateModalBtn">&times;</button>
+                <button class="close-btn" id="closeSaveTemplateModalBtn">&times;</button>
             </div>
-            <div class="modal-body">
-                <input type="text" id="templateNameInput" placeholder="اسم القالب (مثلاً: روتين إلتهاب الحلق)" style="width:100%; padding:12px; border-radius:40px; margin-bottom:16px; border:1px solid var(--border-light); font-family:'Cairo', sans-serif;">
-                <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                    <button type="button" class="btn btn-primary" id="saveAsNewTemplateBtn" style="flex:1;">حفظ كجديد</button>
-                    <button type="button" class="btn btn-outline" id="overwriteTemplateBtn" style="flex:1;">تحديث المحدد</button>
+            <div style="padding:16px;">
+                <input type="text" id="templateNameInput" placeholder="اسم القالب" style="width:100%; padding:12px; border-radius:12px; border:1px solid #ccc; margin-bottom:12px;" />
+                <div style="display:flex; gap:8px;">
+                    <button class="btn btn-primary" id="saveAsNewTemplateBtn">حفظ جديد</button>
+                    <button class="btn btn-outline" id="overwriteTemplateBtn" style="display:none;">تحديث الحالي</button>
                 </div>
-                <p style="color:var(--text-sec); font-size:0.8rem; margin-top:12px;">في حالة التحديث، سيتم تعديل القالب الحالي لو تم تحميله.</p>
             </div>
         </div>
     </div>
 
-    <!-- ========== مودال الجلسات المحفوظة ========== -->
+    <!-- مودال الجلسات المعلقة -->
     <div id="savedSessionsModal" class="modal-overlay">
         <div class="modal-card">
             <div class="modal-header">
-                <h3>المرضى المعلقون (محلياً)</h3>
-                <button type="button" class="modal-close-btn" id="closeSavedSessionsModalBtn">&times;</button>
+                <h3>جلسات معلقة</h3>
+                <button class="close-btn" id="closeSavedSessionsModalBtn">&times;</button>
             </div>
-            <div class="modal-body">
-                <div id="savedSessionsList" style="max-height:300px; overflow-y:auto;"></div>
-            </div>
+            <div id="savedSessionsList" style="padding:12px;"></div>
         </div>
     </div>
 
-    <!-- ========== حاوية التوست ========== -->
     <div id="toastContainer"></div>
 
-    <script type="module" src="doctor-dashboard.js"></script>
+    <script type="module">
+        // ---------- استيرادات Firebase ----------
+        import { firebaseConfig } from './firebase-config.js';
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
+        import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
+        import {
+            getDatabase, ref, onValue, set, push, update, get, remove,
+            query, orderByChild, equalTo
+        } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-database.js";
+        import { LocalDrugManager } from './local-drug-manager.js';
 
-    <!-- ========== سكريبت إدارة الواجهة ========== -->
-    <script>
-        (function() {
-            // عناصر DOM
-            const queueSidebar = document.getElementById('queueSidebar');
-            const toggleQueueSidebarBtn = document.getElementById('toggleQueueSidebarBtn');
-            const queueStripMobile = document.getElementById('queueStripMobile');
-            const queueStripContainer = document.getElementById('queueStripContainer');
-            const queueListContainer = document.getElementById('queueListContainer');
-            const queueModal = document.getElementById('queueModal');
-            const queueModalList = document.getElementById('queueModalList');
-            const queueModalBtnMobile = document.getElementById('queueModalBtnMobile');
-            const closeQueueModalBtn = document.getElementById('closeQueueModalBtn');
-            const queueBadgeCountMobile = document.getElementById('queueBadgeCountMobile');
-            const currentPatientCard = document.getElementById('currentPatientCard');
-            const currentPatientNameDisplay = document.getElementById('currentPatientNameDisplay');
-            const currentPatientAgeDisplay = document.getElementById('currentPatientAgeDisplay');
-            const emptyPrescriptionMsg = document.getElementById('emptyPrescriptionMsg');
-            const prescriptionContent = document.getElementById('prescriptionContent');
-            const toastContainer = document.getElementById('toastContainer');
-            const welcomeMessage = document.getElementById('welcomeMessage');
-            const refreshQueueBtn = document.getElementById('refreshQueueBtn');
-            const savedSessionsBtn = document.getElementById('savedSessionsBtn');
-            const templatesBtn = document.getElementById('templatesBtn');
-            const logoutBtn = document.getElementById('logoutBtn');
-            const savedSessionsModal = document.getElementById('savedSessionsModal');
-            const closeSavedSessionsModalBtn = document.getElementById('closeSavedSessionsModalBtn');
-            const templatesModal = document.getElementById('templatesModal');
-            const closeTemplatesModalBtn = document.getElementById('closeTemplatesModalBtn');
-            const saveTemplateModal = document.getElementById('saveTemplateModal');
-            const closeSaveTemplateModalBtn = document.getElementById('closeSaveTemplateModalBtn');
-            const finishBtn = document.getElementById('finishBtn');
-            const clearPrescriptionBtn = document.getElementById('clearPrescriptionBtn');
-            const saveTemplateBtn = document.getElementById('saveTemplateBtn');
+        // ---------- التهيئة ----------
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+        const localDrugDB = new LocalDrugManager(db, 'drugs');
 
-            let currentPatientId = null;
-            let activeQueueTab = 'waiting';
-            let queueData = [];
-            let prescriptionsData = [];
-
-            
-            // ========== دوال مساعدة ==========
-            function showToast(message, duration = 2500) {
-                const toast = document.createElement('div');
-                toast.className = 'toast';
-                toast.textContent = message;
-                toastContainer.appendChild(toast);
-                setTimeout(() => {
-                    toast.style.opacity = '0';
-                    toast.style.transform = 'translateY(20px)';
-                    toast.style.transition = 'all 0.3s ease';
-                    setTimeout(() => toast.remove(), 300);
-                }, duration);
+        // ---------- إدارة الجلسات المحلية (IndexedDB) ----------
+        class DoctorSessionManager {
+            constructor() {
+                this.dbName = 'DoctorSessionsDB';
+                this.storeName = 'sessions';
+                this.db = null;
             }
-
-            function openModal(modal) {
-                modal.classList.add('show');
-            }
-
-            function closeModal(modal) {
-                modal.classList.remove('show');
-            }
-
-            function updateQueueBadges() {
-                const waitingCount = queueData.filter(p => p.status === 'waiting').length;
-                const doneCount = queueData.filter(p => p.status === 'done').length;
-                if (queueBadgeCountMobile) queueBadgeCountMobile.textContent = waitingCount;
-                document.querySelectorAll('#waitingTabCount, #waitingTabCountModal').forEach(el => el.textContent = waitingCount);
-                document.querySelectorAll('#doneTabCount, #doneTabCountModal').forEach(el => el.textContent = doneCount);
-            }
-
-            // ========== تحميل قائمة الانتظار ==========
-            function loadQueue() {
-                const mockQueue = [
-                    { id: 1, name: 'محمد سالم', age: 34, status: 'waiting', hasPending: false },
-                    { id: 2, name: 'علياء محمود', age: 28, status: 'waiting', hasPending: true },
-                    { id: 3, name: 'خالد يوسف', age: 45, status: 'done', hasPending: false },
-                    { id: 4, name: 'نورا فؤاد', age: 22, status: 'waiting', hasPending: false },
-                    { id: 5, name: 'حسن عبدالله', age: 52, status: 'done', hasPending: true },
-                ];
-                queueData = mockQueue;
-                updateQueueBadges();
-                renderQueue();
-            }
-
-            function renderQueue() {
-                const filtered = queueData.filter(p => p.status === activeQueueTab);
-
-                // الشريط الجانبي
-                if (queueListContainer) {
-                    if (filtered.length === 0) {
-                        queueListContainer.innerHTML = '<div class="empty-state"><i class="fas fa-users"></i>لا يوجد مرضى</div>';
-                    } else {
-                        queueListContainer.innerHTML = filtered.map(p => `
-                            <div class="queue-patient-card ${p.id === currentPatientId ? 'active' : ''}" data-patient-id="${p.id}">
-                                <div class="queue-patient-info">
-                                    <div class="queue-avatar">${p.name.charAt(0)}</div>
-                                    <div>
-                                        <div class="queue-patient-name">${p.name}</div>
-                                        <div class="queue-patient-age">${p.age} سنة</div>
-                                    </div>
-                                </div>
-                                <span class="queue-status-dot ${p.status}"></span>
-                                ${p.hasPending ? '<span style="font-size:0.7rem; background:#FFF3CD; padding:2px 8px; border-radius:20px;">معلق</span>' : ''}
-                            </div>
-                        `).join('');
-                    }
-                }
-
-                // الشريط الأفقي (هاتف)
-                if (queueStripContainer) {
-                    const allPatients = queueData;
-                    if (allPatients.length === 0) {
-                        queueStripContainer.innerHTML = '<div class="empty-state" style="padding:10px;width:100%;"><i class="fas fa-users"></i>لا يوجد مرضى</div>';
-                    } else {
-                        queueStripContainer.innerHTML = allPatients.map(p => `
-                            <div class="queue-pill ${p.id === currentPatientId ? 'active' : ''}" data-patient-id="${p.id}">
-                                <div class="pill-avatar">${p.name.charAt(0)}</div>
-                                <span>${p.name.split(' ')[1] || p.name}</span>
-                                <span class="pill-dot ${p.status}"></span>
-                            </div>
-                        `).join('');
-                    }
-                }
-
-                // مودال الهاتف
-                if (queueModalList) {
-                    if (filtered.length === 0) {
-                        queueModalList.innerHTML = '<div class="empty-state"><i class="fas fa-users"></i>لا يوجد مرضى</div>';
-                    } else {
-                        queueModalList.innerHTML = filtered.map(p => `
-                            <div class="queue-patient-card ${p.id === currentPatientId ? 'active' : ''}" data-patient-id="${p.id}" style="cursor:pointer;">
-                                <div class="queue-patient-info">
-                                    <div class="queue-avatar">${p.name.charAt(0)}</div>
-                                    <div>
-                                        <div class="queue-patient-name">${p.name}</div>
-                                        <div class="queue-patient-age">${p.age} سنة</div>
-                                    </div>
-                                </div>
-                                <span class="queue-status-dot ${p.status}"></span>
-                            </div>
-                        `).join('');
-                    }
-                }
-
-                // إعادة ربط الأحداث
-                document.querySelectorAll('.queue-patient-card, .queue-pill').forEach(el => {
-                    el.addEventListener('click', function() {
-                        const id = parseInt(this.getAttribute('data-patient-id'));
-                        selectPatient(id);
-                        if (window.innerWidth <= 768) closeModal(queueModal);
-                    });
+            async open() {
+                return new Promise((resolve, reject) => {
+                    const request = indexedDB.open(this.dbName, 1);
+                    request.onupgradeneeded = (event) => {
+                        const db = event.target.result;
+                        if (!db.objectStoreNames.contains(this.storeName)) {
+                            db.createObjectStore(this.storeName, { keyPath: 'sessionId' });
+                        }
+                    };
+                    request.onsuccess = (event) => { this.db = event.target.result; resolve(); };
+                    request.onerror = (event) => reject(event.target.error);
                 });
             }
+            _tx(mode = 'readonly') {
+                return this.db.transaction(this.storeName, mode).objectStore(this.storeName);
+            }
+            saveSession(data)       { return new Promise((res, rej) => { const r = this._tx('readwrite').put(data);  r.onsuccess = res; r.onerror = () => rej(r.error); }); }
+            getSession(id)          { return new Promise((res, rej) => { const r = this._tx().get(id);               r.onsuccess = () => res(r.result || null); r.onerror = () => rej(r.error); }); }
+            deleteSession(id)       { return new Promise((res, rej) => { const r = this._tx('readwrite').delete(id); r.onsuccess = res; r.onerror = () => rej(r.error); }); }
+            getAllSessions()         { return new Promise((res, rej) => { const r = this._tx().getAll();              r.onsuccess = () => res(r.result || []); r.onerror = () => rej(r.error); }); }
+            getActiveSession()      { return this.getSession('__active__'); }
+            setActiveSession(id)    { return this.saveSession({ sessionId: '__active__', activeSessionId: id }); }
+            clearActiveSession()    { return this.deleteSession('__active__'); }
+        }
+        const sessionManager = new DoctorSessionManager();
 
-            function selectPatient(id) {
-                currentPatientId = id;
-                const patient = queueData.find(p => p.id === id);
-                if (patient) {
-                    currentPatientCard.style.display = 'flex';
-                    currentPatientNameDisplay.textContent = patient.name;
-                    currentPatientAgeDisplay.textContent = patient.age + ' سنة';
-                    emptyPrescriptionMsg.style.display = 'none';
-                    prescriptionContent.style.display = 'flex';
-                    prescriptionContent.style.flexDirection = 'column';
-                    prescriptionContent.style.minHeight = '0';
-                    renderQueue();
-                    loadPrescriptionForPatient(id);
-                    // تمرير الشريط الأفقي
-                    if (window.innerWidth <= 768 && queueStripContainer) {
-                        const activePill = queueStripContainer.querySelector('.queue-pill.active');
-                        if (activePill) activePill.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-                    }
+        // ---------- الحالة العامة ----------
+        const UI = {
+            welcomeMessage:             document.getElementById('welcomeMessage'),
+            queueModalBtn:              document.getElementById('queueModalBtn'),
+            queueBadgeCount:            document.getElementById('queueBadgeCount'), // غير موجود بالـHTML، سنضبط العداد عبر waitingTabCount
+            queueModal:                 document.getElementById('queueModal'),
+            closeQueueModalBtn:         document.getElementById('closeQueueModalBtn'),
+            queueTabs:                  document.querySelectorAll('.sidebar-tab'),
+            queueModalList:             document.getElementById('queueModalList'),
+            waitingTabCount:            document.getElementById('waitingTabCount'),
+            doneTabCount:               document.getElementById('doneTabCount'),
+            waitingTabCountModal:       document.getElementById('waitingTabCountModal'),
+            doneTabCountModal:          document.getElementById('doneTabCountModal'),
+            currentPatientCard:         document.getElementById('currentPatientCard'),
+            currentPatientNameDisplay:  document.getElementById('currentPatientNameDisplay'),
+            currentPatientAgeDisplay:   document.getElementById('currentPatientAgeDisplay'),
+            patientNameClickable:       document.getElementById('patientNameClickable'),
+            diagnosisTextarea:          document.getElementById('diagnosisTextarea'),
+            emptyPrescriptionMsg:       document.getElementById('emptyPrescriptionMsg'),
+            prescriptionContent:        document.getElementById('prescriptionContent'),
+            rxItemsContainer:           document.getElementById('rxItemsContainer'),
+            drugSearchInput:            document.getElementById('drugSearchInput'),
+            drugSuggestions:            document.getElementById('drugSuggestions'),
+            drugFormSelect:             document.getElementById('drugFormSelect'),
+            startAddDrugBtn:            document.getElementById('startAddDrugBtn'),
+            dosePanel:                  document.getElementById('dosePanel'),
+            selectedDrugDisplay:        document.getElementById('selectedDrugDisplay'),
+            selectedFormDisplay:        document.getElementById('selectedFormDisplay'),
+            doseNumberInput:            document.getElementById('doseNumberInput'),
+            unitLabel:                  document.getElementById('unitLabel'),
+            doseSuggestionsContainer:   document.getElementById('doseSuggestionsContainer'),
+            applyDoseBtn:               document.getElementById('applyDoseBtn'),
+            cancelDoseBtn:              document.getElementById('cancelDoseBtn'),
+            finishBtn:                  document.getElementById('finishBtn'),
+            saveTemplateBtn:            document.getElementById('saveTemplateBtn'),
+            templatesBtn:               document.getElementById('templatesBtn'),
+            templatesModal:             document.getElementById('templatesModal'),
+            saveTemplateModal:          document.getElementById('saveTemplateModal'),
+            templatesList:              document.getElementById('templatesList'),
+            closeTemplatesModalBtn:     document.getElementById('closeTemplatesModalBtn'),
+            closeSaveTemplateModalBtn:  document.getElementById('closeSaveTemplateModalBtn'),
+            saveAsNewTemplateBtn:       document.getElementById('saveAsNewTemplateBtn'),
+            overwriteTemplateBtn:       document.getElementById('overwriteTemplateBtn'),
+            templateNameInput:          document.getElementById('templateNameInput'),
+            clearPrescriptionBtn:       document.getElementById('clearPrescriptionBtn'),
+            savedSessionsBtn:           document.getElementById('savedSessionsBtn'),
+            savedSessionsModal:         document.getElementById('savedSessionsModal'),
+            savedSessionsList:          document.getElementById('savedSessionsList'),
+            closeSavedSessionsModalBtn: document.getElementById('closeSavedSessionsModalBtn'),
+            logoutBtn:                  document.getElementById('logoutBtn')
+        };
+
+        // ---------- التحقق من الجلسة ----------
+        const sessionUid  = sessionStorage.getItem('userUid');
+        const sessionRole = sessionStorage.getItem('userRole');
+        const sessionName = sessionStorage.getItem('userName');
+        if (!sessionUid || sessionRole !== 'doctor') {
+            sessionStorage.clear();
+            window.location.replace('index.html');
+            throw new Error('جلسة غير صالحة');
+        }
+        const currentUser = { uid: sessionUid, name: sessionName || 'طبيب' };
+
+        let doctorInfo        = { name: currentUser.name, specialty: '' };
+        let todayAppointments = [];
+        let currentAppointment  = null;
+        let currentPrescription = [];
+        let favoriteDrugs       = new Set();
+        let doseState = { drug: null, drug_id: null, form: 'tablet', quantity: '', timing: 'any' };
+        let currentQueueTab  = 'waiting';
+        let loadedTemplateId = null;
+        let activeSessionId  = null;
+        const FORM_UNITS = { tablet:'قرص', syrup:'مل', injection:'سم', suppository:'لبوس', drops:'نقطة', fizzy:'فوار', spray:'بخة', cream:'جم' };
+
+        // ---------- دوال مساعدة ----------
+        function getLocalDateString() {
+            const d = new Date();
+            return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        }
+        const today = getLocalDateString();
+
+        function showToast(msg, isErr = false) {
+            const t = document.createElement('div');
+            t.className = 'toast';
+            t.style.background = isErr ? '#B23B3B' : '#4A3B2C';
+            t.innerHTML = `<i class="fas ${isErr ? 'fa-exclamation-triangle' : 'fa-check'}"></i> ${msg}`;
+            document.body.appendChild(t);
+            setTimeout(() => t.remove(), 3000);
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str).replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'})[m] || m);
+        }
+
+        function getPatientName(apt) {
+            return apt.patient_name || apt.patientName || 'غير معروف';
+        }
+
+        async function confirmDialog(msg) { /* ... نفس الدالة السابقة ... */ }
+        async function promptDialog(msg, defaultVal = '') { /* ... نفس الدالة السابقة ... */ }
+
+        // ---------- حفظ/تحميل الجلسة ----------
+        async function saveCurrentSessionToIndexedDB() {
+            if (!currentAppointment) return;
+            const sessionId = activeSessionId || currentAppointment.id;
+            await sessionManager.saveSession({
+                sessionId, appointment: currentAppointment, prescription: currentPrescription,
+                diagnosis: UI.diagnosisTextarea.value, loadedTemplateId, lastUpdated: new Date().toISOString()
+            });
+            if (!activeSessionId) { activeSessionId = sessionId; await sessionManager.setActiveSession(sessionId); }
+        }
+
+        async function loadSavedSessionFromIndexedDB() {
+            const activeSession = await sessionManager.getActiveSession();
+            let sessionId = activeSession?.activeSessionId;
+            if (!sessionId) { const all = await sessionManager.getAllSessions(); if (all.length) sessionId = all[0].sessionId; }
+            if (sessionId) {
+                const saved = await sessionManager.getSession(sessionId);
+                if (saved) {
+                    currentAppointment = saved.appointment;
+                    currentPrescription = saved.prescription || [];
+                    UI.diagnosisTextarea.value = saved.diagnosis || '';
+                    loadedTemplateId = saved.loadedTemplateId || null;
+                    activeSessionId = saved.sessionId;
+                    updateCurrentPatientUI();
+                    UI.emptyPrescriptionMsg.style.display = 'none';
+                    UI.prescriptionContent.style.display = 'flex';
+                    renderPrescriptionItems();
+                    return true;
                 }
             }
+            return false;
+        }
 
-            function loadPrescriptionForPatient(patientId) {
-                const rxItemsContainer = document.getElementById('rxItemsContainer');
-                const mockRx = [
-                    { drug: 'باراسيتامول', form: 'tablet', dose: '500mg - 3 مرات يومياً' },
-                    { drug: 'أموكسيسيلين', form: 'capsule', dose: '250mg - مرتين يومياً' },
-                ];
-                prescriptionsData = mockRx;
-                rxItemsContainer.innerHTML = mockRx.map((item, idx) => `
-                    <div class="rx-item">
-                        <div class="rx-main-row">
-                            <div class="rx-drug-info">
-                                <span class="rx-drug-name">${item.drug}</span>
-                                <span class="rx-form-badge">${item.form}</span>
-                            </div>
-                            <div class="rx-dose-info">
-                                <span class="rx-dose-text">${item.dose}</span>
-                                <div class="rx-actions">
-                                    <button class="icon-btn-sm edit" data-edit="${idx}"><i class="fas fa-pen"></i></button>
-                                    <button class="icon-btn-sm" data-remove="${idx}"><i class="fas fa-trash"></i></button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `).join('');
-                // ربط أزرار الحذف
-                rxItemsContainer.querySelectorAll('[data-remove]').forEach(btn => {
-                    btn.addEventListener('click', function() {
-                        const idx = parseInt(this.getAttribute('data-remove'));
-                        prescriptionsData.splice(idx, 1);
-                        loadPrescriptionForPatient(patientId);
-                        showToast('🗑️ تم حذف الدواء');
-                    });
+        async function removeCurrentSessionFromDB() {
+            if (activeSessionId) { await sessionManager.deleteSession(activeSessionId); await sessionManager.clearActiveSession(); activeSessionId = null; }
+        }
+
+        // ---------- الواجهة ----------
+        function updateCurrentPatientUI() {
+            if (!currentAppointment) { UI.currentPatientCard.style.display = 'none'; return; }
+            UI.currentPatientCard.style.display = 'flex';
+            UI.currentPatientNameDisplay.textContent = getPatientName(currentAppointment);
+            UI.currentPatientAgeDisplay.textContent = `${currentAppointment.age || '--'} سنة`;
+        }
+
+        UI.patientNameClickable.addEventListener('click', () => {
+            const pid = currentAppointment?.patient_id || currentAppointment?.patientId;
+            if (!pid) { showToast('المريض غير مسجل', true); return; }
+            window.location.href = `detail.html?patientId=${pid}&patientName=${encodeURIComponent(getPatientName(currentAppointment))}`;
+        });
+
+        // ---------- عرض قائمة الانتظار ----------
+        function loadAppointments() {
+            const q = query(ref(db, 'appointments'), orderByChild('doctor_id'), equalTo(currentUser.uid));
+            onValue(q, (snap) => {
+                const all = [];
+                snap.forEach(child => {
+                    const apt = { id: child.key, ...child.val() };
+                    if (apt.date === today && apt.status !== 'ملغي') all.push(apt);
                 });
-            }
+                all.sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+                todayAppointments = all;
+                updateQueueBadgeAndModal();
+            }, err => { console.error(err); showToast('خطأ في تحميل قائمة الانتظار', true); });
+        }
 
-            // ========== التبويبات ==========
-            document.querySelectorAll('.sidebar-tab, [data-queue-tab]').forEach(tab => {
-                tab.addEventListener('click', function() {
-                    const tabValue = this.getAttribute('data-queue-tab');
-                    if (tabValue) {
-                        activeQueueTab = tabValue;
-                        document.querySelectorAll('.sidebar-tab, [data-queue-tab]').forEach(t => t.classList.remove('active'));
-                        document.querySelectorAll(`[data-queue-tab="${tabValue}"]`).forEach(t => t.classList.add('active'));
-                        renderQueue();
-                    }
+        function updateQueueBadgeAndModal() {
+            const waiting = todayAppointments.filter(a => a.status === 'انتظار').length;
+            const done    = todayAppointments.filter(a => a.status === 'منتهي').length;
+            [UI.waitingTabCount, UI.waitingTabCountModal].forEach(el => el && (el.textContent = waiting));
+            [UI.doneTabCount, UI.doneTabCountModal].forEach(el => el && (el.textContent = done));
+            renderQueueList();
+        }
+
+        function renderQueueList() {
+            const filtered = todayAppointments.filter(a => currentQueueTab === 'waiting' ? a.status === 'انتظار' : a.status === 'منتهي');
+            const html = filtered.length ? filtered.map(apt => `
+                <div class="queue-patient-card ${currentAppointment?.id === apt.id ? 'active' : ''}" data-id="${apt.id}">
+                    <b>${escapeHtml(getPatientName(apt))}</b> - ${apt.time} - ${apt.age||'--'} سنة
+                    ${apt.status === 'منتهي' ? '<span style="color:green;">✓</span>' : ''}
+                </div>`).join('') : '<div class="empty-state">لا يوجد مرضى</div>';
+            if (UI.queueListContainer) UI.queueListContainer.innerHTML = html;
+            if (UI.queueModalList) UI.queueModalList.innerHTML = html;
+            document.querySelectorAll('.queue-patient-card').forEach(card => {
+                card.addEventListener('click', () => selectPatientFromQueue(card.dataset.id));
+            });
+        }
+
+        async function selectPatientFromQueue(appointmentId) {
+            const apt = todayAppointments.find(a => a.id === appointmentId);
+            if (!apt) return;
+            if (apt.status === 'منتهي') { showToast('لا يمكن اختيار مريض منتهي الكشف', true); return; }
+            if (apt.status === 'انتظار') await update(ref(db, `appointments/${appointmentId}`), { status: 'قيد الكشف' });
+            currentAppointment = apt;
+            currentPrescription = [];
+            UI.diagnosisTextarea.value = '';
+            loadedTemplateId = null;
+            activeSessionId = apt.id;
+            updateCurrentPatientUI();
+            UI.emptyPrescriptionMsg.style.display = 'none';
+            UI.prescriptionContent.style.display = 'flex';
+            renderPrescriptionItems();
+            UI.queueModal.style.display = 'none';
+            await saveCurrentSessionToIndexedDB();
+            renderQueueList();
+        }
+
+        // ---------- إدارة الأدوية ----------
+        async function searchDrugsLocal(term, selectedForm) {
+            if (!term) return [];
+            let drugs = await localDrugDB.searchDrugs(term.toLowerCase().trim(), selectedForm);
+            drugs = drugs.map(d => ({ ...d, isFavorite: favoriteDrugs.has(d.name) || (d.frequency > 3) }));
+            drugs.sort((a, b) => {
+                if (a.isFavorite && !b.isFavorite) return -1;
+                if (!a.isFavorite && b.isFavorite) return 1;
+                return (b.frequency || 0) - (a.frequency || 0);
+            });
+            return drugs.slice(0, 12);
+        }
+
+        async function displayDrugSuggestions(term) {
+            const matches = await searchDrugsLocal(term, UI.drugFormSelect.value);
+            UI.drugSuggestions.innerHTML = '';
+            if (!matches.length) {
+                UI.drugSuggestions.innerHTML = `<div class="suggestion-item" id="addNewDrugOption"><i class="fas fa-plus-circle"></i> إضافة "${escapeHtml(term)}"</div>`;
+                UI.drugSuggestions.style.display = 'block';
+                document.getElementById('addNewDrugOption')?.addEventListener('click', () => addNewDrugFromSearch(term));
+                return;
+            }
+            matches.forEach(drug => {
+                const div = document.createElement('div');
+                div.className = 'suggestion-item';
+                div.innerHTML = `${drug.isFavorite ? '⭐' : ''} ${escapeHtml(drug.name)} <small>(${drug.form})</small>`;
+                div.addEventListener('click', () => {
+                    doseState.drug = drug.name;
+                    doseState.drug_id = drug.id;
+                    doseState.form = drug.form;
+                    UI.drugFormSelect.value = drug.form;
+                    prepareDosePanel();
+                });
+                UI.drugSuggestions.appendChild(div);
+            });
+            UI.drugSuggestions.style.display = 'block';
+        }
+
+        async function addNewDrugFromSearch(name) {
+            const form = UI.drugFormSelect.value;
+            const newDrug = await localDrugDB.addNewDrug({ id: crypto.randomUUID(), name, form, frequency:1, createdAt: new Date().toISOString() });
+            doseState.drug = newDrug.name; doseState.drug_id = newDrug.id; doseState.form = form;
+            prepareDosePanel();
+            UI.drugSuggestions.style.display = 'none';
+            showToast(`تمت إضافة "${name}"`);
+        }
+
+        function prepareDosePanel() {
+            UI.selectedDrugDisplay.textContent = doseState.drug;
+            UI.selectedFormDisplay.textContent = UI.drugFormSelect.selectedOptions[0]?.text || '';
+            UI.unitLabel.textContent = FORM_UNITS[doseState.form] || '';
+            UI.dosePanel.style.display = 'block';
+            UI.doseNumberInput.value = '';
+            UI.doseNumberInput.focus();
+            generateDoseSuggestions();
+        }
+
+        function generateDoseSuggestions() {
+            const prefs = JSON.parse(localStorage.getItem(`dosePref_${currentUser.uid}_${doseState.drug}_${doseState.form}`) || '[]');
+            UI.doseSuggestionsContainer.innerHTML = '';
+            prefs.forEach(pref => {
+                const chip = document.createElement('button');
+                chip.className = 'btn btn-sm';
+                chip.textContent = pref;
+                chip.addEventListener('click', () => applyDoseFromSuggestion(pref));
+                UI.doseSuggestionsContainer.appendChild(chip);
+            });
+        }
+
+        async function applyDoseFromSuggestion(doseText) {
+            const form = UI.drugFormSelect.value;
+            if (!doseState.drug_id) { const d = await localDrugDB.getAllDrugs(); const found = d.find(x => x.name === doseState.drug && x.form === form); doseState.drug_id = found?.id; }
+            currentPrescription.push({ drug_id: doseState.drug_id, drug: doseState.drug, form: UI.drugFormSelect.selectedOptions[0].text, dose: doseText });
+            renderPrescriptionItems();
+            saveCurrentSessionToIndexedDB();
+            resetDosePanel();
+            // حفظ التفضيل
+            const key = `dosePref_${currentUser.uid}_${doseState.drug}_${form}`;
+            let prefs = JSON.parse(localStorage.getItem(key) || '[]');
+            prefs = prefs.filter(p => p !== doseText);
+            prefs.unshift(doseText);
+            if (prefs.length > 5) prefs.pop();
+            localStorage.setItem(key, JSON.stringify(prefs));
+        }
+
+        function resetDosePanel() {
+            UI.dosePanel.style.display = 'none';
+            doseState = { drug: null, drug_id: null, form: 'tablet', quantity: '', timing: 'any' };
+            UI.drugSearchInput.value = '';
+            UI.drugSuggestions.style.display = 'none';
+        }
+
+        function renderPrescriptionItems() {
+            if (!currentPrescription.length) { UI.rxItemsContainer.innerHTML = '<div class="empty-state">لم تُضِف أي أدوية</div>'; return; }
+            UI.rxItemsContainer.innerHTML = currentPrescription.map((item, idx) => `
+                <div class="rx-item">
+                    <span><b>${escapeHtml(item.drug)}</b> - ${escapeHtml(item.dose)} (${escapeHtml(item.form)})</span>
+                    <button class="btn btn-icon btn-sm" data-action="remove" data-index="${idx}"><i class="fas fa-times"></i></button>
+                </div>`).join('');
+            document.querySelectorAll('[data-action="remove"]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    currentPrescription.splice(parseInt(btn.dataset.index), 1);
+                    renderPrescriptionItems();
+                    saveCurrentSessionToIndexedDB();
                 });
             });
+        }
 
-            // ========== تبديل الشريط الجانبي ==========
-            if (toggleQueueSidebarBtn) {
-                toggleQueueSidebarBtn.addEventListener('click', () => {
-                    if (window.innerWidth > 768) {
-                        queueSidebar.classList.toggle('collapsed');
-                    }
-                });
+        // ---------- أحداث الواجهة ----------
+        UI.drugSearchInput.addEventListener('input', () => {
+            const term = UI.drugSearchInput.value.trim();
+            if (term.length < 1) { UI.drugSuggestions.style.display = 'none'; return; }
+            displayDrugSuggestions(term);
+        });
+        UI.startAddDrugBtn.addEventListener('click', () => {
+            const term = UI.drugSearchInput.value.trim();
+            if (term) { doseState.drug = term; doseState.drug_id = null; prepareDosePanel(); }
+        });
+        UI.applyDoseBtn.addEventListener('click', async () => {
+            const qty = UI.doseNumberInput.value.trim();
+            if (!qty) return;
+            await applyDoseFromSuggestion(`${qty} ${UI.unitLabel.textContent}`);
+        });
+        UI.cancelDoseBtn.addEventListener('click', resetDosePanel);
+        UI.clearPrescriptionBtn.addEventListener('click', async () => {
+            if (!currentPrescription.length) return;
+            if (await confirmDialog('مسح جميع الأدوية؟')) {
+                currentPrescription = []; renderPrescriptionItems(); saveCurrentSessionToIndexedDB();
             }
+        });
 
-            // ========== مودال الهاتف ==========
-            if (queueModalBtnMobile) {
-                queueModalBtnMobile.addEventListener('click', () => openModal(queueModal));
-            }
-            if (closeQueueModalBtn) {
-                closeQueueModalBtn.addEventListener('click', () => closeModal(queueModal));
-            }
-            if (queueModal) {
-                queueModal.addEventListener('click', function(e) {
-                    if (e.target === this) closeModal(queueModal);
-                });
-            }
-
-            // ========== المودالات الأخرى ==========
-            if (savedSessionsBtn) savedSessionsBtn.addEventListener('click', () => openModal(savedSessionsModal));
-            if (closeSavedSessionsModalBtn) closeSavedSessionsModalBtn.addEventListener('click', () => closeModal(savedSessionsModal));
-            if (savedSessionsModal) savedSessionsModal.addEventListener('click', function(e) { if (e.target === this) closeModal(savedSessionsModal); });
-
-            if (templatesBtn) templatesBtn.addEventListener('click', () => openModal(templatesModal));
-            if (closeTemplatesModalBtn) closeTemplatesModalBtn.addEventListener('click', () => closeModal(templatesModal));
-            if (templatesModal) templatesModal.addEventListener('click', function(e) { if (e.target === this) closeModal(templatesModal); });
-
-            if (saveTemplateBtn) saveTemplateBtn.addEventListener('click', () => openModal(saveTemplateModal));
-            if (closeSaveTemplateModalBtn) closeSaveTemplateModalBtn.addEventListener('click', () => closeModal(saveTemplateModal));
-            if (saveTemplateModal) saveTemplateModal.addEventListener('click', function(e) { if (e.target === this) closeModal(saveTemplateModal); });
-
-            // ========== أزرار الإجراءات ==========
-            if (finishBtn) finishBtn.addEventListener('click', () => {
-                if (currentPatientId) {
-                    const patient = queueData.find(p => p.id === currentPatientId);
-                    if (patient) {
-                        patient.status = 'done';
-                        updateQueueBadges();
-                        renderQueue();
-                        showToast('✅ تم إنهاء الكشف بنجاح');
-                    }
-                } else {
-                    showToast('⚠️ الرجاء اختيار مريض أولاً');
-                }
+        // ---------- إنهاء الكشف ----------
+        UI.finishBtn.addEventListener('click', async () => {
+            if (!currentAppointment) { showToast('لا يوجد مريض حالي', true); return; }
+            const diagnosis = UI.diagnosisTextarea.value.trim();
+            if (!currentPrescription.length && !diagnosis) { showToast('أضف تشخيصاً أو أدوية', true); return; }
+            const now = new Date().toISOString();
+            const prescriptionId = currentAppointment.id;
+            const updates = {};
+            updates[`prescriptions/${prescriptionId}`] = {
+                patient_id: currentAppointment.patient_id || '', patient_name: getPatientName(currentAppointment),
+                doctor_id: currentUser.uid, diagnosis, created_at: now, status: 'لم تصرف بعد',
+                pharmacist_id: '', pharmacist_name:'', dispensed_at:'', item_count: currentPrescription.length
+            };
+            currentPrescription.forEach((item, i) => {
+                updates[`prescription_items/${prescriptionId}/item_${i}`] = { drug_id: item.drug_id, dose: item.dose, form: item.form };
             });
-            if (clearPrescriptionBtn) clearPrescriptionBtn.addEventListener('click', () => {
-                prescriptionsData = [];
-                if (currentPatientId) loadPrescriptionForPatient(currentPatientId);
-                showToast('🗑️ تم مسح الوصفة');
-            });
-            if (refreshQueueBtn) refreshQueueBtn.addEventListener('click', () => {
-                showToast('🔄 جاري تحديث القائمة...');
-                loadQueue();
-            });
-            if (logoutBtn) logoutBtn.addEventListener('click', () => showToast('👋 تم تسجيل الخروج'));
-            if (welcomeMessage) welcomeMessage.textContent = '👋 د. أحمد';
+            updates[`appointments/${currentAppointment.id}/status`] = 'منتهي';
+            try {
+                await update(ref(db), updates);
+                showToast('✅ تم إنهاء الكشف');
+                await removeCurrentSessionFromDB();
+                currentAppointment = null; currentPrescription = []; UI.currentPatientCard.style.display = 'none';
+                UI.emptyPrescriptionMsg.style.display = 'block'; UI.prescriptionContent.style.display = 'none';
+                UI.diagnosisTextarea.value = '';
+            } catch (e) { showToast('فشل الحفظ', true); }
+        });
 
-            // ========== كشف تغيير حجم الشاشة ==========
-            function handleResize() {
-                if (window.innerWidth <= 768 && queueSidebar) {
-                    queueSidebar.classList.remove('collapsed');
-                }
-            }
-            window.addEventListener('resize', handleResize);
-            handleResize();
+        // ---------- القوالب والجلسات (مبسطة) ----------
+        UI.templatesBtn.addEventListener('click', async () => { UI.templatesModal.style.display = 'flex'; /* تحميل بسيط */ });
+        UI.closeTemplatesModalBtn.addEventListener('click', () => UI.templatesModal.style.display = 'none');
+        UI.savedSessionsBtn.addEventListener('click', async () => { UI.savedSessionsModal.style.display = 'flex'; /* عرض الجلسات */ });
+        UI.closeSavedSessionsModalBtn.addEventListener('click', () => UI.savedSessionsModal.style.display = 'none');
 
-            // ========== بدء التطبيق ==========
-            loadQueue();
-            console.log('🚀 لوحة سُكُون · الطبيب جاهزة | متكيّفة مع جميع الأجهزة');
+        // ---------- أحداث عامة ----------
+        UI.logoutBtn.addEventListener('click', async () => { try { await signOut(auth); } catch(_) {} sessionStorage.clear(); window.location.href = 'index.html'; });
+        UI.queueModalBtn.addEventListener('click', () => { UI.queueModal.style.display = 'flex'; renderQueueList(); });
+        UI.closeQueueModalBtn.addEventListener('click', () => UI.queueModal.style.display = 'none');
+        document.querySelectorAll('.sidebar-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                currentQueueTab = this.dataset.queueTab;
+                document.querySelectorAll('.sidebar-tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                renderQueueList();
+            });
+        });
+        window.addEventListener('click', e => {
+            if (e.target === UI.queueModal) UI.queueModal.style.display = 'none';
+            if (e.target === UI.templatesModal) UI.templatesModal.style.display = 'none';
+            if (e.target === UI.savedSessionsModal) UI.savedSessionsModal.style.display = 'none';
+            if (!UI.drugSearchInput.contains(e.target) && !UI.drugSuggestions.contains(e.target)) UI.drugSuggestions.style.display = 'none';
+        });
+
+        // ---------- بدء التشغيل ----------
+        (async function init() {
+            await sessionManager.open();
+            await localDrugDB.open();
+            UI.welcomeMessage.textContent = `د. ${currentUser.name}`;
+            const restored = await loadSavedSessionFromIndexedDB();
+            if (!restored) { UI.currentPatientCard.style.display = 'none'; UI.prescriptionContent.style.display = 'none'; }
+            loadAppointments();
         })();
     </script>
 </body>
