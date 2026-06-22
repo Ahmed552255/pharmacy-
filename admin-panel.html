@@ -1006,6 +1006,13 @@
         const LOCAL_DB_KEY = 'shifa_admin_local_users';
         const LOCAL_LINKS_KEY = 'shifa_admin_local_links';
         const LOCAL_PASSWORDS_KEY = 'shifa_admin_local_passwords';
+        
+        // ✅ مفاتيح التخزين المحلي من صفحة تسجيل الدخول
+        const LOGIN_STORAGE_KEYS = [
+            'shifa_session',        // الجلسة الدائمة
+            'shifa_remember',       // تذكرني
+            'shifa_last_login'      // آخر تسجيل دخول
+        ];
 
         // ============ المتغيرات العامة ============
         let allUsers = [];
@@ -1640,13 +1647,65 @@
             }
         };
 
-        // ============ تسجيل الخروج ============
+        // ============ ✅ تسجيل الخروج مع مسح بيانات الجلسة ============
         
+        /**
+         * مسح جميع بيانات التخزين المحلي المتعلقة بتسجيل الدخول
+         */
+        const clearAllLoginData = () => {
+            try {
+                // مسح مفاتيح التخزين المحلي من صفحة تسجيل الدخول
+                LOGIN_STORAGE_KEYS.forEach(key => {
+                    localStorage.removeItem(key);
+                });
+                
+                // مسح بيانات sessionStorage
+                sessionStorage.removeItem('userUid');
+                sessionStorage.removeItem('userRole');
+                sessionStorage.removeItem('userName');
+                
+                // مسح البيانات المحلية للوحة الإدارة (اختياري - يحافظ على الأداء)
+                // localStorage.removeItem(LOCAL_DB_KEY);
+                // localStorage.removeItem(LOCAL_LINKS_KEY);
+                // localStorage.removeItem(LOCAL_PASSWORDS_KEY);
+                
+                console.log('✅ تم مسح جميع بيانات الجلسة بنجاح');
+            } catch (e) {
+                console.warn('تعذر مسح بعض بيانات الجلسة:', e.message);
+            }
+        };
+
+        /**
+         * تسجيل الخروج الآمن مع تنظيف كامل
+         */
         const logout = async () => {
-            if (unsubscribeUsers) unsubscribeUsers();
-            if (unsubscribeLinks) unsubscribeLinks();
-            await signOut(auth);
-            window.location.href = 'index.html';
+            try {
+                // 1. إلغاء مستمعي Firebase
+                if (unsubscribeUsers) {
+                    unsubscribeUsers();
+                    unsubscribeUsers = null;
+                }
+                if (unsubscribeLinks) {
+                    unsubscribeLinks();
+                    unsubscribeLinks = null;
+                }
+                
+                // 2. ✅ مسح جميع بيانات الجلسة من localStorage و sessionStorage
+                clearAllLoginData();
+                
+                // 3. تسجيل الخروج من Firebase Auth
+                await signOut(auth);
+                
+                // 4. إعادة التوجيه لصفحة تسجيل الدخول
+                window.location.href = 'index.html';
+                
+            } catch (error) {
+                console.error('خطأ أثناء تسجيل الخروج:', error);
+                
+                // حتى في حالة الخطأ، نمسح البيانات ونتوجه لصفحة الدخول
+                clearAllLoginData();
+                window.location.href = 'index.html';
+            }
         };
 
         // ============ التحقق من الصلاحية ============
@@ -1660,6 +1719,8 @@
             
             onAuthStateChanged(auth, async (user) => {
                 if (!user) {
+                    // ✅ مسح بيانات الجلسة لو المستخدم مش موجود
+                    clearAllLoginData();
                     window.location.href = 'index.html';
                     return;
                 }
@@ -1667,6 +1728,8 @@
                     const snap = await get(ref(db, `users/${user.uid}`));
                     if (!snap.exists() || snap.val().role !== 'admin') {
                         showToast('غير مصرح لك بالدخول', true);
+                        // ✅ مسح البيانات قبل الخروج
+                        clearAllLoginData();
                         await signOut(auth);
                         window.location.href = 'index.html';
                         return;
@@ -1687,6 +1750,8 @@
                             return;
                         }
                     }
+                    // ✅ مسح البيانات في حالة الفشل التام
+                    clearAllLoginData();
                     window.location.href = 'index.html';
                 }
             });
@@ -1762,13 +1827,20 @@
                 setSyncStatus('syncing');
                 showToast('⚠️ انقطع الاتصال - استخدام البيانات المحلية', true);
             });
+            
+            // ✅ مستمع لحدث إغلاق الصفحة - تنظيف اختياري
+            window.addEventListener('beforeunload', () => {
+                // يمكن إضافة أي تنظيف نهائي هنا
+                if (unsubscribeUsers) unsubscribeUsers();
+                if (unsubscribeLinks) unsubscribeLinks();
+            });
         };
 
         // ============ بدء التشغيل ============
         initEvents();
         checkAdminAuth();
         
-        console.log('🚀 لوحة إدارة شفاء - وضع خفيف مع تخزين محلي');
+        console.log('🚀 لوحة إدارة شفاء - وضع خفيف مع تخزين محلي وتنظيف كامل للجلسة');
     </script>
 </body>
 </html>
