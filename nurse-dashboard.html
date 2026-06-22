@@ -2,85 +2,156 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>سُكُون · لوحة الممرض</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#00AEEF">
+    <title>شفاء · لوحة الممرض</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* ----- ألوان برتقالية دافئة (مشمش / كراميل) ----- */
         :root {
-            --primary: #F8C471;
-            --primary-light: #FDEBD0;
-            --primary-dark: #E59866;
-            --accent: #E67E22;
-            --accent-soft: #FAD7A1;
-            --bg: #FFF8F0;
+            --primary: #00AEEF;
+            --primary-light: #E0F7FA;
+            --primary-dark: #008080;
+            --accent: #00AEEF;
+            --accent-soft: #B2EBF2;
+            --bg: #FAFAFA;
             --white: #FFFFFF;
-            --ink: #4A3B2C;
-            --text-sec: #8B7A66;
+            --ink: #1A3C4A;
+            --text-sec: #5A7D8A;
             --danger: #E57373;
-            --success: #5FA88D;
-            --warning: #F4B886;
-            --border-light: #F0E0D0;
-            --shadow-sm: 0 6px 12px -4px rgba(230, 126, 34, 0.08);
-            --shadow-md: 0 12px 28px -6px rgba(230, 126, 34, 0.12);
-            --shadow-lg: 0 20px 40px -10px rgba(230, 126, 34, 0.18);
-            --radius-card: 28px;
+            --danger-light: #FDEDEC;
+            --success: #26A69A;
+            --success-light: #E8F5E9;
+            --warning: #FFB74D;
+            --border: #E0E0E0;
+            --shadow-xs: 0 2px 8px rgba(0,0,0,0.03);
+            --shadow-sm: 0 4px 12px rgba(0,174,239,0.06);
+            --shadow-md: 0 8px 24px rgba(0,174,239,0.1);
+            --shadow-lg: 0 16px 40px rgba(0,174,239,0.15);
+            --radius-xs: 10px;
+            --radius-sm: 16px;
+            --radius-md: 24px;
+            --radius-lg: 32px;
+            --radius-xl: 60px;
+            --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
+
         * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html {
+            font-size: 16px;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-font-smoothing: antialiased;
+        }
+
         body {
             font-family: 'Cairo', sans-serif;
             background: var(--bg);
             color: var(--ink);
             min-height: 100vh;
+            min-height: 100dvh;
             padding: 16px;
             position: relative;
+            overflow-x: hidden;
         }
+
         body::before {
             content: '';
             position: fixed;
             inset: 0;
-            background: radial-gradient(circle at 0% 0%, rgba(248, 196, 113, 0.1), transparent 50%),
-                        radial-gradient(circle at 100% 100%, rgba(230, 126, 34, 0.08), transparent 50%);
+            background: 
+                radial-gradient(ellipse at 10% 20%, rgba(0,174,239,0.06) 0%, transparent 50%),
+                radial-gradient(ellipse at 90% 80%, rgba(0,128,128,0.04) 0%, transparent 50%);
             pointer-events: none;
             z-index: -1;
         }
-        .container { max-width: 1400px; margin: 0 auto; }
 
-        /* الهيدر - تطويره ليكون أكثر انسيابية */
+        .container { max-width: 1200px; margin: 0 auto; }
+
+        #authLoader {
+            position: fixed;
+            inset: 0;
+            background: rgba(250,250,250,0.95);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .loader-spin {
+            width: 48px;
+            height: 48px;
+            border: 3px solid var(--accent-soft);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .loader-text {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--accent);
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
         .app-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            background: rgba(255, 255, 255, 0.6);
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
-            border-radius: 80px;
-            padding: 10px 20px;
-            margin-bottom: 24px;
-            border: 1px solid rgba(255,255,255,0.7);
-            box-shadow: var(--shadow-lg);
+            background: rgba(255,255,255,0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: var(--radius-xl);
+            padding: 12px 24px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.8);
+            box-shadow: var(--shadow-md);
             flex-wrap: wrap;
             gap: 12px;
             position: sticky;
-            top: 16px;
-            z-index: 50;
+            top: 12px;
+            z-index: 100;
         }
+
         .logo h2 {
-            font-size: clamp(1.5rem, 5vw, 2rem);
+            font-size: 1.5rem;
             font-weight: 800;
-            background: linear-gradient(145deg, #D35400, #E67E22);
+            background: linear-gradient(135deg, #008080, #00AEEF);
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
             white-space: nowrap;
         }
-        .header-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        #welcomeMsg {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text-sec);
+        }
+
         .btn {
             padding: 10px 20px;
-            border-radius: 60px;
+            border-radius: var(--radius-xl);
             border: none;
             font-weight: 600;
             font-family: 'Cairo', sans-serif;
@@ -89,189 +160,297 @@
             align-items: center;
             gap: 8px;
             font-size: 0.9rem;
-            transition: all 0.25s cubic-bezier(0.2, 0.8, 0.3, 1);
-            background: white;
-            color: var(--ink);
-            border: 1px solid var(--border-light);
+            transition: all var(--transition);
             white-space: nowrap;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+            position: relative;
+            overflow: hidden;
         }
-        .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 18px rgba(0,0,0,0.06); }
+
+        .btn:active { transform: scale(0.97); }
+
         .btn-primary {
-            background: linear-gradient(145deg, var(--primary), var(--accent));
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
             color: white;
-            border: none;
-            box-shadow: 0 8px 16px rgba(230, 126, 34, 0.25);
+            box-shadow: 0 4px 14px rgba(0,174,239,0.25);
             font-weight: 700;
         }
-        .btn-primary:hover { background: linear-gradient(145deg, var(--primary-dark), var(--accent)); }
-        .btn-outline:hover { background: var(--primary-light); border-color: var(--primary); }
 
-        /* صف التحكم العلوي (الأطباء + أداة اليوم) */
+        .btn-primary:hover {
+            box-shadow: 0 6px 20px rgba(0,174,239,0.35);
+            transform: translateY(-2px);
+        }
+
+        .btn-outline {
+            background: rgba(255,255,255,0.8);
+            color: var(--ink);
+            border: 1.5px solid var(--border);
+        }
+
+        .btn-outline:hover {
+            background: var(--primary-light);
+            border-color: var(--primary);
+        }
+
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.5);
+            transform: scale(0);
+            animation: ripple 0.6s ease-out;
+            pointer-events: none;
+        }
+
+        @keyframes ripple {
+            to { transform: scale(4); opacity: 0; }
+        }
+
+        /* شريط الإحصائيات */
+        .stats-row {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .mini-stat {
+            background: rgba(255,255,255,0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: var(--radius-md);
+            padding: 12px 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border: 1px solid rgba(255,255,255,0.7);
+            box-shadow: var(--shadow-xs);
+            flex: 1;
+            min-width: 120px;
+            transition: all var(--transition);
+        }
+
+        .mini-stat:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .mini-stat-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-xs);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+        }
+
+        .mini-stat-info h4 {
+            font-size: 1.4rem;
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        .mini-stat-info span {
+            font-size: 0.72rem;
+            color: var(--text-sec);
+            font-weight: 500;
+        }
+
         .controls-row {
             display: flex;
             align-items: center;
             justify-content: space-between;
             flex-wrap: wrap;
-            gap: 16px;
-            margin-bottom: 20px;
+            gap: 12px;
+            margin-bottom: 16px;
         }
-        .doctors-toolbar {
+
+        .doctors-tabs {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             flex-wrap: wrap;
+            flex: 1;
         }
-        .doctor-tab-btn {
+
+        .doctor-tab {
             background: white;
-            border: 1px solid var(--border-light);
-            border-radius: 80px;
-            padding: 8px 20px;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-xl);
+            padding: 8px 18px;
             font-weight: 600;
             color: var(--ink);
-            transition: 0.25s;
             cursor: pointer;
-            box-shadow: var(--shadow-sm);
-            font-size: 0.9rem;
+            transition: all var(--transition);
+            font-size: 0.88rem;
             display: inline-flex;
             align-items: center;
             gap: 6px;
-        }
-        .doctor-tab-btn i { color: var(--accent); }
-        .doctor-tab-btn.active {
-            background: var(--primary);
-            color: #4A3B2C;
-            border-color: var(--primary);
-            box-shadow: 0 8px 20px rgba(230, 126, 34, 0.2);
+            box-shadow: var(--shadow-xs);
         }
 
-        /* أداة تحديد اليوم */
-        .date-picker-wrapper {
+        .doctor-tab i { color: var(--accent); }
+
+        .doctor-tab.active {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border-color: transparent;
+            box-shadow: 0 6px 18px rgba(0,174,239,0.2);
+        }
+        .doctor-tab.active i { color: white; }
+
+        .doctor-tab:hover:not(.active) {
+            background: var(--primary-light);
+            border-color: var(--primary);
+        }
+
+        .date-picker {
             display: flex;
             align-items: center;
             background: white;
-            border-radius: 60px;
+            border-radius: var(--radius-xl);
             padding: 4px;
-            border: 1.5px solid var(--border-light);
-            box-shadow: var(--shadow-sm);
-            transition: 0.2s;
+            border: 1.5px solid var(--border);
+            box-shadow: var(--shadow-xs);
+            gap: 4px;
         }
-        .date-picker-wrapper:hover { border-color: var(--primary); }
-        .today-btn {
+
+        .btn-today {
             background: transparent;
             border: none;
-            padding: 8px 16px;
-            border-radius: 50px;
+            padding: 8px 14px;
+            border-radius: var(--radius-xl);
             font-family: 'Cairo', sans-serif;
             font-weight: 600;
             color: var(--accent);
             cursor: pointer;
+            font-size: 0.85rem;
             display: flex;
             align-items: center;
             gap: 6px;
-            transition: 0.2s;
+            transition: all var(--transition);
         }
-        .today-btn i { font-size: 1rem; }
-        .today-btn:hover { background: var(--primary-light); }
+
+        .btn-today:hover { background: var(--primary-light); }
+
         .date-input {
             border: none;
             padding: 8px 12px;
             font-family: 'Cairo', sans-serif;
-            font-size: 0.9rem;
-            border-right: 1px solid var(--border-light);
-            margin-left: 4px;
+            font-size: 0.85rem;
+            border-right: 1px solid var(--border);
             background: transparent;
             color: var(--ink);
             outline: none;
         }
 
-        /* تبويبات الحالة مع عداد */
-        .tabs-container {
+        .status-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
             background: rgba(255,255,255,0.7);
             backdrop-filter: blur(12px);
-            border-radius: 80px;
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: var(--radius-xl);
             padding: 6px;
-            display: inline-flex;
-            margin-bottom: 24px;
-            border: 1px solid var(--border-light);
-            flex-wrap: wrap;
-            justify-content: center;
+            border: 1px solid var(--border);
             box-shadow: var(--shadow-sm);
         }
-        .tab-btn {
+
+        .status-tab {
             background: transparent;
             border: none;
-            padding: 10px 22px;
-            border-radius: 50px;
+            padding: 10px 20px;
+            border-radius: var(--radius-xl);
             font-weight: 600;
-            color: var(--text-sec);
+            font-family: 'Cairo', sans-serif;
             cursor: pointer;
-            transition: 0.25s;
+            transition: all var(--transition);
             display: flex;
             align-items: center;
             gap: 8px;
-            font-size: 0.95rem;
-        }
-        .tab-btn i { font-size: 0.95rem; }
-        .tab-btn .count {
-            background: rgba(0,0,0,0.04);
-            border-radius: 30px;
-            padding: 2px 10px;
-            font-size: 0.8rem;
-            margin-right: 4px;
-        }
-        .tab-btn.active {
-            background: white;
-            color: var(--accent);
-            box-shadow: var(--shadow-sm);
-        }
-        .tab-btn.active .count {
-            background: var(--primary-light);
-            color: var(--ink);
+            font-size: 0.88rem;
+            color: var(--text-sec);
+            flex: 1;
+            justify-content: center;
+            min-width: 90px;
         }
 
-        /* جدول الحجوزات (مُحسّن) */
-        .table-wrapper {
-            background: rgba(255, 255, 255, 0.8);
+        .status-tab .badge {
+            background: rgba(0,0,0,0.05);
+            border-radius: 30px;
+            padding: 2px 10px;
+            font-size: 0.78rem;
+            font-weight: 700;
+        }
+
+        .status-tab.active {
+            background: white;
+            color: var(--accent);
+            box-shadow: var(--shadow-xs);
+        }
+
+        .status-tab.active .badge {
+            background: var(--primary-light);
+            color: var(--accent);
+        }
+
+        .status-tab:hover:not(.active) {
+            color: var(--ink);
+            background: rgba(255,255,255,0.6);
+        }
+
+        .table-container {
+            background: rgba(255,255,255,0.8);
             backdrop-filter: blur(16px);
-            border-radius: var(--radius-card);
-            padding: 0;
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: var(--radius-lg);
             box-shadow: var(--shadow-lg);
             border: 1px solid rgba(255,255,255,0.7);
+            overflow: hidden;
+        }
+
+        .table-scroll {
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
         }
+
         table {
             width: 100%;
             border-collapse: collapse;
             text-align: center;
-            min-width: 800px;
-            font-size: 0.95rem;
+            min-width: 700px;
+            font-size: 0.9rem;
         }
+
         th, td { padding: 14px 10px; }
-        thead tr {
-            background: linear-gradient(to bottom, #FEF5EC, #FCEBD9);
-            border-bottom: 2px solid var(--primary);
-        }
-        th {
+
+        thead th {
+            background: linear-gradient(to bottom, #F5FAFC, #E0F7FA);
             font-weight: 700;
             color: var(--ink);
-            font-size: 0.85rem;
+            font-size: 0.82rem;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.3px;
             white-space: nowrap;
-        }
-        tbody tr { border-bottom: 1px solid var(--border-light); transition: all 0.2s; }
-        tbody tr:hover {
-            background: rgba(248, 196, 113, 0.1);
-            transform: scale(1.01);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
-            position: relative;
+            position: sticky;
+            top: 0;
             z-index: 1;
         }
 
+        tbody tr {
+            border-bottom: 1px solid var(--border);
+            transition: all var(--transition);
+        }
+
+        tbody tr:hover {
+            background: rgba(0,174,239,0.06);
+        }
+
+        tbody tr:last-child { border-bottom: none; }
+
         .status-badge {
             padding: 5px 14px;
-            border-radius: 50px;
+            border-radius: 30px;
             font-size: 0.75rem;
             font-weight: 700;
             white-space: nowrap;
@@ -279,209 +458,934 @@
             align-items: center;
             gap: 4px;
         }
-        .status-waiting { background: #FEF9E7; color: #9A6E1A; }
-        .status-inprogress { background: #D6F0F0; color: #1A5C5C; }
-        .status-done { background: #DCF5E8; color: #1E6F4C; }
-        .status-cancelled { background: #FDE2E2; color: #B23B3B; }
 
-        .action-btns { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
-        .icon-btn {
-            width: 34px; height: 34px; border-radius: 12px; border: none;
-            background: white; color: var(--text-sec); cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            transition: all 0.15s; border: 1px solid var(--border-light);
-            font-size: 0.9rem;
+        .s-waiting { background: #FFF8E1; color: #F57F17; }
+        .s-inprogress { background: #E0F7FA; color: #006064; }
+        .s-done { background: #E8F5E9; color: #1B5E20; }
+        .s-cancelled { background: #FFEBEE; color: #B71C1C; }
+
+        .visit-type-badge {
+            padding: 4px 10px;
+            border-radius: 30px;
+            font-size: 0.7rem;
+            font-weight: 700;
         }
-        .icon-btn:hover { background: var(--primary); color: #4A3B2C; border-color: var(--primary); }
-        .icon-btn.danger:hover { background: var(--danger); color: white; border-color: var(--danger); }
-        .icon-btn.success:hover { background: var(--success); color: white; border-color: var(--success); }
-        .icon-btn.warning:hover { background: var(--warning); color: white; border-color: var(--warning); }
+        .vt-new { background: #E3F2FD; color: #0D47A1; }
+        .vt-follow { background: #F3E5F5; color: #6A1B9A; }
 
-        /* مودال */
+        .action-btns {
+            display: flex;
+            gap: 6px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .icon-btn {
+            width: 34px;
+            height: 34px;
+            border-radius: var(--radius-xs);
+            border: none;
+            background: white;
+            color: var(--text-sec);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition);
+            border: 1px solid var(--border);
+            font-size: 0.85rem;
+        }
+
+        .icon-btn:hover { background: var(--primary); color: white; border-color: var(--primary); }
+        .icon-btn.danger:hover { background: var(--danger); color: white; border-color: var(--danger); }
+
+        .empty-row td {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-sec);
+        }
+
         .modal {
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(60, 40, 20, 0.25);
-            backdrop-filter: blur(8px);
+            background: rgba(26,60,74,0.2);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
             align-items: center;
             justify-content: center;
             z-index: 1000;
             padding: 16px;
+            animation: fadeIn 0.25s ease;
         }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
         .modal-card {
-            background: rgba(255, 255, 255, 0.97);
-            backdrop-filter: blur(16px);
-            border-radius: 40px;
+            background: rgba(255,255,255,0.97);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: var(--radius-lg);
             width: 100%;
-            max-width: 600px;
+            max-width: 520px;
             max-height: 85vh;
             overflow-y: auto;
-            box-shadow: 0 30px 50px rgba(160, 100, 40, 0.25);
+            box-shadow: var(--shadow-lg);
             border: 1px solid rgba(255,255,255,0.8);
+            animation: slideUp 0.3s ease;
         }
+
+        @keyframes slideUp {
+            from { transform: translateY(40px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
         .modal-header {
             padding: 20px 24px;
-            background: #FEF5EC;
-            border-bottom: 1px solid var(--border-light);
-            border-radius: 40px 40px 0 0;
+            background: #F5FAFC;
+            border-bottom: 1px solid var(--border);
+            border-radius: var(--radius-lg) var(--radius-lg) 0 0;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
-        .modal-body { padding: 20px 24px; }
-        .close-btn { background: none; border: none; font-size: 28px; color: var(--text-sec); cursor: pointer; }
-        .form-group { margin-bottom: 18px; }
-        .form-group label { display: block; margin-bottom: 6px; font-weight: 600; color: var(--ink); }
+
+        .modal-header h3 {
+            font-size: 1.15rem;
+            font-weight: 700;
+        }
+
+        .close-btn {
+            background: rgba(0,0,0,0.05);
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            font-size: 22px;
+            color: var(--text-sec);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition);
+        }
+
+        .close-btn:hover { background: rgba(0,0,0,0.1); color: var(--ink); }
+
+        .modal-body { padding: 20px 24px 24px; }
+
+        .form-group { margin-bottom: 16px; }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            font-size: 0.88rem;
+            color: var(--ink);
+        }
+
         .form-control {
             width: 100%;
             padding: 12px 16px;
-            border-radius: 18px;
-            border: 1.5px solid var(--border-light);
-            background: white;
+            border-radius: var(--radius-sm);
+            border: 1.5px solid var(--border);
+            background: #F5FAFC;
             font-family: 'Cairo', sans-serif;
-            font-size: 0.95rem;
-            transition: 0.2s;
+            font-size: 0.9rem;
+            color: var(--ink);
+            transition: all var(--transition);
+            -webkit-appearance: none;
+            appearance: none;
         }
+
         .form-control:focus {
             outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(248, 196, 113, 0.25);
-        }
-        .search-results {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(0,174,239,0.08);
             background: white;
-            border: 1px solid var(--border-light);
-            border-radius: 18px;
-            margin-top: 8px;
-            max-height: 200px;
+        }
+
+        .search-box { position: relative; }
+
+        .search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            margin-top: 4px;
+            max-height: 180px;
             overflow-y: auto;
             display: none;
+            z-index: 20;
+            box-shadow: var(--shadow-md);
         }
-        .search-item { padding: 10px 16px; cursor: pointer; border-bottom: 1px solid var(--border-light); }
-        .search-item:hover { background: #FEF5EC; }
+
+        .search-item {
+            padding: 10px 14px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border);
+            transition: background var(--transition);
+        }
+
+        .search-item:hover { background: #E0F7FA; }
+        .search-item:last-child { border-bottom: none; }
+
+        .alert-msg {
+            color: var(--danger);
+            text-align: center;
+            margin-top: 12px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .toast-container {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 3000;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            pointer-events: none;
+        }
 
         .toast {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            right: 20px;
-            background: #4A3B2C;
+            background: #1A3C4A;
             color: white;
-            padding: 12px 24px;
-            border-radius: 60px;
-            text-align: center;
-            z-index: 1300;
-            font-weight: 500;
-            max-width: 500px;
-            margin: 0 auto;
-            box-shadow: 0 12px 28px rgba(0,0,0,0.2);
+            padding: 14px 24px;
+            border-radius: var(--radius-xl);
+            font-weight: 600;
+            font-size: 0.88rem;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.2);
+            animation: toastIn 0.35s ease, toastOut 0.35s ease 2.5s forwards;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
-        .empty-state { text-align: center; padding: 40px; color: var(--text-sec); }
 
-        /* Responsive */
-        @media (max-width: 640px) {
+        .toast.err { background: #C62828; }
+
+        @keyframes toastIn {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes toastOut {
+            from { transform: translateY(0); opacity: 1; }
+            to { transform: translateY(-20px); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
             body { padding: 10px; }
-            .app-header { padding: 8px 16px; }
-            .logo h2 { font-size: 1.4rem; }
-            .btn { padding: 8px 14px; font-size: 0.8rem; }
-            .doctor-tab-btn { padding: 6px 14px; font-size: 0.8rem; }
-            .tab-btn { padding: 8px 14px; font-size: 0.8rem; }
-            .tab-btn .count { padding: 2px 6px; }
-            table { min-width: 700px; font-size: 0.8rem; }
-            th, td { padding: 10px 4px; }
-            .icon-btn { width: 30px; height: 30px; }
+
+            .app-header {
+                padding: 10px 16px;
+                top: 8px;
+                border-radius: var(--radius-lg);
+            }
+
+            .logo h2 { font-size: 1.3rem; }
+
+            .btn { padding: 8px 14px; font-size: 0.82rem; }
+
+            .doctor-tab { padding: 6px 12px; font-size: 0.8rem; }
+
+            .status-tab { padding: 8px 12px; font-size: 0.8rem; }
+
+            .status-tab .badge { font-size: 0.7rem; padding: 2px 8px; }
+
+            table { min-width: 600px; font-size: 0.8rem; }
+
+            th, td { padding: 10px 6px; }
+
+            .icon-btn { width: 30px; height: 30px; font-size: 0.75rem; }
+
             .controls-row { flex-direction: column; align-items: stretch; }
-            .date-picker-wrapper { width: 100%; }
+
+            .date-picker { width: 100%; justify-content: space-between; }
+
+            .modal-card { max-width: 100%; border-radius: var(--radius-md); }
+
+            .mini-stat { min-width: 80px; padding: 10px 12px; }
+            .mini-stat-info h4 { font-size: 1.1rem; }
+        }
+
+        @media (max-width: 400px) {
+            .status-tabs { flex-direction: column; gap: 4px; }
+            .status-tab { justify-content: space-between; }
+            .doctors-tabs { flex-direction: column; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.01ms !important;
+            }
         }
     </style>
 </head>
 <body>
-<div class="container">
-    <header class="app-header">
-        <div class="logo">
-            <h2><i class="fas fa-calendar-check" style="color:var(--primary); margin-left:8px;"></i>سُكُون · الممرض</h2>
-        </div>
-        <div class="header-actions">
-            <span id="welcomeMessage" style="font-weight:600;"></span>
-            <button class="btn btn-primary" id="openModalBtn"><i class="fas fa-plus"></i> حجز</button>
-            <button class="btn btn-outline" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> خروج</button>
-        </div>
-    </header>
 
-    <!-- صف الأطباء وأداة اليوم -->
-    <div class="controls-row">
-        <div id="doctorsToolbar" class="doctors-toolbar"></div>
-        <div class="date-picker-wrapper">
-            <button class="today-btn" id="todayBtn"><i class="fas fa-calendar-alt"></i> اليوم</button>
-            <input type="date" id="filterDateInput" class="date-input">
+    <div id="authLoader">
+        <div class="loader-spin"></div>
+        <span class="loader-text">جارٍ التحقق من الصلاحية...</span>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <div class="container" id="mainContainer" style="display:none;">
+        <header class="app-header">
+            <div class="logo">
+                <h2><i class="fas fa-heartbeat"></i> شفاء · الممرض</h2>
+            </div>
+            <div class="header-actions">
+                <span id="welcomeMsg"></span>
+                <button class="btn btn-primary" id="addBookingBtn">
+                    <i class="fas fa-plus"></i> كشف جديد
+                </button>
+                <button class="btn btn-outline" id="logoutBtn">
+                    <i class="fas fa-sign-out-alt"></i> خروج
+                </button>
+            </div>
+        </header>
+
+        <!-- شريط الإحصائيات -->
+        <div class="stats-row">
+            <div class="mini-stat">
+                <div class="mini-stat-icon" style="background:#E3F2FD;">
+                    <i class="fas fa-calendar-check" style="color:#1565C0;"></i>
+                </div>
+                <div class="mini-stat-info">
+                    <h4 id="statTotalToday">0</h4>
+                    <span>إجمالي كشوفات اليوم</span>
+                </div>
+            </div>
+            <div class="mini-stat">
+                <div class="mini-stat-icon" style="background:#E8F5E9;">
+                    <i class="fas fa-user-plus" style="color:#2E7D32;"></i>
+                </div>
+                <div class="mini-stat-info">
+                    <h4 id="statNewToday">0</h4>
+                    <span>كشوفات جديدة</span>
+                </div>
+            </div>
+            <div class="mini-stat">
+                <div class="mini-stat-icon" style="background:#F3E5F5;">
+                    <i class="fas fa-redo" style="color:#6A1B9A;"></i>
+                </div>
+                <div class="mini-stat-info">
+                    <h4 id="statFollowToday">0</h4>
+                    <span>كشوفات إعادة</span>
+                </div>
+            </div>
+            <div class="mini-stat">
+                <div class="mini-stat-icon" style="background:#FFF3E0;">
+                    <i class="fas fa-clock" style="color:#E65100;"></i>
+                </div>
+                <div class="mini-stat-info">
+                    <h4 id="statWaiting">0</h4>
+                    <span>قيد الانتظار</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls-row">
+            <div class="doctors-tabs" id="doctorsTabs"></div>
+            <div class="date-picker">
+                <button class="btn-today" id="todayBtn">
+                    <i class="fas fa-calendar-alt"></i> اليوم
+                </button>
+                <input type="date" id="filterDate" class="date-input">
+            </div>
+        </div>
+
+        <div class="status-tabs">
+            <button class="status-tab active" data-tab="waiting">
+                <i class="fas fa-hourglass-half"></i> قيد الانتظار
+                <span class="badge" id="countWaiting">0</span>
+            </button>
+            <button class="status-tab" data-tab="inprogress">
+                <i class="fas fa-stethoscope"></i> قيد الكشف
+                <span class="badge" id="countInProgress">0</span>
+            </button>
+            <button class="status-tab" data-tab="done">
+                <i class="fas fa-check-circle"></i> منتهي
+                <span class="badge" id="countDone">0</span>
+            </button>
+        </div>
+
+        <div class="table-container">
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>المريض</th>
+                            <th>الطبيب</th>
+                            <th>التاريخ</th>
+                            <th>الوقت</th>
+                            <th>نوع الكشف</th>
+                            <th>الحالة</th>
+                            <th>إجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bookingsBody">
+                        <tr class="empty-row"><td colspan="8"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</td></tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
-    <!-- تبويبات مع عداد -->
-    <div class="tabs-container">
-        <button class="tab-btn active" data-tab="waiting"><i class="fas fa-hourglass-half"></i> قيد الانتظار <span id="waitingTabCount" class="count">0</span></button>
-        <button class="tab-btn" data-tab="inprogress"><i class="fas fa-stethoscope"></i> قيد الكشف <span id="inProgressTabCount" class="count">0</span></button>
-        <button class="tab-btn" data-tab="done"><i class="fas fa-check-circle"></i> منتهي <span id="doneTabCount" class="count">0</span></button>
-    </div>
+    <!-- مودال الكشف -->
+    <div id="bookingModal" class="modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 id="modalTitle"><i class="fas fa-calendar-plus"></i> كشف جديد</h3>
+                <button class="close-btn" id="closeModalBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="bookingForm" autocomplete="off">
+                    <input type="hidden" id="editId">
+                    
+                    <div class="form-group">
+                        <label>الطبيب *</label>
+                        <select id="doctorSelect" class="form-control" required></select>
+                    </div>
+                    
+                    <div class="form-group search-box">
+                        <label>البحث عن مريض</label>
+                        <input type="text" id="patientSearch" class="form-control" placeholder="اسم أو رقم الهاتف...">
+                        <div id="searchResults" class="search-results"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>اسم المريض *</label>
+                        <input type="text" id="patientName" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>العمر</label>
+                        <input type="number" id="patientAge" class="form-control" min="0" max="150">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>رقم الهاتف</label>
+                        <input type="tel" id="patientPhone" class="form-control" dir="ltr">
+                    </div>
 
-    <!-- جدول الحجوزات (بدون العمر والهاتف) -->
-    <div class="table-wrapper">
-        <table>
-            <thead>
-                <tr><th>#</th><th>المريض</th><th>التاريخ</th><th>الوقت</th><th>الحالة</th><th>إجراءات</th></tr>
-            </thead>
-            <tbody id="bookingsBody"><tr><td colspan="6" class="empty-state"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</td></tr>
-        </table>
-    </div>
-</div>
-
-<!-- مودال حجز / تعديل (يبقى العمر والهاتف موجودين) -->
-<div id="bookingModal" class="modal">
-    <div class="modal-card">
-        <div class="modal-header">
-            <h3 id="modalTitle"><i class="fas fa-calendar-plus"></i> حجز موعد جديد</h3>
-            <button class="close-btn" id="closeModalBtn">&times;</button>
+                    <div class="form-group">
+                        <label>نوع الكشف *</label>
+                        <select id="visitType" class="form-control" required>
+                            <option value="new">🆕 كشف جديد</option>
+                            <option value="follow">🔄 إعادة (متابعة)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>التاريخ *</label>
+                        <input type="date" id="apptDate" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>الوقت *</label>
+                        <input type="time" id="apptTime" class="form-control" required>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary" style="width:100%;" id="submitBtn">
+                        <i class="fas fa-save"></i> تأكيد الكشف
+                    </button>
+                    
+                    <div id="formAlert" class="alert-msg"></div>
+                </form>
+            </div>
         </div>
-        <div class="modal-body">
-            <form id="bookingForm">
-                <input type="hidden" id="editBookingId">
-                <div class="form-group">
-                    <label>الطبيب *</label>
-                    <select id="bookingDoctorSelect" class="form-control" required></select>
-                </div>
-                <div class="form-group">
-                    <label>البحث عن مريض</label>
-                    <input type="text" id="patientSearch" class="form-control" placeholder="اكتب اسم أو رقم الهاتف..." autocomplete="off">
-                    <div id="searchResults" class="search-results"></div>
-                </div>
-                <div class="form-group">
-                    <label>اسم المريض *</label>
-                    <input type="text" id="patientName" class="form-control" required>
-                </div>
-                <div class="form-group">
-                    <label>العمر</label>
-                    <input type="number" id="patientAge" class="form-control" min="0" max="150">
-                </div>
-                <div class="form-group">
-                    <label>رقم الهاتف</label>
-                    <input type="tel" id="patientPhone" class="form-control">
-                </div>
-                <div class="form-group">
-                    <label>تاريخ الموعد *</label>
-                    <input type="date" id="appointmentDate" class="form-control" required>
-                </div>
-                <div class="form-group">
-                    <label>الوقت *</label>
-                    <input type="time" id="appointmentTime" class="form-control" required>
-                </div>
-                <button type="submit" class="btn btn-primary" style="width:100%;" id="submitBtn">تأكيد الحجز</button>
-                <p id="formAlert" style="color:var(--danger); text-align:center; margin-top:12px;"></p>
-            </form>
-        </div>
     </div>
-</div>
 
-<!-- استدعاء ملف الجافاسكريبت الخارجي -->
-<script type="module" src="nurse-dashboard.js"></script>
+    <script type="module">
+        import { firebaseConfig } from './firebase-config.js';
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getDatabase, ref, onValue, set, push, update, get, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+
+        const state = {
+            currentUser: null,
+            nurseData: null,
+            assignedDoctors: [],
+            selectedDoctorId: null,
+            allBookings: [],
+            currentTab: 'waiting',
+            currentDate: '',
+            selectedPatientId: null,
+            unsubscribeBookings: null,
+        };
+
+        const $ = (sel) => document.querySelector(sel);
+        const $$ = (sel) => document.querySelectorAll(sel);
+
+        const getToday = () => {
+            const d = new Date();
+            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        };
+
+        const escapeHtml = (str) => {
+            if (!str) return '';
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        };
+
+        const showToast = (msg, isError = false) => {
+            const container = $('#toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${isError ? 'err' : ''}`;
+            toast.innerHTML = `<i class="fas ${isError ? 'fa-exclamation-circle' : 'fa-check-circle'}"></i> ${msg}`;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        };
+
+        const addRipple = (e) => {
+            const btn = e.currentTarget;
+            const ripple = document.createElement('span');
+            ripple.className = 'ripple';
+            const rect = btn.getBoundingClientRect();
+            const size = Math.max(rect.width, rect.height);
+            ripple.style.width = ripple.style.height = `${size}px`;
+            ripple.style.left = `${e.clientX - rect.left - size / 2}px`;
+            ripple.style.top = `${e.clientY - rect.top - size / 2}px`;
+            btn.appendChild(ripple);
+            ripple.addEventListener('animationend', () => ripple.remove());
+        };
+
+        const loadNurseData = async (uid) => {
+            try {
+                const nurseSnap = await get(ref(db, `users/${uid}`));
+                if (!nurseSnap.exists() || nurseSnap.val().role !== 'nurse') {
+                    showToast('هذا الحساب ليس ممرضاً', true);
+                    return false;
+                }
+
+                state.nurseData = { id: uid, ...nurseSnap.val() };
+                $('#welcomeMsg').textContent = `أهلاً، ${state.nurseData.name || 'ممرض'}`;
+
+                const linksSnap = await get(ref(db, `doctor_nurse_links/${uid}`));
+                const doctorIds = linksSnap.exists() ? Object.keys(linksSnap.val()) : [];
+
+                if (doctorIds.length === 0) {
+                    $('#doctorsTabs').innerHTML = '<div style="padding:12px;color:var(--text-sec);">لا يوجد أطباء مرتبطين</div>';
+                    return false;
+                }
+
+                const doctorPromises = doctorIds.map(async (docId) => {
+                    const snap = await get(ref(db, `users/${docId}`));
+                    return { id: docId, name: snap.exists() ? snap.val().name : 'دكتور' };
+                });
+                state.assignedDoctors = await Promise.all(doctorPromises);
+
+                renderDoctorsTabs();
+                populateDoctorSelect();
+                state.selectedDoctorId = state.assignedDoctors[0].id;
+                highlightDoctorTab(state.selectedDoctorId);
+                loadBookings();
+                return true;
+
+            } catch (err) {
+                showToast('خطأ في تحميل البيانات: ' + err.message, true);
+                return false;
+            }
+        };
+
+        const renderDoctorsTabs = () => {
+            $('#doctorsTabs').innerHTML = state.assignedDoctors.map(doc => `
+                <button class="doctor-tab" data-id="${doc.id}">
+                    <i class="fas fa-user-md"></i> د. ${escapeHtml(doc.name)}
+                </button>
+            `).join('');
+
+            $$('.doctor-tab').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    state.selectedDoctorId = btn.dataset.id;
+                    highlightDoctorTab(state.selectedDoctorId);
+                    loadBookings();
+                });
+            });
+        };
+
+        const highlightDoctorTab = (docId) => {
+            $$('.doctor-tab').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.id === docId);
+            });
+        };
+
+        const populateDoctorSelect = () => {
+            $('#doctorSelect').innerHTML = state.assignedDoctors.map(doc =>
+                `<option value="${doc.id}">د. ${escapeHtml(doc.name)}</option>`
+            ).join('');
+        };
+
+        const loadBookings = () => {
+            if (state.unsubscribeBookings) state.unsubscribeBookings();
+            if (!state.selectedDoctorId) return;
+
+            const q = query(
+                ref(db, 'appointments'),
+                orderByChild('doctor_id'),
+                equalTo(state.selectedDoctorId)
+            );
+
+            state.unsubscribeBookings = onValue(q, (snap) => {
+                const bookings = [];
+                snap.forEach(child => {
+                    const apt = child.val();
+                    if (apt.date === state.currentDate) {
+                        bookings.push({ id: child.key, ...apt });
+                    }
+                });
+                bookings.sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+                state.allBookings = bookings;
+                updateCounts();
+                updateStats();
+                renderTable();
+            });
+        };
+
+        const updateCounts = () => {
+            const counts = { waiting: 0, inprogress: 0, done: 0 };
+            state.allBookings.forEach(b => {
+                if (b.status === 'انتظار') counts.waiting++;
+                else if (b.status === 'قيد الكشف') counts.inprogress++;
+                else if (b.status === 'منتهي') counts.done++;
+            });
+            $('#countWaiting').textContent = counts.waiting;
+            $('#countInProgress').textContent = counts.inprogress;
+            $('#countDone').textContent = counts.done;
+        };
+
+        const updateStats = () => {
+            const total = state.allBookings.filter(b => b.status !== 'ملغي').length;
+            const newVisits = state.allBookings.filter(b => b.visit_type === 'new' && b.status !== 'ملغي').length;
+            const followVisits = state.allBookings.filter(b => b.visit_type === 'follow' && b.status !== 'ملغي').length;
+            const waiting = state.allBookings.filter(b => b.status === 'انتظار').length;
+
+            $('#statTotalToday').textContent = total;
+            $('#statNewToday').textContent = newVisits;
+            $('#statFollowToday').textContent = followVisits;
+            $('#statWaiting').textContent = waiting;
+        };
+
+        const renderTable = () => {
+            let filtered = [];
+            if (state.currentTab === 'waiting') filtered = state.allBookings.filter(b => b.status === 'انتظار');
+            else if (state.currentTab === 'inprogress') filtered = state.allBookings.filter(b => b.status === 'قيد الكشف');
+            else if (state.currentTab === 'done') filtered = state.allBookings.filter(b => b.status === 'منتهي');
+
+            const tbody = $('#bookingsBody');
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr class="empty-row"><td colspan="8">لا توجد كشوفات في هذا القسم</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = filtered.map((b, i) => {
+                const statusMap = {
+                    'انتظار': 's-waiting',
+                    'قيد الكشف': 's-inprogress',
+                    'منتهي': 's-done',
+                    'ملغي': 's-cancelled'
+                };
+                const statusClass = statusMap[b.status] || 's-waiting';
+                const visitTypeClass = b.visit_type === 'new' ? 'vt-new' : 'vt-follow';
+                const visitTypeText = b.visit_type === 'new' ? 'جديد' : 'إعادة';
+
+                const doctorName = state.assignedDoctors.find(d => d.id === b.doctor_id)?.name || 'دكتور';
+
+                // الإجراءات متاحة فقط للحجوزات قيد الانتظار
+                const actions = state.currentTab === 'waiting' ? `
+                    <button class="icon-btn" data-action="edit" data-id="${b.id}" title="تعديل">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="icon-btn danger" data-action="cancel" data-id="${b.id}" title="إلغاء">
+                        <i class="fas fa-times"></i>
+                    </button>
+                ` : '<span style="opacity:0.4;">—</span>';
+
+                return `
+                <tr>
+                    <td>${i + 1}</td>
+                    <td><b>${escapeHtml(b.patient_name || '-')}</b></td>
+                    <td>د. ${escapeHtml(doctorName)}</td>
+                    <td>${b.date || '-'}</td>
+                    <td>${b.time || '-'}</td>
+                    <td><span class="visit-type-badge ${visitTypeClass}">${visitTypeText}</span></td>
+                    <td><span class="status-badge ${statusClass}">${b.status || 'انتظار'}</span></td>
+                    <td><div class="action-btns">${actions}</div></td>
+                </tr>`;
+            }).join('');
+        };
+
+        $('#bookingsBody').addEventListener('click', (e) => {
+            const btn = e.target.closest('[data-action]');
+            if (!btn) return;
+            const id = btn.dataset.id;
+            const booking = state.allBookings.find(b => b.id === id);
+            if (!booking) return;
+
+            if (btn.dataset.action === 'cancel') cancelBooking(id);
+            else if (btn.dataset.action === 'edit') openEditModal(booking);
+        });
+
+        const cancelBooking = async (id) => {
+            try {
+                await update(ref(db, `appointments/${id}`), { status: 'ملغي' });
+                showToast('تم إلغاء الكشف');
+            } catch (err) {
+                showToast('خطأ في الإلغاء: ' + err.message, true);
+            }
+        };
+
+        const openAddModal = () => {
+            if (state.assignedDoctors.length === 0) {
+                showToast('لا يوجد أطباء مرتبطين', true);
+                return;
+            }
+            $('#editId').value = '';
+            $('#modalTitle').innerHTML = '<i class="fas fa-calendar-plus"></i> كشف جديد';
+            resetForm();
+            $('#bookingModal').style.display = 'flex';
+        };
+
+        const openEditModal = (booking) => {
+            $('#editId').value = booking.id;
+            $('#modalTitle').innerHTML = '<i class="fas fa-edit"></i> تعديل الكشف';
+            $('#doctorSelect').value = booking.doctor_id || state.selectedDoctorId;
+            $('#patientName').value = booking.patient_name || '';
+            $('#patientAge').value = booking.age || '';
+            $('#patientPhone').value = booking.phone || '';
+            $('#visitType').value = booking.visit_type || 'new';
+            $('#apptDate').value = booking.date || state.currentDate;
+            $('#apptTime').value = booking.time || '';
+            state.selectedPatientId = booking.patient_id || null;
+            $('#bookingModal').style.display = 'flex';
+        };
+
+        const closeModal = () => {
+            $('#bookingModal').style.display = 'none';
+            resetForm();
+        };
+
+        const resetForm = () => {
+            $('#bookingForm').reset();
+            $('#apptDate').value = state.currentDate;
+            $('#visitType').value = 'new';
+            state.selectedPatientId = null;
+            $('#formAlert').textContent = '';
+            $('#searchResults').style.display = 'none';
+        };
+
+        let searchTimer;
+        $('#patientSearch').addEventListener('input', (e) => {
+            const term = e.target.value.trim().toLowerCase();
+            if (term.length < 2) {
+                $('#searchResults').style.display = 'none';
+                return;
+            }
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(async () => {
+                const snap = await get(ref(db, 'patients'));
+                const results = [];
+                snap.forEach(child => {
+                    const p = child.val();
+                    if ((p.name && p.name.toLowerCase().includes(term)) ||
+                        (p.phone && p.phone.includes(term))) {
+                        results.push({ id: child.key, ...p });
+                    }
+                });
+
+                const container = $('#searchResults');
+                if (results.length === 0) {
+                    container.innerHTML = '<div class="search-item" style="color:var(--text-sec);">لا توجد نتائج</div>';
+                } else {
+                    container.innerHTML = results.map(p => `
+                        <div class="search-item" data-id="${p.id}">
+                            <b>${escapeHtml(p.name)}</b>
+                            <small style="color:var(--text-sec);">${escapeHtml(p.phone || '')}</small>
+                        </div>
+                    `).join('');
+
+                    container.querySelectorAll('.search-item[data-id]').forEach(item => {
+                        item.addEventListener('click', () => {
+                            const patient = results.find(p => p.id === item.dataset.id);
+                            if (patient) selectPatient(patient);
+                        });
+                    });
+                }
+                container.style.display = 'block';
+            }, 300);
+        });
+
+        const selectPatient = (patient) => {
+            $('#patientName').value = patient.name || '';
+            $('#patientAge').value = patient.age || '';
+            $('#patientPhone').value = patient.phone || '';
+            state.selectedPatientId = patient.id;
+            $('#patientSearch').value = '';
+            $('#searchResults').style.display = 'none';
+        };
+
+        document.addEventListener('click', (e) => {
+            if (!$('#patientSearch').contains(e.target) && !$('#searchResults').contains(e.target)) {
+                $('#searchResults').style.display = 'none';
+            }
+        });
+
+        $('#bookingForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const editId = $('#editId').value;
+            const doctorId = $('#doctorSelect').value;
+            const name = $('#patientName').value.trim();
+            const age = $('#patientAge').value.trim();
+            const phone = $('#patientPhone').value.trim();
+            const visitType = $('#visitType').value;
+            const date = $('#apptDate').value;
+            const time = $('#apptTime').value;
+
+            if (!doctorId || !name || !visitType || !date || !time) {
+                $('#formAlert').textContent = 'جميع الحقول المطلوبة (*) يجب ملؤها';
+                return;
+            }
+
+            const submitBtn = $('#submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
+            $('#formAlert').textContent = '';
+
+            try {
+                let patientId = state.selectedPatientId;
+
+                if (!patientId) {
+                    const newRef = push(ref(db, 'patients'));
+                    patientId = newRef.key;
+                    await set(newRef, {
+                        name,
+                        age: age || null,
+                        phone: phone || null,
+                        created_at: new Date().toISOString()
+                    });
+                }
+
+                const bookingData = {
+                    patient_name: name,
+                    patient_id: patientId,
+                    age: age || null,
+                    phone: phone || null,
+                    doctor_id: doctorId,
+                    visit_type: visitType,
+                    date,
+                    time,
+                    status: 'انتظار'
+                };
+
+                if (editId) {
+                    await update(ref(db, `appointments/${editId}`), bookingData);
+                    showToast('تم تعديل الكشف بنجاح');
+                } else {
+                    bookingData.created_at = new Date().toISOString();
+                    await push(ref(db, 'appointments'), bookingData);
+                    showToast('تم حجز الكشف بنجاح');
+                }
+
+                closeModal();
+            } catch (err) {
+                $('#formAlert').textContent = 'خطأ: ' + err.message;
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-save"></i> تأكيد الكشف';
+            }
+        });
+
+        $$('.status-tab').forEach(btn => {
+            btn.addEventListener('click', () => {
+                $$('.status-tab').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                state.currentTab = btn.dataset.tab;
+                renderTable();
+            });
+        });
+
+        $('#filterDate').addEventListener('change', () => {
+            state.currentDate = $('#filterDate').value;
+            if (state.selectedDoctorId) loadBookings();
+        });
+
+        $('#todayBtn').addEventListener('click', () => {
+            state.currentDate = getToday();
+            $('#filterDate').value = state.currentDate;
+            if (state.selectedDoctorId) loadBookings();
+        });
+
+        $('#logoutBtn').addEventListener('click', async () => {
+            if (state.unsubscribeBookings) state.unsubscribeBookings();
+            try { await signOut(auth); } catch (e) {}
+            sessionStorage.clear();
+            window.location.href = 'index.html';
+        });
+
+        $('#addBookingBtn').addEventListener('click', openAddModal);
+        $('#closeModalBtn').addEventListener('click', closeModal);
+        window.addEventListener('click', (e) => {
+            if (e.target === $('#bookingModal')) closeModal();
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && $('#bookingModal').style.display === 'flex') closeModal();
+        });
+
+        $$('.btn').forEach(btn => btn.addEventListener('click', addRipple));
+
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                sessionStorage.clear();
+                window.location.href = 'index.html';
+                return;
+            }
+
+            const userSnap = await get(ref(db, `users/${user.uid}`));
+            if (!userSnap.exists() || userSnap.val().role !== 'nurse') {
+                showToast('غير مصرح لك بالدخول', true);
+                await signOut(auth);
+                sessionStorage.clear();
+                setTimeout(() => { window.location.href = 'index.html'; }, 2000);
+                return;
+            }
+
+            sessionStorage.setItem('userUid', user.uid);
+            sessionStorage.setItem('userRole', 'nurse');
+            sessionStorage.setItem('userName', userSnap.val().name || 'ممرض');
+
+            if (!state.currentUser) {
+                state.currentUser = { uid: user.uid };
+                state.currentDate = getToday();
+                $('#filterDate').value = state.currentDate;
+
+                const success = await loadNurseData(user.uid);
+                if (success) {
+                    $('#authLoader').style.display = 'none';
+                    $('#mainContainer').style.display = 'block';
+                }
+            }
+        });
+    </script>
 </body>
-</html> وده كمان 
+</html>
