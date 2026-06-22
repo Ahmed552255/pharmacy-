@@ -2,449 +2,931 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>سُكُون · تفاصيل الروشتة</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#00AEEF">
+    <title>شفاء · تفاصيل الروشتة</title>
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap&subset=arabic" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
+    
     <style>
         :root {
-            --primary: #F8C471;
-            --primary-light: #FDEBD0;
-            --primary-dark: #E59866;
-            --accent: #E67E22;
-            --accent-soft: #FAD7A1;
-            --bg: #FFF8F0;
+            --primary: #00AEEF;
+            --primary-light: #E0F7FA;
+            --primary-dark: #008080;
+            --bg: #FAFAFA;
             --white: #FFFFFF;
-            --ink: #4A3B2C;
-            --text-sec: #8B7A66;
+            --ink: #1A3C4A;
+            --text-sec: #5A7D8A;
             --danger: #E57373;
-            --success: #5FA88D;
-            --warning: #F4B886;
-            --border-light: #F0E0D0;
-            --shadow-sm: 0 4px 10px rgba(0,0,0,0.04);
-            --radius-card: 20px;
+            --success: #26A69A;
+            --warning: #FFB74D;
+            --border: #E0E0E0;
+            --shadow-xs: 0 1px 4px rgba(0,0,0,0.03);
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 16px rgba(0,0,0,0.08);
+            --radius-xs: 8px;
             --radius-sm: 14px;
+            --radius-md: 20px;
+            --radius-lg: 26px;
+            --radius-xl: 50px;
         }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html {
+            font-size: 15px;
+            -webkit-font-smoothing: antialiased;
+            -webkit-text-size-adjust: 100%;
+            text-rendering: optimizeSpeed;
+        }
+
         body {
             font-family: 'Cairo', sans-serif;
             background: var(--bg);
             color: var(--ink);
             min-height: 100vh;
+            min-height: 100dvh;
             padding: 12px;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            position: relative;
+            overflow-x: hidden;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
         }
-        body::before {
-            content: '';
-            position: fixed;
-            inset: 0;
-            background: radial-gradient(circle at 0% 0%, rgba(248, 196, 113, 0.1), transparent 60%);
-            pointer-events: none;
-            z-index: -1;
-        }
+
         .container {
-            width: 100%;
-            max-width: 700px;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
+            max-width: 800px;
             margin: 0 auto;
         }
-        .top-bar {
+
+        #pageLoader {
+            position: fixed;
+            inset: 0;
+            background: rgba(250,250,250,0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            flex-direction: column;
+            gap: 16px;
+        }
+        
+        .loader-circle {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #E0E0E0;
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+        
+        @keyframes spin { 
+            to { transform: rotate(360deg); } 
+        }
+
+        .app-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            background: rgba(255,255,255,0.85);
-            backdrop-filter: blur(10px);
-            border-radius: 60px;
-            padding: 12px 20px;
-            border: 1px solid rgba(255,255,255,0.7);
-            box-shadow: var(--shadow-sm);
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        .btn {
+            background: var(--white);
+            border-radius: var(--radius-lg);
             padding: 10px 18px;
-            border-radius: 40px;
+            margin-bottom: 14px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+            flex-wrap: wrap;
+            gap: 10px;
+            position: sticky;
+            top: 6px;
+            z-index: 100;
+        }
+        
+        .logo h2 {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: var(--primary-dark);
+            white-space: nowrap;
+        }
+        
+        .logo i { color: var(--primary); }
+        
+        .header-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+
+        .btn {
+            padding: 8px 14px;
+            border-radius: var(--radius-xl);
             border: none;
-            font-weight: 600;
+            font-weight: 700;
             font-family: 'Cairo', sans-serif;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
-            gap: 6px;
-            font-size: 0.9rem;
-            transition: all 0.2s;
-            background: white;
-            color: var(--ink);
-            border: 1px solid var(--border-light);
+            gap: 5px;
+            font-size: 0.83rem;
             white-space: nowrap;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+            transition: opacity 0.15s;
+            min-height: 36px;
             text-decoration: none;
         }
-        .btn:hover { background: var(--primary-light); }
+        
+        .btn:active { opacity: 0.8; }
+        
         .btn-primary {
             background: var(--primary);
-            color: #4A3B2C;
-            border: none;
-            box-shadow: 0 4px 12px rgba(230, 126, 34, 0.15);
+            color: white;
+            box-shadow: 0 3px 10px rgba(0,174,239,0.2);
         }
+        
+        .btn-outline {
+            background: var(--white);
+            color: var(--ink);
+            border: 1.5px solid var(--border);
+        }
+        
         .btn-success {
             background: var(--success);
             color: white;
-            border: none;
+            box-shadow: 0 3px 10px rgba(38,166,154,0.2);
         }
-        .btn-outline { background: transparent; }
-        .btn-sm { padding: 6px 14px; font-size: 0.8rem; border-radius: 30px; }
+        
+        .btn-sm { 
+            padding: 6px 12px; 
+            font-size: 0.78rem; 
+            min-height: 32px;
+        }
 
         .card {
-            background: rgba(255,255,255,0.8);
-            backdrop-filter: blur(8px);
-            border-radius: var(--radius-card);
-            padding: 20px;
-            border: 1px solid rgba(255,255,255,0.6);
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            padding: 16px 18px;
+            border: 1px solid var(--border);
             box-shadow: var(--shadow-sm);
+            margin-bottom: 12px;
         }
-        .card h2 {
-            font-size: 1.2rem;
-            margin-bottom: 14px;
-            color: var(--accent);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .info-row {
+        
+        .card-header {
             display: flex;
             align-items: center;
             gap: 10px;
-            margin-bottom: 10px;
-            font-size: 0.95rem;
-            flex-wrap: wrap;
+            margin-bottom: 14px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border);
         }
-        .info-row i {
-            width: 20px;
-            color: var(--accent);
+        
+        .card-header h3 {
             font-size: 1rem;
-            text-align: center;
+            font-weight: 800;
         }
+        
+        .icon-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+        
+        .icon-cyan { background: var(--primary-light); color: var(--primary-dark); }
+        .icon-green { background: #E8F5E9; color: #00695C; }
+        .icon-blue { background: #E3F2FD; color: #1565C0; }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+        }
+        
+        .info-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            font-size: 0.85rem;
+        }
+        
+        .info-item i {
+            color: var(--primary);
+            width: 18px;
+            margin-top: 3px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        
+        .info-item strong {
+            display: block;
+            font-size: 0.73rem;
+            color: var(--text-sec);
+            margin-bottom: 2px;
+        }
+        
+        .info-item .clickable {
+            color: var(--primary);
+            cursor: pointer;
+            font-weight: 700;
+            text-decoration: underline;
+            text-underline-offset: 3px;
+        }
+
         .status-badge {
-            display: inline-block;
-            padding: 4px 14px;
-            border-radius: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 12px;
+            border-radius: 30px;
             font-weight: 700;
             font-size: 0.8rem;
         }
-        .status-pending { background: #FFF3E0; color: #E65100; }
-        .status-dispensed { background: #E8F5E9; color: #2E7D32; }
+        
+        .status-pending {
+            background: #FFF3E0;
+            color: #E65100;
+        }
+        
+        .status-dispensed {
+            background: #E8F5E9;
+            color: #00695C;
+        }
 
-        .drug-table {
+        .rx-table-wrap {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin: 0 -18px;
+            padding: 0 18px;
+        }
+        
+        .rx-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 8px;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
+            min-width: 350px;
         }
-        .drug-table th, .drug-table td {
-            padding: 12px 8px;
-            border-bottom: 1px solid var(--border-light);
-            text-align: right;
+        
+        .rx-table th {
+            background: #F5FAFC;
+            padding: 10px 8px;
+            font-weight: 700;
+            font-size: 0.75rem;
+            color: var(--ink);
+            border-bottom: 2px solid var(--primary-light);
+            white-space: nowrap;
+            text-align: center;
+        }
+        
+        .rx-table td {
+            padding: 10px 8px;
+            border-bottom: 1px solid var(--border);
             vertical-align: middle;
+            text-align: center;
         }
-        .drug-table th { background: var(--primary-light); color: var(--ink); font-weight: 700; font-size: 0.85rem; }
-        .actions-row {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            margin-top: 16px;
+        
+        .rx-table tbody tr:last-child td { border-bottom: none; }
+        
+        .drug-form-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            background: var(--primary-light);
+            color: var(--primary-dark);
+            white-space: nowrap;
+        }
+        
+        .dose-highlight {
+            font-weight: 700;
+            color: var(--primary-dark);
+            background: rgba(0,174,239,0.06);
+            padding: 3px 10px;
+            border-radius: 20px;
+            white-space: nowrap;
         }
 
-        .toast {
+        .form-control {
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: var(--radius-sm);
+            border: 1.5px solid var(--border);
+            font-family: 'Cairo', sans-serif;
+            font-size: 0.85rem;
+            background: #F5FAFC;
+            resize: vertical;
+            min-height: 60px;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: white;
+        }
+
+        .dispense-card {
+            border: 2px dashed var(--success);
+            background: rgba(38,166,154,0.03);
+        }
+        
+        .dispensed-info {
+            background: #E8F5E9;
+            border-radius: var(--radius-sm);
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+            color: #00695C;
+            font-size: 0.82rem;
+            flex-wrap: wrap;
+        }
+        
+        .pharmacist-notes-display {
+            background: #FFF8E1;
+            border-radius: var(--radius-sm);
+            padding: 12px 16px;
+            border-right: 3px solid var(--warning);
+            font-size: 0.82rem;
+            color: #5D4037;
+            margin-top: 10px;
+        }
+
+        .action-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+
+        .toast-container {
             position: fixed;
             bottom: 20px;
-            left: 20px;
-            right: 20px;
-            background: #4A3B2C;
-            color: white;
-            padding: 14px 20px;
-            border-radius: 60px;
-            text-align: center;
+            left: 50%;
+            transform: translateX(-50%);
             z-index: 3000;
-            max-width: 450px;
-            margin: 0 auto;
-            font-size: 0.9rem;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-            animation: fadeInUp 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            pointer-events: none;
         }
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(15px); }
-            to { opacity: 1; transform: translateY(0); }
+        
+        .toast {
+            background: #1A3C4A;
+            color: white;
+            padding: 10px 18px;
+            border-radius: var(--radius-xl);
+            font-weight: 600;
+            font-size: 0.82rem;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.18);
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 7px;
         }
-        .loading {
+        
+        .toast.err { background: #C62828; }
+        .toast.removing { opacity: 0; transform: translateY(-10px); transition: all 0.3s ease; }
+        
+        .empty-state {
             text-align: center;
-            padding: 40px;
-            font-size: 1.1rem;
+            padding: 40px 15px;
             color: var(--text-sec);
         }
+        
+        .empty-state i { font-size: 2.5rem; opacity: 0.2; margin-bottom: 10px; display: block; }
 
-        @media (max-width: 500px) {
+        @media (max-width: 600px) {
             body { padding: 8px; }
-            .container { gap: 12px; }
-            .card { padding: 16px; border-radius: var(--radius-sm); }
-            .top-bar { padding: 10px 16px; border-radius: 40px; }
-            .btn { font-size: 0.8rem; padding: 8px 14px; }
-            .drug-table { font-size: 0.8rem; }
-            .drug-table th, .drug-table td { padding: 8px 4px; }
-            .info-row { font-size: 0.85rem; }
+            
+            .app-header { 
+                padding: 8px 12px; 
+                top: 4px; 
+                border-radius: var(--radius-md); 
+            }
+            
+            .logo h2 { font-size: 1.15rem; }
+            
+            .card { 
+                padding: 12px 14px; 
+                border-radius: var(--radius-md); 
+            }
+            
+            .info-grid { grid-template-columns: 1fr; }
+            
+            .btn { 
+                padding: 6px 10px; 
+                font-size: 0.75rem; 
+                gap: 4px; 
+                min-height: 30px;
+            }
+            
+            .rx-table { font-size: 0.78rem; }
+            .rx-table th, .rx-table td { padding: 8px 5px; }
+            
+            .rx-table-wrap { 
+                margin: 0 -14px; 
+                padding: 0 14px; 
+            }
+            
+            .action-row { flex-direction: column; }
+            .action-row .btn { width: 100%; justify-content: center; }
+        }
+
+        @media (max-width: 360px) {
+            html { font-size: 13px; }
+            .btn { padding: 5px 8px; font-size: 0.7rem; min-height: 28px; }
+            .card { padding: 10px 12px; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.001ms !important;
+                transition-duration: 0.001ms !important;
+            }
         }
     </style>
 </head>
 <body>
-<div class="container">
-    <div class="top-bar">
-        <h2 style="font-size:1.2rem; font-weight:700;"><i class="fas fa-prescription"></i> تفاصيل الروشتة</h2>
-        <button class="btn btn-outline btn-sm" onclick="window.location.href='pharmacy-dashboard.html'">
-            <i class="fas fa-arrow-right"></i> العودة للوحة الصيدلي
-        </button>
+
+    <div id="pageLoader">
+        <div class="loader-circle"></div>
+        <span style="font-weight:700;color:var(--primary-dark);">جارٍ تحميل الروشتة...</span>
     </div>
-    <div id="contentArea">
-        <div class="loading"><i class="fas fa-spinner fa-pulse"></i> جاري تحميل البيانات...</div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <div class="container" id="mainContent" style="display:none;">
+        <header class="app-header">
+            <div class="logo">
+                <h2><i class="fas fa-heartbeat"></i> شفاء</h2>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-outline btn-sm" id="printBtn">
+                    <i class="fas fa-print"></i> طباعة
+                </button>
+                <button class="btn btn-outline btn-sm" id="backBtn">
+                    <i class="fas fa-arrow-right"></i> العودة
+                </button>
+            </div>
+        </header>
+
+        <div id="dynamicContent"></div>
     </div>
-</div>
 
-<script type="module">
-    import { firebaseConfig } from './firebase-config.js';
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
-    import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-database.js";
+    <script type="module">
+        import { firebaseConfig } from './firebase-config.js';
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getDatabase(app);
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
 
-    let currentUser = null;
-    let pharmacistInfo = null;
-    let prescriptionData = null;
-    const urlParams = new URLSearchParams(window.location.search);
-    const prescriptionId = urlParams.get('id');
+        const urlParams = new URLSearchParams(window.location.search);
+        const prescriptionId = urlParams.get('id');
+        const patientIdFromUrl = urlParams.get('patientId');
+        const patientNameFromUrl = urlParams.get('patientName');
+        const doctorIdFromUrl = urlParams.get('doctorId');
 
-    if (!prescriptionId) {
-        document.getElementById('contentArea').innerHTML = '<div class="card"><p>معرف الروشتة غير موجود.</p></div>';
-    }
+        let currentUser = null;
+        let pharmacistData = null;
 
-    function escapeHtml(str) {
-        if (!str) return '';
-        return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'})[m] || m);
-    }
+        const $ = (sel) => document.querySelector(sel);
+        
+        const esc = (s) => {
+            if (!s) return '';
+            const div = document.createElement('div');
+            div.textContent = String(s);
+            return div.innerHTML;
+        };
+        
+        const toast = (msg, err=false) => {
+            const container = $('#toastContainer');
+            const t = document.createElement('div');
+            t.className = `toast ${err?'err':''}`;
+            t.innerHTML = `<i class="fas ${err?'fa-exclamation-circle':'fa-check-circle'}"></i> ${msg}`;
+            container.appendChild(t);
+            setTimeout(() => {
+                t.classList.add('removing');
+                setTimeout(() => t.remove(), 300);
+            }, 2500);
+        };
 
-    function showToast(msg, isErr = false) {
-        const old = document.querySelector('.toast');
-        if (old) old.remove();
-        const t = document.createElement('div');
-        t.className = 'toast';
-        t.style.background = isErr ? '#B23B3B' : '#4A3B2C';
-        t.innerHTML = `<i class="fas ${isErr ? 'fa-exclamation-triangle' : 'fa-check'}"></i> ${msg}`;
-        document.body.appendChild(t);
-        setTimeout(() => t.remove(), 2500);
-    }
-
-    async function loadPharmacistData(uid) {
-        const snap = await get(ref(db, `users/${uid}`));
-        if (snap.exists()) {
-            const data = snap.val();
-            if (data.role === 'pharmacist') {
-                pharmacistInfo = data;
-                return true;
+        async function loadPrescription() {
+            if (!prescriptionId) {
+                showErrorState('معرف الروشتة غير موجود');
+                return;
             }
-        }
-        return false;
-    }
 
-    async function loadPrescription() {
-        const presSnap = await get(ref(db, `prescriptions/${prescriptionId}`));
-        if (!presSnap.exists()) {
-            document.getElementById('contentArea').innerHTML = '<div class="card"><p>الروشتة غير موجودة.</p></div>';
-            return;
-        }
-        prescriptionData = { id: prescriptionId, ...presSnap.val() };
-
-        // 1. جلب عناصر الوصفة (إما من prescription_items أو من template_items)
-        let itemsSnap = await get(ref(db, `prescription_items/${prescriptionId}`));
-        let items = [];
-        if (itemsSnap.exists()) {
-            items = Object.values(itemsSnap.val());
-        }
-
-        // لو مفيش عناصر مباشرة ولكن الروشتة مرتبطة بقالب → نجيب عناصر القالب
-        if (items.length === 0 && prescriptionData.template_id) {
-            const templateItemsSnap = await get(ref(db, `template_items/${prescriptionData.template_id}`));
-            if (templateItemsSnap.exists()) {
-                items = Object.values(templateItemsSnap.val());
-            }
-        }
-
-        // 2. بيانات الطبيب والمريض
-        const [doctorSnap, patientSnap] = await Promise.all([
-            get(ref(db, `users/${prescriptionData.doctor_id}`)),
-            prescriptionData.patient_id ? get(ref(db, `patients/${prescriptionData.patient_id}`)) : Promise.resolve(null)
-        ]);
-
-        const doctorData = doctorSnap.exists() ? doctorSnap.val() : {};
-        prescriptionData._doctorName = doctorData.name || '';
-        prescriptionData._doctorSpecialty = doctorData.specialty || '';
-
-        let patientName = prescriptionData.patient_name || '';
-        if (!patientName && patientSnap && patientSnap.exists()) {
-            patientName = patientSnap.val().name || '';
-        }
-        prescriptionData._patientName = patientName || 'غير معروف';
-
-        // 3. أسماء الأدوية (اختياري، لتحسين العرض)
-        const drugNamePromises = items.map(async (item) => {
             try {
-                if (!item.drug_id) return 'غير معروف';
-                const drugSnap = await get(ref(db, `drugs/${item.drug_id}`));
-                return drugSnap.exists() ? drugSnap.val().name : item.drug_id;
-            } catch (e) {
-                return item.drug_id;
-            }
-        });
-        prescriptionData._items = items;
-        prescriptionData._drugNames = await Promise.all(drugNamePromises);
-        prescriptionData._itemCount = items.length;
+                // ✅ جلب الروشتة
+                const presSnap = await get(ref(db, `prescriptions/${prescriptionId}`));
+                if (!presSnap.exists()) {
+                    showErrorState('الروشتة غير موجودة');
+                    return;
+                }
+                const rx = { id: prescriptionId, ...presSnap.val() };
+                
+                console.log('📋 بيانات الروشتة:', rx);
 
-        renderPrescription();
-    }
-
-    function renderPrescription() {
-        const p = prescriptionData;
-        const items = p._items || [];
-        const drugNames = p._drugNames || [];
-        const statusText = p.status === 'تم الصرف' ? 'تم الصرف' : 'لم تصرف بعد';
-        const statusClass = p.status === 'تم الصرف' ? 'status-dispensed' : 'status-pending';
-        const itemCount = p._itemCount || 0;
-
-        let itemsRows = '';
-        if (items.length > 0) {
-            items.forEach((item, i) => {
-                const drugName = drugNames[i] || item.drug_id || '—';
-                itemsRows += `
-                <tr>
-                    <td>${escapeHtml(drugName)}</td>
-                    <td>${escapeHtml(item.form || '—')}</td>
-                    <td>${escapeHtml(item.dose)}</td>
-                </tr>`;
-            });
-        }
-
-        const patientFileBtn = (p.patient_id) ? `
-            <button id="patientFileBtn" class="btn btn-outline btn-sm"><i class="fas fa-folder-open"></i> ملف المريض</button>
-        ` : '';
-
-        let pharmacySectionHtml = '';
-        if (p.status === 'تم الصرف') {
-            pharmacySectionHtml = `
-                <div class="card" style="background: #E8F5E9; border-right: 4px solid var(--success);">
-                    <h2><i class="fas fa-check-circle" style="color:var(--success);"></i> تم الصرف</h2>
-                    <div class="info-row"><i class="fas fa-user-check"></i> <strong>الصيدلي:</strong> ${escapeHtml(p.pharmacist_name || '')}</div>
-                    <div class="info-row"><i class="far fa-clock"></i> <strong>تاريخ الصرف:</strong> ${p.dispensed_at ? new Date(p.dispensed_at).toLocaleString('ar-EG') : ''}</div>
-                </div>
-            `;
-        } else if (pharmacistInfo) {
-            pharmacySectionHtml = `
-                <div class="card">
-                    <h2><i class="fas fa-capsules"></i> إجراء الصرف</h2>
-                    <p style="margin-bottom:12px; color:var(--text-sec);">تأكيد صرف جميع الأدوية للمريض.</p>
-                    <button id="dispenseBtn" class="btn btn-success"><i class="fas fa-check-circle"></i> تأكيد الصرف والعودة للوحة التحكم</button>
-                </div>
-            `;
-        }
-
-        const html = `
-            <div class="card">
-                <h2><i class="fas fa-user"></i> معلومات المريض والوصفة</h2>
-                <div class="info-row"><i class="fas fa-user"></i> <strong>المريض:</strong> ${escapeHtml(p._patientName)}</div>
-                <div class="info-row"><i class="fas fa-user-md"></i> <strong>الطبيب:</strong> د. ${escapeHtml(p._doctorName)} ${p._doctorSpecialty ? '(' + escapeHtml(p._doctorSpecialty) + ')' : ''}</div>
-                <div class="info-row"><i class="far fa-calendar-alt"></i> <strong>تاريخ الوصفة:</strong> ${p.created_at ? new Date(p.created_at).toLocaleString('ar-EG') : ''}</div>
-                ${p.diagnosis ? `<div class="info-row"><i class="fas fa-notes-medical"></i> <strong>التشخيص:</strong> ${escapeHtml(p.diagnosis)}</div>` : ''}
-                <div class="info-row"><i class="fas fa-circle"></i> <strong>الحالة:</strong> <span class="status-badge ${statusClass}">${statusText}</span></div>
-                <div class="info-row"><i class="fas fa-cubes"></i> <strong>عدد الأصناف:</strong> ${itemCount}</div>
-                <div class="actions-row">
-                    ${patientFileBtn}
-                    <button id="printBtn" class="btn btn-primary btn-sm"><i class="fas fa-print"></i> طباعة</button>
-                </div>
-            </div>
-
-            <div class="card">
-                <h2><i class="fas fa-pills"></i> الأدوية الموصوفة</h2>
-                ${items.length === 0 ? '<p>لا توجد أدوية مسجلة.</p>' : `
-                <div style="overflow-x: auto;">
-                <table class="drug-table">
-                    <thead>
-                        <tr>
-                            <th>اسم الدواء</th>
-                            <th>الشكل</th>
-                            <th>الجرعة</th>
-                        </tr>
-                    </thead>
-                    <tbody>${itemsRows}</tbody>
-                </table>
-                </div>
-                `}
-            </div>
-
-            ${pharmacySectionHtml}
-        `;
-
-        document.getElementById('contentArea').innerHTML = html;
-
-        const patientFileBtnEl = document.getElementById('patientFileBtn');
-        if (patientFileBtnEl) {
-            patientFileBtnEl.addEventListener('click', () => {
-                window.location.href = `detail.html?patientId=${p.patient_id}&patientName=${encodeURIComponent(p._patientName)}`;
-            });
-        }
-
-        document.getElementById('printBtn')?.addEventListener('click', () => window.print());
-
-        const dispenseBtn = document.getElementById('dispenseBtn');
-        if (dispenseBtn) {
-            dispenseBtn.addEventListener('click', async () => {
-                try {
-                    await update(ref(db, `prescriptions/${prescriptionId}`), {
-                        status: 'تم الصرف',
-                        pharmacist_id: currentUser.uid,
-                        pharmacist_name: pharmacistInfo.name || 'صيدلي',
-                        dispensed_at: new Date().toISOString()
+                // ✅ جلب عناصر الروشتة
+                const itemsSnap = await get(ref(db, `prescription_items/${prescriptionId}`));
+                let items = [];
+                if (itemsSnap.exists()) {
+                    const itemsData = itemsSnap.val();
+                    console.log('💊 العناصر الخام:', itemsData);
+                    
+                    // ✅ تحويل العناصر لصفيف بالشكل الصحيح
+                    items = Object.entries(itemsData).map(([key, value]) => {
+                        console.log(`🔍 عنصر ${key}:`, value);
+                        return {
+                            key,
+                            drug_name: value.drug_name || value.drug || value.name || '—',
+                            form: value.form || 'tablet',
+                            dose: value.dose || '—'
+                        };
                     });
-                    showToast('✅ تم صرف الروشتة بنجاح، جاري العودة...');
-                    setTimeout(() => {
-                        window.location.href = 'pharmacy-dashboard.html';
-                    }, 800);
-                } catch (err) {
-                    showToast('فشل الصرف، حاول مرة أخرى', true);
+                    
+                    console.log('💊 العناصر بعد المعالجة:', items);
+                }
+
+                // ✅ جلب بيانات الطبيب من users
+                const doctorId = rx.doctor_id || doctorIdFromUrl;
+                let doctorName = '';
+                let doctorSpecialty = '';
+                
+                if (doctorId) {
+                    try {
+                        const doctorSnap = await get(ref(db, `users/${doctorId}`));
+                        if (doctorSnap.exists()) {
+                            const doctorData = doctorSnap.val();
+                            doctorName = doctorData.name || '';
+                            doctorSpecialty = doctorData.specialty || '';
+                            console.log('👨‍⚕️ بيانات الطبيب:', doctorData);
+                        }
+                    } catch(e) {
+                        console.warn('تعذر جلب بيانات الطبيب:', e);
+                    }
+                }
+
+                // ✅ جلب بيانات المريض
+                const patientId = rx.patient_id || patientIdFromUrl;
+                let patientName = patientNameFromUrl || rx.patient_name || 'غير معروف';
+                let patientPhone = rx.patient_phone || '';
+                
+                if (patientId && (!patientName || patientName === 'غير معروف')) {
+                    try {
+                        const patientSnap = await get(ref(db, `patients/${patientId}`));
+                        if (patientSnap.exists()) {
+                            const patientData = patientSnap.val();
+                            patientName = patientData.name || patientName;
+                            patientPhone = patientData.phone || patientPhone;
+                            console.log('👤 بيانات المريض:', patientData);
+                        }
+                    } catch(e) {
+                        console.warn('تعذر جلب بيانات المريض:', e);
+                    }
+                }
+
+                // ✅ تاريخ الكشف
+                const dateStr = rx.created_at 
+                    ? new Date(rx.created_at).toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' })
+                    : '—';
+                const timeStr = rx.created_at 
+                    ? new Date(rx.created_at).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })
+                    : '';
+
+                const data = {
+                    ...rx,
+                    _items: items,
+                    _patientName: patientName,
+                    _patientPhone: patientPhone,
+                    _patientId: patientId,
+                    _doctorName: doctorName,
+                    _doctorSpecialty: doctorSpecialty,
+                    _doctorId: doctorId,
+                    _itemCount: items.length,
+                    _dateStr: dateStr,
+                    _timeStr: timeStr,
+                };
+
+                console.log('✅ البيانات النهائية:', data);
+                renderPrescription(data);
+                
+            } catch (err) {
+                console.error('❌ خطأ في تحميل الروشتة:', err);
+                showErrorState('حدث خطأ في تحميل البيانات: ' + err.message);
+            }
+        }
+
+        function showErrorState(msg) {
+            $('#dynamicContent').innerHTML = `
+                <div class="card">
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-triangle" style="color:var(--danger);"></i>
+                        <p style="font-size:1rem;font-weight:600;">${msg}</p>
+                    </div>
+                </div>`;
+            $('#pageLoader').style.display = 'none';
+            $('#mainContent').style.display = 'block';
+        }
+
+        function renderPrescription(data) {
+            const isDispensed = data.status === 'تم الصرف';
+            const statusLabel = isDispensed ? 'تم الصرف' : 'لم تصرف بعد';
+            const statusClass = isDispensed ? 'status-dispensed' : 'status-pending';
+            
+            console.log('🎨 عرض البيانات:', {
+                items: data._items,
+                count: data._itemCount,
+                doctorName: data._doctorName,
+                patientName: data._patientName
+            });
+
+            // ✅ بناء جدول الأدوية
+            let itemsHtml = '';
+            if (data._items && data._items.length > 0) {
+                const formLabels = {
+                    'tablet': 'أقراص',
+                    'capsule': 'كبسولات',
+                    'syrup': 'شراب',
+                    'injection': 'حقن',
+                    'suppository': 'لبوس',
+                    'drops': 'نقط',
+                    'spray': 'بخاخ',
+                    'cream': 'كريم'
+                };
+                
+                itemsHtml = data._items.map((item, i) => {
+                    const drugName = item.drug_name || item.drug || item.name || '—';
+                    const form = item.form || 'tablet';
+                    const dose = item.dose || '—';
+                    
+                    console.log(`💊 صف ${i}:`, { drugName, form, dose });
+                    
+                    return `
+                    <tr>
+                        <td><strong>${esc(drugName)}</strong></td>
+                        <td><span class="drug-form-badge">${formLabels[form] || form}</span></td>
+                        <td><span class="dose-highlight">${esc(dose)}</span></td>
+                    </tr>`;
+                }).join('');
+            } else {
+                itemsHtml = '<tr><td colspan="3" style="text-align:center;padding:20px;color:var(--text-sec);">لا توجد أدوية مسجلة</td></tr>';
+            }
+
+            // ✅ قسم الصرف
+            let dispenseSection = '';
+            if (isDispensed) {
+                let notesHtml = '';
+                if (data.pharmacist_notes) {
+                    notesHtml = `
+                    <div class="pharmacist-notes-display">
+                        <i class="fas fa-pen" style="margin-left:6px;"></i>
+                        <strong>ملاحظات الصيدلي:</strong> ${esc(data.pharmacist_notes)}
+                    </div>`;
+                }
+                
+                dispenseSection = `
+                <div class="card">
+                    <div class="dispensed-info">
+                        <i class="fas fa-check-circle" style="font-size:1.5rem;"></i>
+                        <div>
+                            <strong>تم صرف الروشتة</strong>
+                            <div style="font-size:0.82rem;margin-top:4px;">
+                                الصيدلي: ${esc(data.pharmacist_name||'')} · 
+                                ${data.dispensed_at ? new Date(data.dispensed_at).toLocaleString('ar-EG', {dateStyle:'medium',timeStyle:'short'}) : ''}
+                            </div>
+                        </div>
+                    </div>
+                    ${notesHtml}
+                </div>`;
+            } else if (pharmacistData) {
+                dispenseSection = `
+                <div class="card dispense-card">
+                    <div class="card-header">
+                        <div class="icon-circle icon-green"><i class="fas fa-capsules"></i></div>
+                        <h3>تأكيد الصرف</h3>
+                    </div>
+                    
+                    <div style="margin-bottom:12px;">
+                        <label style="display:block;font-weight:700;margin-bottom:6px;font-size:0.85rem;">
+                            <i class="fas fa-pen" style="color:var(--warning);margin-left:4px;"></i>
+                            ملاحظات الصيدلي <small style="font-weight:400;color:var(--text-sec);">(اختياري)</small>
+                        </label>
+                        <textarea 
+                            id="pharmacistNotes" 
+                            class="form-control" 
+                            placeholder="مثال: تحذيرات، تعليمات إضافية للمريض، بدائل الأدوية..."
+                            style="min-height:60px;"
+                        ></textarea>
+                        <div style="font-size:0.7rem;color:var(--text-sec);margin-top:4px;">
+                            هذه الملاحظات ستظهر للمريض مع الروشتة
+                        </div>
+                    </div>
+                    
+                    <p style="color:var(--text-sec);margin-bottom:12px;font-size:0.83rem;">
+                        بالضغط على الزر أدناه، أنت تؤكد صرف جميع الأدوية المذكورة أعلاه للمريض.
+                    </p>
+                    <button class="btn btn-success" id="dispenseBtn">
+                        <i class="fas fa-check-circle"></i> تأكيد صرف الروشتة
+                    </button>
+                </div>`;
+            }
+
+            const html = `
+            <!-- ✅ بطاقة معلومات الروشتة -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="icon-circle icon-cyan"><i class="fas fa-clipboard-list"></i></div>
+                    <h3>معلومات الروشتة</h3>
+                </div>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <i class="fas fa-user"></i>
+                        <div>
+                            <strong>المريض</strong>
+                            <span class="clickable" id="patientNameLink" data-patient-id="${esc(data._patientId||'')}" data-patient-name="${esc(data._patientName)}">
+                                ${esc(data._patientName)}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <i class="fas fa-user-md"></i>
+                        <div>
+                            <strong>الطبيب</strong>
+                            <span>د. ${esc(data._doctorName || 'غير معروف')}${data._doctorSpecialty ? ` (${esc(data._doctorSpecialty)})` : ''}</span>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <i class="fas fa-calendar-alt"></i>
+                        <div>
+                            <strong>تاريخ الكشف</strong>
+                            <span>${data._dateStr} · ${data._timeStr}</span>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <i class="fas fa-cubes"></i>
+                        <div><strong>عدد الأصناف</strong> ${data._itemCount} صنف</div>
+                    </div>
+                    <div class="info-item" style="grid-column:1/-1;">
+                        <i class="fas fa-notes-medical"></i>
+                        <div>
+                            <strong>التشخيص</strong> 
+                            <span>${esc(data.diagnosis || 'غير محدد')}</span>
+                        </div>
+                    </div>
+                </div>
+                <div style="margin-top:12px;">
+                    <span class="status-badge ${statusClass}">
+                        <i class="fas fa-circle" style="font-size:0.5rem;"></i> ${statusLabel}
+                    </span>
+                </div>
+                <div class="action-row">
+                    ${data._patientId ? `
+                    <button class="btn btn-outline btn-sm" id="patientFileBtn">
+                        <i class="fas fa-folder-open"></i> ملف المريض
+                    </button>` : ''}
+                    ${data._patientPhone ? `
+                    <a href="tel:${esc(data._patientPhone)}" class="btn btn-outline btn-sm" style="text-decoration:none;">
+                        <i class="fas fa-phone"></i> ${esc(data._patientPhone)}
+                    </a>` : ''}
+                </div>
+            </div>
+
+            <!-- ✅ بطاقة الأدوية -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="icon-circle icon-blue"><i class="fas fa-pills"></i></div>
+                    <h3>الأدوية الموصوفة (${data._itemCount})</h3>
+                </div>
+                <div class="rx-table-wrap">
+                    <table class="rx-table">
+                        <thead>
+                            <tr>
+                                <th>اسم الدواء</th>
+                                <th>الشكل الصيدلي</th>
+                                <th>الجرعة</th>
+                            </tr>
+                        </thead>
+                        <tbody>${itemsHtml}</tbody>
+                    </table>
+                </div>
+            </div>
+
+            ${dispenseSection}
+            `;
+
+            $('#dynamicContent').innerHTML = html;
+
+            // ✅ أزرار
+            $('#printBtn')?.addEventListener('click', () => window.print());
+            
+            $('#backBtn')?.addEventListener('click', () => {
+                if (document.referrer && document.referrer.includes(window.location.host)) {
+                    window.history.back();
+                } else {
+                    window.location.href = 'pharmacy-dashboard.html';
                 }
             });
-        }
-    }
 
-    onAuthStateChanged(auth, async (user) => {
-        if (!user) {
-            window.location.href = 'index.html';
-            return;
+            $('#patientFileBtn')?.addEventListener('click', () => {
+                const pid = data._patientId;
+                const pname = data._patientName;
+                if (pid) {
+                    window.open(`patient-file.html?patientId=${pid}&patientName=${encodeURIComponent(pname)}`, '_blank');
+                }
+            });
+
+            const patientNameLink = document.getElementById('patientNameLink');
+            if (patientNameLink) {
+                patientNameLink.addEventListener('click', () => {
+                    const pid = patientNameLink.dataset.patientId;
+                    const pname = patientNameLink.dataset.patientName;
+                    if (pid) {
+                        window.open(`patient-file.html?patientId=${pid}&patientName=${encodeURIComponent(pname)}`, '_blank');
+                    }
+                });
+            }
+
+            // ✅ زر الصرف مع حفظ الملاحظات
+            const dispenseBtn = $('#dispenseBtn');
+            if (dispenseBtn) {
+                dispenseBtn.addEventListener('click', async () => {
+                    if (!confirm('هل أنت متأكد من صرف جميع الأدوية في هذه الروشتة؟')) return;
+                    
+                    dispenseBtn.disabled = true;
+                    dispenseBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الصرف...';
+                    
+                    try {
+                        const notes = $('#pharmacistNotes')?.value?.trim() || '';
+                        
+                        const updateData = {
+                            status: 'تم الصرف',
+                            pharmacist_id: currentUser.uid,
+                            pharmacist_name: pharmacistData.name || 'صيدلي',
+                            dispensed_at: new Date().toISOString()
+                        };
+                        
+                        if (notes) {
+                            updateData.pharmacist_notes = notes;
+                        }
+                        
+                        await update(ref(db, `prescriptions/${prescriptionId}`), updateData);
+                        
+                        toast('✅ تم صرف الروشتة بنجاح');
+                        
+                        setTimeout(() => {
+                            window.location.href = 'pharmacy-dashboard.html';
+                        }, 1200);
+                    } catch (err) {
+                        console.error('❌ خطأ في الصرف:', err);
+                        toast('❌ فشل الصرف: ' + err.message, true);
+                        dispenseBtn.disabled = false;
+                        dispenseBtn.innerHTML = '<i class="fas fa-check-circle"></i> تأكيد صرف الروشتة';
+                    }
+                });
+            }
+
+            $('#pageLoader').style.display = 'none';
+            $('#mainContent').style.display = 'block';
         }
-        currentUser = user;
-        const valid = await loadPharmacistData(user.uid);
-        if (!valid) {
-            document.getElementById('contentArea').innerHTML = '<div class="card"><p>هذا الحساب ليس صيدليًا.</p></div>';
-            return;
-        }
-        if (prescriptionId) {
-            loadPrescription();
-        }
-    });
-</script>
+
+        // ============ بدء التشغيل ============
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                sessionStorage.clear();
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            currentUser = user;
+            
+            // ✅ التحقق من صلاحية المستخدم
+            try {
+                const userSnap = await get(ref(db, `users/${user.uid}`));
+                if (userSnap.exists()) {
+                    const userData = userSnap.val();
+                    if (userData.role === 'pharmacist') {
+                        pharmacistData = { id: user.uid, ...userData };
+                    }
+                }
+            } catch(e) {
+                console.warn('تعذر التحقق من بيانات المستخدم:', e);
+            }
+            
+            await loadPrescription();
+        });
+
+        console.log('🚀 صفحة تفاصيل الروشتة - وضع خفيف مع عرض الأدوية');
+    </script>
 </body>
 </html>
