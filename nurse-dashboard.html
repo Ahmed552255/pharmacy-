@@ -846,6 +846,13 @@
         const LOCAL_STORAGE_KEY = 'shifa_nurse_bookings_cache';
         const LOCAL_DOCTORS_KEY = 'shifa_nurse_doctors_cache';
         const CACHE_EXPIRY_DAYS = 50; // ✅ البيانات المحلية تنتهي بعد 50 يوم
+        
+        // ✅ مفاتيح التخزين المحلي من صفحة تسجيل الدخول
+        const LOGIN_STORAGE_KEYS = [
+            'shifa_session',        // الجلسة الدائمة
+            'shifa_remember',       // تذكرني
+            'shifa_last_login'      // آخر تسجيل دخول
+        ];
 
         // ============ حالة التطبيق ============
         const state = {
@@ -886,6 +893,29 @@
                 toast.classList.add('removing');
                 setTimeout(() => toast.remove(), 300);
             }, 2500);
+        };
+
+        // ============ ✅ مسح بيانات تسجيل الدخول ============
+        
+        /**
+         * مسح جميع بيانات التخزين المحلي المتعلقة بتسجيل الدخول
+         */
+        const clearAllLoginData = () => {
+            try {
+                // مسح مفاتيح التخزين المحلي من صفحة تسجيل الدخول
+                LOGIN_STORAGE_KEYS.forEach(key => {
+                    localStorage.removeItem(key);
+                });
+                
+                // مسح بيانات sessionStorage
+                sessionStorage.removeItem('userUid');
+                sessionStorage.removeItem('userRole');
+                sessionStorage.removeItem('userName');
+                
+                console.log('✅ تم مسح جميع بيانات الجلسة بنجاح');
+            } catch (e) {
+                console.warn('تعذر مسح بعض بيانات الجلسة:', e.message);
+            }
         };
 
         // ============ إدارة التخزين المحلي ============
@@ -1508,20 +1538,31 @@
             if (state.selectedDoctorId) loadBookings();
         });
 
-        // ============ ✅ تسجيل الخروج مع مسح حالة الدخول ============
+        // ============ ✅ تسجيل الخروج مع مسح كامل لبيانات الدخول ============
         $('#logoutBtn').addEventListener('click', async () => {
-            if (state.unsubscribeBookings) state.unsubscribeBookings();
-            try { 
-                await signOut(auth); 
-            } catch (e) {
-                // تجاهل
+            try {
+                // 1. إلغاء مستمع Firebase
+                if (state.unsubscribeBookings) {
+                    state.unsubscribeBookings();
+                    state.unsubscribeBookings = null;
+                }
+                
+                // 2. ✅ مسح جميع بيانات الجلسة من localStorage و sessionStorage
+                clearAllLoginData();
+                
+                // 3. تسجيل الخروج من Firebase Auth
+                await signOut(auth);
+                
+                // 4. إعادة التوجيه لصفحة تسجيل الدخول
+                window.location.href = 'index.html';
+                
+            } catch (error) {
+                console.error('خطأ أثناء تسجيل الخروج:', error);
+                
+                // حتى في حالة الخطأ، نمسح البيانات ونتوجه لصفحة الدخول
+                clearAllLoginData();
+                window.location.href = 'index.html';
             }
-            // ✅ مسح بيانات الجلسة من sessionStorage
-            sessionStorage.clear();
-            // ✅ مسح حالة تسجيل الدخول من localStorage
-            localStorage.removeItem('shifa_session');
-            // إعادة التوجيه لصفحة الدخول
-            window.location.href = 'index.html';
         });
 
         // ============ أحداث أخرى ============
@@ -1552,7 +1593,8 @@
         
         onAuthStateChanged(auth, async (user) => {
             if (!user) {
-                sessionStorage.clear();
+                // ✅ مسح بيانات الجلسة لو المستخدم مش موجود
+                clearAllLoginData();
                 window.location.href = 'index.html';
                 return;
             }
@@ -1560,8 +1602,9 @@
             const userSnap = await get(ref(db, `users/${user.uid}`));
             if (!userSnap.exists() || userSnap.val().role !== 'nurse') {
                 showToast('غير مصرح لك بالدخول', true);
+                // ✅ مسح البيانات قبل الخروج
+                clearAllLoginData();
                 await signOut(auth);
-                sessionStorage.clear();
                 setTimeout(() => { window.location.href = 'index.html'; }, 2000);
                 return;
             }
@@ -1592,7 +1635,7 @@
             }
         });
 
-        console.log('🚀 لوحة الممرض - وضع خفيف مع تخزين محلي (50 يوم صلاحية)');
+        console.log('🚀 لوحة الممرض - وضع خفيف مع تخزين محلي (50 يوم صلاحية) وتنظيف كامل للجلسة');
     </script>
 </body>
 </html>
