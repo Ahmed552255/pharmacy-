@@ -2,40 +2,36 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#00AEEF">
     <title>شفاء | لوحة الإدارة</title>
+    
+    <!-- خط محلي احتياطي سريع -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap&subset=arabic" rel="stylesheet">
+    
+    <!-- Font Awesome مضغوط -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
+    
     <style>
         :root {
             --primary: #00AEEF;
             --primary-light: #E0F7FA;
             --primary-dark: #008080;
-            --accent: #00AEEF;
-            --accent-soft: #B2EBF2;
             --bg: #FAFAFA;
             --white: #FFFFFF;
             --ink: #1A3C4A;
             --text-sec: #5A7D8A;
             --danger: #E57373;
-            --danger-light: #FDEDEC;
             --success: #26A69A;
-            --success-light: #E8F5E9;
-            --warning: #FFB74D;
             --border: #E0E0E0;
-            --shadow-xs: 0 2px 8px rgba(0,0,0,0.04);
-            --shadow-sm: 0 4px 12px rgba(0, 174, 239, 0.06);
-            --shadow-md: 0 8px 24px rgba(0, 174, 239, 0.1);
-            --shadow-lg: 0 16px 40px rgba(0, 174, 239, 0.15);
-            --radius-xs: 10px;
-            --radius-sm: 16px;
-            --radius-md: 24px;
-            --radius-lg: 32px;
-            --radius-xl: 60px;
-            --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            --shadow-sm: 0 4px 12px rgba(0,0,0,0.05);
+            --shadow-md: 0 8px 24px rgba(0,0,0,0.08);
+            --radius-sm: 14px;
+            --radius-md: 20px;
+            --radius-lg: 28px;
+            --radius-xl: 50px;
         }
         
         * {
@@ -45,9 +41,11 @@
         }
         
         html {
-            font-size: 16px;
+            font-size: 15px;
             -webkit-tap-highlight-color: transparent;
             -webkit-font-smoothing: antialiased;
+            -webkit-text-size-adjust: 100%;
+            text-rendering: optimizeSpeed;
         }
         
         body {
@@ -56,48 +54,39 @@
             color: var(--ink);
             min-height: 100vh;
             min-height: 100dvh;
-            padding: 20px;
-            position: relative;
+            padding: 14px;
             overflow-x: hidden;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
         }
         
-        body::before {
-            content: '';
-            position: fixed;
-            inset: 0;
-            background: 
-                radial-gradient(ellipse at 10% 20%, rgba(0, 174, 239, 0.06) 0%, transparent 50%),
-                radial-gradient(ellipse at 90% 80%, rgba(0, 128, 128, 0.04) 0%, transparent 50%);
-            pointer-events: none;
-            z-index: -1;
-        }
+        /* إزالة أي خلفيات متحركة */
         
         .container {
-            max-width: 1400px;
+            max-width: 1300px;
             margin: 0 auto;
         }
         
+        /* لودر مبسط */
         #authCheckLoader {
             position: fixed;
             inset: 0;
-            background: rgba(250, 250, 250, 0.95);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
+            background: rgba(250, 250, 250, 0.9);
             display: flex;
             align-items: center;
             justify-content: center;
             z-index: 2000;
             flex-direction: column;
-            gap: 20px;
+            gap: 16px;
         }
         
         .loader-icon {
-            width: 56px;
-            height: 56px;
-            border: 3px solid var(--accent-soft);
-            border-top-color: var(--accent);
+            width: 44px;
+            height: 44px;
+            border: 3px solid #E0E0E0;
+            border-top-color: var(--primary);
             border-radius: 50%;
-            animation: spin 0.8s linear infinite;
+            animation: spin 0.7s linear infinite;
         }
         
         @keyframes spin {
@@ -105,81 +94,65 @@
         }
         
         .loader-text {
-            font-size: 1.1rem;
+            font-size: 1rem;
             font-weight: 600;
-            color: var(--accent);
-            animation: pulse 1.5s ease-in-out infinite;
+            color: var(--primary-dark);
         }
         
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-        
+        /* هيدر مبسط - بدون blur */
         .app-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border-radius: var(--radius-xl);
-            padding: 14px 28px;
-            margin-bottom: 28px;
-            border: 1px solid rgba(255, 255, 255, 0.8);
-            box-shadow: var(--shadow-md);
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            padding: 12px 20px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
             flex-wrap: wrap;
-            gap: 16px;
+            gap: 12px;
             position: sticky;
-            top: 12px;
+            top: 8px;
             z-index: 100;
-            transition: all var(--transition);
         }
         
         .logo h2 {
-            font-size: 1.7rem;
+            font-size: 1.4rem;
             font-weight: 800;
-            background: linear-gradient(135deg, #008080, #00AEEF);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
+            color: var(--primary-dark);
             white-space: nowrap;
         }
         
         .logo i {
-            background: linear-gradient(135deg, #00AEEF, #008080);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
+            color: var(--primary);
         }
         
         .header-actions {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             align-items: center;
             flex-wrap: wrap;
         }
         
         .search-wrapper {
-            background: rgba(255, 255, 255, 0.9);
+            background: #F5FAFC;
             border-radius: var(--radius-xl);
-            padding: 8px 20px;
+            padding: 6px 16px;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
             border: 1.5px solid var(--border);
-            transition: all var(--transition);
-            min-width: 220px;
+            min-width: 180px;
         }
         
         .search-wrapper:focus-within {
-            border-color: var(--accent);
-            box-shadow: 0 0 0 4px rgba(0, 174, 239, 0.1);
+            border-color: var(--primary);
         }
         
         .search-wrapper i {
-            color: var(--accent);
-            font-size: 0.95rem;
+            color: var(--primary);
+            font-size: 0.9rem;
         }
         
         .search-wrapper input {
@@ -187,8 +160,8 @@
             border: none;
             padding: 8px 0;
             font-family: 'Cairo', sans-serif;
-            font-size: 0.9rem;
-            width: 160px;
+            font-size: 0.88rem;
+            width: 140px;
             outline: none;
             color: var(--ink);
         }
@@ -197,49 +170,39 @@
             color: #B0C8D0;
         }
         
+        /* أزرار مبسطة */
         .btn {
-            padding: 10px 20px;
+            padding: 10px 18px;
             border-radius: var(--radius-xl);
             border: none;
-            font-weight: 600;
+            font-weight: 700;
             font-family: 'Cairo', sans-serif;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
-            gap: 8px;
-            font-size: 0.9rem;
-            transition: all var(--transition);
+            gap: 6px;
+            font-size: 0.85rem;
             white-space: nowrap;
-            position: relative;
-            overflow: hidden;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+            transition: opacity 0.15s;
         }
         
         .btn:active {
-            transform: scale(0.97);
+            opacity: 0.8;
         }
         
         .btn-primary {
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            background: var(--primary);
             color: white;
-            border: none;
-            box-shadow: 0 4px 14px rgba(0, 174, 239, 0.25);
-            font-weight: 700;
-        }
-        
-        .btn-primary:hover {
-            box-shadow: 0 6px 20px rgba(0, 174, 239, 0.35);
-            transform: translateY(-2px);
+            box-shadow: 0 3px 10px rgba(0, 174, 239, 0.2);
         }
         
         .btn-outline {
-            background: rgba(255, 255, 255, 0.8);
+            background: var(--white);
             color: var(--ink);
             border: 1.5px solid var(--border);
-        }
-        
-        .btn-outline:hover {
-            background: var(--primary-light);
-            border-color: var(--primary);
         }
         
         .btn-icon {
@@ -253,116 +216,82 @@
         .btn-danger {
             background: var(--danger);
             color: white;
-            box-shadow: 0 4px 14px rgba(229, 115, 115, 0.25);
         }
         
         .btn-success {
             background: var(--success);
             color: white;
-            box-shadow: 0 4px 14px rgba(38, 166, 154, 0.25);
         }
         
-        .ripple-effect {
-            position: absolute;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.5);
-            transform: scale(0);
-            animation: ripple 0.6s ease-out;
-            pointer-events: none;
-        }
-        
-        @keyframes ripple {
-            to {
-                transform: scale(4);
-                opacity: 0;
-            }
-        }
-        
+        /* شريط الإحصائيات */
         .stats-bar {
             display: flex;
-            gap: 16px;
-            margin-bottom: 24px;
+            gap: 12px;
+            margin-bottom: 20px;
             flex-wrap: wrap;
         }
         
         .stat-card {
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            background: var(--white);
             border-radius: var(--radius-md);
-            padding: 16px 20px;
+            padding: 14px 18px;
             display: flex;
             align-items: center;
-            gap: 14px;
-            border: 1px solid rgba(255, 255, 255, 0.7);
-            box-shadow: var(--shadow-xs);
+            gap: 12px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
             flex: 1;
-            min-width: 140px;
-            transition: all var(--transition);
-        }
-        
-        .stat-card:hover {
-            transform: translateY(-3px);
-            box-shadow: var(--shadow-md);
+            min-width: 130px;
         }
         
         .stat-icon {
-            width: 48px;
-            height: 48px;
+            width: 44px;
+            height: 44px;
             border-radius: var(--radius-sm);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.3rem;
+            font-size: 1.2rem;
         }
         
         .stat-info h4 {
-            font-size: 1.6rem;
+            font-size: 1.5rem;
             font-weight: 800;
             line-height: 1;
         }
         
         .stat-info span {
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             color: var(--text-sec);
             font-weight: 500;
         }
         
+        /* شبكة المستخدمين */
         .users-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 16px;
         }
         
         .user-card {
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            background: var(--white);
             border-radius: var(--radius-lg);
-            padding: 24px 20px 22px;
-            transition: all var(--transition);
-            border: 1px solid rgba(255, 255, 255, 0.7);
+            padding: 20px 16px 18px;
+            border: 1px solid var(--border);
             box-shadow: var(--shadow-sm);
             cursor: pointer;
             position: relative;
-            will-change: transform;
-        }
-        
-        .user-card:hover {
-            transform: translateY(-6px);
-            background: rgba(255, 255, 255, 0.9);
-            border-color: var(--primary);
-            box-shadow: var(--shadow-lg);
+            transition: box-shadow 0.15s;
         }
         
         .user-card:active {
-            transform: scale(0.98);
+            box-shadow: var(--shadow-md);
         }
         
         .card-status-dot {
             position: absolute;
-            top: 16px;
-            left: 16px;
+            top: 14px;
+            left: 14px;
             width: 10px;
             height: 10px;
             border-radius: 50%;
@@ -371,43 +300,36 @@
         
         .card-status-dot.active {
             background: var(--success);
-            box-shadow: 0 0 8px rgba(38, 166, 154, 0.4);
         }
         
         .card-status-dot.blocked {
             background: var(--danger);
-            box-shadow: 0 0 8px rgba(229, 115, 115, 0.4);
         }
         
         .card-avatar {
             display: flex;
             justify-content: center;
-            margin-bottom: 16px;
+            margin-bottom: 14px;
         }
         
         .avatar-circle {
-            width: 80px;
-            height: 80px;
-            background: linear-gradient(135deg, #B2EBF2, #00AEEF);
+            width: 70px;
+            height: 70px;
+            background: #E0F7FA;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 2.2rem;
+            font-size: 1.8rem;
             color: #004D40;
             border: 3px solid white;
-            box-shadow: 0 6px 16px rgba(0, 174, 239, 0.12);
-            transition: all var(--transition);
-        }
-        
-        .user-card:hover .avatar-circle {
-            transform: scale(1.05);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.06);
         }
         
         .user-name {
-            font-size: 1.25rem;
+            font-size: 1.15rem;
             font-weight: 700;
-            color: #1A3C4A;
+            color: var(--ink);
             text-align: center;
             margin-bottom: 6px;
             line-height: 1.3;
@@ -415,61 +337,40 @@
         
         .role-tag {
             display: inline-block;
-            padding: 5px 14px;
+            padding: 4px 12px;
             border-radius: var(--radius-xl);
-            font-size: 0.78rem;
+            font-size: 0.75rem;
             font-weight: 700;
-            margin: 0 auto 12px;
+            margin: 0 auto 10px;
             text-align: center;
             width: fit-content;
-            letter-spacing: 0.3px;
         }
         
-        .role-doctor {
-            background: #E3F2FD;
-            color: #1565C0;
-        }
-        
-        .role-nurse {
-            background: #FCE4EC;
-            color: #C62828;
-        }
-        
-        .role-pharmacist {
-            background: #E8F5E9;
-            color: #2E7D32;
-        }
-        
-        .role-admin {
-            background: #FFF3E0;
-            color: #E65100;
-        }
+        .role-doctor { background: #E3F2FD; color: #1565C0; }
+        .role-nurse { background: #FCE4EC; color: #C62828; }
+        .role-pharmacist { background: #E8F5E9; color: #2E7D32; }
+        .role-admin { background: #FFF3E0; color: #E65100; }
         
         .user-bio {
-            background: linear-gradient(135deg, #F5FAFC, #E0F7FA);
+            background: #F5FAFC;
             border-radius: var(--radius-sm);
-            padding: 12px 14px;
-            margin: 12px 0;
-            font-size: 0.83rem;
-            color: #1A3C4A;
+            padding: 10px 12px;
+            margin: 10px 0;
+            font-size: 0.8rem;
+            color: var(--ink);
             border-right: 3px solid var(--primary);
-            max-height: 45px;
+            max-height: 40px;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
-            transition: all var(--transition);
-        }
-        
-        .user-card:hover .user-bio {
-            border-right-color: var(--primary-dark);
         }
         
         .assigned-doctors {
             background: #E0F7FA;
             border-radius: var(--radius-xl);
-            padding: 6px 12px;
-            font-size: 0.75rem;
-            margin-top: 10px;
+            padding: 5px 10px;
+            font-size: 0.73rem;
+            margin-top: 8px;
             color: #004D40;
             display: inline-block;
         }
@@ -478,13 +379,13 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-top: 14px;
-            font-size: 0.82rem;
+            margin-top: 12px;
+            font-size: 0.78rem;
         }
         
         .card-footer small {
             color: var(--text-sec);
-            max-width: 160px;
+            max-width: 150px;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
@@ -493,68 +394,46 @@
         .empty-state {
             grid-column: 1 / -1;
             text-align: center;
-            padding: 60px 20px;
+            padding: 50px 20px;
             color: var(--text-sec);
         }
         
         .empty-state i {
-            font-size: 3rem;
-            color: var(--accent-soft);
-            margin-bottom: 16px;
+            font-size: 2.5rem;
+            color: #B0C8D0;
+            margin-bottom: 14px;
         }
         
         .empty-state h3 {
-            font-size: 1.2rem;
-            margin-bottom: 8px;
+            font-size: 1.1rem;
+            margin-bottom: 6px;
         }
         
+        /* المودالات - مبسطة بدون blur */
         .modal {
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(26, 60, 74, 0.2);
-            backdrop-filter: blur(6px);
-            -webkit-backdrop-filter: blur(6px);
+            background: rgba(0, 0, 0, 0.3);
             align-items: center;
             justify-content: center;
             z-index: 1000;
             padding: 16px;
-            animation: fadeIn 0.25s ease;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
         }
         
         .modal-card {
-            background: rgba(255, 255, 255, 0.97);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            background: var(--white);
             border-radius: var(--radius-lg);
             width: 100%;
-            max-width: 560px;
+            max-width: 520px;
             max-height: 85vh;
             overflow-y: auto;
-            box-shadow: var(--shadow-lg);
-            border: 1px solid rgba(255, 255, 255, 0.8);
-            animation: slideUp 0.3s ease;
-            will-change: transform;
-        }
-        
-        @keyframes slideUp {
-            from {
-                transform: translateY(40px);
-                opacity: 0;
-            }
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
+            box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+            border: 1px solid var(--border);
         }
         
         .modal-header {
-            padding: 20px 24px;
+            padding: 16px 20px;
             background: #F5FAFC;
             border-bottom: 1px solid var(--border);
             border-radius: var(--radius-lg) var(--radius-lg) 0 0;
@@ -567,12 +446,12 @@
         }
         
         .modal-header h3 {
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             font-weight: 700;
         }
         
         .close-btn {
-            background: rgba(0, 0, 0, 0.05);
+            background: none;
             border: none;
             width: 36px;
             height: 36px;
@@ -583,27 +462,25 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all var(--transition);
         }
         
-        .close-btn:hover {
-            background: rgba(0, 0, 0, 0.1);
-            color: var(--ink);
+        .close-btn:active {
+            background: rgba(0,0,0,0.05);
         }
         
         .modal-body {
-            padding: 24px;
+            padding: 20px;
         }
         
         .form-group {
-            margin-bottom: 18px;
+            margin-bottom: 16px;
         }
         
         .form-group label {
             display: block;
-            margin-bottom: 6px;
+            margin-bottom: 5px;
             font-weight: 600;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             color: var(--ink);
         }
         
@@ -611,14 +488,13 @@
         select,
         textarea {
             width: 100%;
-            padding: 12px 16px;
+            padding: 10px 14px;
             border-radius: var(--radius-sm);
             border: 1.5px solid var(--border);
             background: #F5FAFC;
             font-family: 'Cairo', sans-serif;
-            font-size: 0.9rem;
+            font-size: 0.88rem;
             color: var(--ink);
-            transition: all var(--transition);
             -webkit-appearance: none;
             appearance: none;
         }
@@ -627,39 +503,37 @@
         select:focus,
         textarea:focus {
             outline: none;
-            border-color: var(--accent);
-            box-shadow: 0 0 0 4px rgba(0, 174, 239, 0.08);
+            border-color: var(--primary);
             background: white;
         }
         
         textarea {
             resize: vertical;
-            min-height: 70px;
+            min-height: 60px;
         }
         
         .multi-select {
             background: #F5FAFC;
             border: 1.5px solid var(--border);
             border-radius: var(--radius-sm);
-            padding: 8px;
-            max-height: 200px;
+            padding: 6px;
+            max-height: 180px;
             overflow-y: auto;
         }
         
         .multi-select label {
             display: flex;
             align-items: center;
-            gap: 10px;
-            padding: 10px 14px;
+            gap: 8px;
+            padding: 8px 12px;
             margin: 0;
             font-weight: 500;
             cursor: pointer;
-            border-radius: var(--radius-xs);
-            transition: background var(--transition);
-            position: relative;
+            border-radius: 10px;
+            font-size: 0.85rem;
         }
         
-        .multi-select label:hover {
+        .multi-select label:active {
             background: var(--primary-light);
         }
         
@@ -669,22 +543,22 @@
         }
         
         .multi-select input[type="checkbox"] {
-            width: 20px;
-            height: 20px;
-            accent-color: var(--accent);
+            width: 18px;
+            height: 18px;
+            accent-color: var(--primary);
             cursor: pointer;
         }
         
         .checkmark-icon {
             color: var(--primary);
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             margin-right: auto;
         }
         
         .field-hint {
-            font-size: 0.78rem;
+            font-size: 0.75rem;
             color: var(--text-sec);
-            margin-top: 6px;
+            margin-top: 5px;
             padding-right: 4px;
         }
         
@@ -694,31 +568,27 @@
         
         .password-toggle {
             position: absolute;
-            left: 14px;
-            top: 42px;
+            left: 12px;
+            top: 40px;
             cursor: pointer;
             color: var(--text-sec);
             background: none;
             border: none;
             font-size: 1.1rem;
             padding: 6px;
-            transition: color var(--transition);
-        }
-        
-        .password-toggle:hover {
-            color: var(--accent);
+            touch-action: manipulation;
         }
         
         .row-buttons {
             display: flex;
-            gap: 10px;
-            margin-top: 24px;
+            gap: 8px;
+            margin-top: 20px;
             flex-wrap: wrap;
         }
         
         .action-btns {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             flex-wrap: wrap;
         }
         
@@ -726,118 +596,135 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            padding: 4px 0;
+            padding: 3px 0;
+            font-size: 0.88rem;
         }
         
         .detail-row i {
-            width: 24px;
-            color: var(--accent);
+            width: 22px;
+            color: var(--primary);
             text-align: center;
         }
         
         .password-display {
             background: #F5FAFC;
-            padding: 8px 12px;
-            border-radius: var(--radius-xs);
+            padding: 6px 10px;
+            border-radius: 10px;
             font-family: monospace;
             letter-spacing: 2px;
             cursor: pointer;
-            transition: all var(--transition);
             border: 1px solid var(--border);
             display: inline-flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
+            font-size: 0.85rem;
         }
         
-        .password-display:hover {
-            background: #E0F7FA;
-            border-color: var(--primary);
-        }
-        
+        /* توست مبسط */
         .toast-container {
             position: fixed;
-            bottom: 24px;
+            bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
             z-index: 3000;
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 6px;
             pointer-events: none;
         }
         
         .toast {
             background: #1A3C4A;
             color: white;
-            padding: 14px 24px;
+            padding: 12px 20px;
             border-radius: var(--radius-xl);
             font-weight: 600;
-            font-size: 0.9rem;
-            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
-            animation: toastIn 0.35s ease, toastOut 0.35s ease 2.5s forwards;
+            font-size: 0.85rem;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            animation: toastIn 0.3s ease forwards;
             white-space: nowrap;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
         }
         
         .toast.error {
             background: #C62828;
         }
         
+        .toast.removing {
+            animation: toastOut 0.3s ease forwards;
+        }
+        
         @keyframes toastIn {
-            from {
-                transform: translateY(20px);
-                opacity: 0;
-            }
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
+            from { transform: translateY(15px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
         }
         
         @keyframes toastOut {
-            from {
-                transform: translateY(0);
-                opacity: 1;
-            }
-            to {
-                transform: translateY(-20px);
-                opacity: 0;
-            }
+            from { transform: translateY(0); opacity: 1; }
+            to { transform: translateY(-15px); opacity: 0; }
         }
         
+        /* مؤشر المزامنة */
+        .sync-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-left: 6px;
+        }
+        
+        .sync-indicator.synced {
+            background: var(--success);
+        }
+        
+        .sync-indicator.syncing {
+            background: #FFB74D;
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        
+        /* تحسينات للشاشات الصغيرة */
         @media (max-width: 768px) {
             body {
-                padding: 12px;
+                padding: 8px;
             }
             
             .app-header {
-                padding: 12px 16px;
-                border-radius: var(--radius-lg);
-                top: 8px;
+                padding: 10px 14px;
+                border-radius: var(--radius-md);
+                top: 4px;
             }
             
             .logo h2 {
-                font-size: 1.4rem;
+                font-size: 1.2rem;
             }
             
             .search-wrapper {
-                min-width: 180px;
+                min-width: 150px;
             }
             
             .search-wrapper input {
-                width: 120px;
+                width: 100px;
             }
             
             .users-grid {
                 grid-template-columns: 1fr;
-                gap: 14px;
+                gap: 10px;
+            }
+            
+            .stats-bar {
+                gap: 8px;
             }
             
             .stat-card {
                 min-width: 100px;
-                padding: 12px 14px;
+                padding: 10px 12px;
             }
             
             .stat-info h4 {
@@ -848,36 +735,52 @@
                 max-width: 100%;
                 border-radius: var(--radius-md);
             }
-        }
-        
-        @media (prefers-reduced-motion: reduce) {
-            *,
-            *::before,
-            *::after {
-                animation-duration: 0.01ms !important;
-                transition-duration: 0.01ms !important;
+            
+            .btn {
+                padding: 8px 14px;
+                font-size: 0.8rem;
             }
         }
         
-        .modal-card::-webkit-scrollbar {
-            width: 6px;
+        @media (max-width: 360px) {
+            .app-header {
+                padding: 8px 10px;
+                gap: 8px;
+            }
+            
+            .stats-bar {
+                flex-wrap: wrap;
+            }
+            
+            .stat-card {
+                flex: 1 1 45%;
+                min-width: 0;
+            }
         }
         
-        .modal-card::-webkit-scrollbar-track {
-            background: transparent;
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.001ms !important;
+                transition-duration: 0.001ms !important;
+            }
+        }
+        
+        /* سكرول بار خفيف */
+        .modal-card::-webkit-scrollbar {
+            width: 5px;
         }
         
         .modal-card::-webkit-scrollbar-thumb {
-            background: var(--border);
+            background: #D0D0D0;
             border-radius: 10px;
         }
         
         .multi-select::-webkit-scrollbar {
-            width: 5px;
+            width: 4px;
         }
         
         .multi-select::-webkit-scrollbar-thumb {
-            background: var(--border);
+            background: #D0D0D0;
             border-radius: 10px;
         }
     </style>
@@ -894,7 +797,7 @@
     <div class="container" id="mainContainer" style="display: none;">
         <header class="app-header">
             <div class="logo">
-                <h2><i class="fas fa-heartbeat"></i> شفاء · الإدارة</h2>
+                <h2><i class="fas fa-heartbeat"></i> شفاء · الإدارة <span class="sync-indicator synced" id="syncIndicator" title="حالة المزامنة"></span></h2>
             </div>
             <div class="header-actions">
                 <div class="search-wrapper">
@@ -904,7 +807,7 @@
                 <button class="btn btn-primary" id="addUserBtn">
                     <i class="fas fa-user-plus"></i> إضافة
                 </button>
-                <button class="btn btn-outline btn-icon" id="refreshBtn" title="تحديث البيانات">
+                <button class="btn btn-outline btn-icon" id="refreshBtn" title="تحديث">
                     <i class="fas fa-sync-alt"></i>
                 </button>
                 <button class="btn btn-outline" id="logoutBtn">
@@ -955,7 +858,7 @@
         <div id="usersGrid" class="users-grid">
             <div class="empty-state">
                 <i class="fas fa-spinner fa-spin"></i>
-                <h3>جاري تحميل المستخدمين...</h3>
+                <h3>جاري التحميل...</h3>
             </div>
         </div>
     </div>
@@ -968,19 +871,19 @@
                 <button class="close-btn" id="closeDetailBtn">&times;</button>
             </div>
             <div class="modal-body">
-                <div style="display: flex; gap: 16px; align-items: center; margin-bottom: 20px;">
+                <div style="display: flex; gap: 14px; align-items: center; margin-bottom: 18px;">
                     <div id="detailAvatar">
-                        <div style="width:64px; height:64px; background:linear-gradient(135deg, #B2EBF2, #00AEEF); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.8rem; color:#004D40;">
+                        <div style="width:56px; height:56px; background:#E0F7FA; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.6rem; color:#004D40;">
                             <i id="detailAvatarIcon" class="fas fa-user"></i>
                         </div>
                     </div>
                     <div>
-                        <h2 id="detailName" style="margin:0;">الاسم</h2>
+                        <h2 id="detailName" style="margin:0; font-size:1.1rem;">الاسم</h2>
                         <span id="detailRoleSpan"></span>
                     </div>
                 </div>
                 
-                <div style="display:grid; gap:12px; margin-bottom:20px;">
+                <div style="display:grid; gap:10px; margin-bottom:18px;">
                     <div class="detail-row"><i class="fas fa-envelope"></i> <span id="detailEmail"></span></div>
                     <div class="detail-row"><i class="fas fa-phone"></i> <span id="detailPhone"></span></div>
                     <div id="detailSpecialtyRow" style="display:none;" class="detail-row">
@@ -993,18 +896,18 @@
                         <span>كلمة المرور:</span>
                         <span class="password-display" id="detailPassword" title="اضغط للنسخ">
                             <span id="passwordText">••••••••</span>
-                            <i class="fas fa-copy" style="font-size:0.8rem;"></i>
+                            <i class="fas fa-copy" style="font-size:0.75rem;"></i>
                         </span>
                     </div>
                 </div>
                 
-                <div id="detailAssignedDoctorsSection" style="display:none; background:#F5FAFC; padding:14px; border-radius:var(--radius-sm); margin-bottom:16px;">
-                    <i class="fas fa-user-md" style="color:var(--accent);"></i> الأطباء المسؤولون: <span id="detailAssignedDoctors"></span>
+                <div id="detailAssignedDoctorsSection" style="display:none; background:#F5FAFC; padding:12px; border-radius:var(--radius-sm); margin-bottom:14px;">
+                    <i class="fas fa-user-md" style="color:var(--primary);"></i> الأطباء المسؤولون: <span id="detailAssignedDoctors"></span>
                 </div>
                 
-                <div style="margin-bottom:16px;">
-                    <strong style="display:block; margin-bottom:8px;">لمحة سريعة</strong>
-                    <div id="quickBlurbDisplay" style="background:#E0F7FA; padding:14px; border-radius:var(--radius-sm);"></div>
+                <div style="margin-bottom:14px;">
+                    <strong style="display:block; margin-bottom:6px;">لمحة سريعة</strong>
+                    <div id="quickBlurbDisplay" style="background:#F5FAFC; padding:12px; border-radius:var(--radius-sm);"></div>
                 </div>
 
                 <div class="action-btns">
@@ -1059,6 +962,7 @@
                     <label>لمحة سريعة</label>
                     <textarea id="quickBlurb" rows="2" placeholder="خبرة، ملاحظات إضافية..."></textarea>
                 </div>
+                <!-- ✅ حقل كلمة المرور للإضافة فقط -->
                 <div class="form-group password-section" id="passwordFieldGroup">
                     <label>كلمة المرور *</label>
                     <input type="password" id="userPassword" placeholder="••••••••" required>
@@ -1067,14 +971,7 @@
                     </button>
                     <div class="field-hint" id="passwordHint">أدخل كلمة مرور قوية (6 أحرف على الأقل)</div>
                 </div>
-                <div class="form-group" id="editPasswordGroup" style="display:none;">
-                    <label>كلمة المرور الجديدة (اتركه فارغاً للاحتفاظ بالقديمة)</label>
-                    <input type="password" id="editPassword" placeholder="كلمة مرور جديدة">
-                    <button type="button" class="password-toggle" id="toggleEditPassword" title="إظهار/إخفاء">
-                        <i class="far fa-eye"></i>
-                    </button>
-                    <div class="field-hint">6 أحرف على الأقل لتغيير كلمة المرور</div>
-                </div>
+                <!-- ✅ تم حذف قسم تعديل كلمة المرور بالكامل -->
                 <div class="form-group">
                     <label>الحالة</label>
                     <select id="userStatus">
@@ -1093,8 +990,9 @@
         import { firebaseConfig } from './firebase-config.js';
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getDatabase, ref, onValue, set, update, get, remove } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
-        import { getAuth, onAuthStateChanged, signOut, updatePassword } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
+        // ============ تهيئة Firebase ============
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
         const auth = getAuth(app);
@@ -1103,18 +1001,25 @@
         const API_KEY = firebaseConfig.apiKey;
         const SIGN_UP_URL = `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${API_KEY}`;
         const DELETE_URL = `https://identitytoolkit.googleapis.com/v1/accounts:delete?key=${API_KEY}`;
-        const CHANGE_PASSWORD_URL = `https://identitytoolkit.googleapis.com/v1/accounts:update?key=${API_KEY}`;
 
+        // ============ ثوابت التخزين المحلي ============
+        const LOCAL_DB_KEY = 'shifa_admin_local_users';
+        const LOCAL_LINKS_KEY = 'shifa_admin_local_links';
+        const LOCAL_PASSWORDS_KEY = 'shifa_admin_local_passwords';
+
+        // ============ المتغيرات العامة ============
         let allUsers = [];
         let doctorsList = [];
         let linksMap = {};
         let currentEditId = null;
         let currentViewId = null;
-        let currentUserPassword = null; // تخزين كلمة المرور مؤقتاً للعرض
+        let currentUserPassword = null;
         let unsubscribeUsers = null;
         let unsubscribeLinks = null;
         let searchTimer = null;
+        let isOnline = navigator.onLine;
 
+        // ============ دوال مساعدة ============
         const $ = (sel) => document.querySelector(sel);
         const $$ = (sel) => document.querySelectorAll(sel);
 
@@ -1131,22 +1036,94 @@
             toast.className = `toast ${isError ? 'error' : ''}`;
             toast.innerHTML = `<i class="fas ${isError ? 'fa-exclamation-circle' : 'fa-check-circle'}"></i> ${msg}`;
             container.appendChild(toast);
-            setTimeout(() => toast.remove(), 3000);
+            
+            // إزالة التوست بعد 2.5 ثانية
+            setTimeout(() => {
+                toast.classList.add('removing');
+                setTimeout(() => toast.remove(), 300);
+            }, 2500);
         };
 
-        const addRipple = (e) => {
-            const btn = e.currentTarget;
-            const ripple = document.createElement('span');
-            ripple.className = 'ripple-effect';
-            const rect = btn.getBoundingClientRect();
-            const size = Math.max(rect.width, rect.height);
-            ripple.style.width = ripple.style.height = `${size}px`;
-            ripple.style.left = `${e.clientX - rect.left - size / 2}px`;
-            ripple.style.top = `${e.clientY - rect.top - size / 2}px`;
-            btn.appendChild(ripple);
-            ripple.addEventListener('animationend', () => ripple.remove());
+        // ============ إدارة التخزين المحلي (قاعدة بيانات محلية) ============
+        
+        const setSyncStatus = (status) => {
+            const indicator = $('#syncIndicator');
+            if (indicator) {
+                indicator.className = `sync-indicator ${status}`;
+                indicator.title = status === 'synced' ? 'متزامن مع السحابة' : 'جاري المزامنة...';
+            }
         };
 
+        const saveToLocalDB = () => {
+            try {
+                const usersData = {};
+                allUsers.forEach(u => {
+                    usersData[u.id] = { ...u };
+                    // حذف الخصائص المؤقتة قبل الحفظ
+                    delete usersData[u.id]._linkedDoctorIds;
+                });
+                localStorage.setItem(LOCAL_DB_KEY, JSON.stringify(usersData));
+                localStorage.setItem(LOCAL_LINKS_KEY, JSON.stringify(linksMap));
+            } catch (e) {
+                console.warn('تعذر الحفظ في التخزين المحلي:', e.message);
+            }
+        };
+
+        const loadFromLocalDB = () => {
+            try {
+                const usersData = localStorage.getItem(LOCAL_DB_KEY);
+                const linksData = localStorage.getItem(LOCAL_LINKS_KEY);
+                
+                if (usersData) {
+                    const parsed = JSON.parse(usersData);
+                    allUsers = Object.keys(parsed).map(id => ({
+                        id,
+                        ...parsed[id]
+                    }));
+                }
+                
+                if (linksData) {
+                    linksMap = JSON.parse(linksData);
+                }
+                
+                return allUsers.length > 0;
+            } catch (e) {
+                console.warn('تعذر تحميل التخزين المحلي:', e.message);
+                return false;
+            }
+        };
+
+        const savePasswordLocally = (uid, password) => {
+            try {
+                const passwords = JSON.parse(localStorage.getItem(LOCAL_PASSWORDS_KEY) || '{}');
+                passwords[uid] = password;
+                localStorage.setItem(LOCAL_PASSWORDS_KEY, JSON.stringify(passwords));
+            } catch (e) {
+                console.warn('تعذر حفظ كلمة المرور محلياً:', e.message);
+            }
+        };
+
+        const getPasswordLocally = (uid) => {
+            try {
+                const passwords = JSON.parse(localStorage.getItem(LOCAL_PASSWORDS_KEY) || '{}');
+                return passwords[uid] || null;
+            } catch (e) {
+                return null;
+            }
+        };
+
+        const removePasswordLocally = (uid) => {
+            try {
+                const passwords = JSON.parse(localStorage.getItem(LOCAL_PASSWORDS_KEY) || '{}');
+                delete passwords[uid];
+                localStorage.setItem(LOCAL_PASSWORDS_KEY, JSON.stringify(passwords));
+            } catch (e) {
+                // تجاهل
+            }
+        };
+
+        // ============ مزامنة البيانات ============
+        
         const updateStats = () => {
             const total = allUsers.length;
             const doctors = allUsers.filter(u => u.role === 'doctor').length;
@@ -1177,12 +1154,16 @@
             updateStats();
             renderGrid();
             populateDoctorsCheckboxes();
+            
+            // حفظ في التخزين المحلي
+            saveToLocalDB();
         };
 
         const startListeners = () => {
             if (unsubscribeUsers) unsubscribeUsers();
             if (unsubscribeLinks) unsubscribeLinks();
 
+            // مستمع Firebase للبيانات
             unsubscribeUsers = onValue(usersRef, (snap) => {
                 const usersArray = [];
                 snap.forEach(child => {
@@ -1190,21 +1171,34 @@
                 });
                 allUsers = usersArray;
                 combineAndRender();
+                setSyncStatus('synced');
+            }, (error) => {
+                console.warn('خطأ في الاتصال بـ Firebase، استخدام البيانات المحلية:', error.message);
+                setSyncStatus('syncing');
+                // استخدام البيانات المحلية في حالة فشل الاتصال
+                if (allUsers.length === 0) {
+                    loadFromLocalDB();
+                    combineAndRender();
+                }
             });
 
             unsubscribeLinks = onValue(linksRef, (snap) => {
                 linksMap = snap.val() || {};
                 if (allUsers.length) combineAndRender();
+            }, (error) => {
+                console.warn('خطأ في تحميل الروابط:', error.message);
             });
         };
 
+        // ============ القوائم المنسدلة للأطباء ============
+        
         const populateDoctorsCheckboxes = () => {
             const container = $('#assignedDoctorsCheckboxGroup');
             if (!container) return;
             container.innerHTML = '';
             
             if (doctorsList.length === 0) {
-                container.innerHTML = '<div style="padding:12px; color:var(--text-sec);">لا يوجد أطباء مسجلين بعد</div>';
+                container.innerHTML = '<div style="padding:10px; color:var(--text-sec);">لا يوجد أطباء مسجلين بعد</div>';
                 return;
             }
             
@@ -1218,7 +1212,6 @@
                     <i class="fas fa-check-circle checkmark-icon" style="display:none;"></i>
                 `;
                 
-                // إظهار/إخفاء علامة الصح
                 const checkbox = label.querySelector('input[type="checkbox"]');
                 const checkmark = label.querySelector('.checkmark-icon');
                 
@@ -1236,6 +1229,8 @@
             });
         };
 
+        // ============ عرض الشبكة ============
+        
         const renderGrid = () => {
             const term = $('#searchInput')?.value.toLowerCase() || '';
             const filtered = allUsers.filter(u =>
@@ -1295,7 +1290,7 @@
                     </div>
                     ${assignedInfo}
                     <div class="user-bio">
-                        <i class="fas fa-pen"></i> ${escapeHtml((user.quickBlurb || '').substring(0, 60) || 'لا توجد لمحة')}
+                        <i class="fas fa-pen"></i> ${escapeHtml((user.quickBlurb || '').substring(0, 50) || 'لا توجد لمحة')}
                     </div>
                     <div class="card-footer">
                         <span>${user.status === 'active' ? '✅' : '⛔'} ${user.status === 'active' ? 'نشط' : 'محظور'}</span>
@@ -1305,13 +1300,15 @@
             }).join('');
         };
 
+        // ============ المودالات ============
+        
         const openDetailModal = (id) => {
             const user = allUsers.find(u => u.id === id);
             if (!user) return;
             currentViewId = id;
             
-            // استرجاع كلمة المرور من sessionStorage لو موجودة
-            const savedPassword = sessionStorage.getItem(`pwd_${id}`);
+            // استرجاع كلمة المرور من التخزين المحلي
+            const savedPassword = getPasswordLocally(id);
             currentUserPassword = savedPassword || 'غير معروفة';
             
             $('#detailNameTitle').textContent = user.name || 'تفاصيل';
@@ -1328,8 +1325,6 @@
                 : '<span style="color:#C62828;">⛔ محظور</span>';
             
             $('#quickBlurbDisplay').textContent = user.quickBlurb || 'لا توجد لمحة';
-            
-            // عرض كلمة المرور
             $('#passwordText').textContent = currentUserPassword;
             
             let avatarIcon = 'fa-user';
@@ -1387,7 +1382,6 @@
             $('#userStatus').value = 'active';
             
             $('#passwordFieldGroup').style.display = 'block';
-            $('#editPasswordGroup').style.display = 'none';
             $('#passwordHint').textContent = 'أدخل كلمة مرور قوية (6 أحرف على الأقل)';
             
             $('#assignDoctorsGroup').style.display = 'none';
@@ -1416,11 +1410,10 @@
             $('#quickBlurb').value = user.quickBlurb || '';
             $('#userStatus').value = user.status || 'active';
             
+            // ✅ إخفاء حقل كلمة المرور في وضع التعديل
             $('#passwordFieldGroup').style.display = 'none';
-            $('#editPasswordGroup').style.display = 'block';
             $('#userPassword').required = false;
             $('#userPassword').value = '';
-            $('#editPassword').value = '';
             
             const role = user.role;
             $('#assignDoctorsGroup').style.display = role === 'nurse' ? 'block' : 'none';
@@ -1452,6 +1445,8 @@
             currentEditId = null;
         };
 
+        // ============ الأحداث ============
+        
         $('#userRole').addEventListener('change', (e) => {
             const role = e.target.value;
             $('#assignDoctorsGroup').style.display = role === 'nurse' ? 'block' : 'none';
@@ -1461,19 +1456,6 @@
         // تبديل كلمة المرور في الإضافة
         $('#togglePassword').addEventListener('click', function() {
             const pwdField = $('#userPassword');
-            const icon = this.querySelector('i');
-            if (pwdField.type === 'password') {
-                pwdField.type = 'text';
-                icon.className = 'far fa-eye-slash';
-            } else {
-                pwdField.type = 'password';
-                icon.className = 'far fa-eye';
-            }
-        });
-
-        // تبديل كلمة المرور في التعديل
-        $('#toggleEditPassword').addEventListener('click', function() {
-            const pwdField = $('#editPassword');
             const icon = this.querySelector('i');
             if (pwdField.type === 'password') {
                 pwdField.type = 'text';
@@ -1495,6 +1477,8 @@
             }
         });
 
+        // ============ عمليات الحفظ ============
+        
         const saveUser = async () => {
             const name = $('#userName').value.trim();
             const email = $('#userEmail').value.trim();
@@ -1504,7 +1488,6 @@
             const quickBlurb = $('#quickBlurb').value.trim();
             const status = $('#userStatus').value;
             const password = $('#userPassword').value;
-            const editPassword = $('#editPassword').value;
 
             if (!name || !email || !role) {
                 showToast('الاسم والبريد والدور مطلوبة', true);
@@ -1533,34 +1516,11 @@
 
             try {
                 if (currentEditId) {
-                    // تعديل مستخدم موجود
+                    // ✅ تعديل مستخدم موجود (بدون تغيير كلمة المرور)
                     await update(ref(db, `users/${currentEditId}`), userData);
                     
                     if (role === 'nurse') {
                         await saveNurseDoctorLinks(currentEditId, selectedDoctorIds);
-                    }
-                    
-                    // تغيير كلمة المرور لو تم إدخال كلمة جديدة
-                    if (editPassword && editPassword.length >= 6) {
-                        try {
-                            const currentUser = auth.currentUser;
-                            if (currentUser) {
-                                const idToken = await currentUser.getIdToken();
-                                await fetch(CHANGE_PASSWORD_URL, {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({
-                                        idToken: idToken,
-                                        password: editPassword,
-                                        returnSecureToken: false
-                                    })
-                                });
-                                // تحديث كلمة المرور في sessionStorage
-                                sessionStorage.setItem(`pwd_${currentEditId}`, editPassword);
-                            }
-                        } catch (pwdError) {
-                            console.warn('تعذر تغيير كلمة المرور:', pwdError);
-                        }
                     }
                     
                     showToast('✅ تم التعديل بنجاح');
@@ -1576,6 +1536,8 @@
                         return;
                     }
 
+                    setSyncStatus('syncing');
+                    
                     const signUpRes = await fetch(SIGN_UP_URL, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -1594,17 +1556,19 @@
                     userData.created_at = new Date().toISOString();
                     await set(ref(db, `users/${uid}`), userData);
                     
-                    // حفظ كلمة المرور في sessionStorage
-                    sessionStorage.setItem(`pwd_${uid}`, password);
+                    // ✅ حفظ كلمة المرور في التخزين المحلي
+                    savePasswordLocally(uid, password);
                     
                     if (role === 'nurse') {
                         await saveNurseDoctorLinks(uid, selectedDoctorIds);
                     }
                     
+                    setSyncStatus('synced');
                     showToast('🎉 تم إضافة المستخدم بنجاح');
                     closeFormModal();
                 }
             } catch (err) {
+                setSyncStatus('synced');
                 showToast(err.message, true);
             }
         };
@@ -1647,8 +1611,8 @@
 
                 await remove(ref(db, `users/${id}`));
 
-                // حذف كلمة المرور المخزنة
-                sessionStorage.removeItem(`pwd_${id}`);
+                // ✅ حذف كلمة المرور المخزنة محلياً
+                removePasswordLocally(id);
 
                 try {
                     const currentUser = auth.currentUser;
@@ -1676,6 +1640,8 @@
             }
         };
 
+        // ============ تسجيل الخروج ============
+        
         const logout = async () => {
             if (unsubscribeUsers) unsubscribeUsers();
             if (unsubscribeLinks) unsubscribeLinks();
@@ -1683,7 +1649,15 @@
             window.location.href = 'index.html';
         };
 
+        // ============ التحقق من الصلاحية ============
+        
         const checkAdminAuth = () => {
+            // ✅ تحميل البيانات المحلية فوراً للعرض السريع
+            loadFromLocalDB();
+            if (allUsers.length > 0) {
+                combineAndRender();
+            }
+            
             onAuthStateChanged(auth, async (user) => {
                 if (!user) {
                     window.location.href = 'index.html';
@@ -1702,15 +1676,28 @@
                     startListeners();
                 } catch (err) {
                     console.error(err);
+                    // ✅ استخدام البيانات المحلية في حالة فشل الاتصال
+                    const localSession = localStorage.getItem('shifa_session');
+                    if (localSession) {
+                        const session = JSON.parse(localSession);
+                        if (session.role === 'admin') {
+                            $('#authCheckLoader').style.display = 'none';
+                            $('#mainContainer').style.display = 'block';
+                            if (!unsubscribeUsers) startListeners();
+                            return;
+                        }
+                    }
                     window.location.href = 'index.html';
                 }
             });
         };
 
+        // ============ تهيئة الأحداث ============
+        
         const initEvents = () => {
             $('#searchInput')?.addEventListener('input', () => {
                 clearTimeout(searchTimer);
-                searchTimer = setTimeout(renderGrid, 250);
+                searchTimer = setTimeout(renderGrid, 200);
             });
 
             $('#usersGrid').addEventListener('click', (e) => {
@@ -1719,7 +1706,12 @@
             });
 
             $('#addUserBtn').onclick = openAddModal;
-            $('#refreshBtn').onclick = () => showToast('🔄 البيانات محدثة تلقائياً');
+            $('#refreshBtn').onclick = () => {
+                setSyncStatus('syncing');
+                showToast('🔄 جاري تحديث البيانات...');
+                // Firebase هيعمل تحديث تلقائي via onValue
+                setTimeout(() => setSyncStatus('synced'), 1500);
+            };
             $('#logoutBtn').onclick = logout;
 
             $('#saveFormBtn').onclick = saveUser;
@@ -1741,18 +1733,42 @@
                 if (e.target === $('#formModal')) closeFormModal();
             };
 
-            $$('.btn').forEach(btn => btn.addEventListener('click', addRipple));
-
             document.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape') {
                     if ($('#detailModal').style.display === 'flex') closeDetailModal();
                     if ($('#formModal').style.display === 'flex') closeFormModal();
                 }
             });
+            
+            // ✅ مستمع لحالة الاتصال بالإنترنت
+            window.addEventListener('online', () => {
+                isOnline = true;
+                setSyncStatus('syncing');
+                showToast('📡 تم استعادة الاتصال - جاري المزامنة');
+                // إعادة تحميل البيانات من السحابة
+                if (unsubscribeUsers) {
+                    unsubscribeUsers();
+                    unsubscribeUsers = null;
+                }
+                if (unsubscribeLinks) {
+                    unsubscribeLinks();
+                    unsubscribeLinks = null;
+                }
+                startListeners();
+            });
+            
+            window.addEventListener('offline', () => {
+                isOnline = false;
+                setSyncStatus('syncing');
+                showToast('⚠️ انقطع الاتصال - استخدام البيانات المحلية', true);
+            });
         };
 
+        // ============ بدء التشغيل ============
         initEvents();
         checkAdminAuth();
+        
+        console.log('🚀 لوحة إدارة شفاء - وضع خفيف مع تخزين محلي');
     </script>
 </body>
 </html>
