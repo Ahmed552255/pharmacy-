@@ -2,14 +2,16 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#00AEEF">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>شفاء — بوابة الدخول</title>
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap&subset=arabic" rel="stylesheet">
+    
     <style>
         :root {
             --primary: #00AEEF;
@@ -23,7 +25,7 @@
             --success: #26A69A;
             --shadow: 0 10px 30px rgba(0, 174, 239, 0.08);
             --border-light: rgba(0, 174, 239, 0.2);
-            --transition-speed: 0.2s;
+            --transition-speed: 0.15s;
         }
         
         * { 
@@ -36,6 +38,8 @@
             font-size: 16px; 
             -webkit-tap-highlight-color: transparent;
             -webkit-font-smoothing: antialiased;
+            -webkit-text-size-adjust: 100%;
+            text-rendering: optimizeSpeed;
         }
         
         body {
@@ -50,14 +54,17 @@
             background: var(--bg);
             position: relative;
             overflow-x: hidden;
+            contain: layout style paint;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
         }
         
-        /* خلفية خفيفة */
         .bg-pattern {
             position: fixed;
             inset: 0;
             z-index: -1;
             pointer-events: none;
+            contain: strict;
         }
         
         .bg-pattern::before {
@@ -69,9 +76,9 @@
             height: 60vw;
             max-width: 500px;
             max-height: 500px;
-            background: radial-gradient(circle, rgba(0, 174, 239, 0.08) 0%, transparent 70%);
+            background: radial-gradient(circle, rgba(0, 174, 239, 0.06) 0%, transparent 70%);
             border-radius: 50%;
-            animation: subtleFloat 20s infinite alternate ease-in-out;
+            animation: simpleFloat 30s infinite alternate ease-in-out;
         }
         
         .bg-pattern::after {
@@ -83,18 +90,16 @@
             height: 50vw;
             max-width: 400px;
             max-height: 400px;
-            background: radial-gradient(circle, rgba(0, 128, 128, 0.06) 0%, transparent 70%);
+            background: radial-gradient(circle, rgba(0, 128, 128, 0.04) 0%, transparent 70%);
             border-radius: 50%;
-            animation: subtleFloat 25s infinite alternate-reverse ease-in-out;
+            animation: simpleFloat 35s infinite alternate-reverse ease-in-out;
         }
         
-        @keyframes subtleFloat {
-            to { 
-                transform: translate(20px, 20px) scale(1.05); 
-            }
+        @keyframes simpleFloat {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(15px, 15px); }
         }
         
-        /* الكارت الرئيسي */
         .glass-card {
             background: var(--white);
             border: 1px solid var(--border-light);
@@ -105,20 +110,18 @@
             padding: 2.2rem 1.8rem;
             text-align: center;
             z-index: 1;
-            animation: cardEntry 0.5s cubic-bezier(0.2, 0.9, 0.3, 1) forwards;
-            transform: scale(0.94);
+            animation: cardIn 0.4s ease-out forwards;
             opacity: 0;
-            will-change: transform, opacity;
+            contain: layout style;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
         }
         
-        @keyframes cardEntry {
-            to { 
-                transform: scale(1); 
-                opacity: 1; 
-            }
+        @keyframes cardIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         
-        /* شعار المنصة */
         .logo-icon {
             width: 56px;
             height: 56px;
@@ -130,6 +133,7 @@
             justify-content: center;
             box-shadow: 0 8px 20px rgba(0, 174, 239, 0.2);
             position: relative;
+            contain: strict;
         }
         
         .logo-icon svg {
@@ -172,7 +176,6 @@
             height: 14px;
         }
         
-        /* مجموعات الإدخال */
         .input-wrapper {
             margin-bottom: 1.2rem;
             text-align: right;
@@ -213,9 +216,10 @@
             font-size: 0.95rem;
             font-family: 'Cairo', sans-serif;
             color: var(--ink);
-            transition: all var(--transition-speed) ease;
+            transition: border-color var(--transition-speed), box-shadow var(--transition-speed);
             -webkit-appearance: none;
             appearance: none;
+            touch-action: manipulation;
         }
         
         .input-group input:focus {
@@ -233,7 +237,6 @@
             font-weight: 400;
         }
         
-        /* زر إظهار كلمة المرور */
         .password-toggle {
             position: absolute;
             top: 50%;
@@ -243,23 +246,22 @@
             border: none;
             color: var(--primary);
             cursor: pointer;
-            padding: 6px;
+            padding: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
             border-radius: 8px;
             transition: background var(--transition-speed);
-        }
-        
-        .password-toggle:hover {
-            background: var(--primary-light);
+            min-width: 44px;
+            min-height: 44px;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
         }
         
         .password-toggle:active {
             background: rgba(0, 174, 239, 0.15);
         }
         
-        /* رسائل الخطأ */
         .error-message {
             color: var(--danger);
             font-weight: 600;
@@ -268,23 +270,23 @@
             background: rgba(229, 115, 115, 0.05);
             border-radius: 14px;
             opacity: 0;
-            transform: translateY(-8px);
-            transition: all var(--transition-speed) ease;
+            transition: opacity var(--transition-speed);
             border: 1px solid rgba(229, 115, 115, 0.1);
             margin-bottom: 0.8rem;
-            pointer-events: none;
-            height: 0;
+            max-height: 0;
             overflow: hidden;
+            padding-top: 0;
+            padding-bottom: 0;
+            border-width: 0;
         }
         
         .error-message.show {
             opacity: 1;
-            transform: translateY(0);
-            height: auto;
-            pointer-events: auto;
+            max-height: 100px;
+            padding: 0.6rem 1rem;
+            border-width: 1px;
         }
         
-        /* زر تسجيل الدخول */
         .btn-login {
             width: 100%;
             padding: 0.95rem;
@@ -294,23 +296,23 @@
             font-weight: 700;
             font-family: 'Cairo', sans-serif;
             cursor: pointer;
-            transition: all var(--transition-speed) ease;
+            transition: transform 0.1s, box-shadow 0.15s;
             background: linear-gradient(135deg, var(--primary), var(--primary-dark));
             color: white;
             box-shadow: 0 6px 18px rgba(0, 174, 239, 0.2);
             position: relative;
             overflow: hidden;
             -webkit-tap-highlight-color: transparent;
-        }
-        
-        .btn-login:hover:not(:disabled) {
-            transform: translateY(-1px);
-            box-shadow: 0 8px 22px rgba(0, 174, 239, 0.3);
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+            contain: layout style;
         }
         
         .btn-login:active:not(:disabled) {
-            transform: translateY(0);
+            transform: scale(0.98);
             box-shadow: 0 4px 12px rgba(0, 174, 239, 0.15);
+            transition: transform 0.05s, box-shadow 0.05s;
         }
         
         .btn-login:disabled {
@@ -325,6 +327,7 @@
             align-items: center;
             justify-content: center;
             gap: 8px;
+            pointer-events: none;
         }
         
         .spinner {
@@ -333,19 +336,19 @@
             border: 2px solid rgba(255, 255, 255, 0.3);
             border-radius: 50%;
             border-top-color: white;
-            animation: spin 0.6s linear infinite;
+            animation: spin 0.5s linear infinite;
+            contain: strict;
         }
         
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
         
-        /* إشعار التوست */
         .toast {
             position: fixed;
             top: 20px;
             left: 50%;
-            transform: translateX(-50%) translateY(-100px);
+            transform: translateX(-50%) translateY(-120px);
             color: white;
             padding: 12px 24px;
             border-radius: 30px;
@@ -354,11 +357,12 @@
             font-family: 'Cairo', sans-serif;
             font-size: 0.9rem;
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: transform 0.25s ease-out;
             pointer-events: none;
             display: flex;
             align-items: center;
             gap: 8px;
+            contain: layout style;
         }
         
         .toast.show {
@@ -373,24 +377,44 @@
             background: var(--danger);
         }
         
-        /* تأثير الـ ripple للزر */
         .ripple {
             position: absolute;
             border-radius: 50%;
-            background: rgba(255, 255, 255, 0.4);
+            background: rgba(255, 255, 255, 0.35);
             transform: scale(0);
-            animation: rippleEffect 0.6s ease-out;
+            animation: rippleEffect 0.5s ease-out;
             pointer-events: none;
         }
         
         @keyframes rippleEffect {
             to {
-                transform: scale(4);
+                transform: scale(3.5);
                 opacity: 0;
             }
         }
         
-        /* تحسينات للأجهزة الضعيفة */
+        .loading-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+            width: 0%;
+            z-index: 10000;
+            transition: width 1.2s ease-out;
+            transform: translateZ(0);
+        }
+        
+        .loading-bar.active {
+            width: 85%;
+        }
+        
+        .loading-bar.done {
+            width: 100%;
+            transition: width 0.25s ease;
+            opacity: 0;
+        }
+        
         @media (max-width: 480px) {
             .glass-card {
                 padding: 1.8rem 1.3rem;
@@ -405,55 +429,51 @@
                 padding: 0.75rem 2.5rem;
                 font-size: 0.9rem;
             }
-        }
-        
-        /* تقليل الحركات للأجهزة اللي بتفضل كده */
-        @media (prefers-reduced-motion: reduce) {
-            *, *::before, *::after {
-                animation-duration: 0.01ms !important;
-                animation-iteration-count: 1 !important;
-                transition-duration: 0.01ms !important;
+            
+            .bg-pattern::before,
+            .bg-pattern::after {
+                animation-duration: 45s;
             }
         }
         
-        /* شريط التحميل العلوي */
-        .loading-bar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            height: 3px;
-            background: linear-gradient(90deg, var(--primary), var(--primary-dark));
-            width: 0%;
-            z-index: 10000;
-            transition: width 0.3s ease;
+        @media (max-width: 360px) {
+            .glass-card {
+                padding: 1.5rem 1rem;
+                border-radius: 20px;
+            }
+            
+            .card-header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .btn-login {
+                padding: 0.85rem;
+                font-size: 1rem;
+            }
         }
         
-        .loading-bar.active {
-            width: 90%;
-            transition: width 1.5s ease;
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.001ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.001ms !important;
+            }
         }
         
-        .loading-bar.done {
-            width: 100%;
-            transition: width 0.3s ease;
-            opacity: 0;
+        @media (prefers-reduced-data: reduce) {
+            .bg-pattern {
+                display: none;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- خلفية خفيفة -->
-    <div class="bg-pattern"></div>
+    <div class="bg-pattern" aria-hidden="true"></div>
+    <div class="loading-bar" id="loadingBar" aria-hidden="true"></div>
+    <div class="toast" id="toast" aria-live="polite"></div>
     
-    <!-- شريط تحميل علوي -->
-    <div class="loading-bar" id="loadingBar"></div>
-    
-    <!-- إشعار التوست -->
-    <div class="toast" id="toast"></div>
-    
-    <!-- الكارت الرئيسي -->
     <main class="glass-card" id="mainCard">
-        <!-- شعار المنصة -->
-        <div class="logo-icon">
+        <div class="logo-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/>
                 <path d="M12 8v4l3 3"/>
@@ -465,7 +485,7 @@
             <p>منصة إدارة العيادات والصيدليات</p>
         </header>
         
-        <div class="secure-badge">
+        <div class="secure-badge" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
                 <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
@@ -473,13 +493,11 @@
             اتصال آمن ومشفر
         </div>
         
-        <!-- فورم تسجيل الدخول -->
-        <form id="loginForm" novalidate>
-            <!-- حقل البريد الإلكتروني -->
+        <form id="loginForm" novalidate autocomplete="on">
             <div class="input-wrapper">
                 <label class="input-label" for="emailInput">البريد الإلكتروني</label>
                 <div class="input-group">
-                    <svg class="input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <svg class="input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <rect x="2" y="4" width="20" height="16" rx="2"/>
                         <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
                     </svg>
@@ -495,11 +513,10 @@
                 </div>
             </div>
             
-            <!-- حقل كلمة المرور -->
             <div class="input-wrapper">
                 <label class="input-label" for="passwordInput">كلمة المرور</label>
                 <div class="input-group">
-                    <svg class="input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <svg class="input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
                         <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                     </svg>
@@ -510,8 +527,8 @@
                         required 
                         autocomplete="current-password"
                     >
-                    <button type="button" class="password-toggle" id="togglePasswordBtn" aria-label="إظهار/إخفاء كلمة المرور">
-                        <svg id="eyeIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <button type="button" class="password-toggle" id="togglePasswordBtn" aria-label="إظهار/إخفاء كلمة المرور" tabindex="-1">
+                        <svg id="eyeIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
                             <circle cx="12" cy="12" r="3"/>
                         </svg>
@@ -519,13 +536,11 @@
                 </div>
             </div>
             
-            <!-- رسالة الخطأ -->
-            <div class="error-message" id="errorMessage" role="alert"></div>
+            <div class="error-message" id="errorMessage" role="alert" aria-live="assertive"></div>
             
-            <!-- زر تسجيل الدخول -->
             <button type="submit" class="btn-login" id="loginButton">
                 <span class="btn-content" id="btnContent">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
                         <polyline points="10 17 15 12 10 7"/>
                         <line x1="15" y1="12" x2="3" y2="12"/>
@@ -540,8 +555,15 @@
         // ============ استيراد Firebase ============
         import { firebaseConfig } from './firebase-config.js';
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+
+        // ============ ثوابت التخزين المحلي ============
+        const STORAGE_KEYS = {
+            SESSION: 'shifa_session',
+            REMEMBER_ME: 'shifa_remember',
+            LAST_LOGIN: 'shifa_last_login'
+        };
 
         // ============ تهيئة Firebase ============
         const app = initializeApp(firebaseConfig);
@@ -570,6 +592,75 @@
 
         // ============ محتوى الزر الافتراضي ============
         const defaultBtnContent = dom.btnContent.innerHTML;
+
+        // ============ إدارة التخزين المحلي - جلسة دائمة ============
+        
+        /**
+         * حفظ بيانات الجلسة في localStorage (دائمة - لا تنتهي صلاحيتها أبداً)
+         */
+        const saveSessionToLocal = (uid, role, name, email = '') => {
+            try {
+                const sessionData = {
+                    uid,
+                    role,
+                    name,
+                    email: email || dom.emailInput.value.trim().toLowerCase(),
+                    timestamp: Date.now()
+                    // ✅ لا يوجد expiresAt - الجلسة دائمة للأبد
+                };
+                localStorage.setItem(STORAGE_KEYS.SESSION, JSON.stringify(sessionData));
+            } catch (e) {
+                console.warn('تعذر حفظ الجلسة محلياً:', e.message);
+            }
+        };
+
+        /**
+         * استرجاع بيانات الجلسة من localStorage (صالحة للأبد)
+         */
+        const getLocalSession = () => {
+            try {
+                const data = localStorage.getItem(STORAGE_KEYS.SESSION);
+                if (!data) return null;
+                
+                const session = JSON.parse(data);
+                
+                // ✅ التحقق من وجود البيانات الأساسية فقط (بدون تاريخ صلاحية)
+                if (!session.uid || !session.role) {
+                    clearLocalSession();
+                    return null;
+                }
+                
+                return session;
+            } catch (e) {
+                console.warn('تعذر استرجاع الجلسة المحلية:', e.message);
+                clearLocalSession();
+                return null;
+            }
+        };
+
+        /**
+         * مسح بيانات الجلسة المحلية
+         */
+        const clearLocalSession = () => {
+            try {
+                localStorage.removeItem(STORAGE_KEYS.SESSION);
+            } catch (e) {
+                console.warn('تعذر مسح الجلسة المحلية:', e.message);
+            }
+        };
+
+        /**
+         * حفظ بيانات الجلسة في كلا المخزنين (sessionStorage + localStorage)
+         */
+        const saveSession = (uid, role, name, email = '') => {
+            // جلسة سريعة (تنتهي عند إغلاق المتصفح)
+            sessionStorage.setItem('userUid', uid);
+            sessionStorage.setItem('userRole', role);
+            sessionStorage.setItem('userName', name);
+            
+            // ✅ جلسة دائمة في localStorage للتوجيه التلقائي (لا تنتهي أبداً)
+            saveSessionToLocal(uid, role, name, email);
+        };
 
         // ============ دوال مساعدة ============
         
@@ -610,7 +701,7 @@
             setTimeout(() => {
                 dom.loadingBar.classList.remove('active', 'done');
                 dom.loadingBar.style.width = '0%';
-            }, 400);
+            }, 300);
         };
 
         const setLoading = (loading) => {
@@ -634,13 +725,16 @@
             ripple.style.left = `${e.clientX - rect.left - size / 2}px`;
             ripple.style.top = `${e.clientY - rect.top - size / 2}px`;
             button.appendChild(ripple);
-            ripple.addEventListener('animationend', () => ripple.remove());
+            ripple.addEventListener('animationend', () => {
+                if (ripple.parentNode) ripple.remove();
+            });
         };
 
         dom.loginButton.addEventListener('click', addRippleEffect);
 
         // تبديل إظهار/إخفاء كلمة المرور
-        dom.togglePasswordBtn.addEventListener('click', () => {
+        dom.togglePasswordBtn.addEventListener('click', (e) => {
+            e.preventDefault();
             const isPassword = dom.passwordInput.type === 'password';
             dom.passwordInput.type = isPassword ? 'text' : 'password';
             dom.eyeIcon.innerHTML = isPassword ? ICONS.eyeOff : ICONS.eyeOpen;
@@ -673,14 +767,74 @@
             
             setTimeout(() => {
                 window.location.href = redirectUrl;
-            }, 1000);
+            }, 800);
         };
 
-        // حفظ بيانات الجلسة
-        const saveSession = (uid, role, name) => {
-            sessionStorage.setItem('userUid', uid);
-            sessionStorage.setItem('userRole', role);
-            sessionStorage.setItem('userName', name);
+        /**
+         * ============ التحقق من الجلسة المحفوظة وإعادة التوجيه التلقائي ============
+         * الجلسة دائمة - المستخدم هيتوجه تلقائي كل مرة
+         */
+        const checkStoredSession = async () => {
+            const localSession = getLocalSession();
+            
+            if (!localSession || !localSession.uid || !localSession.role) {
+                return false;
+            }
+            
+            showToast('🔄 جاري استعادة الجلسة...', 'success');
+            setLoading(true);
+            
+            try {
+                // التحقق من حالة المستخدم في قاعدة البيانات
+                const userData = await fetchUserData(localSession.uid);
+                
+                if (!userData || !userData.role) {
+                    // المستخدم مش موجود في قاعدة البيانات - خلاص امسح الجلسة
+                    clearLocalSession();
+                    setLoading(false);
+                    return false;
+                }
+                
+                // التحقق من الحالة (محظور)
+                if (userData.status === 'blocked') {
+                    clearLocalSession();
+                    setLoading(false);
+                    showError('🚫 هذا الحساب محظور. تواصل مع المسؤول.');
+                    return false;
+                }
+                
+                // تحديث بيانات الجلسة لو الدور اتغير
+                if (userData.role !== localSession.role) {
+                    saveSessionToLocal(localSession.uid, userData.role, userData.name || localSession.name, localSession.email);
+                }
+                
+                const displayName = userData.name || localSession.name || 'مستخدم';
+                
+                // تحديث sessionStorage
+                sessionStorage.setItem('userUid', localSession.uid);
+                sessionStorage.setItem('userRole', userData.role);
+                sessionStorage.setItem('userName', displayName);
+                
+                // توجيه المستخدم مباشرة
+                redirectUser(userData.role, displayName);
+                return true;
+                
+            } catch (error) {
+                console.warn('تعذر التحقق من الجلسة المحفوظة:', error.message);
+                
+                // في حالة خطأ الشبكة - استخدم البيانات المحلية مباشرة
+                if (error.message.includes('network') || error.message.includes('fetch') || error.code === 'auth/network-request-failed') {
+                    const displayName = localSession.name || 'مستخدم';
+                    sessionStorage.setItem('userUid', localSession.uid);
+                    sessionStorage.setItem('userRole', localSession.role);
+                    sessionStorage.setItem('userName', displayName);
+                    redirectUser(localSession.role, displayName);
+                    return true;
+                }
+                
+                setLoading(false);
+                return false;
+            }
         };
 
         // ============ معالجة تسجيل الدخول ============
@@ -690,7 +844,6 @@
             const email = dom.emailInput.value.trim().toLowerCase();
             const password = dom.passwordInput.value;
 
-            // تحقق سريع من الحقول
             if (!email) {
                 showError('⚠️ الرجاء إدخال البريد الإلكتروني');
                 dom.emailInput.focus();
@@ -703,7 +856,6 @@
                 return;
             }
             
-            // تحقق من صحة صيغة البريد الإلكتروني
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(email)) {
                 showError('⚠️ صيغة البريد الإلكتروني غير صحيحة');
@@ -711,7 +863,6 @@
                 return;
             }
 
-            // تحقق من طول كلمة المرور
             if (password.length < 6) {
                 showError('⚠️ كلمة المرور يجب أن تكون 6 أحرف على الأقل');
                 dom.passwordInput.focus();
@@ -722,21 +873,17 @@
             setLoading(true);
 
             try {
-                // محاولة تسجيل الدخول
                 const userCredential = await signInWithEmailAndPassword(auth, email, password);
                 const user = userCredential.user;
 
-                // ============ جلب بيانات المستخدم من قاعدة البيانات ============
                 const userData = await fetchUserData(user.uid);
 
-                // التحقق من وجود بيانات المستخدم
                 if (!userData || !userData.role) {
                     showError('❌ هذا الحساب غير مفعل أو لا يملك صلاحيات. تواصل مع المسؤول.');
                     setLoading(false);
                     return;
                 }
 
-                // التحقق من الحالة (محظور ولا لأ)
                 if (userData.status === 'blocked') {
                     showError('🚫 هذا الحساب محظور. تواصل مع المسؤول.');
                     setLoading(false);
@@ -745,10 +892,9 @@
 
                 const displayName = userData.name || email.split('@')[0];
 
-                // حفظ بيانات الجلسة
-                saveSession(user.uid, userData.role, displayName);
+                // ✅ حفظ الجلسة بشكل دائم
+                saveSession(user.uid, userData.role, displayName, email);
 
-                // توجيه المستخدم
                 redirectUser(userData.role, displayName);
 
             } catch (error) {
@@ -782,26 +928,28 @@
         dom.emailInput.addEventListener('input', hideError);
         dom.passwordInput.addEventListener('input', hideError);
 
-        // إظهار كلمة المرور مؤقتاً بالضغط المطول (للأجهزة اللمسية)
+        // إظهار كلمة المرور مؤقتاً بالضغط المطول
         let longPressTimer;
-        dom.togglePasswordBtn.addEventListener('mousedown', () => {
+        
+        const startLongPress = () => {
             longPressTimer = setTimeout(() => {
                 dom.passwordInput.type = 'text';
                 dom.eyeIcon.innerHTML = ICONS.eyeOff;
-            }, 500);
-        });
+            }, 400);
+        };
         
-        dom.togglePasswordBtn.addEventListener('mouseup', () => {
+        const endLongPress = () => {
             clearTimeout(longPressTimer);
             dom.passwordInput.type = 'password';
             dom.eyeIcon.innerHTML = ICONS.eyeOpen;
-        });
+        };
         
-        dom.togglePasswordBtn.addEventListener('mouseleave', () => {
-            clearTimeout(longPressTimer);
-            dom.passwordInput.type = 'password';
-            dom.eyeIcon.innerHTML = ICONS.eyeOpen;
-        });
+        dom.togglePasswordBtn.addEventListener('mousedown', startLongPress);
+        dom.togglePasswordBtn.addEventListener('mouseup', endLongPress);
+        dom.togglePasswordBtn.addEventListener('mouseleave', endLongPress);
+        dom.togglePasswordBtn.addEventListener('touchstart', startLongPress, { passive: true });
+        dom.togglePasswordBtn.addEventListener('touchend', endLongPress);
+        dom.togglePasswordBtn.addEventListener('touchcancel', endLongPress);
 
         // اختصار Ctrl+Enter لتسجيل الدخول
         document.addEventListener('keydown', (e) => {
@@ -813,21 +961,73 @@
 
         // ============ تحسينات إضافية ============
         
-        // تعطيل التكبير/التصغير على الأجهزة اللمسية
         document.addEventListener('gesturestart', (e) => {
             if (document.activeElement.tagName === 'INPUT') {
                 e.preventDefault();
             }
-        });
+        }, { passive: false });
 
-        // تنظيف التايمرات عند مغادرة الصفحة
+        // ============ بدء التشغيل: التحقق من الجلسة الدائمة ============
+        const initApp = async () => {
+            // ✅ التحقق من وجود جلسة دائمة في localStorage
+            const hasSession = await checkStoredSession();
+            
+            if (!hasSession) {
+                console.log('👤 لا توجد جلسة سابقة - انتظار تسجيل الدخول');
+                
+                // محاولة ملء البريد الإلكتروني من الجلسة القديمة لو موجود
+                try {
+                    const oldData = localStorage.getItem(STORAGE_KEYS.SESSION);
+                    if (oldData) {
+                        const parsed = JSON.parse(oldData);
+                        if (parsed.email) {
+                            dom.emailInput.value = parsed.email;
+                        }
+                    }
+                } catch (e) {
+                    // تجاهل
+                }
+            }
+            
+            // مستمع لحالة المصادقة
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    const localSession = getLocalSession();
+                    if (!localSession || localSession.uid !== user.uid) {
+                        try {
+                            const userData = await fetchUserData(user.uid);
+                            if (userData && userData.role) {
+                                const displayName = userData.name || user.email.split('@')[0];
+                                saveSession(user.uid, userData.role, displayName, user.email);
+                            }
+                        } catch (e) {
+                            console.warn('تعذر تحديث الجلسة:', e.message);
+                        }
+                    }
+                }
+            });
+        };
+
+        // ============ تنظيف التايمرات عند مغادرة الصفحة ============
         window.addEventListener('beforeunload', () => {
             clearTimeout(dom._errorTimeout);
             clearTimeout(dom._toastTimeout);
             clearTimeout(longPressTimer);
         });
 
-        console.log('🚀 نظام شفاء — بوابة الدخول جاهزة');
+        // ============ تحسين أداء الصفحة ============
+        if (typeof requestIdleCallback !== 'undefined') {
+            requestIdleCallback(() => {
+                console.log('🚀 نظام شفاء — بوابة الدخول جاهزة (جلسة دائمة)');
+            });
+        } else {
+            setTimeout(() => {
+                console.log('🚀 نظام شفاء — بوابة الدخول جاهزة (جلسة دائمة)');
+            }, 200);
+        }
+
+        // تشغيل التطبيق
+        initApp();
     </script>
 </body>
 </html>
