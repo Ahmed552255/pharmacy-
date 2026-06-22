@@ -430,6 +430,9 @@
             overflow-y: auto;
             box-shadow: 0 20px 50px rgba(0,0,0,0.15);
             border: 1px solid var(--border);
+            /* ✅ تحسين السحب على الموبايل */
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
         }
         
         .modal-header {
@@ -470,6 +473,8 @@
         
         .modal-body {
             padding: 20px;
+            /* ✅ مساحة إضافية للسحب فوق لوحة المفاتيح */
+            padding-bottom: 45vh;
         }
         
         .form-group {
@@ -519,6 +524,8 @@
             padding: 6px;
             max-height: 180px;
             overflow-y: auto;
+            /* ✅ تحسين السحب */
+            -webkit-overflow-scrolling: touch;
         }
         
         .multi-select label {
@@ -618,6 +625,14 @@
             align-items: center;
             gap: 6px;
             font-size: 0.85rem;
+        }
+        
+        /* ✅ spacer للسحب - غير مرئي لكنه يوفر مساحة */
+        .keyboard-scroll-spacer {
+            height: 1px;
+            width: 100%;
+            pointer-events: none;
+            opacity: 0;
         }
         
         /* توست مبسط */
@@ -740,6 +755,11 @@
                 padding: 8px 14px;
                 font-size: 0.8rem;
             }
+            
+            /* ✅ مساحة أكبر على الموبايل */
+            .modal-body {
+                padding-bottom: 55vh;
+            }
         }
         
         @media (max-width: 360px) {
@@ -755,6 +775,11 @@
             .stat-card {
                 flex: 1 1 45%;
                 min-width: 0;
+            }
+            
+            /* ✅ مساحة أكبر للشاشات الصغيرة جداً */
+            .modal-body {
+                padding-bottom: 65vh;
             }
         }
         
@@ -916,6 +941,9 @@
                     <button id="unblockModalBtn" class="btn btn-success"><i class="fas fa-unlock"></i> إلغاء حظر</button>
                     <button id="editModalBtn" class="btn btn-primary"><i class="fas fa-edit"></i> تعديل</button>
                 </div>
+                
+                <!-- ✅ spacer للسحب فوق لوحة المفاتيح -->
+                <div class="keyboard-scroll-spacer"></div>
             </div>
         </div>
     </div>
@@ -982,6 +1010,9 @@
                 <div class="row-buttons">
                     <button id="saveFormBtn" class="btn btn-primary"><i class="fas fa-save"></i> حفظ</button>
                 </div>
+                
+                <!-- ✅ spacer للسحب فوق لوحة المفاتيح -->
+                <div class="keyboard-scroll-spacer"></div>
             </div>
         </div>
     </div>
