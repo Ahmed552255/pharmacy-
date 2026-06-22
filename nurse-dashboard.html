@@ -47,9 +47,13 @@
             min-height: 100vh;
             min-height: 100dvh;
             padding: 12px;
+            /* ✅ مساحة إضافية للسحب فوق لوحة المفاتيح */
+            padding-bottom: 45vh;
             overflow-x: hidden;
             -webkit-backface-visibility: hidden;
             backface-visibility: hidden;
+            /* ✅ تحسين السحب على الموبايل */
+            -webkit-overflow-scrolling: touch;
         }
 
         .container { max-width: 1100px; margin: 0 auto; }
@@ -452,6 +456,14 @@
         .sync-dot.on { background: var(--success); }
         .sync-dot.off { background: #FFB74D; }
 
+        /* ✅ spacer للسحب فوق لوحة المفاتيح */
+        .keyboard-scroll-spacer {
+            height: 1px;
+            width: 100%;
+            pointer-events: none;
+            opacity: 0;
+        }
+
         /* مودال خفيف */
         .modal {
             display: none;
@@ -473,6 +485,9 @@
             overflow-y: auto;
             box-shadow: 0 15px 40px rgba(0,0,0,0.12);
             border: 1px solid var(--border);
+            /* ✅ تحسين السحب على الموبايل */
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
         }
 
         .modal-header {
@@ -506,7 +521,11 @@
 
         .close-btn:active { background: rgba(0,0,0,0.05); }
 
-        .modal-body { padding: 18px; }
+        .modal-body { 
+            padding: 18px;
+            /* ✅ مساحة إضافية للسحب فوق لوحة المفاتيح */
+            padding-bottom: 45vh;
+        }
 
         .form-group { margin-bottom: 14px; }
 
@@ -553,6 +572,8 @@
             display: none;
             z-index: 20;
             box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+            /* ✅ تحسين السحب */
+            -webkit-overflow-scrolling: touch;
         }
 
         .search-item {
@@ -605,7 +626,11 @@
 
         /* تحسينات الشاشات الصغيرة */
         @media (max-width: 768px) {
-            body { padding: 8px; }
+            body { 
+                padding: 8px;
+                /* ✅ مساحة أكبر على الموبايل */
+                padding-bottom: 55vh;
+            }
 
             .app-header {
                 padding: 8px 12px;
@@ -637,12 +662,26 @@
 
             .mini-stat { min-width: 70px; padding: 8px 10px; }
             .mini-stat-info h4 { font-size: 1.1rem; }
+            
+            /* ✅ مساحة أكبر في المودال على الموبايل */
+            .modal-body {
+                padding-bottom: 55vh;
+            }
         }
 
         @media (max-width: 400px) {
             .status-tabs { flex-direction: column; gap: 3px; }
             .status-tab { justify-content: space-between; }
             .doctors-tabs { flex-direction: column; }
+            
+            /* ✅ مساحة أكبر للشاشات الصغيرة جداً */
+            body {
+                padding-bottom: 65vh;
+            }
+            
+            .modal-body {
+                padding-bottom: 65vh;
+            }
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -764,6 +803,9 @@
                 </table>
             </div>
         </div>
+        
+        <!-- ✅ spacer للسحب فوق لوحة المفاتيح -->
+        <div class="keyboard-scroll-spacer"></div>
     </div>
 
     <!-- مودال الكشف -->
@@ -827,6 +869,9 @@
                     
                     <div id="formAlert" class="alert-msg"></div>
                 </form>
+                
+                <!-- ✅ spacer للسحب فوق لوحة المفاتيح -->
+                <div class="keyboard-scroll-spacer"></div>
             </div>
         </div>
     </div>
