@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#00AEEF">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>شفاء · تحميل</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap&subset=arabic" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #00AEEF;
+            --primary-dark: #008080;
+        }
+
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+        }
+
+        html {
+            font-size: 16px;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-font-smoothing: antialiased;
+            text-rendering: optimizeSpeed;
+        }
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: linear-gradient(135deg, #E0F7FA 0%, #FAFAFA 50%, #E0F7FA 100%);
+            min-height: 100vh;
+            min-height: 100dvh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+        }
+
+        .splash-container {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 24px;
+        }
+
+        /* شعار شفاء */
+        .logo-wrapper {
+            position: relative;
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border-radius: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 12px 40px rgba(0, 174, 239, 0.3);
+            animation: logoPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes logoPulse {
+            0%, 100% { 
+                transform: scale(1); 
+                box-shadow: 0 12px 40px rgba(0, 174, 239, 0.3);
+            }
+            50% { 
+                transform: scale(1.05); 
+                box-shadow: 0 16px 50px rgba(0, 174, 239, 0.4);
+            }
+        }
+
+        .logo-wrapper svg {
+            width: 56px;
+            height: 56px;
+            color: white;
+        }
+
+        /* اسم التطبيق */
+        .app-name {
+            font-size: 2.2rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #008080, #00AEEF);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        .app-subtitle {
+            font-size: 0.95rem;
+            color: #5A7D8A;
+            font-weight: 500;
+            margin-top: -12px;
+        }
+
+        /* شريط التحميل */
+        .loading-bar-wrapper {
+            width: 200px;
+            height: 4px;
+            background: rgba(0, 174, 239, 0.15);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .loading-bar-fill {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+            border-radius: 10px;
+            animation: loadingBar 1.8s ease-in-out forwards;
+        }
+
+        @keyframes loadingBar {
+            0% { width: 0%; }
+            30% { width: 40%; }
+            60% { width: 70%; }
+            90% { width: 90%; }
+            100% { width: 100%; }
+        }
+
+        /* نص التحميل */
+        .loading-text {
+            font-size: 0.82rem;
+            color: #5A7D8A;
+            font-weight: 600;
+            animation: fadeText 1.5s ease-in-out infinite;
+        }
+
+        @keyframes fadeText {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
+        /* نقاط التحميل */
+        .dots {
+            display: inline-block;
+        }
+
+        .dots span {
+            display: inline-block;
+            animation: dotBounce 1.4s ease-in-out infinite;
+        }
+
+        .dots span:nth-child(1) { animation-delay: 0s; }
+        .dots span:nth-child(2) { animation-delay: 0.2s; }
+        .dots span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes dotBounce {
+            0%, 80%, 100% { 
+                transform: translateY(0); 
+                opacity: 0.3;
+            }
+            40% { 
+                transform: translateY(-6px); 
+                opacity: 1;
+            }
+        }
+
+        /* نسخة حقوق */
+        .version-text {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.72rem;
+            color: #B0C8D0;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        /* تقليل الحركات */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.001ms !important;
+                animation-iteration-count: 1 !important;
+            }
+        }
+
+        /* موبايل */
+        @media (max-width: 480px) {
+            .logo-wrapper {
+                width: 80px;
+                height: 80px;
+                border-radius: 22px;
+            }
+
+            .logo-wrapper svg {
+                width: 44px;
+                height: 44px;
+            }
+
+            .app-name {
+                font-size: 1.8rem;
+            }
+
+            .app-subtitle {
+                font-size: 0.85rem;
+            }
+
+            .loading-bar-wrapper {
+                width: 160px;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .logo-wrapper {
+                width: 70px;
+                height: 70px;
+                border-radius: 18px;
+            }
+
+            .logo-wrapper svg {
+                width: 38px;
+                height: 38px;
+            }
+
+            .app-name {
+                font-size: 1.5rem;
+            }
+
+            .loading-bar-wrapper {
+                width: 140px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="splash-container">
+        <!-- شعار شفاء -->
+        <div class="logo-wrapper">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/>
+                <path d="M12 8v4l3 3"/>
+            </svg>
+        </div>
+
+        <!-- اسم التطبيق -->
+        <div>
+            <h1 class="app-name">شفاء</h1>
+            <p class="app-subtitle">منصة إدارة العيادات والصيدليات</p>
+        </div>
+
+        <!-- شريط التحميل -->
+        <div class="loading-bar-wrapper">
+            <div class="loading-bar-fill"></div>
+        </div>
+
+        <!-- نص التحميل -->
+        <p class="loading-text">
+            جاري التحميل
+            <span class="dots">
+                <span>.</span><span>.</span><span>.</span>
+            </span>
+        </p>
+    </div>
+
+    <!-- نسخة -->
+    <div class="version-text">شفاء v1.0</div>
+
+    <script>
+        // ============ التوجيه بعد اكتمال التحميل ============
+        (function() {
+            // ✅ التحقق من وجود جلسة محفوظة
+            const hasSession = localStorage.getItem('shifa_session');
+            
+            // ✅ مدة التحميل: 2.5 ثانية لو فيه جلسة، 2 ثانية لو مفيش
+            const delay = hasSession ? 2500 : 2000;
+            
+            // ✅ بعد انتهاء التحميل، التوجيه لـ home.html
+            setTimeout(() => {
+                window.location.href = 'home.html';
+            }, delay);
+            
+            // ✅ لو المستخدم ضغط على الشاشة، توجيه فوري
+            document.addEventListener('click', () => {
+                window.location.href = 'home.html';
+            });
+            
+            // ✅ لو تم تحميل الصفحة بالكامل بسرعة، توجيه فوري
+            window.addEventListener('load', () => {
+                // لو الصفحة حملت في أقل من 1.5 ثانية، نستنى شوية بردو
+                // عشان الحركات تظهر حلوة
+            });
+            
+            console.log('🚀 شفاء - صفحة البداية');
+        })();
+    </script>
+</body>
+</html>
