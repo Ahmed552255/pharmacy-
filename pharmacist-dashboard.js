@@ -22,6 +22,13 @@ let unsubscribePatients = null;
 
 const PHARMACIST_STORAGE_KEY = 'pharmacist_selected_doctor';
 
+// ✅ مفاتيح التخزين المحلي من صفحة تسجيل الدخول
+const LOGIN_STORAGE_KEYS = [
+    'shifa_session',        // الجلسة الدائمة
+    'shifa_remember',       // تذكرني
+    'shifa_last_login'      // آخر تسجيل دخول
+];
+
 // ---------- عناصر DOM ----------
 const UI = {
     welcomeMessage: document.getElementById('welcomeMessage'),
@@ -74,6 +81,25 @@ function saveSelectedDoctor() {
 
 function loadSavedDoctor() {
     return localStorage.getItem(PHARMACIST_STORAGE_KEY);
+}
+
+// ✅ دالة مسح جميع بيانات تسجيل الدخول
+function clearAllLoginData() {
+    try {
+        // مسح مفاتيح التخزين المحلي من صفحة تسجيل الدخول
+        LOGIN_STORAGE_KEYS.forEach(key => {
+            localStorage.removeItem(key);
+        });
+        
+        // مسح بيانات sessionStorage
+        sessionStorage.removeItem('userUid');
+        sessionStorage.removeItem('userRole');
+        sessionStorage.removeItem('userName');
+        
+        console.log('✅ تم مسح جميع بيانات الجلسة بنجاح');
+    } catch (e) {
+        console.warn('تعذر مسح بعض بيانات الجلسة:', e.message);
+    }
 }
 
 async function loadPharmacistData(user) {
@@ -388,13 +414,36 @@ UI.tabBtns.forEach(btn => {
     });
 });
 
+// ✅ زر تسجيل الخروج مع مسح كامل لبيانات الدخول
 UI.logoutBtn.addEventListener('click', async () => {
-    if (unsubscribePrescriptions) unsubscribePrescriptions();
-    if (unsubscribeDoctors) unsubscribeDoctors();
-    if (unsubscribePatients) unsubscribePatients();
-    sessionStorage.clear();
-    localStorage.removeItem(PHARMACIST_STORAGE_KEY);
-    window.location.href = 'index.html';
+    try {
+        // 1. إلغاء مستمعي Firebase
+        if (unsubscribePrescriptions) {
+            unsubscribePrescriptions();
+            unsubscribePrescriptions = null;
+        }
+        if (unsubscribeDoctors) {
+            unsubscribeDoctors();
+            unsubscribeDoctors = null;
+        }
+        if (unsubscribePatients) {
+            unsubscribePatients();
+            unsubscribePatients = null;
+        }
+        
+        // 2. ✅ مسح جميع بيانات الجلسة من localStorage و sessionStorage
+        clearAllLoginData();
+        
+        // 3. إعادة التوجيه لصفحة تسجيل الدخول
+        window.location.href = 'index.html';
+        
+    } catch (error) {
+        console.error('خطأ أثناء تسجيل الخروج:', error);
+        
+        // حتى في حالة الخطأ، نمسح البيانات ونتوجه لصفحة الدخول
+        clearAllLoginData();
+        window.location.href = 'index.html';
+    }
 });
 
 // إغلاق المودال بزر ESC
@@ -407,6 +456,8 @@ document.addEventListener('keydown', (e) => {
 // ---------- بدء التشغيل ----------
 onAuthStateChanged(auth, async (user) => {
     if (!user) {
+        // ✅ مسح بيانات الجلسة لو المستخدم مش موجود
+        clearAllLoginData();
         window.location.href = 'index.html';
         return;
     }
@@ -414,6 +465,8 @@ onAuthStateChanged(auth, async (user) => {
     const valid = await loadPharmacistData(user);
     if (!valid) {
         UI.welcomeMessage.textContent = 'خطأ في تحميل البيانات';
+        // ✅ مسح البيانات في حالة فشل التحقق
+        clearAllLoginData();
         return;
     }
     const savedDoctorId = loadSavedDoctor();
