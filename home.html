@@ -51,12 +51,16 @@
             justify-content: center;
             align-items: center;
             padding: 1.25rem;
+            /* ✅ مساحة إضافية للسحب فوق لوحة المفاتيح */
+            padding-bottom: 45vh;
             background: var(--bg);
             position: relative;
             overflow-x: hidden;
             contain: layout style paint;
             -webkit-backface-visibility: hidden;
             backface-visibility: hidden;
+            /* ✅ تحسين السحب على الموبايل */
+            -webkit-overflow-scrolling: touch;
         }
         
         .bg-pattern {
@@ -344,6 +348,14 @@
             to { transform: rotate(360deg); }
         }
         
+        /* ✅ spacer للسحب فوق لوحة المفاتيح */
+        .keyboard-scroll-spacer {
+            height: 1px;
+            width: 100%;
+            pointer-events: none;
+            opacity: 0;
+        }
+        
         .toast {
             position: fixed;
             top: 20px;
@@ -434,6 +446,11 @@
             .bg-pattern::after {
                 animation-duration: 45s;
             }
+            
+            /* ✅ مساحة أكبر على الموبايل */
+            body {
+                padding-bottom: 55vh;
+            }
         }
         
         @media (max-width: 360px) {
@@ -449,6 +466,11 @@
             .btn-login {
                 padding: 0.85rem;
                 font-size: 1rem;
+            }
+            
+            /* ✅ مساحة أكبر للشاشات الصغيرة جداً */
+            body {
+                padding-bottom: 65vh;
             }
         }
         
@@ -549,6 +571,9 @@
                 </span>
             </button>
         </form>
+        
+        <!-- ✅ spacer للسحب فوق لوحة المفاتيح -->
+        <div class="keyboard-scroll-spacer"></div>
     </main>
 
     <script type="module">
