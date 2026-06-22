@@ -2,48 +2,42 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#00AEEF">
     <title>شفاء · لوحة الممرض</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap&subset=arabic" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
     <style>
         :root {
             --primary: #00AEEF;
             --primary-light: #E0F7FA;
             --primary-dark: #008080;
-            --accent: #00AEEF;
-            --accent-soft: #B2EBF2;
             --bg: #FAFAFA;
             --white: #FFFFFF;
             --ink: #1A3C4A;
             --text-sec: #5A7D8A;
             --danger: #E57373;
-            --danger-light: #FDEDEC;
             --success: #26A69A;
-            --success-light: #E8F5E9;
-            --warning: #FFB74D;
             --border: #E0E0E0;
-            --shadow-xs: 0 2px 8px rgba(0,0,0,0.03);
-            --shadow-sm: 0 4px 12px rgba(0,174,239,0.06);
-            --shadow-md: 0 8px 24px rgba(0,174,239,0.1);
-            --shadow-lg: 0 16px 40px rgba(0,174,239,0.15);
-            --radius-xs: 10px;
-            --radius-sm: 16px;
-            --radius-md: 24px;
-            --radius-lg: 32px;
-            --radius-xl: 60px;
-            --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            --shadow-xs: 0 2px 6px rgba(0,0,0,0.03);
+            --shadow-sm: 0 4px 12px rgba(0,0,0,0.05);
+            --radius-xs: 8px;
+            --radius-sm: 14px;
+            --radius-md: 20px;
+            --radius-lg: 26px;
+            --radius-xl: 50px;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         html {
-            font-size: 16px;
+            font-size: 15px;
             -webkit-tap-highlight-color: transparent;
             -webkit-font-smoothing: antialiased;
+            -webkit-text-size-adjust: 100%;
+            text-rendering: optimizeSpeed;
         }
 
         body {
@@ -52,43 +46,32 @@
             color: var(--ink);
             min-height: 100vh;
             min-height: 100dvh;
-            padding: 16px;
-            position: relative;
+            padding: 12px;
             overflow-x: hidden;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
         }
 
-        body::before {
-            content: '';
-            position: fixed;
-            inset: 0;
-            background: 
-                radial-gradient(ellipse at 10% 20%, rgba(0,174,239,0.06) 0%, transparent 50%),
-                radial-gradient(ellipse at 90% 80%, rgba(0,128,128,0.04) 0%, transparent 50%);
-            pointer-events: none;
-            z-index: -1;
-        }
+        .container { max-width: 1100px; margin: 0 auto; }
 
-        .container { max-width: 1200px; margin: 0 auto; }
-
+        /* لودر مبسط */
         #authLoader {
             position: fixed;
             inset: 0;
-            background: rgba(250,250,250,0.95);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
+            background: rgba(250,250,250,0.9);
             display: flex;
             align-items: center;
             justify-content: center;
             z-index: 2000;
             flex-direction: column;
-            gap: 20px;
+            gap: 16px;
         }
 
         .loader-spin {
-            width: 48px;
-            height: 48px;
-            border: 3px solid var(--accent-soft);
-            border-top-color: var(--accent);
+            width: 40px;
+            height: 40px;
+            border: 3px solid #E0E0E0;
+            border-top-color: var(--primary);
             border-radius: 50%;
             animation: spin 0.7s linear infinite;
         }
@@ -96,161 +79,122 @@
         @keyframes spin { to { transform: rotate(360deg); } }
 
         .loader-text {
-            font-size: 1rem;
+            font-size: 0.95rem;
             font-weight: 600;
-            color: var(--accent);
-            animation: pulse 1.5s ease-in-out infinite;
+            color: var(--primary-dark);
         }
 
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-
+        /* هيدر خفيف */
         .app-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            background: rgba(255,255,255,0.7);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border-radius: var(--radius-xl);
-            padding: 12px 24px;
-            margin-bottom: 20px;
-            border: 1px solid rgba(255,255,255,0.8);
-            box-shadow: var(--shadow-md);
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            padding: 10px 18px;
+            margin-bottom: 16px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
             flex-wrap: wrap;
-            gap: 12px;
+            gap: 10px;
             position: sticky;
-            top: 12px;
+            top: 6px;
             z-index: 100;
         }
 
         .logo h2 {
-            font-size: 1.5rem;
+            font-size: 1.3rem;
             font-weight: 800;
-            background: linear-gradient(135deg, #008080, #00AEEF);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
+            color: var(--primary-dark);
             white-space: nowrap;
         }
 
+        .logo i { color: var(--primary); }
+
         .header-actions {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             align-items: center;
             flex-wrap: wrap;
         }
 
         #welcomeMsg {
             font-weight: 600;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             color: var(--text-sec);
         }
 
         .btn {
-            padding: 10px 20px;
+            padding: 9px 16px;
             border-radius: var(--radius-xl);
             border: none;
-            font-weight: 600;
+            font-weight: 700;
             font-family: 'Cairo', sans-serif;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
-            gap: 8px;
-            font-size: 0.9rem;
-            transition: all var(--transition);
+            gap: 6px;
+            font-size: 0.83rem;
             white-space: nowrap;
-            position: relative;
-            overflow: hidden;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+            transition: opacity 0.15s;
         }
 
-        .btn:active { transform: scale(0.97); }
+        .btn:active { opacity: 0.8; }
 
         .btn-primary {
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            background: var(--primary);
             color: white;
-            box-shadow: 0 4px 14px rgba(0,174,239,0.25);
-            font-weight: 700;
-        }
-
-        .btn-primary:hover {
-            box-shadow: 0 6px 20px rgba(0,174,239,0.35);
-            transform: translateY(-2px);
+            box-shadow: 0 3px 10px rgba(0,174,239,0.2);
         }
 
         .btn-outline {
-            background: rgba(255,255,255,0.8);
+            background: var(--white);
             color: var(--ink);
             border: 1.5px solid var(--border);
-        }
-
-        .btn-outline:hover {
-            background: var(--primary-light);
-            border-color: var(--primary);
-        }
-
-        .ripple {
-            position: absolute;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.5);
-            transform: scale(0);
-            animation: ripple 0.6s ease-out;
-            pointer-events: none;
-        }
-
-        @keyframes ripple {
-            to { transform: scale(4); opacity: 0; }
         }
 
         /* شريط الإحصائيات */
         .stats-row {
             display: flex;
-            gap: 12px;
-            margin-bottom: 16px;
+            gap: 10px;
+            margin-bottom: 14px;
             flex-wrap: wrap;
         }
 
         .mini-stat {
-            background: rgba(255,255,255,0.8);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            background: var(--white);
             border-radius: var(--radius-md);
-            padding: 12px 18px;
+            padding: 10px 14px;
             display: flex;
             align-items: center;
             gap: 10px;
-            border: 1px solid rgba(255,255,255,0.7);
+            border: 1px solid var(--border);
             box-shadow: var(--shadow-xs);
             flex: 1;
-            min-width: 120px;
-            transition: all var(--transition);
-        }
-
-        .mini-stat:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-md);
+            min-width: 110px;
         }
 
         .mini-stat-icon {
-            width: 40px;
-            height: 40px;
+            width: 38px;
+            height: 38px;
             border-radius: var(--radius-xs);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.1rem;
+            font-size: 1rem;
         }
 
         .mini-stat-info h4 {
-            font-size: 1.4rem;
+            font-size: 1.3rem;
             font-weight: 800;
             line-height: 1;
         }
 
         .mini-stat-info span {
-            font-size: 0.72rem;
+            font-size: 0.7rem;
             color: var(--text-sec);
             font-weight: 500;
         }
@@ -260,98 +204,96 @@
             align-items: center;
             justify-content: space-between;
             flex-wrap: wrap;
-            gap: 12px;
-            margin-bottom: 16px;
+            gap: 10px;
+            margin-bottom: 14px;
         }
 
         .doctors-tabs {
             display: flex;
-            gap: 8px;
+            gap: 6px;
             flex-wrap: wrap;
             flex: 1;
         }
 
         .doctor-tab {
-            background: white;
+            background: var(--white);
             border: 1.5px solid var(--border);
             border-radius: var(--radius-xl);
-            padding: 8px 18px;
+            padding: 7px 14px;
             font-weight: 600;
             color: var(--ink);
             cursor: pointer;
-            transition: all var(--transition);
-            font-size: 0.88rem;
+            font-size: 0.82rem;
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
             box-shadow: var(--shadow-xs);
+            touch-action: manipulation;
+            transition: opacity 0.15s;
         }
 
-        .doctor-tab i { color: var(--accent); }
+        .doctor-tab i { color: var(--primary); }
 
         .doctor-tab.active {
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            background: var(--primary);
             color: white;
             border-color: transparent;
-            box-shadow: 0 6px 18px rgba(0,174,239,0.2);
         }
         .doctor-tab.active i { color: white; }
 
-        .doctor-tab:hover:not(.active) {
+        .doctor-tab:active:not(.active) {
             background: var(--primary-light);
-            border-color: var(--primary);
         }
 
         .date-picker {
             display: flex;
             align-items: center;
-            background: white;
+            background: var(--white);
             border-radius: var(--radius-xl);
-            padding: 4px;
+            padding: 3px;
             border: 1.5px solid var(--border);
             box-shadow: var(--shadow-xs);
-            gap: 4px;
+            gap: 3px;
         }
 
         .btn-today {
             background: transparent;
             border: none;
-            padding: 8px 14px;
+            padding: 7px 12px;
             border-radius: var(--radius-xl);
             font-family: 'Cairo', sans-serif;
             font-weight: 600;
-            color: var(--accent);
+            color: var(--primary);
             cursor: pointer;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             display: flex;
             align-items: center;
-            gap: 6px;
-            transition: all var(--transition);
+            gap: 5px;
+            touch-action: manipulation;
         }
 
-        .btn-today:hover { background: var(--primary-light); }
+        .btn-today:active { background: var(--primary-light); }
 
         .date-input {
             border: none;
-            padding: 8px 12px;
+            padding: 7px 10px;
             font-family: 'Cairo', sans-serif;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             border-right: 1px solid var(--border);
             background: transparent;
             color: var(--ink);
             outline: none;
         }
 
+        /* تبويبات الحالة */
         .status-tabs {
             display: flex;
-            gap: 8px;
-            margin-bottom: 16px;
+            gap: 6px;
+            margin-bottom: 14px;
             flex-wrap: wrap;
-            background: rgba(255,255,255,0.7);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            background: var(--white);
             border-radius: var(--radius-xl);
-            padding: 6px;
+            padding: 5px;
             border: 1px solid var(--border);
             box-shadow: var(--shadow-sm);
         }
@@ -359,53 +301,52 @@
         .status-tab {
             background: transparent;
             border: none;
-            padding: 10px 20px;
+            padding: 9px 16px;
             border-radius: var(--radius-xl);
             font-weight: 600;
             font-family: 'Cairo', sans-serif;
             cursor: pointer;
-            transition: all var(--transition);
             display: flex;
             align-items: center;
-            gap: 8px;
-            font-size: 0.88rem;
+            gap: 6px;
+            font-size: 0.82rem;
             color: var(--text-sec);
             flex: 1;
             justify-content: center;
-            min-width: 90px;
+            min-width: 80px;
+            touch-action: manipulation;
+            transition: opacity 0.15s;
         }
 
         .status-tab .badge {
-            background: rgba(0,0,0,0.05);
+            background: rgba(0,0,0,0.04);
             border-radius: 30px;
-            padding: 2px 10px;
-            font-size: 0.78rem;
+            padding: 2px 9px;
+            font-size: 0.75rem;
             font-weight: 700;
         }
 
         .status-tab.active {
             background: white;
-            color: var(--accent);
-            box-shadow: var(--shadow-xs);
+            color: var(--primary);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.06);
         }
 
         .status-tab.active .badge {
             background: var(--primary-light);
-            color: var(--accent);
+            color: var(--primary);
         }
 
-        .status-tab:hover:not(.active) {
-            color: var(--ink);
+        .status-tab:active:not(.active) {
             background: rgba(255,255,255,0.6);
         }
 
+        /* الجدول */
         .table-container {
-            background: rgba(255,255,255,0.8);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
+            background: var(--white);
             border-radius: var(--radius-lg);
-            box-shadow: var(--shadow-lg);
-            border: 1px solid rgba(255,255,255,0.7);
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border);
             overflow: hidden;
         }
 
@@ -418,19 +359,17 @@
             width: 100%;
             border-collapse: collapse;
             text-align: center;
-            min-width: 700px;
-            font-size: 0.9rem;
+            min-width: 650px;
+            font-size: 0.85rem;
         }
 
-        th, td { padding: 14px 10px; }
+        th, td { padding: 12px 8px; }
 
         thead th {
-            background: linear-gradient(to bottom, #F5FAFC, #E0F7FA);
+            background: #F5FAFC;
             font-weight: 700;
             color: var(--ink);
-            font-size: 0.82rem;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
+            font-size: 0.78rem;
             white-space: nowrap;
             position: sticky;
             top: 0;
@@ -439,24 +378,19 @@
 
         tbody tr {
             border-bottom: 1px solid var(--border);
-            transition: all var(--transition);
-        }
-
-        tbody tr:hover {
-            background: rgba(0,174,239,0.06);
         }
 
         tbody tr:last-child { border-bottom: none; }
 
         .status-badge {
-            padding: 5px 14px;
+            padding: 4px 12px;
             border-radius: 30px;
-            font-size: 0.75rem;
+            font-size: 0.72rem;
             font-weight: 700;
             white-space: nowrap;
             display: inline-flex;
             align-items: center;
-            gap: 4px;
+            gap: 3px;
         }
 
         .s-waiting { background: #FFF8E1; color: #F57F17; }
@@ -465,9 +399,9 @@
         .s-cancelled { background: #FFEBEE; color: #B71C1C; }
 
         .visit-type-badge {
-            padding: 4px 10px;
+            padding: 3px 9px;
             border-radius: 30px;
-            font-size: 0.7rem;
+            font-size: 0.68rem;
             font-weight: 700;
         }
         .vt-new { background: #E3F2FD; color: #0D47A1; }
@@ -475,73 +409,74 @@
 
         .action-btns {
             display: flex;
-            gap: 6px;
+            gap: 4px;
             justify-content: center;
             flex-wrap: wrap;
         }
 
         .icon-btn {
-            width: 34px;
-            height: 34px;
+            width: 30px;
+            height: 30px;
             border-radius: var(--radius-xs);
             border: none;
-            background: white;
+            background: var(--white);
             color: var(--text-sec);
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all var(--transition);
             border: 1px solid var(--border);
-            font-size: 0.85rem;
+            font-size: 0.78rem;
+            touch-action: manipulation;
+            transition: opacity 0.15s;
         }
 
-        .icon-btn:hover { background: var(--primary); color: white; border-color: var(--primary); }
-        .icon-btn.danger:hover { background: var(--danger); color: white; border-color: var(--danger); }
+        .icon-btn:active { background: var(--primary); color: white; border-color: var(--primary); }
+        .icon-btn.danger:active { background: var(--danger); color: white; border-color: var(--danger); }
 
         .empty-row td {
             text-align: center;
-            padding: 40px;
+            padding: 35px;
             color: var(--text-sec);
         }
 
+        /* مؤشر المزامنة */
+        .sync-dot {
+            display: inline-block;
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            margin-left: 5px;
+            vertical-align: middle;
+        }
+        .sync-dot.on { background: var(--success); }
+        .sync-dot.off { background: #FFB74D; }
+
+        /* مودال خفيف */
         .modal {
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(26,60,74,0.2);
-            backdrop-filter: blur(6px);
-            -webkit-backdrop-filter: blur(6px);
+            background: rgba(0,0,0,0.25);
             align-items: center;
             justify-content: center;
             z-index: 1000;
             padding: 16px;
-            animation: fadeIn 0.25s ease;
         }
-
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
         .modal-card {
-            background: rgba(255,255,255,0.97);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            background: var(--white);
             border-radius: var(--radius-lg);
             width: 100%;
-            max-width: 520px;
+            max-width: 480px;
             max-height: 85vh;
             overflow-y: auto;
-            box-shadow: var(--shadow-lg);
-            border: 1px solid rgba(255,255,255,0.8);
-            animation: slideUp 0.3s ease;
-        }
-
-        @keyframes slideUp {
-            from { transform: translateY(40px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
+            box-shadow: 0 15px 40px rgba(0,0,0,0.12);
+            border: 1px solid var(--border);
         }
 
         .modal-header {
-            padding: 20px 24px;
+            padding: 14px 18px;
             background: #F5FAFC;
             border-bottom: 1px solid var(--border);
             border-radius: var(--radius-lg) var(--radius-lg) 0 0;
@@ -553,16 +488,13 @@
             z-index: 10;
         }
 
-        .modal-header h3 {
-            font-size: 1.15rem;
-            font-weight: 700;
-        }
+        .modal-header h3 { font-size: 1.05rem; font-weight: 700; }
 
         .close-btn {
-            background: rgba(0,0,0,0.05);
+            background: none;
             border: none;
-            width: 36px;
-            height: 36px;
+            width: 34px;
+            height: 34px;
             border-radius: 50%;
             font-size: 22px;
             color: var(--text-sec);
@@ -570,41 +502,38 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all var(--transition);
         }
 
-        .close-btn:hover { background: rgba(0,0,0,0.1); color: var(--ink); }
+        .close-btn:active { background: rgba(0,0,0,0.05); }
 
-        .modal-body { padding: 20px 24px 24px; }
+        .modal-body { padding: 18px; }
 
-        .form-group { margin-bottom: 16px; }
+        .form-group { margin-bottom: 14px; }
 
         .form-group label {
             display: block;
-            margin-bottom: 6px;
+            margin-bottom: 5px;
             font-weight: 600;
-            font-size: 0.88rem;
+            font-size: 0.83rem;
             color: var(--ink);
         }
 
         .form-control {
             width: 100%;
-            padding: 12px 16px;
+            padding: 10px 14px;
             border-radius: var(--radius-sm);
             border: 1.5px solid var(--border);
             background: #F5FAFC;
             font-family: 'Cairo', sans-serif;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             color: var(--ink);
-            transition: all var(--transition);
             -webkit-appearance: none;
             appearance: none;
         }
 
         .form-control:focus {
             outline: none;
-            border-color: var(--accent);
-            box-shadow: 0 0 0 4px rgba(0,174,239,0.08);
+            border-color: var(--primary);
             background: white;
         }
 
@@ -618,95 +547,87 @@
             background: white;
             border: 1px solid var(--border);
             border-radius: var(--radius-sm);
-            margin-top: 4px;
-            max-height: 180px;
+            margin-top: 3px;
+            max-height: 160px;
             overflow-y: auto;
             display: none;
             z-index: 20;
-            box-shadow: var(--shadow-md);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
         }
 
         .search-item {
-            padding: 10px 14px;
+            padding: 9px 12px;
             cursor: pointer;
             border-bottom: 1px solid var(--border);
-            transition: background var(--transition);
+            font-size: 0.83rem;
         }
 
-        .search-item:hover { background: #E0F7FA; }
+        .search-item:active { background: #E0F7FA; }
         .search-item:last-child { border-bottom: none; }
 
         .alert-msg {
             color: var(--danger);
             text-align: center;
-            margin-top: 12px;
-            font-size: 0.85rem;
+            margin-top: 10px;
+            font-size: 0.8rem;
             font-weight: 500;
         }
 
+        /* توست خفيف */
         .toast-container {
             position: fixed;
-            bottom: 24px;
+            bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
             z-index: 3000;
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 6px;
             pointer-events: none;
         }
 
         .toast {
             background: #1A3C4A;
             color: white;
-            padding: 14px 24px;
+            padding: 11px 20px;
             border-radius: var(--radius-xl);
             font-weight: 600;
-            font-size: 0.88rem;
-            box-shadow: 0 12px 30px rgba(0,0,0,0.2);
-            animation: toastIn 0.35s ease, toastOut 0.35s ease 2.5s forwards;
+            font-size: 0.82rem;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.18);
             white-space: nowrap;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
         }
 
         .toast.err { background: #C62828; }
+        .toast.removing { opacity: 0; transform: translateY(-10px); transition: all 0.3s ease; }
 
-        @keyframes toastIn {
-            from { transform: translateY(20px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-
-        @keyframes toastOut {
-            from { transform: translateY(0); opacity: 1; }
-            to { transform: translateY(-20px); opacity: 0; }
-        }
-
+        /* تحسينات الشاشات الصغيرة */
         @media (max-width: 768px) {
-            body { padding: 10px; }
+            body { padding: 8px; }
 
             .app-header {
-                padding: 10px 16px;
-                top: 8px;
-                border-radius: var(--radius-lg);
+                padding: 8px 12px;
+                top: 4px;
+                border-radius: var(--radius-md);
             }
 
-            .logo h2 { font-size: 1.3rem; }
+            .logo h2 { font-size: 1.15rem; }
 
-            .btn { padding: 8px 14px; font-size: 0.82rem; }
+            .btn { padding: 7px 12px; font-size: 0.78rem; }
 
-            .doctor-tab { padding: 6px 12px; font-size: 0.8rem; }
+            .doctor-tab { padding: 6px 10px; font-size: 0.76rem; }
 
-            .status-tab { padding: 8px 12px; font-size: 0.8rem; }
+            .status-tab { padding: 7px 10px; font-size: 0.76rem; }
 
-            .status-tab .badge { font-size: 0.7rem; padding: 2px 8px; }
+            .status-tab .badge { font-size: 0.7rem; }
 
-            table { min-width: 600px; font-size: 0.8rem; }
+            table { min-width: 550px; font-size: 0.78rem; }
 
-            th, td { padding: 10px 6px; }
+            th, td { padding: 8px 5px; }
 
-            .icon-btn { width: 30px; height: 30px; font-size: 0.75rem; }
+            .icon-btn { width: 28px; height: 28px; font-size: 0.7rem; }
 
             .controls-row { flex-direction: column; align-items: stretch; }
 
@@ -714,20 +635,20 @@
 
             .modal-card { max-width: 100%; border-radius: var(--radius-md); }
 
-            .mini-stat { min-width: 80px; padding: 10px 12px; }
+            .mini-stat { min-width: 70px; padding: 8px 10px; }
             .mini-stat-info h4 { font-size: 1.1rem; }
         }
 
         @media (max-width: 400px) {
-            .status-tabs { flex-direction: column; gap: 4px; }
+            .status-tabs { flex-direction: column; gap: 3px; }
             .status-tab { justify-content: space-between; }
             .doctors-tabs { flex-direction: column; }
         }
 
         @media (prefers-reduced-motion: reduce) {
             *, *::before, *::after {
-                animation-duration: 0.01ms !important;
-                transition-duration: 0.01ms !important;
+                animation-duration: 0.001ms !important;
+                transition-duration: 0.001ms !important;
             }
         }
     </style>
@@ -744,7 +665,7 @@
     <div class="container" id="mainContainer" style="display:none;">
         <header class="app-header">
             <div class="logo">
-                <h2><i class="fas fa-heartbeat"></i> شفاء · الممرض</h2>
+                <h2><i class="fas fa-heartbeat"></i> شفاء · الممرض <span class="sync-dot on" id="syncDot" title="حالة المزامنة"></span></h2>
             </div>
             <div class="header-actions">
                 <span id="welcomeMsg"></span>
@@ -863,7 +784,7 @@
                     
                     <div class="form-group search-box">
                         <label>البحث عن مريض</label>
-                        <input type="text" id="patientSearch" class="form-control" placeholder="اسم أو رقم الهاتف...">
+                        <input type="text" id="patientSearch" class="form-control" placeholder="اسم أو رقم الهاتف..." autocomplete="off">
                         <div id="searchResults" class="search-results"></div>
                     </div>
                     
@@ -916,10 +837,17 @@
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         import { getDatabase, ref, onValue, set, push, update, get, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
+        // ============ تهيئة Firebase ============
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getDatabase(app);
 
+        // ============ ثوابت التخزين المحلي ============
+        const LOCAL_STORAGE_KEY = 'shifa_nurse_bookings_cache';
+        const LOCAL_DOCTORS_KEY = 'shifa_nurse_doctors_cache';
+        const CACHE_EXPIRY_DAYS = 50; // ✅ البيانات المحلية تنتهي بعد 50 يوم
+
+        // ============ حالة التطبيق ============
         const state = {
             currentUser: null,
             nurseData: null,
@@ -932,6 +860,7 @@
             unsubscribeBookings: null,
         };
 
+        // ============ دوال مساعدة ============
         const $ = (sel) => document.querySelector(sel);
         const $$ = (sel) => document.querySelectorAll(sel);
 
@@ -953,22 +882,198 @@
             toast.className = `toast ${isError ? 'err' : ''}`;
             toast.innerHTML = `<i class="fas ${isError ? 'fa-exclamation-circle' : 'fa-check-circle'}"></i> ${msg}`;
             container.appendChild(toast);
-            setTimeout(() => toast.remove(), 3000);
+            setTimeout(() => {
+                toast.classList.add('removing');
+                setTimeout(() => toast.remove(), 300);
+            }, 2500);
         };
 
-        const addRipple = (e) => {
-            const btn = e.currentTarget;
-            const ripple = document.createElement('span');
-            ripple.className = 'ripple';
-            const rect = btn.getBoundingClientRect();
-            const size = Math.max(rect.width, rect.height);
-            ripple.style.width = ripple.style.height = `${size}px`;
-            ripple.style.left = `${e.clientX - rect.left - size / 2}px`;
-            ripple.style.top = `${e.clientY - rect.top - size / 2}px`;
-            btn.appendChild(ripple);
-            ripple.addEventListener('animationend', () => ripple.remove());
+        // ============ إدارة التخزين المحلي ============
+        
+        /**
+         * ✅ تنظيف البيانات المحلية القديمة (أقدم من 50 يوم)
+         */
+        const cleanOldLocalData = () => {
+            try {
+                const cached = localStorage.getItem(LOCAL_STORAGE_KEY);
+                if (!cached) return;
+                
+                const data = JSON.parse(cached);
+                const now = Date.now();
+                const expiryMs = CACHE_EXPIRY_DAYS * 24 * 60 * 60 * 1000;
+                let hasChanges = false;
+                
+                // تنظيف الكشوفات القديمة
+                if (data.bookings) {
+                    const freshBookings = data.bookings.filter(b => {
+                        return (now - b._cachedAt) < expiryMs;
+                    });
+                    if (freshBookings.length !== data.bookings.length) {
+                        data.bookings = freshBookings;
+                        hasChanges = true;
+                    }
+                }
+                
+                // تنظيف المرضى القديمين
+                if (data.patients) {
+                    const freshPatients = data.patients.filter(p => {
+                        return (now - p._cachedAt) < expiryMs;
+                    });
+                    if (freshPatients.length !== data.patients.length) {
+                        data.patients = freshPatients;
+                        hasChanges = true;
+                    }
+                }
+                
+                if (hasChanges) {
+                    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data));
+                    console.log('🧹 تم تنظيف البيانات المحلية القديمة');
+                }
+            } catch (e) {
+                console.warn('تعذر تنظيف البيانات المحلية:', e.message);
+            }
         };
 
+        /**
+         * حفظ الكشوفات في التخزين المحلي
+         */
+        const saveBookingsToLocal = (bookings) => {
+            try {
+                const cached = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '{}');
+                cached.bookings = bookings.map(b => ({
+                    ...b,
+                    _cachedAt: Date.now()
+                }));
+                cached.lastUpdated = Date.now();
+                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(cached));
+            } catch (e) {
+                console.warn('تعذر حفظ الكشوفات محلياً:', e.message);
+            }
+        };
+
+        /**
+         * حفظ بيانات مريض في التخزين المحلي
+         */
+        const savePatientToLocal = (patientId, patientData) => {
+            try {
+                const cached = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '{}');
+                if (!cached.patients) cached.patients = [];
+                
+                // إزالة المريض القديم لو موجود
+                cached.patients = cached.patients.filter(p => p.id !== patientId);
+                
+                cached.patients.push({
+                    id: patientId,
+                    ...patientData,
+                    _cachedAt: Date.now()
+                });
+                
+                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(cached));
+            } catch (e) {
+                console.warn('تعذر حفظ المريض محلياً:', e.message);
+            }
+        };
+
+        /**
+         * تحميل البيانات من التخزين المحلي
+         */
+        const loadBookingsFromLocal = (doctorId, date) => {
+            try {
+                const cached = localStorage.getItem(LOCAL_STORAGE_KEY);
+                if (!cached) return null;
+                
+                const data = JSON.parse(cached);
+                if (!data.bookings) return null;
+                
+                const now = Date.now();
+                const expiryMs = CACHE_EXPIRY_DAYS * 24 * 60 * 60 * 1000;
+                
+                // تصفية الكشوفات حسب الطبيب والتاريخ والصلاحية
+                const filtered = data.bookings.filter(b => {
+                    const isFresh = (now - b._cachedAt) < expiryMs;
+                    return b.doctor_id === doctorId && b.date === date && isFresh;
+                });
+                
+                return filtered.length > 0 ? filtered : null;
+            } catch (e) {
+                console.warn('تعذر تحميل الكشوفات المحلية:', e.message);
+                return null;
+            }
+        };
+
+        /**
+         * البحث عن مريض في التخزين المحلي
+         */
+        const searchPatientsLocal = (term) => {
+            try {
+                const cached = localStorage.getItem(LOCAL_STORAGE_KEY);
+                if (!cached) return [];
+                
+                const data = JSON.parse(cached);
+                if (!data.patients) return [];
+                
+                const now = Date.now();
+                const expiryMs = CACHE_EXPIRY_DAYS * 24 * 60 * 60 * 1000;
+                const t = term.toLowerCase();
+                
+                return data.patients.filter(p => {
+                    const isFresh = (now - p._cachedAt) < expiryMs;
+                    return isFresh && (
+                        (p.name && p.name.toLowerCase().includes(t)) ||
+                        (p.phone && p.phone.includes(t))
+                    );
+                });
+            } catch (e) {
+                return [];
+            }
+        };
+
+        /**
+         * ✅ حفظ قائمة الأطباء محلياً
+         */
+        const saveDoctorsToLocal = (doctors) => {
+            try {
+                const data = {
+                    doctors,
+                    cachedAt: Date.now()
+                };
+                localStorage.setItem(LOCAL_DOCTORS_KEY, JSON.stringify(data));
+            } catch (e) {
+                console.warn('تعذر حفظ الأطباء محلياً:', e.message);
+            }
+        };
+
+        /**
+         * ✅ تحميل قائمة الأطباء من المحلي
+         */
+        const loadDoctorsFromLocal = () => {
+            try {
+                const data = localStorage.getItem(LOCAL_DOCTORS_KEY);
+                if (!data) return null;
+                
+                const parsed = JSON.parse(data);
+                const now = Date.now();
+                const expiryMs = CACHE_EXPIRY_DAYS * 24 * 60 * 60 * 1000;
+                
+                if ((now - parsed.cachedAt) < expiryMs) {
+                    return parsed.doctors;
+                }
+                return null;
+            } catch (e) {
+                return null;
+            }
+        };
+
+        // ============ تحديث مؤشر المزامنة ============
+        const setSyncStatus = (online) => {
+            const dot = $('#syncDot');
+            if (dot) {
+                dot.className = `sync-dot ${online ? 'on' : 'off'}`;
+                dot.title = online ? 'متصل بالسحابة' : 'غير متصل - استخدام البيانات المحلية';
+            }
+        };
+
+        // ============ تحميل بيانات الممرض ============
         const loadNurseData = async (uid) => {
             try {
                 const nurseSnap = await get(ref(db, `users/${uid}`));
@@ -984,7 +1089,7 @@
                 const doctorIds = linksSnap.exists() ? Object.keys(linksSnap.val()) : [];
 
                 if (doctorIds.length === 0) {
-                    $('#doctorsTabs').innerHTML = '<div style="padding:12px;color:var(--text-sec);">لا يوجد أطباء مرتبطين</div>';
+                    $('#doctorsTabs').innerHTML = '<div style="padding:10px;color:var(--text-sec);">لا يوجد أطباء مرتبطين</div>';
                     return false;
                 }
 
@@ -993,15 +1098,42 @@
                     return { id: docId, name: snap.exists() ? snap.val().name : 'دكتور' };
                 });
                 state.assignedDoctors = await Promise.all(doctorPromises);
+                
+                // ✅ حفظ الأطباء محلياً
+                saveDoctorsToLocal(state.assignedDoctors);
 
                 renderDoctorsTabs();
                 populateDoctorSelect();
                 state.selectedDoctorId = state.assignedDoctors[0].id;
                 highlightDoctorTab(state.selectedDoctorId);
                 loadBookings();
+                setSyncStatus(true);
                 return true;
 
             } catch (err) {
+                // ✅ محاولة تحميل الأطباء من التخزين المحلي
+                const localDoctors = loadDoctorsFromLocal();
+                if (localDoctors && localDoctors.length > 0) {
+                    state.assignedDoctors = localDoctors;
+                    renderDoctorsTabs();
+                    populateDoctorSelect();
+                    state.selectedDoctorId = state.assignedDoctors[0].id;
+                    highlightDoctorTab(state.selectedDoctorId);
+                    
+                    // تحميل الكشوفات من المحلي
+                    const localBookings = loadBookingsFromLocal(state.selectedDoctorId, state.currentDate);
+                    if (localBookings) {
+                        state.allBookings = localBookings;
+                        updateCounts();
+                        updateStats();
+                        renderTable();
+                    }
+                    
+                    setSyncStatus(false);
+                    showToast('⚠️ استخدام البيانات المحلية - لا يوجد اتصال', true);
+                    return true;
+                }
+                
                 showToast('خطأ في تحميل البيانات: ' + err.message, true);
                 return false;
             }
@@ -1055,9 +1187,25 @@
                 });
                 bookings.sort((a, b) => (a.time || '').localeCompare(b.time || ''));
                 state.allBookings = bookings;
+                
+                // ✅ حفظ في التخزين المحلي
+                saveBookingsToLocal(bookings);
+                setSyncStatus(true);
+                
                 updateCounts();
                 updateStats();
                 renderTable();
+            }, (error) => {
+                // ✅ استخدام البيانات المحلية عند فشل الاتصال
+                console.warn('خطأ في تحميل الكشوفات، استخدام المحلي:', error.message);
+                const localBookings = loadBookingsFromLocal(state.selectedDoctorId, state.currentDate);
+                if (localBookings) {
+                    state.allBookings = localBookings;
+                    updateCounts();
+                    updateStats();
+                    renderTable();
+                }
+                setSyncStatus(false);
             });
         };
 
@@ -1111,7 +1259,6 @@
 
                 const doctorName = state.assignedDoctors.find(d => d.id === b.doctor_id)?.name || 'دكتور';
 
-                // الإجراءات متاحة فقط للحجوزات قيد الانتظار
                 const actions = state.currentTab === 'waiting' ? `
                     <button class="icon-btn" data-action="edit" data-id="${b.id}" title="تعديل">
                         <i class="fas fa-edit"></i>
@@ -1135,6 +1282,7 @@
             }).join('');
         };
 
+        // ============ أحداث الجدول ============
         $('#bookingsBody').addEventListener('click', (e) => {
             const btn = e.target.closest('[data-action]');
             if (!btn) return;
@@ -1155,6 +1303,7 @@
             }
         };
 
+        // ============ المودال ============
         const openAddModal = () => {
             if (state.assignedDoctors.length === 0) {
                 showToast('لا يوجد أطباء مرتبطين', true);
@@ -1194,6 +1343,7 @@
             $('#searchResults').style.display = 'none';
         };
 
+        // ============ البحث عن المرضى ============
         let searchTimer;
         $('#patientSearch').addEventListener('input', (e) => {
             const term = e.target.value.trim().toLowerCase();
@@ -1203,15 +1353,30 @@
             }
             clearTimeout(searchTimer);
             searchTimer = setTimeout(async () => {
-                const snap = await get(ref(db, 'patients'));
-                const results = [];
-                snap.forEach(child => {
-                    const p = child.val();
-                    if ((p.name && p.name.toLowerCase().includes(term)) ||
-                        (p.phone && p.phone.includes(term))) {
-                        results.push({ id: child.key, ...p });
-                    }
-                });
+                let results = [];
+                
+                // ✅ البحث في التخزين المحلي أولاً
+                const localResults = searchPatientsLocal(term);
+                if (localResults.length > 0) {
+                    results = localResults;
+                }
+                
+                // البحث في Firebase
+                try {
+                    const snap = await get(ref(db, 'patients'));
+                    snap.forEach(child => {
+                        const p = child.val();
+                        if ((p.name && p.name.toLowerCase().includes(term)) ||
+                            (p.phone && p.phone.includes(term))) {
+                            // تجنب التكرار
+                            if (!results.find(r => r.id === child.key)) {
+                                results.push({ id: child.key, ...p });
+                            }
+                        }
+                    });
+                } catch (err) {
+                    console.warn('تعذر البحث في السحابة:', err.message);
+                }
 
                 const container = $('#searchResults');
                 if (results.length === 0) {
@@ -1232,7 +1397,7 @@
                     });
                 }
                 container.style.display = 'block';
-            }, 300);
+            }, 250);
         });
 
         const selectPatient = (patient) => {
@@ -1250,6 +1415,7 @@
             }
         });
 
+        // ============ حفظ الكشف ============
         $('#bookingForm').addEventListener('submit', async (e) => {
             e.preventDefault();
 
@@ -1278,12 +1444,16 @@
                 if (!patientId) {
                     const newRef = push(ref(db, 'patients'));
                     patientId = newRef.key;
-                    await set(newRef, {
+                    const patientData = {
                         name,
                         age: age || null,
                         phone: phone || null,
                         created_at: new Date().toISOString()
-                    });
+                    };
+                    await set(newRef, patientData);
+                    
+                    // ✅ حفظ المريض محلياً
+                    savePatientToLocal(patientId, patientData);
                 }
 
                 const bookingData = {
@@ -1316,6 +1486,7 @@
             }
         });
 
+        // ============ تبويبات الحالة ============
         $$('.status-tab').forEach(btn => {
             btn.addEventListener('click', () => {
                 $$('.status-tab').forEach(b => b.classList.remove('active'));
@@ -1325,6 +1496,7 @@
             });
         });
 
+        // ============ تغيير التاريخ ============
         $('#filterDate').addEventListener('change', () => {
             state.currentDate = $('#filterDate').value;
             if (state.selectedDoctorId) loadBookings();
@@ -1336,13 +1508,23 @@
             if (state.selectedDoctorId) loadBookings();
         });
 
+        // ============ ✅ تسجيل الخروج مع مسح حالة الدخول ============
         $('#logoutBtn').addEventListener('click', async () => {
             if (state.unsubscribeBookings) state.unsubscribeBookings();
-            try { await signOut(auth); } catch (e) {}
+            try { 
+                await signOut(auth); 
+            } catch (e) {
+                // تجاهل
+            }
+            // ✅ مسح بيانات الجلسة من sessionStorage
             sessionStorage.clear();
+            // ✅ مسح حالة تسجيل الدخول من localStorage
+            localStorage.removeItem('shifa_session');
+            // إعادة التوجيه لصفحة الدخول
             window.location.href = 'index.html';
         });
 
+        // ============ أحداث أخرى ============
         $('#addBookingBtn').addEventListener('click', openAddModal);
         $('#closeModalBtn').addEventListener('click', closeModal);
         window.addEventListener('click', (e) => {
@@ -1352,8 +1534,22 @@
             if (e.key === 'Escape' && $('#bookingModal').style.display === 'flex') closeModal();
         });
 
-        $$('.btn').forEach(btn => btn.addEventListener('click', addRipple));
+        // ============ ✅ مستمعي الاتصال بالإنترنت ============
+        window.addEventListener('online', () => {
+            setSyncStatus(true);
+            showToast('📡 تم استعادة الاتصال - جاري المزامنة');
+            if (state.selectedDoctorId) loadBookings();
+        });
+        
+        window.addEventListener('offline', () => {
+            setSyncStatus(false);
+            showToast('⚠️ انقطع الاتصال - استخدام البيانات المحلية', true);
+        });
 
+        // ============ بدء التشغيل ============
+        // ✅ تنظيف البيانات المحلية القديمة عند بدء التشغيل
+        cleanOldLocalData();
+        
         onAuthStateChanged(auth, async (user) => {
             if (!user) {
                 sessionStorage.clear();
@@ -1379,6 +1575,15 @@
                 state.currentDate = getToday();
                 $('#filterDate').value = state.currentDate;
 
+                // ✅ محاولة تحميل الكشوفات المحلية فوراً للعرض السريع
+                const localBookings = loadBookingsFromLocal(state.selectedDoctorId || '', state.currentDate);
+                if (localBookings && localBookings.length > 0) {
+                    state.allBookings = localBookings;
+                    updateCounts();
+                    updateStats();
+                    renderTable();
+                }
+
                 const success = await loadNurseData(user.uid);
                 if (success) {
                     $('#authLoader').style.display = 'none';
@@ -1386,6 +1591,8 @@
                 }
             }
         });
+
+        console.log('🚀 لوحة الممرض - وضع خفيف مع تخزين محلي (50 يوم صلاحية)');
     </script>
 </body>
 </html>
