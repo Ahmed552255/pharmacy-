@@ -51,16 +51,12 @@
             justify-content: center;
             align-items: center;
             padding: 1.25rem;
-            /* ✅ مساحة إضافية للسحب فوق لوحة المفاتيح */
-            padding-bottom: 45vh;
             background: var(--bg);
             position: relative;
             overflow-x: hidden;
             contain: layout style paint;
             -webkit-backface-visibility: hidden;
             backface-visibility: hidden;
-            /* ✅ تحسين السحب على الموبايل */
-            -webkit-overflow-scrolling: touch;
         }
         
         .bg-pattern {
@@ -348,14 +344,6 @@
             to { transform: rotate(360deg); }
         }
         
-        /* ✅ spacer للسحب فوق لوحة المفاتيح */
-        .keyboard-scroll-spacer {
-            height: 1px;
-            width: 100%;
-            pointer-events: none;
-            opacity: 0;
-        }
-        
         .toast {
             position: fixed;
             top: 20px;
@@ -446,11 +434,6 @@
             .bg-pattern::after {
                 animation-duration: 45s;
             }
-            
-            /* ✅ مساحة أكبر على الموبايل */
-            body {
-                padding-bottom: 55vh;
-            }
         }
         
         @media (max-width: 360px) {
@@ -466,11 +449,6 @@
             .btn-login {
                 padding: 0.85rem;
                 font-size: 1rem;
-            }
-            
-            /* ✅ مساحة أكبر للشاشات الصغيرة جداً */
-            body {
-                padding-bottom: 65vh;
             }
         }
         
@@ -571,9 +549,6 @@
                 </span>
             </button>
         </form>
-        
-        <!-- ✅ spacer للسحب فوق لوحة المفاتيح -->
-        <div class="keyboard-scroll-spacer"></div>
     </main>
 
     <script type="module">
@@ -618,10 +593,10 @@
         // ============ محتوى الزر الافتراضي ============
         const defaultBtnContent = dom.btnContent.innerHTML;
 
-        // ============ إدارة التخزين المحلي - جلسة دائمة ============
+        // ============ إدارة التخزين المحلي - جلسة خفيفة ============
         
         /**
-         * حفظ بيانات الجلسة في localStorage (دائمة - لا تنتهي صلاحيتها أبداً)
+         * حفظ بيانات الجلسة في localStorage (خفيفة - فقط للاستخدام المؤقت)
          */
         const saveSessionToLocal = (uid, role, name, email = '') => {
             try {
@@ -631,7 +606,6 @@
                     name,
                     email: email || dom.emailInput.value.trim().toLowerCase(),
                     timestamp: Date.now()
-                    // ✅ لا يوجد expiresAt - الجلسة دائمة للأبد
                 };
                 localStorage.setItem(STORAGE_KEYS.SESSION, JSON.stringify(sessionData));
             } catch (e) {
@@ -640,7 +614,7 @@
         };
 
         /**
-         * استرجاع بيانات الجلسة من localStorage (صالحة للأبد)
+         * استرجاع بيانات الجلسة من localStorage
          */
         const getLocalSession = () => {
             try {
@@ -649,7 +623,6 @@
                 
                 const session = JSON.parse(data);
                 
-                // ✅ التحقق من وجود البيانات الأساسية فقط (بدون تاريخ صلاحية)
                 if (!session.uid || !session.role) {
                     clearLocalSession();
                     return null;
@@ -675,15 +648,14 @@
         };
 
         /**
-         * حفظ بيانات الجلسة في كلا المخزنين (sessionStorage + localStorage)
+         * حفظ بيانات الجلسة في sessionStorage فقط (تنتهي عند إغلاق المتصفح)
          */
         const saveSession = (uid, role, name, email = '') => {
-            // جلسة سريعة (تنتهي عند إغلاق المتصفح)
             sessionStorage.setItem('userUid', uid);
             sessionStorage.setItem('userRole', role);
             sessionStorage.setItem('userName', name);
             
-            // ✅ جلسة دائمة في localStorage للتوجيه التلقائي (لا تنتهي أبداً)
+            // حفظ خفيف في localStorage للاستخدامات البسيطة
             saveSessionToLocal(uid, role, name, email);
         };
 
@@ -795,73 +767,6 @@
             }, 800);
         };
 
-        /**
-         * ============ التحقق من الجلسة المحفوظة وإعادة التوجيه التلقائي ============
-         * الجلسة دائمة - المستخدم هيتوجه تلقائي كل مرة
-         */
-        const checkStoredSession = async () => {
-            const localSession = getLocalSession();
-            
-            if (!localSession || !localSession.uid || !localSession.role) {
-                return false;
-            }
-            
-            showToast('🔄 جاري استعادة الجلسة...', 'success');
-            setLoading(true);
-            
-            try {
-                // التحقق من حالة المستخدم في قاعدة البيانات
-                const userData = await fetchUserData(localSession.uid);
-                
-                if (!userData || !userData.role) {
-                    // المستخدم مش موجود في قاعدة البيانات - خلاص امسح الجلسة
-                    clearLocalSession();
-                    setLoading(false);
-                    return false;
-                }
-                
-                // التحقق من الحالة (محظور)
-                if (userData.status === 'blocked') {
-                    clearLocalSession();
-                    setLoading(false);
-                    showError('🚫 هذا الحساب محظور. تواصل مع المسؤول.');
-                    return false;
-                }
-                
-                // تحديث بيانات الجلسة لو الدور اتغير
-                if (userData.role !== localSession.role) {
-                    saveSessionToLocal(localSession.uid, userData.role, userData.name || localSession.name, localSession.email);
-                }
-                
-                const displayName = userData.name || localSession.name || 'مستخدم';
-                
-                // تحديث sessionStorage
-                sessionStorage.setItem('userUid', localSession.uid);
-                sessionStorage.setItem('userRole', userData.role);
-                sessionStorage.setItem('userName', displayName);
-                
-                // توجيه المستخدم مباشرة
-                redirectUser(userData.role, displayName);
-                return true;
-                
-            } catch (error) {
-                console.warn('تعذر التحقق من الجلسة المحفوظة:', error.message);
-                
-                // في حالة خطأ الشبكة - استخدم البيانات المحلية مباشرة
-                if (error.message.includes('network') || error.message.includes('fetch') || error.code === 'auth/network-request-failed') {
-                    const displayName = localSession.name || 'مستخدم';
-                    sessionStorage.setItem('userUid', localSession.uid);
-                    sessionStorage.setItem('userRole', localSession.role);
-                    sessionStorage.setItem('userName', displayName);
-                    redirectUser(localSession.role, displayName);
-                    return true;
-                }
-                
-                setLoading(false);
-                return false;
-            }
-        };
-
         // ============ معالجة تسجيل الدخول ============
         const handleLogin = async (e) => {
             e.preventDefault();
@@ -917,7 +822,7 @@
 
                 const displayName = userData.name || email.split('@')[0];
 
-                // ✅ حفظ الجلسة بشكل دائم
+                // ✅ حفظ الجلسة بشكل خفيف
                 saveSession(user.uid, userData.role, displayName, email);
 
                 redirectUser(userData.role, displayName);
@@ -992,31 +897,27 @@
             }
         }, { passive: false });
 
-        // ============ بدء التشغيل: التحقق من الجلسة الدائمة ============
+        // ============ بدء التشغيل: بدون توجيه تلقائي ============
         const initApp = async () => {
-            // ✅ التحقق من وجود جلسة دائمة في localStorage
-            const hasSession = await checkStoredSession();
+            console.log('👤 صفحة تسجيل الدخول جاهزة - بدون توجيه تلقائي');
             
-            if (!hasSession) {
-                console.log('👤 لا توجد جلسة سابقة - انتظار تسجيل الدخول');
-                
-                // محاولة ملء البريد الإلكتروني من الجلسة القديمة لو موجود
-                try {
-                    const oldData = localStorage.getItem(STORAGE_KEYS.SESSION);
-                    if (oldData) {
-                        const parsed = JSON.parse(oldData);
-                        if (parsed.email) {
-                            dom.emailInput.value = parsed.email;
-                        }
+            // محاولة ملء البريد الإلكتروني من الجلسة القديمة لو موجود (فقط للتذكير)
+            try {
+                const oldData = localStorage.getItem(STORAGE_KEYS.SESSION);
+                if (oldData) {
+                    const parsed = JSON.parse(oldData);
+                    if (parsed.email) {
+                        dom.emailInput.value = parsed.email;
                     }
-                } catch (e) {
-                    // تجاهل
                 }
+            } catch (e) {
+                // تجاهل
             }
             
-            // مستمع لحالة المصادقة
+            // مستمع لحالة المصادقة (للتأكد من عدم وجود جلسة نشطة)
             onAuthStateChanged(auth, async (user) => {
                 if (user) {
+                    // ✅ المستخدم مسجل دخول بالفعل - نوجهه مباشرة
                     const localSession = getLocalSession();
                     if (!localSession || localSession.uid !== user.uid) {
                         try {
@@ -1024,6 +925,7 @@
                             if (userData && userData.role) {
                                 const displayName = userData.name || user.email.split('@')[0];
                                 saveSession(user.uid, userData.role, displayName, user.email);
+                                redirectUser(userData.role, displayName);
                             }
                         } catch (e) {
                             console.warn('تعذر تحديث الجلسة:', e.message);
@@ -1043,11 +945,11 @@
         // ============ تحسين أداء الصفحة ============
         if (typeof requestIdleCallback !== 'undefined') {
             requestIdleCallback(() => {
-                console.log('🚀 نظام شفاء — بوابة الدخول جاهزة (جلسة دائمة)');
+                console.log('🚀 نظام شفاء — بوابة الدخول جاهزة');
             });
         } else {
             setTimeout(() => {
-                console.log('🚀 نظام شفاء — بوابة الدخول جاهزة (جلسة دائمة)');
+                console.log('🚀 نظام شفاء — بوابة الدخول جاهزة');
             }, 200);
         }
 
