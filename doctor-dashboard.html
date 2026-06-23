@@ -17,7 +17,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
     
     <style>
-        /* جميع الأنماط موجودة كما هي - لم يتم التعديل عليها */
         :root {
             --primary: #00AEEF;
             --primary-light: #E0F7FA;
@@ -66,8 +65,6 @@
             padding-bottom: calc(max(4px, 1vw) + var(--safe-bottom));
             position: relative;
             overflow-x: hidden;
-            content-visibility: auto;
-            contain: layout style paint;
         }
 
         body::before {
@@ -77,11 +74,9 @@
             background: radial-gradient(ellipse at 15% 25%, rgba(0,174,239,0.05) 0%, transparent 50%), radial-gradient(ellipse at 85% 75%, rgba(0,128,128,0.04) 0%, transparent 50%);
             pointer-events: none;
             z-index: -1;
-            will-change: transform;
-            transform: translateZ(0);
         }
 
-        .container { max-width: min(1300px, 95vw); margin: 0 auto; contain: layout style; }
+        .container { max-width: min(1300px, 95vw); margin: 0 auto; }
 
         #appLoader {
             position: fixed; inset: 0; background: rgba(250,250,250,0.95); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
@@ -90,7 +85,7 @@
         .loader-circle {
             width: clamp(36px, 8vw, 44px); height: clamp(36px, 8vw, 44px);
             border: 3px solid var(--accent-soft); border-top-color: var(--accent); border-radius: 50%;
-            animation: spin 0.7s linear infinite; will-change: transform;
+            animation: spin 0.7s linear infinite;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
 
@@ -99,7 +94,7 @@
             background: rgba(255,255,255,0.85); backdrop-filter: blur(16px) saturate(180%); -webkit-backdrop-filter: blur(16px) saturate(180%);
             border-radius: var(--radius-xl); padding: clamp(6px, 1.5vw, 8px) clamp(10px, 3vw, 16px); margin-bottom: clamp(8px, 2vw, 12px);
             border: 1px solid rgba(255,255,255,0.9); box-shadow: var(--shadow-sm); flex-wrap: wrap; gap: clamp(4px, 1.5vw, 8px);
-            position: sticky; top: max(4px, 1vw); z-index: 100; will-change: transform; transform: translateZ(0);
+            position: sticky; top: max(4px, 1vw); z-index: 100;
         }
         .logo { display: flex; align-items: center; gap: clamp(4px, 1.5vw, 8px); flex-shrink: 0; }
         .logo h2 { font-size: clamp(1.1rem, 4vw, 1.4rem); font-weight: 900; background: linear-gradient(135deg, #008080, #00AEEF); -webkit-background-clip: text; background-clip: text; color: transparent; white-space: nowrap; }
@@ -130,22 +125,19 @@
             font-size: clamp(0.75rem, 2.2vw, 0.85rem); transition: all var(--transition);
             white-space: nowrap; position: relative; overflow: hidden;
             touch-action: manipulation; min-height: clamp(32px, 8vw, 40px); min-width: clamp(32px, 8vw, 44px);
-            will-change: transform; backface-visibility: hidden;
         }
         .btn:active { transform: scale(0.95); }
         .btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; box-shadow: 0 4px 12px rgba(0,174,239,0.25); }
         .btn-outline { background: rgba(255,255,255,0.9); color: var(--ink); border: 1.5px solid var(--border); }
+        .btn-success { background: linear-gradient(135deg, #26A69A, #00897B); color: white; box-shadow: 0 4px 12px rgba(38,166,154,0.25); }
         .btn-sm { padding: clamp(4px, 1vw, 5px) clamp(8px, 2vw, 10px); font-size: clamp(0.72rem, 1.8vw, 0.78rem); border-radius: var(--radius-sm); min-height: clamp(28px, 7vw, 32px); }
         
-        .ripple { position: absolute; border-radius: 50%; background: rgba(255,255,255,0.5); transform: scale(0); animation: ripple 0.5s ease-out; pointer-events: none; }
-        @keyframes ripple { to { transform: scale(4); opacity: 0; } }
-
         .main-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(300px, 340px); gap: clamp(8px, 2vw, 12px); align-items: start; }
 
         .workspace {
             background: rgba(255,255,255,0.85); backdrop-filter: blur(12px) saturate(180%); -webkit-backdrop-filter: blur(12px) saturate(180%);
             border-radius: var(--radius-lg); padding: clamp(12px, 3vw, 16px); border: 1px solid rgba(255,255,255,0.8);
-            box-shadow: var(--shadow-md); min-height: 50vh; min-height: 50dvh; contain: layout style;
+            box-shadow: var(--shadow-md); min-height: 50vh; min-height: 50dvh;
         }
         .patient-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: clamp(10px, 2.5vw, 14px); flex-wrap: wrap; gap: clamp(6px, 1.5vw, 8px); }
         .patient-info { display: flex; align-items: center; gap: clamp(6px, 2vw, 10px); flex: 1; min-width: 0; }
@@ -164,7 +156,7 @@
         .diagnosis-box textarea {
             width: 100%; padding: clamp(10px, 2vw, 12px) clamp(12px, 2.5vw, 14px); border-radius: var(--radius-sm);
             border: 1.5px solid var(--border); font-family: 'Cairo', system-ui, sans-serif; font-size: clamp(0.82rem, 2.2vw, 0.88rem);
-            resize: vertical; min-height: 80px; background: #F5FAFC; transition: all var(--transition); will-change: border-color, box-shadow;
+            resize: vertical; min-height: 80px; background: #F5FAFC; transition: all var(--transition);
         }
         .diagnosis-box textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,174,239,0.1); background: white; }
 
@@ -238,7 +230,7 @@
             background: rgba(255,255,255,0.85); backdrop-filter: blur(12px) saturate(180%); -webkit-backdrop-filter: blur(12px) saturate(180%);
             border-radius: var(--radius-lg); padding: clamp(10px, 2.5vw, 14px); border: 1px solid rgba(255,255,255,0.8);
             box-shadow: var(--shadow-sm); max-height: 70vh; max-height: 70dvh; overflow-y: auto; position: sticky;
-            top: clamp(60px, 15vw, 80px); -webkit-overflow-scrolling: touch; overscroll-behavior: contain; contain: layout style;
+            top: clamp(60px, 15vw, 80px); -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
         }
         .sidebar-panel h4 { font-size: clamp(0.82rem, 2.2vw, 0.9rem); font-weight: 800; margin-bottom: clamp(8px, 2vw, 10px); display: flex; align-items: center; gap: clamp(4px, 1vw, 6px); }
         .mini-queue-item {
@@ -258,7 +250,7 @@
 
         .prescription-history-item {
             background: white; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; margin-bottom: 8px;
-            cursor: pointer; transition: all var(--transition);
+            cursor: pointer; transition: all var(--transition); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;
         }
         .prescription-history-item:hover { border-color: var(--accent); box-shadow: var(--shadow-sm); }
         .editable-rx-chip {
@@ -322,9 +314,6 @@
         @keyframes toastIn { from { transform: translateY(16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         @keyframes toastOut { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-16px); opacity: 0; } }
 
-        @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
-        @media (prefers-reduced-data: reduce) { body::before { display: none; } .app-header, .workspace, .sidebar-panel, .modal-card { backdrop-filter: none; -webkit-backdrop-filter: none; } }
-
         @media (max-width: 1024px) { .main-layout { grid-template-columns: 1fr; gap: clamp(8px, 2vw, 10px); } .sidebar-panel { max-height: none; position: static; order: -1; } }
         @media (max-width: 768px) {
             html { font-size: clamp(13px, 3.5vw, 14px); }
@@ -340,16 +329,7 @@
             .queue-tabs { width: 100%; }
             .queue-tab { flex: 1; text-align: center; font-size: 0.72rem; padding: 5px 8px; }
         }
-        @media (max-width: 480px) {
-            .btn { padding: clamp(6px, 2vw, 7px) clamp(10px, 3vw, 12px); font-size: clamp(0.75rem, 2.5vw, 0.8rem); gap: 4px; }
-            .rx-chip .drug-name { max-width: 80px; }
-        }
-        @media (max-width: 360px) {
-            html { font-size: clamp(12px, 4vw, 13px); }
-            .header-actions { gap: 3px; }
-            .btn { padding: 5px 8px; font-size: 0.75rem; gap: 3px; min-height: 30px; }
-        }
-        @media print { body::before, .app-header, .sidebar-panel, .toast-container, #appLoader, .modal { display: none !important; } .workspace { box-shadow: none; border: 1px solid #ddd; } body { background: white; } }
+        @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
     </style>
 </head>
 <body>
@@ -397,9 +377,14 @@
                                 <span id="patientMeta">---</span>
                             </div>
                         </div>
-                        <button class="btn btn-outline btn-sm" id="viewPatientFileBtn" aria-label="ملف المريض">
-                            <i class="fas fa-folder-open"></i> ملف
-                        </button>
+                        <div style="display:flex;gap:6px;">
+                            <button class="btn btn-outline btn-sm" id="viewPatientFileBtn" aria-label="ملف المريض">
+                                <i class="fas fa-folder-open"></i> ملف
+                            </button>
+                            <button class="btn btn-success btn-sm" id="saveAsTemplateBtn" aria-label="حفظ كقالب">
+                                <i class="fas fa-save"></i> حفظ كقالب
+                            </button>
+                        </div>
                     </div>
 
                     <div class="diagnosis-box">
@@ -443,6 +428,7 @@
                             <i class="fas fa-trash-alt"></i>
                         </button>
                     </div>
+                    <div id="loadedTemplateInfo" style="margin-top:8px;font-size:0.75rem;color:var(--accent);display:none;"></div>
                 </div>
             </div>
 
@@ -474,7 +460,7 @@
         </div>
     </div>
 
-    <!-- نافذة تعديل وصفة سابقة -->
+    <!-- النوافذ المنبثقة -->
     <div id="editPrescriptionModal" class="modal" role="dialog" aria-modal="true" aria-label="تعديل الوصفة">
         <div class="modal-card">
             <div class="modal-header">
@@ -537,6 +523,28 @@
         </div>
     </div>
 
+    <!-- نافذة حفظ كقالب جديدة -->
+    <div id="saveNewTemplateModal" class="modal" role="dialog" aria-modal="true" aria-label="حفظ كقالب جديد">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3><i class="fas fa-save"></i> حفظ كقالب جديد</h3>
+                <button class="close-btn" id="closeSaveNewTemplateBtn" aria-label="إغلاق">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom:12px;font-size:0.85rem;color:var(--text-sec);">
+                    سيتم حفظ التشخيص الحالي وجميع الأدوية المضافة كقالب جديد.
+                </p>
+                <label for="newTemplateNameInput" style="font-weight:700;display:block;margin-bottom:6px;">اسم القالب</label>
+                <input type="text" id="newTemplateNameInput" class="form-control" placeholder="أدخل اسم القالب الجديد..." aria-label="اسم القالب الجديد">
+                <div id="templateNameError" style="color:var(--danger);font-size:0.78rem;margin-top:4px;display:none;"></div>
+                <div style="display:flex;gap:8px;margin-top:16px;">
+                    <button class="btn btn-primary" id="confirmSaveNewTemplateBtn" style="flex:1;">💾 حفظ</button>
+                    <button class="btn btn-outline btn-sm" id="cancelSaveNewTemplateBtn">إلغاء</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="patientFileModal" class="modal" role="dialog" aria-modal="true" aria-label="الملف الطبي">
         <div class="modal-card" style="max-width: 900px; width: 95%; max-height: 90vh;">
             <div class="modal-header">
@@ -554,83 +562,45 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         import { getDatabase, ref, onValue, set, push, update, get, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
-        import { drugManager as localDrugManager } from './local-drug-manager.js';
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getDatabase(app);
 
+        // ✅ مفاتيح التخزين المحلي من صفحة تسجيل الدخول
+        const LOGIN_STORAGE_KEYS = ['shifa_session', 'shifa_remember', 'shifa_last_login'];
+
         // ============ IndexedDB للجلسات ============
         class SessionDB {
-            constructor() { this.dbName = 'ShifaDoctorDB'; this.storeName = 'pendingSessions'; this.db = null; this._cache = null; }
+            constructor() { this.dbName = 'ShifaDoctorDB'; this.storeName = 'pendingSessions'; this.db = null; }
             async open() { if (this.db) return; return new Promise((resolve, reject) => { const req = indexedDB.open(this.dbName, 1); req.onupgradeneeded = (e) => { const db = e.target.result; if (!db.objectStoreNames.contains(this.storeName)) db.createObjectStore(this.storeName, { keyPath: 'id' }); }; req.onsuccess = (e) => { this.db = e.target.result; resolve(); }; req.onerror = (e) => reject(e.target.error); }); }
-            async save(session) { if (!this.db) await this.open(); this._cache = null; return new Promise((resolve, reject) => { const tx = this.db.transaction(this.storeName, 'readwrite'); tx.objectStore(this.storeName).put(session); tx.oncomplete = resolve; tx.onerror = () => reject(tx.error); }); }
-            async getAll() { if (this._cache) return this._cache; if (!this.db) await this.open(); return new Promise((resolve, reject) => { const tx = this.db.transaction(this.storeName, 'readonly'); const req = tx.objectStore(this.storeName).getAll(); req.onsuccess = () => { this._cache = req.result || []; resolve(this._cache); }; req.onerror = () => reject(req.error); }); }
-            async delete(id) { if (!this.db) await this.open(); this._cache = null; return new Promise((resolve, reject) => { const tx = this.db.transaction(this.storeName, 'readwrite'); tx.objectStore(this.storeName).delete(id); tx.oncomplete = resolve; tx.onerror = () => reject(tx.error); }); }
+            async save(session) { if (!this.db) await this.open(); return new Promise((resolve, reject) => { const tx = this.db.transaction(this.storeName, 'readwrite'); tx.objectStore(this.storeName).put(session); tx.oncomplete = resolve; tx.onerror = () => reject(tx.error); }); }
+            async getAll() { if (!this.db) await this.open(); return new Promise((resolve, reject) => { const tx = this.db.transaction(this.storeName, 'readonly'); const req = tx.objectStore(this.storeName).getAll(); req.onsuccess = () => resolve(req.result || []); req.onerror = () => reject(req.error); }); }
+            async delete(id) { if (!this.db) await this.open(); return new Promise((resolve, reject) => { const tx = this.db.transaction(this.storeName, 'readwrite'); tx.objectStore(this.storeName).delete(id); tx.oncomplete = resolve; tx.onerror = () => reject(tx.error); }); }
         }
 
         // ============ IndexedDB لمفضلة الأدوية ============
         class FavoriteDrugsDB {
-            constructor() { this.dbName = 'ShifaFavoritesDB'; this.storeName = 'favoriteDrugs'; this.db = null; this._cache = null; }
-            async open() { if (this.db) return; return new Promise((resolve, reject) => { const req = indexedDB.open(this.dbName, 1); req.onupgradeneeded = (e) => { const db = e.target.result; if (!db.objectStoreNames.contains(this.storeName)) { const store = db.createObjectStore(this.storeName, { keyPath: 'fullName' }); store.createIndex('usageCount', 'usageCount', { unique: false }); store.createIndex('lastUsed', 'lastUsed', { unique: false }); } }; req.onsuccess = (e) => { this.db = e.target.result; resolve(); }; req.onerror = (e) => reject(e.target.error); }); }
-            async getAll() { if (this._cache) return this._cache; if (!this.db) await this.open(); return new Promise((resolve, reject) => { const tx = this.db.transaction(this.storeName, 'readonly'); const req = tx.objectStore(this.storeName).getAll(); req.onsuccess = () => { this._cache = req.result || []; resolve(this._cache); }; req.onerror = () => reject(req.error); }); }
-            async incrementAndSave(fullName, name, form, strength) { if (!this.db) await this.open(); this._cache = null; const tx = this.db.transaction(this.storeName, 'readwrite'); const store = tx.objectStore(this.storeName); const req = store.get(fullName); req.onsuccess = () => { let drug = req.result; if (drug) { drug.usageCount = (drug.usageCount || 0) + 1; drug.lastUsed = new Date().toISOString(); } else { drug = { fullName, name, form, strength, usageCount: 1, hidden: false, firstUsed: new Date().toISOString(), lastUsed: new Date().toISOString() }; } store.put(drug); }; }
-            async hideDrug(fullName) { if (!this.db) await this.open(); this._cache = null; return new Promise((resolve) => { const tx = this.db.transaction(this.storeName, 'readwrite'); const store = tx.objectStore(this.storeName); const req = store.get(fullName); req.onsuccess = () => { let drug = req.result || { fullName, usageCount: 0 }; drug.hidden = true; drug.lastUsed = new Date().toISOString(); store.put(drug); resolve(); }; req.onerror = () => resolve(); }); }
+            constructor() { this.dbName = 'ShifaFavoritesDB'; this.storeName = 'favoriteDrugs'; this.db = null; }
+            async open() { if (this.db) return; return new Promise((resolve, reject) => { const req = indexedDB.open(this.dbName, 1); req.onupgradeneeded = (e) => { const db = e.target.result; if (!db.objectStoreNames.contains(this.storeName)) { const store = db.createObjectStore(this.storeName, { keyPath: 'fullName' }); store.createIndex('usageCount', 'usageCount', { unique: false }); } }; req.onsuccess = (e) => { this.db = e.target.result; resolve(); }; req.onerror = (e) => reject(e.target.error); }); }
+            async getAll() { if (!this.db) await this.open(); return new Promise((resolve, reject) => { const tx = this.db.transaction(this.storeName, 'readonly'); const req = tx.objectStore(this.storeName).getAll(); req.onsuccess = () => resolve(req.result || []); req.onerror = () => reject(req.error); }); }
+            async incrementAndSave(fullName, name, form, strength) { if (!this.db) await this.open(); const tx = this.db.transaction(this.storeName, 'readwrite'); const store = tx.objectStore(this.storeName); const req = store.get(fullName); req.onsuccess = () => { let drug = req.result; if (drug) { drug.usageCount = (drug.usageCount || 0) + 1; drug.lastUsed = new Date().toISOString(); } else { drug = { fullName, name, form, strength, usageCount: 1, hidden: false, firstUsed: new Date().toISOString(), lastUsed: new Date().toISOString() }; } store.put(drug); }; }
+            async hideDrug(fullName) { if (!this.db) await this.open(); return new Promise((resolve) => { const tx = this.db.transaction(this.storeName, 'readwrite'); const store = tx.objectStore(this.storeName); const req = store.get(fullName); req.onsuccess = () => { let drug = req.result || { fullName, usageCount: 0 }; drug.hidden = true; store.put(drug); resolve(); }; req.onerror = () => resolve(); }); }
             async search(term, formFilter = null, limit = 5) { const all = await this.getAll(); const termLower = term.toLowerCase(); let results = all.filter(d => { if (d.hidden) return false; if (formFilter && d.form !== formFilter) return false; return d.name?.toLowerCase().includes(termLower) || d.fullName?.toLowerCase().includes(termLower); }); results.sort((a, b) => (b.usageCount || 0) - (a.usageCount || 0)); return results.slice(0, limit); }
         }
 
         // ============ IndexedDB لمفضلة الجرعات ============
         class FavoriteDosesDB {
-            constructor() { this.dbName = 'ShifaDosesDB'; this.storeName = 'favoriteDoses'; this.db = null; this._cache = null; }
+            constructor() { this.dbName = 'ShifaDosesDB'; this.storeName = 'favoriteDoses'; this.db = null; }
             async open() { if (this.db) return; return new Promise((resolve, reject) => { const req = indexedDB.open(this.dbName, 1); req.onupgradeneeded = (e) => { const db = e.target.result; if (!db.objectStoreNames.contains(this.storeName)) { const store = db.createObjectStore(this.storeName, { keyPath: 'id' }); store.createIndex('usageCount', 'usageCount', { unique: false }); } }; req.onsuccess = (e) => { this.db = e.target.result; resolve(); }; req.onerror = (e) => reject(e.target.error); }); }
-            async getAll() { if (this._cache) return this._cache; if (!this.db) await this.open(); return new Promise((resolve, reject) => { const tx = this.db.transaction(this.storeName, 'readonly'); const req = tx.objectStore(this.storeName).getAll(); req.onsuccess = () => { this._cache = req.result || []; resolve(this._cache); }; req.onerror = () => reject(req.error); }); }
-            async recordDose(drugName, form, dose, freqLabel) { if (!this.db) await this.open(); this._cache = null; const id = `${drugName}_${form}_${dose}`; const tx = this.db.transaction(this.storeName, 'readwrite'); const store = tx.objectStore(this.storeName); const req = store.get(id); req.onsuccess = () => { let entry = req.result; if (entry) { entry.usageCount = (entry.usageCount || 0) + 1; entry.lastUsed = new Date().toISOString(); } else { entry = { id, drugName, form, dose, freqLabel, usageCount: 1, firstUsed: new Date().toISOString(), lastUsed: new Date().toISOString() }; } store.put(entry); }; }
+            async getAll() { if (!this.db) await this.open(); return new Promise((resolve, reject) => { const tx = this.db.transaction(this.storeName, 'readonly'); const req = tx.objectStore(this.storeName).getAll(); req.onsuccess = () => resolve(req.result || []); req.onerror = () => reject(req.error); }); }
+            async recordDose(drugName, form, dose, freqLabel) { if (!this.db) await this.open(); const id = `${drugName}_${form}_${dose}`; const tx = this.db.transaction(this.storeName, 'readwrite'); const store = tx.objectStore(this.storeName); const req = store.get(id); req.onsuccess = () => { let entry = req.result; if (entry) { entry.usageCount = (entry.usageCount || 0) + 1; entry.lastUsed = new Date().toISOString(); } else { entry = { id, drugName, form, dose, freqLabel, usageCount: 1, firstUsed: new Date().toISOString(), lastUsed: new Date().toISOString() }; } store.put(entry); }; }
             async search(drugName, form, limit = 3) { const all = await this.getAll(); let results = all.filter(d => d.drugName === drugName && d.form === form); results.sort((a, b) => (b.usageCount || 0) - (a.usageCount || 0)); return results.slice(0, limit); }
         }
 
         const sessionDB = new SessionDB();
         const favoritesDB = new FavoriteDrugsDB();
         const favoriteDosesDB = new FavoriteDosesDB();
-
-        // دمج الـ localDrugManager المستورد مع النظام الحالي
-        const drugManager = {
-            ...localDrugManager,
-            _cachePromise: null,
-            async loadCache() {
-                if (this._cachePromise) return this._cachePromise;
-                this._cachePromise = (async () => {
-                    try { const snap = await get(ref(db, 'drugs')); state.globalDrugsCache = snap.exists() ? Object.values(snap.val()) : []; } catch(e) { state.globalDrugsCache = []; }
-                    try { 
-                        // استدعاء localDrugManager للحصول على الأدوية المحلية
-                        const localDrugs = await localDrugManager.getAllDrugs ? await localDrugManager.getAllDrugs() : [];
-                        const seen = new Set(state.globalDrugsCache.map(d => d.name?.toLowerCase()));
-                        localDrugs.forEach(name => { if (!seen.has(name.toLowerCase())) { state.globalDrugsCache.push({ id: `local_${state.globalDrugsCache.length}`, name, form: 'tablet', freq: 0 }); } });
-                    } catch(e) { console.log('لم يتم تحميل local-drug-manager'); }
-                    state.drugCache = [...state.globalDrugsCache];
-                })();
-                return this._cachePromise;
-            },
-            async getSuggestions(term, form) {
-                const termLower = term.toLowerCase(); const suggestions = []; const seenNames = new Set();
-                const localFavs = await favoritesDB.search(termLower, form, 2);
-                localFavs.forEach(d => { const key = `${d.name}_${d.form}_${d.strength}`.toLowerCase(); if (!seenNames.has(key)) { seenNames.add(key); suggestions.push({ name: d.fullName || `${d.name} ${d.strength}`, form: d.form, strength: d.strength, freq: d.usageCount, source: 'favorite', originalName: d.name }); } });
-                const remainingSlots = 5 - suggestions.length;
-                if (remainingSlots > 0) { let globalResults = state.globalDrugsCache.filter(d => { const name = (d.name || '').toLowerCase(); return name.includes(termLower); }); if (form) globalResults = globalResults.filter(d => d.form === form); globalResults.sort((a, b) => (b.freq || 0) - (a.freq || 0)); for (const d of globalResults) { const key = `${d.name}_${d.form}`.toLowerCase(); if (!seenNames.has(key) && suggestions.length < 5) { seenNames.add(key); suggestions.push({ name: d.name, form: d.form, strength: d.strength || extractStrength(d.name), freq: d.freq || 0, source: 'global', originalName: d.name }); } } }
-                return suggestions;
-            },
-            async recordUsage(fullDrugName, name, form, strength) { 
-                const now = new Date().toISOString(); const uid = state.user?.uid; 
-                await favoritesDB.incrementAndSave(fullDrugName, name, form, strength); 
-                // تسجيل في localDrugManager
-                try { await localDrugManager.recordUsage ? await localDrugManager.recordUsage(fullDrugName, name, form, strength) : null; } catch(e) {}
-                if (uid) { (async () => { try { const userDrugRef = ref(db, `doctor_favorites/${uid}`); const snap = await get(userDrugRef); let favorites = snap.exists() ? snap.val() : {}; const drugKey = fullDrugName.replace(/[.#$\/\[\]]/g, '_'); if (favorites[drugKey]) { favorites[drugKey].usageCount = (favorites[drugKey].usageCount || 0) + 1; favorites[drugKey].lastUsed = now; } else { favorites[drugKey] = { name, form, strength, fullName: fullDrugName, usageCount: 1, hidden: false, firstUsed: now, lastUsed: now }; } await set(userDrugRef, favorites); } catch(e) {} })(); } 
-            },
-            async hideSuggestion(fullDrugName, name, form) { 
-                await favoritesDB.hideDrug(fullDrugName); 
-                try { await localDrugManager.hideSuggestion ? await localDrugManager.hideSuggestion(fullDrugName, name, form) : null; } catch(e) {}
-                const uid = state.user?.uid; if (uid) { try { const drugKey = fullDrugName.replace(/[.#$\/\[\]]/g, '_'); const userDrugRef = ref(db, `doctor_favorites/${uid}/${drugKey}`); const snap = await get(userDrugRef); let data = snap.exists() ? snap.val() : { name, form, fullName: fullDrugName, usageCount: 0 }; data.hidden = true; await set(userDrugRef, data); } catch(e) {} } toast(`تم تقليل ظهور "${fullDrugName}"`); 
-            }
-        };
 
         const state = {
             user: null, doctorData: null, appointments: [], currentAppointment: null,
@@ -639,15 +609,23 @@
             editingPrescription: null, editingRxId: null, editingPatientName: ''
         };
 
-        const DOM = {};
-        const $ = (sel) => { if (!DOM[sel]) DOM[sel] = document.querySelector(sel); return DOM[sel]; };
+        const $ = (sel) => document.querySelector(sel);
         const $$ = (sel) => document.querySelectorAll(sel);
         const today = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
         const esc = (s) => { if (!s) return ''; const d = document.createElement('div'); d.textContent = String(s); return d.innerHTML; };
         const toast = (msg, err=false) => { const c = $('#toastContainer'); const t = document.createElement('div'); t.className = `toast ${err?'err':''}`; t.innerHTML = `<i class="fas ${err?'fa-exclamation-circle':'fa-check-circle'}"></i> ${msg}`; c.appendChild(t); setTimeout(() => { if (t.parentNode) t.remove(); }, 2500); };
-        const ripple = (e) => { const b = e.currentTarget; const r = document.createElement('span'); r.className = 'ripple'; const rect = b.getBoundingClientRect(); const s = Math.max(rect.width, rect.height); r.style.width = r.style.height = s+'px'; r.style.left = (e.clientX - rect.left - s/2)+'px'; r.style.top = (e.clientY - rect.top - s/2)+'px'; b.appendChild(r); r.addEventListener('animationend', () => r.remove(), { once: true }); };
         const getPatientName = (apt) => apt?.patient_name || apt?.patientName || 'غير معروف';
         const extractStrength = (text) => { const match = text.match(/(\d+(?:\.\d+)?\s*(?:gm|g|gram|mg|mcg|mcgm|IU|MU|ml|%|mcg\/ml|mg\/ml|mg\/5ml|mcg\/puff)(?:\/\d*\s*(?:ml|gm|g))?)/i); return match ? match[1] : ''; };
+
+        // ✅ دالة مسح جميع بيانات تسجيل الدخول
+        function clearAllLoginData() {
+            try {
+                LOGIN_STORAGE_KEYS.forEach(key => localStorage.removeItem(key));
+                sessionStorage.removeItem('userUid');
+                sessionStorage.removeItem('userRole');
+                sessionStorage.removeItem('userName');
+            } catch (e) { console.warn('تعذر مسح بيانات الجلسة:', e.message); }
+        }
 
         // ============ نظام اقتراح الجرعات الذكي ============
         const doseManager = {
@@ -683,7 +661,28 @@
         };
 
         // ============ إدارة الأدوية ============
-        // تم دمج drugManager مع localDrugManager أعلاه
+        const drugManager = {
+            _cachePromise: null,
+            async loadCache() {
+                if (this._cachePromise) return this._cachePromise;
+                this._cachePromise = (async () => {
+                    try { const snap = await get(ref(db, 'drugs')); state.globalDrugsCache = snap.exists() ? Object.values(snap.val()) : []; } catch(e) { state.globalDrugsCache = []; }
+                    try { const module = await import('./drugs-database.js'); const localDrugs = module.default || module.drugsDatabase || []; const seen = new Set(state.globalDrugsCache.map(d => d.name?.toLowerCase())); localDrugs.forEach(name => { if (!seen.has(name.toLowerCase())) { state.globalDrugsCache.push({ id: `local_${state.globalDrugsCache.length}`, name, form: 'tablet', freq: 0 }); } }); } catch(e) {}
+                    state.drugCache = [...state.globalDrugsCache];
+                })();
+                return this._cachePromise;
+            },
+            async getSuggestions(term, form) {
+                const termLower = term.toLowerCase(); const suggestions = []; const seenNames = new Set();
+                const localFavs = await favoritesDB.search(termLower, form, 2);
+                localFavs.forEach(d => { const key = `${d.name}_${d.form}_${d.strength}`.toLowerCase(); if (!seenNames.has(key)) { seenNames.add(key); suggestions.push({ name: d.fullName || `${d.name} ${d.strength}`, form: d.form, strength: d.strength, freq: d.usageCount, source: 'favorite', originalName: d.name }); } });
+                const remainingSlots = 5 - suggestions.length;
+                if (remainingSlots > 0) { let globalResults = state.globalDrugsCache.filter(d => { const name = (d.name || '').toLowerCase(); return name.includes(termLower); }); if (form) globalResults = globalResults.filter(d => d.form === form); globalResults.sort((a, b) => (b.freq || 0) - (a.freq || 0)); for (const d of globalResults) { const key = `${d.name}_${d.form}`.toLowerCase(); if (!seenNames.has(key) && suggestions.length < 5) { seenNames.add(key); suggestions.push({ name: d.name, form: d.form, strength: d.strength || extractStrength(d.name), freq: d.freq || 0, source: 'global', originalName: d.name }); } } }
+                return suggestions;
+            },
+            async recordUsage(fullDrugName, name, form, strength) { const now = new Date().toISOString(); await favoritesDB.incrementAndSave(fullDrugName, name, form, strength); },
+            async hideSuggestion(fullDrugName, name, form) { await favoritesDB.hideDrug(fullDrugName); toast(`تم تقليل ظهور "${fullDrugName}"`); }
+        };
 
         // ============ الجلسات ============
         async function saveSessionToDB() { if (!state.currentAppointment) return; const session = { id: state.currentAppointment.id, appointment: state.currentAppointment, prescription: state.prescription.slice(), diagnosis: $('#diagnosisInput')?.value || '', loadedTemplateId: state.loadedTemplateId, loadedTemplateName: state.loadedTemplateName, updatedAt: new Date().toISOString() }; sessionDB.save(session).catch(() => {}); state.activeSessionId = session.id; }
@@ -707,12 +706,7 @@
             const container = $('#' + containerId);
             if (!container) return;
             if (patients.length === 0) { const label = containerId.includes('current') ? 'جاري كشفهم' : containerId.includes('waiting') ? 'منتظرين' : 'منتهين'; container.innerHTML = `<div class="empty-queue">لا يوجد مرضى ${label}</div>`; return; }
-            const fragment = document.createDocumentFragment();
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = patients.map(apt => { let cls = 'mini-queue-item'; if (isDone) cls += ' done'; if (state.currentAppointment && apt.id === state.currentAppointment.id) cls += ' current'; const name = getPatientName(apt); const statusIcon = apt.status === 'منتهي' ? '✅' : apt.status === 'قيد الكشف' ? '🩺' : '⏳'; return `<div class="${cls}" data-id="${apt.id}"><div style="display:flex;justify-content:space-between;align-items:center;"><div><b>${esc(name)}</b><div style="font-size:0.7rem;color:var(--text-sec);">${apt.time||''} · ${apt.age||'--'} سنة</div></div><span class="patient-status-icon">${statusIcon}</span></div></div>`; }).join('');
-            while (tempDiv.firstChild) fragment.appendChild(tempDiv.firstChild);
-            container.innerHTML = ''; container.appendChild(fragment);
-            if (!container._hasDelegation) { container.addEventListener('click', (e) => { const item = e.target.closest('.mini-queue-item:not(.done)'); if (item) selectPatient(item.dataset.id); }); container._hasDelegation = true; }
+            container.innerHTML = patients.map(apt => { let cls = 'mini-queue-item'; if (isDone) cls += ' done'; if (state.currentAppointment && apt.id === state.currentAppointment.id) cls += ' current'; const name = getPatientName(apt); const statusIcon = apt.status === 'منتهي' ? '✅' : apt.status === 'قيد الكشف' ? '🩺' : '⏳'; return `<div class="${cls}" data-id="${apt.id}"><div style="display:flex;justify-content:space-between;align-items:center;"><div><b>${esc(name)}</b><div style="font-size:0.7rem;color:var(--text-sec);">${apt.time||''} · ${apt.age||'--'} سنة</div></div><span class="patient-status-icon">${statusIcon}</span></div></div>`; }).join('');
         }
 
         function updateQueueCount() {
@@ -734,12 +728,27 @@
         }
 
         function updateWorkspace() {
-            if (!state.currentAppointment) { $('#noPatientSelected').style.display = 'block'; $('#patientWorkspace').style.display = 'none'; return; }
-            $('#noPatientSelected').style.display = 'none'; $('#patientWorkspace').style.display = 'block';
+            if (!state.currentAppointment) { 
+                $('#noPatientSelected').style.display = 'block'; 
+                $('#patientWorkspace').style.display = 'none'; 
+                $('#loadedTemplateInfo').style.display = 'none';
+                return; 
+            }
+            $('#noPatientSelected').style.display = 'none'; 
+            $('#patientWorkspace').style.display = 'block';
             const apt = state.currentAppointment; const name = getPatientName(apt);
             $('#patientNameDisplay').textContent = name;
             $('#patientMeta').textContent = `${apt.time||''} · ${apt.age||'--'} سنة · ${apt.phone||''}`;
             $('#patientAvatar').textContent = name.charAt(0).toUpperCase();
+            
+            // ✅ عرض القالب المحمل إذا وجد
+            if (state.loadedTemplateId && state.loadedTemplateName) {
+                $('#loadedTemplateInfo').textContent = `📋 القالب المحمل: ${state.loadedTemplateName}`;
+                $('#loadedTemplateInfo').style.display = 'block';
+            } else {
+                $('#loadedTemplateInfo').style.display = 'none';
+            }
+            
             renderRxList(); renderSidebar();
         }
 
@@ -748,7 +757,6 @@
             $('#rxCount').textContent = count > 0 ? `(${count} أدوية)` : '';
             if (count === 0) { container.innerHTML = '<span style="color:var(--text-sec);font-size:0.82rem;">لم تُضف أدوية بعد</span>'; return; }
             container.innerHTML = state.prescription.map((item, i) => `<span class="rx-chip"><span class="drug-name">${esc(item.drug)}</span><span style="font-size:0.7rem;color:var(--text-sec);">${esc(item.form==='tablet'?'أقراص':item.form==='syrup'?'شراب':item.form==='injection'?'حقن':item.form==='suppository'?'لبوس':'نقط')}</span><span class="drug-dose">${esc(item.dose)}</span><button class="remove-chip" data-index="${i}" title="حذف" aria-label="حذف الدواء">&times;</button></span>`).join('');
-            if (!container._hasRxDelegation) { container.addEventListener('click', (e) => { const removeBtn = e.target.closest('.remove-chip'); if (removeBtn) { e.stopPropagation(); const i = parseInt(removeBtn.dataset.index); state.prescription.splice(i, 1); renderRxList(); saveSessionToDB(); } }); container._hasRxDelegation = true; }
         }
 
         // ============ إضافة دواء سريعة ============
@@ -768,6 +776,90 @@
             }
         };
 
+        // ============ نظام حفظ القوالب ============
+        async function checkTemplateNameExists(name) {
+            if (!state.user) return false;
+            const snap = await get(ref(db, `prescription_templates/${state.user.uid}`));
+            if (!snap.exists()) return false;
+            const templates = snap.val();
+            const nameLower = name.trim().toLowerCase();
+            return Object.values(templates).some(t => t.name?.toLowerCase() === nameLower);
+        }
+
+        async function saveAsNewTemplate() {
+            const nameInput = $('#newTemplateNameInput');
+            const nameError = $('#templateNameError');
+            const templateName = nameInput.value.trim();
+            
+            // التحقق من أن الاسم غير فارغ
+            if (!templateName) {
+                nameError.textContent = 'الرجاء إدخال اسم للقالب';
+                nameError.style.display = 'block';
+                nameInput.focus();
+                return;
+            }
+            
+            // التحقق من عدم وجود قالب بنفس الاسم
+            const exists = await checkTemplateNameExists(templateName);
+            if (exists) {
+                nameError.textContent = '⚠️ يوجد قالب بنفس الاسم. الرجاء اختيار اسم آخر.';
+                nameError.style.display = 'block';
+                nameInput.focus();
+                return;
+            }
+            
+            // حفظ القالب
+            try {
+                const diagnosis = $('#diagnosisInput').value.trim();
+                const now = new Date().toISOString();
+                const templateId = push(ref(db, `prescription_templates/${state.user.uid}`)).key;
+                
+                const templateData = {
+                    name: templateName,
+                    diagnosis: diagnosis,
+                    doctor_id: state.user.uid,
+                    created_at: now,
+                    itemCount: state.prescription.length
+                };
+                
+                const updates = {};
+                updates[`prescription_templates/${state.user.uid}/${templateId}`] = templateData;
+                state.prescription.forEach((item, i) => {
+                    updates[`template_items/${templateId}/item_${i}`] = {
+                        drug_name: item.drug,
+                        form: item.form,
+                        dose: item.dose
+                    };
+                });
+                
+                await update(ref(db), updates);
+                
+                // تحديث الحالة بأننا نحمل هذا القالب
+                state.loadedTemplateId = templateId;
+                state.loadedTemplateName = templateName;
+                updateWorkspace();
+                
+                $('#saveNewTemplateModal').style.display = 'none';
+                toast(`✅ تم حفظ القالب "${templateName}" بنجاح`);
+            } catch (err) {
+                console.error('خطأ في حفظ القالب:', err);
+                toast('خطأ في حفظ القالب', true);
+            }
+        }
+
+        function openSaveNewTemplateModal() {
+            const diagnosis = $('#diagnosisInput').value.trim();
+            if (state.prescription.length === 0 && !diagnosis) {
+                toast('لا توجد بيانات لحفظها. أضف أدوية أو تشخيص أولاً.', true);
+                return;
+            }
+            
+            $('#newTemplateNameInput').value = '';
+            $('#templateNameError').style.display = 'none';
+            $('#saveNewTemplateModal').style.display = 'flex';
+            setTimeout(() => $('#newTemplateNameInput').focus(), 100);
+        }
+
         // ============ فتح الملف الطبي ============
         async function openPatientFile() {
             const pid = state.currentAppointment?.patient_id || state.currentAppointment?.patientId;
@@ -780,41 +872,37 @@
                 const patientRx = [];
                 if (prescriptionsSnap.exists()) { prescriptionsSnap.forEach(child => { const rx = child.val(); if (String(rx.patient_id) === String(pid)) { patientRx.push({ id: child.key, data: rx }); } }); }
                 patientRx.sort((a, b) => (b.data.created_at || '').localeCompare(a.data.created_at || ''));
-                const totalRx = patientRx.length; const dispensed = patientRx.filter(r => r.data.status === 'تم الصرف').length;
-                let html = `<div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap:10px; margin-bottom:20px;"><div style="background:var(--primary-light); padding:12px; border-radius:14px; text-align:center;"><div style="font-size:1.5rem; font-weight:900;">${esc(patientName)}</div><div style="font-size:0.75rem;color:var(--text-sec);">المريض</div></div><div style="background:#E3F2FD; padding:12px; border-radius:14px; text-align:center;"><div style="font-size:1.5rem; font-weight:900;">${totalRx}</div><div style="font-size:0.75rem;color:#1565C0;">وصفات</div></div><div style="background:#E8F5E9; padding:12px; border-radius:14px; text-align:center;"><div style="font-size:1.5rem; font-weight:900;">${dispensed}</div><div style="font-size:0.75rem;color:#1B5E20;">تم صرفها</div></div></div><h4 style="margin-bottom:12px;"><i class="fas fa-history"></i> سجل الوصفات (${totalRx})</h4>`;
+                const totalRx = patientRx.length;
+                let html = `<div style="margin-bottom:20px;"><h4>${esc(patientName)} - ${totalRx} وصفات</h4></div>`;
                 if (patientRx.length === 0) { html += '<div style="text-align:center;padding:20px;color:var(--text-sec);">لا توجد وصفات مسجلة</div>'; }
                 else {
-                    const recent = patientRx.slice(0, 10);
-                    for (const r of recent) {
-                        const rx = r.data; const dateStr = rx.created_at ? new Date(rx.created_at).toLocaleDateString('ar-EG', { year:'numeric', month:'short', day:'numeric' }) : '—'; const isDispensed = rx.status === 'تم الصرف';
-                        const itemsSnap = await get(ref(db, `prescription_items/${r.id}`)); let items = itemsSnap.exists() ? Object.values(itemsSnap.val()) : [];
-                        let drugsHtml = items.length > 0 ? items.map(item => `<span style="display:inline-block;background:var(--primary-light);padding:3px 10px;border-radius:20px;font-size:0.78rem;margin:2px;">💊 ${esc(item.drug_name||item.drug_id||'—')} <b>${esc(item.dose||'')}</b></span>`).join(' ') : '<span style="color:var(--text-sec);font-size:0.8rem;">لا توجد أدوية</span>';
-                        html += `<div class="prescription-history-item" data-rx-id="${r.id}" style="display:flex;justify-content:space-between;align-items:center;padding:12px;margin-bottom:8px;"><div style="flex:1;"><div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="font-weight:700;color:var(--accent);">📅 ${dateStr}</span><span style="font-size:0.75rem;padding:2px 10px;border-radius:20px;${isDispensed?'background:#E8F5E9;color:#1B5E20;':'background:#FFF3E0;color:#E65100;'}">${isDispensed?'✅ تم الصرف':'⏳ لم تصرف'}</span></div>${rx.diagnosis ? `<div style="background:#F5FAFC;padding:6px;border-radius:8px;margin-bottom:4px;font-size:0.8rem;">${esc(rx.diagnosis)}</div>` : ''}<div>${drugsHtml}</div></div><button class="btn btn-outline btn-sm edit-prescription-btn" data-rx-id="${r.id}" style="margin-right:8px;"><i class="fas fa-edit"></i> تعديل</button></div>`;
+                    for (const r of patientRx.slice(0, 10)) {
+                        const rx = r.data; const dateStr = rx.created_at ? new Date(rx.created_at).toLocaleDateString('ar-EG') : '—';
+                        html += `<div class="prescription-history-item" data-rx-id="${r.id}"><div><b>${dateStr}</b> - ${rx.diagnosis||'بدون تشخيص'}</div><button class="btn btn-outline btn-sm edit-prescription-btn" data-rx-id="${r.id}"><i class="fas fa-edit"></i> تعديل</button></div>`;
                     }
-                    if (patientRx.length > 10) { html += `<div style="text-align:center;color:var(--text-sec);font-size:0.8rem;">+ ${patientRx.length - 10} وصفات إضافية</div>`; }
                 }
                 content.innerHTML = html;
                 content.querySelectorAll('.edit-prescription-btn').forEach(btn => {
                     btn.addEventListener('click', (e) => {
                         e.stopPropagation();
                         const rxId = btn.dataset.rxId;
-                        openEditPrescriptionModal(rxId, patientName, pid);
+                        openEditPrescriptionModal(rxId, patientName);
                     });
                 });
-            } catch (err) { console.error('خطأ في تحميل الملف:', err); content.innerHTML = '<div style="text-align:center;padding:20px;color:var(--danger);">حدث خطأ في تحميل الملف الطبي</div>'; }
+            } catch (err) { content.innerHTML = '<div style="color:var(--danger);">خطأ في تحميل الملف</div>'; }
         }
 
         // ============ نظام تعديل الوصفة ============
-        async function openEditPrescriptionModal(rxId, patientName, patientId) {
+        async function openEditPrescriptionModal(rxId, patientName) {
             state.editingRxId = rxId; state.editingPatientName = patientName; state.editingPrescription = { diagnosis: '', items: [] };
             try {
                 const [rxSnap, itemsSnap] = await Promise.all([get(ref(db, `prescriptions/${rxId}`)), get(ref(db, `prescription_items/${rxId}`))]);
-                if (rxSnap.exists()) { const rxData = rxSnap.val(); state.editingPrescription.diagnosis = rxData.diagnosis || ''; }
+                if (rxSnap.exists()) { state.editingPrescription.diagnosis = rxSnap.val().diagnosis || ''; }
                 if (itemsSnap.exists()) { state.editingPrescription.items = Object.values(itemsSnap.val()).map(it => ({ drug: it.drug_name || it.drug_id || '', form: it.form || 'tablet', dose: it.dose || '' })); }
                 renderEditModal();
                 $('#editPrescriptionInfo').textContent = `المريض: ${patientName} | رقم الوصفة: ${rxId}`;
                 $('#editPrescriptionModal').style.display = 'flex';
-            } catch (err) { console.error('خطأ في فتح تعديل الوصفة:', err); toast('خطأ في تحميل الوصفة', true); }
+            } catch (err) { toast('خطأ في تحميل الوصفة', true); }
         }
 
         function renderEditModal() {
@@ -837,21 +925,27 @@
             $('#editDiagnosisInput').value = state.editingPrescription?.diagnosis || '';
             container.querySelectorAll('.remove-edit-chip').forEach(btn => {
                 btn.addEventListener('click', () => {
-                    const idx = parseInt(btn.dataset.index);
-                    state.editingPrescription.items.splice(idx, 1);
+                    const index = parseInt(btn.dataset.index);
+                    state.editingPrescription.items.splice(index, 1);
                     renderEditModal();
                 });
             });
-            container.querySelectorAll('.edit-drug-name, .edit-drug-form, .edit-drug-dose').forEach(el => {
-                el.addEventListener('input', () => {
-                    const idx = parseInt(el.dataset.index);
-                    const field = el.classList.contains('edit-drug-name') ? 'drug' : el.classList.contains('edit-drug-form') ? 'form' : 'dose';
-                    state.editingPrescription.items[idx][field] = el.value;
+            container.querySelectorAll('.edit-drug-name').forEach(input => {
+                input.addEventListener('input', () => {
+                    const index = parseInt(input.dataset.index);
+                    if (state.editingPrescription.items[index]) state.editingPrescription.items[index].drug = input.value;
                 });
-                el.addEventListener('change', () => {
-                    const idx = parseInt(el.dataset.index);
-                    const field = el.classList.contains('edit-drug-name') ? 'drug' : el.classList.contains('edit-drug-form') ? 'form' : 'dose';
-                    state.editingPrescription.items[idx][field] = el.value;
+            });
+            container.querySelectorAll('.edit-drug-form').forEach(select => {
+                select.addEventListener('change', () => {
+                    const index = parseInt(select.dataset.index);
+                    if (state.editingPrescription.items[index]) state.editingPrescription.items[index].form = select.value;
+                });
+            });
+            container.querySelectorAll('.edit-drug-dose').forEach(input => {
+                input.addEventListener('input', () => {
+                    const index = parseInt(input.dataset.index);
+                    if (state.editingPrescription.items[index]) state.editingPrescription.items[index].dose = input.value;
                 });
             });
         }
@@ -866,15 +960,13 @@
                 updates[`prescriptions/${state.editingRxId}/item_count`] = items.length;
                 updates[`prescriptions/${state.editingRxId}/updated_at`] = new Date().toISOString();
                 const oldItemsSnap = await get(ref(db, `prescription_items/${state.editingRxId}`));
-                if (oldItemsSnap.exists()) {
-                    Object.keys(oldItemsSnap.val()).forEach(key => { updates[`prescription_items/${state.editingRxId}/${key}`] = null; });
-                }
+                if (oldItemsSnap.exists()) { Object.keys(oldItemsSnap.val()).forEach(key => { updates[`prescription_items/${state.editingRxId}/${key}`] = null; }); }
                 items.forEach((item, i) => { updates[`prescription_items/${state.editingRxId}/item_${i}`] = { drug_name: item.drug, dose: item.dose, form: item.form }; });
                 await update(ref(db), updates);
                 toast('✅ تم حفظ تعديلات الوصفة بنجاح');
                 $('#editPrescriptionModal').style.display = 'none';
                 if ($('#patientFileModal').style.display === 'flex') openPatientFile();
-            } catch (err) { console.error('خطأ في حفظ التعديلات:', err); toast('خطأ في حفظ التعديلات', true); }
+            } catch (err) { toast('خطأ في حفظ التعديلات', true); }
         }
 
         function addDrugToEdit() {
@@ -885,6 +977,183 @@
             state.editingPrescription.items.push({ drug: drugName, form, dose });
             renderEditModal();
             $('#editDrugSearchInput').value = ''; $('#editDoseInput').value = '';
+        }
+
+        // ============ معالجات الأحداث ============
+        async function handleFinishSession() {
+            if (!state.currentAppointment) return;
+            const diagnosis = $('#diagnosisInput').value.trim();
+            if (state.prescription.length === 0 && !diagnosis) { toast('أضف أدوية أو تشخيص', true); return; }
+            
+            if (state.loadedTemplateId && state.loadedTemplateName) {
+                const currentRx = JSON.stringify(state.prescription);
+                const templateSnap = await get(ref(db, `prescription_templates/${state.user.uid}/${state.loadedTemplateId}`));
+                if (templateSnap.exists()) {
+                    const itemsSnap = await get(ref(db, `template_items/${state.loadedTemplateId}`));
+                    let origItems = []; 
+                    if (itemsSnap.exists()) { origItems = Object.values(itemsSnap.val()).map(it => ({ drug: it.drug_name || it.drug_id, form: it.form, dose: it.dose })); }
+                    const currentDx = $('#diagnosisInput').value.trim();
+                    if (currentRx !== JSON.stringify(origItems) || currentDx !== (templateSnap.val().diagnosis || '')) { 
+                        state._pendingFinish = true; 
+                        $('#saveTemplateMsg').textContent = `القالب "${state.loadedTemplateName}" تم تعديله. هل تريد حفظ التغييرات؟`; 
+                        $('#saveTemplateTitle').innerHTML = '<i class="fas fa-save"></i> تحديث القالب'; 
+                        $('#templateNameInput').value = state.loadedTemplateName; 
+                        $('#saveTemplateModal').style.display = 'flex'; 
+                        return; 
+                    }
+                }
+            }
+            await finalizeSession(false, null, null);
+        }
+        
+        async function handleSaveAsNew() { 
+            const name = $('#templateNameInput').value.trim() || state.loadedTemplateName || 'قالب جديد'; 
+            await finalizeSession(true, name, 'new'); 
+            $('#saveTemplateModal').style.display = 'none'; 
+        }
+        
+        async function handleUpdateExisting() { 
+            const name = $('#templateNameInput').value.trim() || state.loadedTemplateName; 
+            await finalizeSession(true, name, 'update'); 
+            $('#saveTemplateModal').style.display = 'none'; 
+        }
+        
+        async function handleSkipSave() { 
+            await finalizeSession(false, null, null); 
+            $('#saveTemplateModal').style.display = 'none'; 
+        }
+
+        async function handleTemplates() {
+            const snap = await get(ref(db, `prescription_templates/${state.user.uid}`)); 
+            const list = $('#templatesList');
+            if (!snap.exists()) { list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-sec);">لا توجد قوالب</div>'; }
+            else { 
+                const templates = snap.val(); 
+                list.innerHTML = Object.entries(templates).map(([id, t]) => `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px;border-bottom:1px solid var(--border);"><div><b>${esc(t.name)}</b><div>${t.itemCount||0} أدوية</div></div><button class="btn btn-primary btn-sm load-template-btn" data-id="${id}" data-name="${esc(t.name)}">تحميل</button></div>`).join(''); 
+                list.querySelectorAll('.load-template-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        loadTemplate(btn.dataset.id, btn.dataset.name);
+                        $('#templatesModal').style.display = 'none';
+                    });
+                });
+            }
+            $('#templatesModal').style.display = 'flex';
+        }
+
+        async function handleSessions() {
+            const sessions = await sessionDB.getAll(); 
+            const list = $('#sessionsList');
+            if (sessions.length === 0) { list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-sec);">لا توجد جلسات معلقة</div>'; }
+            else { 
+                list.innerHTML = sessions.map(s => `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px;border-bottom:1px solid var(--border);"><div><b>${esc(getPatientName(s.appointment))}</b><div>${s.prescription.length} أدوية</div></div><div style="display:flex;gap:4px;"><button class="btn btn-primary btn-sm restore-session-btn" data-id="${s.id}">استكمال</button><button class="btn btn-outline btn-sm delete-session-btn" data-id="${s.id}"><i class="fas fa-trash"></i></button></div></div>`).join(''); 
+                list.querySelectorAll('.restore-session-btn').forEach(btn => {
+                    btn.addEventListener('click', async () => {
+                        const sessionId = btn.dataset.id;
+                        const sessions = await sessionDB.getAll();
+                        const session = sessions.find(s => s.id === sessionId);
+                        if (session) {
+                            state.currentAppointment = session.appointment;
+                            state.prescription = session.prescription || [];
+                            state.loadedTemplateId = session.loadedTemplateId || null;
+                            state.loadedTemplateName = session.loadedTemplateName || null;
+                            state.activeSessionId = session.id;
+                            const diagInput = $('#diagnosisInput');
+                            if (diagInput) diagInput.value = session.diagnosis || '';
+                            updateWorkspace();
+                            $('#sessionsModal').style.display = 'none';
+                            toast('🔄 تم استكمال الجلسة');
+                        }
+                    });
+                });
+                list.querySelectorAll('.delete-session-btn').forEach(btn => {
+                    btn.addEventListener('click', async () => {
+                        const sessionId = btn.dataset.id;
+                        await deleteSession(sessionId);
+                        toast('🗑️ تم حذف الجلسة المعلقة');
+                        handleSessions();
+                    });
+                });
+            }
+            $('#sessionsModal').style.display = 'flex';
+        }
+
+        async function loadTemplate(templateId, templateName) {
+            const snap = await get(ref(db, `template_items/${templateId}`)); 
+            state.prescription = [];
+            if (snap.exists()) { state.prescription = Object.values(snap.val()).map(it => ({ drug: it.drug_name || it.drug_id, form: it.form, dose: it.dose })); }
+            const templateSnap = await get(ref(db, `prescription_templates/${state.user.uid}/${templateId}`));
+            if (templateSnap.exists() && templateSnap.val().diagnosis) { 
+                const diagInput = $('#diagnosisInput'); 
+                if (diagInput) diagInput.value = templateSnap.val().diagnosis; 
+            }
+            state.loadedTemplateId = templateId; 
+            state.loadedTemplateName = templateName;
+            state.prescription.forEach(item => { 
+                const strength = extractStrength(item.drug); 
+                const pureName = strength ? item.drug.replace(strength, '').trim() : item.drug; 
+                drugManager.recordUsage(item.drug, pureName, item.form, strength); 
+            });
+            renderRxList(); 
+            updateWorkspace();
+            saveSessionToDB(); 
+            toast(`📋 تم تحميل القالب: ${templateName}`);
+        }
+
+        async function finalizeSession(saveTemplate, templateName, templateAction) {
+            const apt = state.currentAppointment; 
+            const diagnosis = $('#diagnosisInput').value.trim(); 
+            const prescriptionId = apt.id;
+            try {
+                const now = new Date().toISOString();
+                
+                if (saveTemplate && templateName) { 
+                    let templateId = state.loadedTemplateId; 
+                    if (templateAction === 'new' || !templateId) templateId = push(ref(db, `prescription_templates/${state.user.uid}`)).key; 
+                    const templateData = { name: templateName, diagnosis, doctor_id: state.user.uid, created_at: now, itemCount: state.prescription.length }; 
+                    const updates = {}; 
+                    updates[`prescription_templates/${state.user.uid}/${templateId}`] = templateData; 
+                    state.prescription.forEach((item, i) => { updates[`template_items/${templateId}/item_${i}`] = { drug_name: item.drug, form: item.form, dose: item.dose }; }); 
+                    await update(ref(db), updates); 
+                }
+                
+                const prescriptionData = { 
+                    patient_id: apt.patient_id || apt.patientId || '', 
+                    patient_name: getPatientName(apt), 
+                    doctor_id: state.user.uid,
+                    doctor_name: state.user.name || 'طبيب',
+                    diagnosis, 
+                    created_at: now, 
+                    status: 'لم تصرف بعد',
+                    item_count: state.prescription.length 
+                };
+                
+                const finalUpdates = {}; 
+                finalUpdates[`prescriptions/${prescriptionId}`] = prescriptionData;
+                state.prescription.forEach((item, i) => { 
+                    finalUpdates[`prescription_items/${prescriptionId}/item_${i}`] = { 
+                        drug_name: item.drug, 
+                        dose: item.dose, 
+                        form: item.form 
+                    }; 
+                });
+                finalUpdates[`appointments/${apt.id}/status`] = 'منتهي';
+                
+                await update(ref(db), finalUpdates);
+                await deleteSession(apt.id);
+                
+                state.currentAppointment = null; 
+                state.prescription = []; 
+                state.diagnosis = ''; 
+                state.loadedTemplateId = null; 
+                state.loadedTemplateName = null;
+                const diagInput = $('#diagnosisInput'); 
+                if (diagInput) diagInput.value = '';
+                updateWorkspace(); 
+                toast('✅ تم إنهاء الكشف وإرسال الوصفة للصيدلية');
+            } catch (err) { 
+                console.error(err); 
+                toast('خطأ في حفظ الوصفة: '+err.message, true); 
+            }
         }
 
         // ============ إعداد الأحداث ============
@@ -903,10 +1172,28 @@
                 updateQueueCount();
             });
             
+            ['currentPatientsList', 'waitingPatientsList', 'donePatientsList'].forEach(id => {
+                const container = $('#' + id);
+                if (container) {
+                    container.addEventListener('click', (e) => {
+                        const item = e.target.closest('.mini-queue-item:not(.done)');
+                        if (item) selectPatient(item.dataset.id);
+                    });
+                }
+            });
+            
             $('#addDrugBtn').addEventListener('click', () => quickAdd.addDrug());
             $('#doseInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); quickAdd.addDrug(); } });
-            $('#drugSearchInput').addEventListener('keydown', (e) => { if (e.key === 'Enter' && $('#drugSuggestions').style.display !== 'block') { e.preventDefault(); $('#doseInput').focus(); } });
-
+            
+            $('#rxItemsContainer').addEventListener('click', (e) => {
+                const removeBtn = e.target.closest('.remove-chip');
+                if (!removeBtn) return;
+                const index = parseInt(removeBtn.dataset.index);
+                state.prescription.splice(index, 1);
+                renderRxList();
+                saveSessionToDB();
+            });
+            
             let doseTimer;
             $('#doseInput').addEventListener('input', () => {
                 const val = $('#doseInput').value.trim();
@@ -918,13 +1205,24 @@
                     const suggestions = await doseManager.getSuggestions(val, form, drugName || null);
                     const dd = $('#doseSuggestions');
                     if (suggestions.length === 0) { dd.style.display = 'none'; return; }
-                    dd.innerHTML = suggestions.map(s => { const isFav = s.source === 'favorite'; return `<div class="dose-suggestion-item${isFav?' favorite-dose':''}" data-dose="${esc(s.dose)}" data-freq="${esc(s.freq||'')}"><span>${esc(s.label)} ${isFav?`<span style="font-size:0.65rem;color:var(--text-sec);">(${s.usageCount||0}x)</span>`:''}</span><span class="freq-badge">${esc(s.freq||'')}</span></div>`; }).join('');
+                    dd.innerHTML = suggestions.map(s => `<div class="dose-suggestion-item${s.source==='favorite'?' favorite-dose':''}" data-dose="${esc(s.dose)}" data-freq="${esc(s.freq||'')}"><span>${esc(s.label)}</span><span class="freq-badge">${esc(s.freq||'')}</span></div>`).join('');
                     dd.style.display = 'block';
-                    if (!dd._hasDelegation) { dd.addEventListener('click', (e) => { const item = e.target.closest('.dose-suggestion-item'); if (item) { $('#doseInput').value = `${item.dataset.dose} ${item.dataset.freq ? '- ' + item.dataset.freq : ''}`; dd.style.display = 'none'; $('#addDrugBtn').focus(); } }); dd._hasDelegation = true; }
+                    dd.querySelectorAll('.dose-suggestion-item').forEach(item => {
+                        item.addEventListener('click', () => {
+                            const doseEl = $('#doseInput');
+                            doseEl.value = `${item.dataset.dose} - ${item.dataset.freq}`;
+                            dd.style.display = 'none';
+                            doseEl.focus();
+                        });
+                    });
                 }, 150);
             });
 
-            document.addEventListener('click', (e) => { if (!$('#doseInput').contains(e.target) && !$('#doseSuggestions').contains(e.target)) { $('#doseSuggestions').style.display = 'none'; } });
+            document.addEventListener('click', (e) => { 
+                if (!$('#doseInput').contains(e.target) && !$('#doseSuggestions').contains(e.target)) { 
+                    $('#doseSuggestions').style.display = 'none'; 
+                } 
+            });
 
             let searchTimer;
             $('#drugSearchInput').addEventListener('input', () => {
@@ -935,23 +1233,57 @@
                     const form = $('#drugFormSelect').value;
                     const results = await drugManager.getSuggestions(term, form);
                     const dd = $('#drugSuggestions');
-                    if (results.length === 0) { dd.innerHTML = `<div class="suggestion-item" id="createNewDrug" style="color:var(--accent);"><span style="flex:1;">➕ إضافة "${esc(term)}" كدواء جديد</span></div>`; dd.style.display = 'block'; $('#createNewDrug').addEventListener('click', () => { $('#drugSearchInput').value = term; $('#doseInput').focus(); dd.style.display = 'none'; }); return; }
-                    dd.innerHTML = results.map(d => { const sourceBadge = d.source === 'favorite' ? '<span style="font-size:0.65rem;color:#E65100;">⭐</span>' : ''; return `<div class="suggestion-item" data-name="${esc(d.name)}" data-form="${d.form}"><div class="suggestion-content" style="flex:1;cursor:pointer;"><span>${esc(d.name)} ${sourceBadge}</span><span class="usage-count">${d.freq||0}x</span></div><button class="hide-suggestion-btn" data-fullname="${esc(d.name)}" data-name="${esc(d.originalName||d.name)}" data-form="${d.form}" title="تقليل ظهور هذا الدواء" aria-label="إخفاء الاقتراح"><i class="fas fa-times"></i></button></div>`; }).join('');
-                    dd.style.display = 'block';
-                    if (!dd._hasDelegation) { dd.addEventListener('click', (e) => { const content = e.target.closest('.suggestion-content'); if (content) { const item = content.closest('.suggestion-item'); $('#drugSearchInput').value = item.dataset.name; $('#drugFormSelect').value = item.dataset.form; $('#doseInput').focus(); dd.style.display = 'none'; } const hideBtn = e.target.closest('.hide-suggestion-btn'); if (hideBtn) { e.stopPropagation(); drugManager.hideSuggestion(hideBtn.dataset.fullname, hideBtn.dataset.name, hideBtn.dataset.form); hideBtn.closest('.suggestion-item').remove(); if (dd.querySelectorAll('.suggestion-item').length === 0) dd.style.display = 'none'; } }); dd._hasDelegation = true; }
+                    if (results.length === 0) { 
+                        dd.innerHTML = `<div class="suggestion-item" id="createNewDrug" style="color:var(--accent);">➕ إضافة "${esc(term)}" كدواء جديد</div>`; 
+                        dd.style.display = 'block'; 
+                        const createBtn = $('#createNewDrug');
+                        if (createBtn) {
+                            createBtn.addEventListener('click', () => {
+                                $('#drugSearchInput').value = term;
+                                $('#drugSuggestions').style.display = 'none';
+                                $('#doseInput').focus();
+                            });
+                        }
+                    } else {
+                        dd.innerHTML = results.map(d => `<div class="suggestion-item" data-name="${esc(d.name)}" data-form="${d.form}"><div class="suggestion-content">${esc(d.name)} <span class="usage-count">${d.freq||0}x</span></div><button class="hide-suggestion-btn" data-fullname="${esc(d.name)}" data-name="${esc(d.originalName||d.name)}" data-form="${d.form}">×</button></div>`).join('');
+                        dd.style.display = 'block';
+                        dd.querySelectorAll('.suggestion-item').forEach(item => {
+                            item.addEventListener('click', (e) => {
+                                if (e.target.closest('.hide-suggestion-btn')) return;
+                                $('#drugSearchInput').value = item.dataset.name;
+                                $('#drugSuggestions').style.display = 'none';
+                                $('#doseInput').focus();
+                            });
+                        });
+                        dd.querySelectorAll('.hide-suggestion-btn').forEach(btn => {
+                            btn.addEventListener('click', (e) => {
+                                e.stopPropagation();
+                                drugManager.hideSuggestion(btn.dataset.fullname, btn.dataset.name, btn.dataset.form);
+                                $('#drugSuggestions').style.display = 'none';
+                            });
+                        });
+                    }
                 }, 200);
             });
 
-            $('#viewPatientFileBtn').addEventListener('click', openPatientFile);
-            $('#closePatientFileBtn').addEventListener('click', () => $('#patientFileModal').style.display = 'none');
-            $('#patientFileModal').addEventListener('click', (e) => { if (e.target === $('#patientFileModal')) $('#patientFileModal').style.display = 'none'; });
-
-            $('#closeEditPrescriptionBtn').addEventListener('click', () => $('#editPrescriptionModal').style.display = 'none');
-            $('#cancelEditPrescriptionBtn').addEventListener('click', () => $('#editPrescriptionModal').style.display = 'none');
-            $('#editPrescriptionModal').addEventListener('click', (e) => { if (e.target === $('#editPrescriptionModal')) $('#editPrescriptionModal').style.display = 'none'; });
-            $('#saveEditedPrescriptionBtn').addEventListener('click', saveEditedPrescription);
-            $('#addEditDrugBtn').addEventListener('click', addDrugToEdit);
-            $('#editDoseInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); addDrugToEdit(); } });
+            // ✅ زر حفظ كقالب جديد
+            $('#saveAsTemplateBtn').addEventListener('click', openSaveNewTemplateModal);
+            
+            // ✅ أحداث نافذة حفظ القالب الجديد
+            $('#closeSaveNewTemplateBtn').addEventListener('click', () => $('#saveNewTemplateModal').style.display = 'none');
+            $('#cancelSaveNewTemplateBtn').addEventListener('click', () => $('#saveNewTemplateModal').style.display = 'none');
+            $('#confirmSaveNewTemplateBtn').addEventListener('click', saveAsNewTemplate);
+            $('#newTemplateNameInput').addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    saveAsNewTemplate();
+                }
+            });
+            
+            // ✅ إخفاء رسالة الخطأ عند الكتابة في حقل اسم القالب
+            $('#newTemplateNameInput').addEventListener('input', () => {
+                $('#templateNameError').style.display = 'none';
+            });
 
             $('#finishSessionBtn').addEventListener('click', handleFinishSession);
             $('#saveAsNewBtn').addEventListener('click', handleSaveAsNew);
@@ -959,98 +1291,83 @@
             $('#skipSaveBtn').addEventListener('click', handleSkipSave);
             $('#templatesBtn').addEventListener('click', handleTemplates);
             $('#sessionsBtn').addEventListener('click', handleSessions);
+            $('#viewPatientFileBtn').addEventListener('click', openPatientFile);
             $('#clearRxBtn').addEventListener('click', () => { if (state.prescription.length === 0) return; if (confirm('مسح كل الأدوية؟')) { state.prescription = []; renderRxList(); saveSessionToDB(); } });
             $('#diagnosisInput').addEventListener('input', () => { clearTimeout(state._diagTimer); state._diagTimer = setTimeout(saveSessionToDB, 500); });
-            $('#logoutBtn').addEventListener('click', async () => { try { await signOut(auth); } catch(e) {} sessionStorage.clear(); window.location.href = 'index.html'; });
+            
+            $('#logoutBtn').addEventListener('click', async () => { 
+                try { await signOut(auth); } catch(e) {} 
+                clearAllLoginData();
+                window.location.href = 'index.html'; 
+            });
+            
             $$('.close-btn').forEach(b => b.addEventListener('click', () => { b.closest('.modal').style.display = 'none'; }));
-            window.addEventListener('click', (e) => { if (e.target.classList.contains('modal')) e.target.style.display = 'none'; if (!$('#drugSearchInput').contains(e.target) && !$('#drugSuggestions').contains(e.target)) $('#drugSuggestions').style.display = 'none'; });
-            document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { $$('.modal').forEach(m => m.style.display = 'none'); $('#drugSuggestions').style.display = 'none'; $('#doseSuggestions').style.display = 'none'; } });
-            $$('.btn').forEach(b => b.addEventListener('click', ripple));
+            window.addEventListener('click', (e) => { 
+                if (e.target.classList.contains('modal')) e.target.style.display = 'none'; 
+                if (!$('#drugSearchInput').contains(e.target) && !$('#drugSuggestions').contains(e.target)) $('#drugSuggestions').style.display = 'none'; 
+            });
+            document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { $$('.modal').forEach(m => m.style.display = 'none'); } });
+
+            $('#closeEditPrescriptionBtn').addEventListener('click', () => $('#editPrescriptionModal').style.display = 'none');
+            $('#cancelEditPrescriptionBtn').addEventListener('click', () => $('#editPrescriptionModal').style.display = 'none');
+            $('#saveEditedPrescriptionBtn').addEventListener('click', saveEditedPrescription);
+            $('#addEditDrugBtn').addEventListener('click', addDrugToEdit);
+            $('#closePatientFileBtn').addEventListener('click', () => $('#patientFileModal').style.display = 'none');
+            
+            // ✅ زر إغلاق نافذة حفظ القالب
+            $('#closeSaveTemplateBtn').addEventListener('click', () => $('#saveTemplateModal').style.display = 'none');
         };
-
-        // ============ معالجات الأحداث ============
-        async function handleFinishSession() {
-            if (!state.currentAppointment) return;
-            const diagnosis = $('#diagnosisInput').value.trim();
-            if (state.prescription.length === 0 && !diagnosis) { toast('أضف أدوية أو تشخيص', true); return; }
-            if (state.loadedTemplateId && state.loadedTemplateName) {
-                const currentRx = JSON.stringify(state.prescription); const currentDx = $('#diagnosisInput').value.trim();
-                const templateSnap = await get(ref(db, `prescription_templates/${state.user.uid}/${state.loadedTemplateId}`));
-                if (templateSnap.exists()) {
-                    const itemsSnap = await get(ref(db, `template_items/${state.loadedTemplateId}`));
-                    let origItems = []; if (itemsSnap.exists()) { origItems = Object.values(itemsSnap.val()).map(it => ({ drug: it.drug_name || it.drug_id, form: it.form, dose: it.dose })); }
-                    if (currentRx !== JSON.stringify(origItems) || currentDx !== (templateSnap.val().diagnosis || '')) { state._pendingFinish = true; $('#saveTemplateMsg').textContent = `القالب "${state.loadedTemplateName}" تم تعديله. هل تريد حفظ التغييرات؟`; $('#saveTemplateTitle').innerHTML = '<i class="fas fa-save"></i> تحديث القالب'; $('#templateNameInput').value = state.loadedTemplateName; $('#saveTemplateModal').style.display = 'flex'; return; }
-                }
-            }
-            await finalizeSession(false, null, null);
-        }
-        async function handleSaveAsNew() { const name = $('#templateNameInput').value.trim() || state.loadedTemplateName || 'قالب جديد'; await finalizeSession(true, name, 'new'); $('#saveTemplateModal').style.display = 'none'; }
-        async function handleUpdateExisting() { const name = $('#templateNameInput').value.trim() || state.loadedTemplateName; await finalizeSession(true, name, 'update'); $('#saveTemplateModal').style.display = 'none'; }
-        async function handleSkipSave() { await finalizeSession(false, null, null); $('#saveTemplateModal').style.display = 'none'; }
-
-        async function handleTemplates() {
-            const snap = await get(ref(db, `prescription_templates/${state.user.uid}`)); const list = $('#templatesList');
-            if (!snap.exists()) { list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-sec);">لا توجد قوالب</div>'; }
-            else { const templates = snap.val(); list.innerHTML = Object.entries(templates).map(([id, t]) => `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px;border-bottom:1px solid var(--border);"><div><b style="font-size:0.88rem;">${esc(t.name)}</b><div style="font-size:0.72rem;color:var(--text-sec);">${t.itemCount||0} أدوية</div></div><button class="btn btn-primary btn-sm load-template-btn" data-id="${id}" data-name="${esc(t.name)}">تحميل</button></div>`).join(''); if (!list._hasDelegation) { list.addEventListener('click', async (e) => { const btn = e.target.closest('.load-template-btn'); if (btn) { await loadTemplate(btn.dataset.id, btn.dataset.name); $('#templatesModal').style.display = 'none'; } }); list._hasDelegation = true; } }
-            $('#templatesModal').style.display = 'flex';
-        }
-
-        async function handleSessions() {
-            const sessions = await sessionDB.getAll(); const list = $('#sessionsList');
-            if (sessions.length === 0) { list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-sec);">لا توجد جلسات معلقة</div>'; }
-            else { list.innerHTML = sessions.map(s => `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px;border-bottom:1px solid var(--border);"><div><b style="font-size:0.88rem;">${esc(getPatientName(s.appointment))}</b><div style="font-size:0.7rem;color:var(--text-sec);">${s.updatedAt?.slice(0,16)||''} · ${s.prescription.length} أدوية</div></div><div style="display:flex;gap:4px;"><button class="btn btn-primary btn-sm restore-session-btn" data-id="${s.id}">استكمال</button><button class="btn btn-outline btn-sm delete-session-btn" data-id="${s.id}"><i class="fas fa-trash"></i></button></div></div>`).join(''); if (!list._hasDelegation) { list.addEventListener('click', async (e) => { const restoreBtn = e.target.closest('.restore-session-btn'); if (restoreBtn) { const s = sessions.find(x => x.id === restoreBtn.dataset.id); if (s) { state.currentAppointment = s.appointment; state.prescription = s.prescription; state.loadedTemplateId = s.loadedTemplateId; state.loadedTemplateName = s.loadedTemplateName; state.activeSessionId = s.id; const diagInput = $('#diagnosisInput'); if (diagInput) diagInput.value = s.diagnosis || ''; updateWorkspace(); toast('🔄 تم استكمال الجلسة'); } $('#sessionsModal').style.display = 'none'; } const deleteBtn = e.target.closest('.delete-session-btn'); if (deleteBtn) { await deleteSession(deleteBtn.dataset.id); toast('🗑️ تم حذف الجلسة'); handleSessions(); } }); list._hasDelegation = true; } }
-            $('#sessionsModal').style.display = 'flex';
-        }
-
-        async function loadTemplate(templateId, templateName) {
-            const snap = await get(ref(db, `template_items/${templateId}`)); state.prescription = [];
-            if (snap.exists()) { state.prescription = Object.values(snap.val()).map(it => ({ drug: it.drug_name || it.drug_id, form: it.form, dose: it.dose, drug_id: it.drug_id })); }
-            const templateSnap = await get(ref(db, `prescription_templates/${state.user.uid}/${templateId}`));
-            if (templateSnap.exists() && templateSnap.val().diagnosis) { const diagInput = $('#diagnosisInput'); if (diagInput) diagInput.value = templateSnap.val().diagnosis; }
-            state.loadedTemplateId = templateId; state.loadedTemplateName = templateName;
-            state.prescription.forEach(item => { const strength = extractStrength(item.drug); const pureName = strength ? item.drug.replace(strength, '').trim() : item.drug; drugManager.recordUsage(item.drug, pureName, item.form, strength); });
-            renderRxList(); saveSessionToDB(); toast(`📋 تم تحميل القالب: ${templateName}`);
-        }
-
-        async function finalizeSession(saveTemplate, templateName, templateAction) {
-            const apt = state.currentAppointment; const diagnosis = $('#diagnosisInput').value.trim(); const prescriptionId = apt.id;
-            try {
-                const now = new Date().toISOString();
-                if (saveTemplate && templateName) { let templateId = state.loadedTemplateId; if (templateAction === 'new' || !templateId) templateId = push(ref(db, `prescription_templates/${state.user.uid}`)).key; const templateData = { name: templateName, diagnosis, doctor_id: state.user.uid, created_at: now, itemCount: state.prescription.length }; const updates = {}; updates[`prescription_templates/${state.user.uid}/${templateId}`] = templateData; state.prescription.forEach((item, i) => { updates[`template_items/${templateId}/item_${i}`] = { drug_name: item.drug, drug_id: item.drug_id || '', form: item.form, dose: item.dose }; }); await update(ref(db), updates); state.prescription.forEach(item => { const strength = extractStrength(item.drug); const pureName = strength ? item.drug.replace(strength, '').trim() : item.drug; drugManager.recordUsage(item.drug, pureName, item.form, strength); }); }
-                const prescriptionData = { patient_id: apt.patient_id || apt.patientId || '', patient_name: getPatientName(apt), doctor_id: state.user.uid, diagnosis, created_at: now, status: 'لم تصرف بعد', item_count: state.prescription.length };
-                const finalUpdates = {}; finalUpdates[`prescriptions/${prescriptionId}`] = prescriptionData;
-                state.prescription.forEach((item, i) => { finalUpdates[`prescription_items/${prescriptionId}/item_${i}`] = { drug_name: item.drug, dose: item.dose, form: item.form }; });
-                finalUpdates[`appointments/${apt.id}/status`] = 'منتهي';
-                await update(ref(db), finalUpdates);
-                await deleteSession(apt.id);
-                state.currentAppointment = null; state.prescription = []; state.diagnosis = ''; state.loadedTemplateId = null; state.loadedTemplateName = null;
-                const diagInput = $('#diagnosisInput'); if (diagInput) diagInput.value = '';
-                updateWorkspace(); toast('✅ تم إنهاء الكشف بنجاح');
-            } catch (err) { console.error(err); toast('خطأ في الحفظ: '+err.message, true); }
-        }
 
         // ============ بدء التشغيل ============
         onAuthStateChanged(auth, async (user) => {
-            if (!user) { sessionStorage.clear(); window.location.href = 'index.html'; return; }
+            if (!user) { 
+                clearAllLoginData();
+                window.location.href = 'index.html'; 
+                return; 
+            }
             try {
                 const userSnap = await get(ref(db, `users/${user.uid}`));
-                if (!userSnap.exists() || userSnap.val().role !== 'doctor') { toast('غير مصرح', true); await signOut(auth); window.location.href = 'index.html'; return; }
+                if (!userSnap.exists() || userSnap.val().role !== 'doctor') { 
+                    toast('غير مصرح', true); 
+                    await signOut(auth); 
+                    window.location.href = 'index.html'; 
+                    return; 
+                }
                 state.user = { uid: user.uid, ...userSnap.val() };
-                $('#welcomeMsg').textContent = `د. ${state.user.name||'طبيب'}`; $('#welcomeMsg').style.display = 'inline';
-                sessionStorage.setItem('userUid', user.uid); sessionStorage.setItem('userRole', 'doctor'); sessionStorage.setItem('userName', state.user.name||'');
+                $('#welcomeMsg').textContent = `د. ${state.user.name||'طبيب'}`; 
+                $('#welcomeMsg').style.display = 'inline';
+                sessionStorage.setItem('userUid', user.uid); 
+                sessionStorage.setItem('userRole', 'doctor'); 
+                sessionStorage.setItem('userName', state.user.name||'');
+                
                 await Promise.all([sessionDB.open(), favoritesDB.open(), favoriteDosesDB.open(), drugManager.loadCache()]);
                 setupEventListeners();
+                
                 const q = query(ref(db, 'appointments'), orderByChild('doctor_id'), equalTo(user.uid));
                 onValue(q, (snap) => {
-                    const apps = []; snap.forEach(c => { const a = c.val(); if (a.date === today() && a.status !== 'ملغي') apps.push({ id: c.key, ...a }); });
+                    const apps = []; 
+                    snap.forEach(c => { 
+                        const a = c.val(); 
+                        if (a.date === today() && a.status !== 'ملغي') {
+                            apps.push({ id: c.key, ...a }); 
+                        }
+                    });
                     apps.sort((a,b) => (a.time||'').localeCompare(b.time||''));
-                    state.appointments = apps; updateQueueCount(); renderSidebar();
+                    state.appointments = apps; 
+                    updateQueueCount(); 
+                    renderSidebar();
                     if (state.currentAppointment) updateWorkspace();
                 });
+                
                 const restored = await restoreSession();
                 if (restored) { updateWorkspace(); toast('🔄 تم استعادة آخر جلسة'); }
-                $('#appLoader').style.display = 'none'; $('#mainContainer').style.display = 'block';
-            } catch (error) { console.error('خطأ في بدء التشغيل:', error); toast('حدث خطأ في تحميل البيانات', true); }
+                
+                $('#appLoader').style.display = 'none'; 
+                $('#mainContainer').style.display = 'block';
+            } catch (error) { 
+                console.error('خطأ في بدء التشغيل:', error); 
+                toast('حدث خطأ في تحميل البيانات', true); 
+            }
         });
     </script>
 </body>
