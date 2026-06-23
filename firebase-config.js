@@ -2,12 +2,12 @@
 // إعدادات Firebase لمشروع "شفاء"
 
 export const firebaseConfig = {
-    apiKey: "AIzaSyBwU26WBqYZ728pV4sBdQa09OOpP4GYMsE",
-    authDomain: "shifa-51011.firebaseapp.com",
-    databaseURL: "https://shifa-51011-default-rtdb.europe-west1.firebasedatabase.app",
-    projectId: "shifa-51011",
-    storageBucket: "shifa-51011.firebasestorage.app",
-    messagingSenderId: "184548486784",
-    appId: "1:184548486784:web:c9941b183af58b9eca8065",
-    measurementId: "G-1NJH9YQT4G"
+    apiKey: "AIzaSyCNasTP-QP_mn5stNAwDm3qdM_BoZnmX4Q",
+    authDomain: "healing-65f68.firebaseapp.com",
+    databaseURL: "https://healing-65f68-default-rtdb.firebaseio.com",
+    projectId: "healing-65f68",
+    storageBucket: "healing-65f68.firebasestorage.app",
+    messagingSenderId: "1022809606730",
+    appId: "1:1022809606730:web:1057f302827a33f06eb4b3",
+    measurementId: "G-THX2EG2JXH"
 };
