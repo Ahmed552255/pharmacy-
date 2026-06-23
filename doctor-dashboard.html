@@ -132,7 +132,15 @@
         .btn-outline { background: rgba(255,255,255,0.9); color: var(--ink); border: 1.5px solid var(--border); }
         .btn-success { background: linear-gradient(135deg, #26A69A, #00897B); color: white; box-shadow: 0 4px 12px rgba(38,166,154,0.25); }
         .btn-warning { background: linear-gradient(135deg, #FFB74D, #F57C00); color: white; box-shadow: 0 4px 12px rgba(255,183,77,0.25); }
+        .btn-info { background: linear-gradient(135deg, #5DADE2, #2E86C1); color: white; box-shadow: 0 4px 12px rgba(93,173,226,0.25); }
         .btn-sm { padding: clamp(4px, 1vw, 5px) clamp(8px, 2vw, 10px); font-size: clamp(0.72rem, 1.8vw, 0.78rem); border-radius: var(--radius-sm); min-height: clamp(28px, 7vw, 32px); }
+        
+        .record-count-badge {
+            display: inline-flex; align-items: center; justify-content: center;
+            background: var(--success); color: white; border-radius: 50%;
+            width: 20px; height: 20px; font-size: 0.65rem; font-weight: 800;
+            margin-left: 2px; line-height: 1;
+        }
         
         .main-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(300px, 340px); gap: clamp(8px, 2vw, 12px); align-items: start; }
 
@@ -257,9 +265,25 @@
 
         .prescription-history-item {
             background: white; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; margin-bottom: 8px;
-            cursor: pointer; transition: all var(--transition); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;
+            transition: all var(--transition);
         }
         .prescription-history-item:hover { border-color: var(--accent); box-shadow: var(--shadow-sm); }
+        .prescription-history-header {
+            display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px;
+        }
+        .prescription-history-drugs {
+            display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px;
+        }
+        .drug-mini-tag {
+            display: inline-flex; align-items: center; gap: 3px;
+            background: #F5FAFC; border: 1px solid var(--border); border-radius: 15px;
+            padding: 2px 8px; font-size: 0.72rem;
+        }
+        .drug-mini-tag .tag-dose {
+            background: var(--primary-light); padding: 1px 5px; border-radius: 10px;
+            font-size: 0.65rem; font-weight: 600;
+        }
+        
         .editable-rx-chip {
             display: inline-flex; align-items: center; gap: 6px; background: #F5FAFC; border: 1px solid var(--border);
             border-radius: 20px; padding: 4px 10px; margin: 3px; font-size: 0.8rem;
@@ -400,8 +424,9 @@
                             <span id="patientStatusBadge" style="display:none;"></span>
                         </div>
                         <div style="display:flex;gap:6px;flex-wrap:wrap;">
-                            <button class="btn btn-outline btn-sm" id="viewPatientFileBtn" aria-label="ملف المريض">
+                            <button class="btn btn-outline btn-sm" id="viewPatientFileBtn" aria-label="ملف المريض" style="position:relative;">
                                 <i class="fas fa-folder-open"></i> ملف
+                                <span id="recordCountBadge" class="record-count-badge" style="display:none;">0</span>
                             </button>
                             <button class="btn btn-success btn-sm" id="saveAsTemplateBtn" aria-label="حفظ كقالب">
                                 <i class="fas fa-save"></i> حفظ كقالب
@@ -597,7 +622,6 @@
 
         const LOGIN_STORAGE_KEYS = ['shifa_session', 'shifa_remember', 'shifa_last_login'];
 
-        // ============ IndexedDB للجلسات ============
         class SessionDB {
             constructor() { this.dbName = 'ShifaDoctorDB'; this.storeName = 'pendingSessions'; this.db = null; }
             async open() { if (this.db) return; return new Promise((resolve, reject) => { const req = indexedDB.open(this.dbName, 1); req.onupgradeneeded = (e) => { const db = e.target.result; if (!db.objectStoreNames.contains(this.storeName)) db.createObjectStore(this.storeName, { keyPath: 'id' }); }; req.onsuccess = (e) => { this.db = e.target.result; resolve(); }; req.onerror = (e) => reject(e.target.error); }); }
@@ -632,8 +656,9 @@
             prescription: [], diagnosis: '', loadedTemplateId: null, loadedTemplateName: null,
             activeSessionId: null, drugCache: [], globalDrugsCache: [], currentTab: 'current',
             editingPrescription: null, editingRxId: null, editingPatientName: '',
-            // ✅ حالة جديدة لتتبع وضع تعديل وصفة منتهية
-            isEditingCompleted: false, editingCompletedRxId: null
+            isEditingCompleted: false, editingCompletedRxId: null,
+            // ✅ عداد السجلات السابقة
+            previousRecordsCount: 0
         };
 
         const $ = (sel) => document.querySelector(sel);
@@ -651,6 +676,61 @@
                 sessionStorage.removeItem('userRole');
                 sessionStorage.removeItem('userName');
             } catch (e) { console.warn('تعذر مسح بيانات الجلسة:', e.message); }
+        }
+
+        // ✅ دالة جلب عدد الكشوفات السابقة للمريض
+        async function fetchPreviousRecordsCount(patientId) {
+            if (!patientId) return 0;
+            try {
+                const snap = await get(ref(db, 'prescriptions'));
+                if (!snap.exists()) return 0;
+                let count = 0;
+                snap.forEach(child => {
+                    const rx = child.val();
+                    if (String(rx.patient_id) === String(patientId)) count++;
+                });
+                return count;
+            } catch (e) {
+                return 0;
+            }
+        }
+
+        // ✅ دالة استرداد وصفة سابقة
+        async function restorePrescription(rxId) {
+            try {
+                const [rxSnap, itemsSnap] = await Promise.all([
+                    get(ref(db, `prescriptions/${rxId}`)),
+                    get(ref(db, `prescription_items/${rxId}`))
+                ]);
+                
+                if (rxSnap.exists()) {
+                    const diagnosis = rxSnap.val().diagnosis || '';
+                    $('#diagnosisInput').value = diagnosis;
+                }
+                
+                state.prescription = [];
+                if (itemsSnap.exists()) {
+                    state.prescription = Object.values(itemsSnap.val()).map(it => ({
+                        drug: it.drug_name || it.drug_id || '',
+                        form: it.form || 'tablet',
+                        dose: it.dose || ''
+                    }));
+                }
+                
+                state.prescription.forEach(item => {
+                    const strength = extractStrength(item.drug);
+                    const pureName = strength ? item.drug.replace(strength, '').trim() : item.drug;
+                    drugManager.recordUsage(item.drug, pureName, item.form, strength);
+                });
+                
+                renderRxList();
+                saveSessionToDB();
+                $('#patientFileModal').style.display = 'none';
+                toast('✅ تم استرداد الوصفة بنجاح');
+            } catch (err) {
+                console.error('خطأ في استرداد الوصفة:', err);
+                toast('خطأ في استرداد الوصفة', true);
+            }
         }
 
         const doseManager = {
@@ -710,7 +790,6 @@
 
         async function saveSessionToDB() { 
             if (!state.currentAppointment) return; 
-            // لا نحفظ جلسات التعديل على الوصفات المنتهية
             if (state.isEditingCompleted) return;
             const session = { id: state.currentAppointment.id, appointment: state.currentAppointment, prescription: state.prescription.slice(), diagnosis: $('#diagnosisInput')?.value || '', loadedTemplateId: state.loadedTemplateId, loadedTemplateName: state.loadedTemplateName, updatedAt: new Date().toISOString() }; 
             sessionDB.save(session).catch(() => {}); 
@@ -764,8 +843,7 @@
                 if (state.currentAppointment && apt.id === state.currentAppointment.id && !isDone) cls += ' current'; 
                 const name = getPatientName(apt); 
                 const statusIcon = apt.status === 'منتهي' ? '✅' : apt.status === 'قيد الكشف' ? '🩺' : '⏳';
-                const tooltip = isDone ? 'data-tooltip="اضغط لتعديل الوصفة"' : '';
-                return `<div class="${cls}" data-id="${apt.id}" ${tooltip}><div style="display:flex;justify-content:space-between;align-items:center;"><div><b>${esc(name)}</b><div style="font-size:0.7rem;color:var(--text-sec);">${apt.time||''} · ${apt.age||'--'} سنة</div></div><span class="patient-status-icon">${statusIcon}</span></div></div>`; 
+                return `<div class="${cls}" data-id="${apt.id}"><div style="display:flex;justify-content:space-between;align-items:center;"><div><b>${esc(name)}</b><div style="font-size:0.7rem;color:var(--text-sec);">${apt.time||''} · ${apt.age||'--'} سنة</div></div><span class="patient-status-icon">${statusIcon}</span></div></div>`; 
             }).join('');
         }
 
@@ -782,13 +860,11 @@
             const apt = state.appointments.find(a => a.id === appointmentId);
             if (!apt) return;
             
-            // ✅ إذا كان المريض منتهي - فتح وضع تعديل الوصفة
             if (apt.status === 'منتهي') {
                 await openCompletedPrescriptionForEditing(apt);
                 return;
             }
             
-            // ✅ سلوك طبيعي للمرضى المنتظرين أو جاري كشفهم
             if (apt.status === 'انتظار') { 
                 await update(ref(db, `appointments/${appointmentId}`), { status: 'قيد الكشف' }); 
             }
@@ -801,11 +877,15 @@
             state.editingCompletedRxId = null;
             const diagInput = $('#diagnosisInput'); 
             if (diagInput) diagInput.value = '';
+            
+            // ✅ جلب عدد الكشوفات السابقة
+            const patientId = apt.patient_id || apt.patientId;
+            state.previousRecordsCount = await fetchPreviousRecordsCount(patientId);
+            
             updateWorkspace(); 
             await saveSessionToDB();
         }
 
-        // ✅ فتح وصفة منتهية للتعديل
         async function openCompletedPrescriptionForEditing(apt) {
             try {
                 const prescriptionSnap = await get(ref(db, `prescriptions/${apt.id}`));
@@ -827,13 +907,15 @@
                     }));
                 }
                 
-                // تعيين حالة التعديل
                 state.isEditingCompleted = true;
                 state.editingCompletedRxId = apt.id;
                 state.currentAppointment = apt;
                 state.prescription = items;
                 state.loadedTemplateId = null;
                 state.loadedTemplateName = null;
+                
+                const patientId = apt.patient_id || apt.patientId;
+                state.previousRecordsCount = await fetchPreviousRecordsCount(patientId);
                 
                 const diagInput = $('#diagnosisInput');
                 if (diagInput) diagInput.value = diagnosis;
@@ -846,7 +928,6 @@
             }
         }
 
-        // ✅ حفظ تعديلات الوصفة المنتهية
         async function saveCompletedPrescriptionEdit() {
             if (!state.isEditingCompleted || !state.editingCompletedRxId) return;
             
@@ -862,14 +943,12 @@
                 const now = new Date().toISOString();
                 const updates = {};
                 
-                // تحديث بيانات الوصفة
                 updates[`prescriptions/${state.editingCompletedRxId}/diagnosis`] = diagnosis;
                 updates[`prescriptions/${state.editingCompletedRxId}/item_count`] = items.length;
                 updates[`prescriptions/${state.editingCompletedRxId}/updated_at`] = now;
                 updates[`prescriptions/${state.editingCompletedRxId}/last_edited_by`] = state.user.uid;
                 updates[`prescriptions/${state.editingCompletedRxId}/last_edited_at`] = now;
                 
-                // حذف العناصر القديمة وإضافة الجديدة
                 const oldItemsSnap = await get(ref(db, `prescription_items/${state.editingCompletedRxId}`));
                 if (oldItemsSnap.exists()) {
                     Object.keys(oldItemsSnap.val()).forEach(key => {
@@ -887,18 +966,17 @@
                 
                 await update(ref(db), updates);
                 
-                // تسجيل استخدام الأدوية
                 items.forEach(item => {
                     const strength = extractStrength(item.drug);
                     const pureName = strength ? item.drug.replace(strength, '').trim() : item.drug;
                     drugManager.recordUsage(item.drug, pureName, item.form, strength);
                 });
                 
-                // تنظيف الحالة
                 state.isEditingCompleted = false;
                 state.editingCompletedRxId = null;
                 state.currentAppointment = null;
                 state.prescription = [];
+                state.previousRecordsCount = 0;
                 
                 const diagInput = $('#diagnosisInput');
                 if (diagInput) diagInput.value = '';
@@ -911,12 +989,12 @@
             }
         }
 
-        // ✅ إلغاء وضع تعديل الوصفة المنتهية
         function cancelCompletedEdit() {
             state.isEditingCompleted = false;
             state.editingCompletedRxId = null;
             state.currentAppointment = null;
             state.prescription = [];
+            state.previousRecordsCount = 0;
             
             const diagInput = $('#diagnosisInput');
             if (diagInput) diagInput.value = '';
@@ -932,6 +1010,7 @@
                 $('#loadedTemplateInfo').style.display = 'none';
                 $('#editModeInfo').style.display = 'none';
                 $('#workspace').classList.remove('editing-completed');
+                $('#recordCountBadge').style.display = 'none';
                 return; 
             }
             
@@ -944,9 +1023,15 @@
             $('#patientMeta').textContent = `${apt.time||''} · ${apt.age||'--'} سنة · ${apt.phone||''}`;
             $('#patientAvatar').textContent = name.charAt(0).toUpperCase();
             
-            // ✅ إظهار/إخفاء العناصر حسب وضع التعديل
+            // ✅ تحديث عداد السجلات
+            if (state.previousRecordsCount > 0) {
+                $('#recordCountBadge').textContent = state.previousRecordsCount;
+                $('#recordCountBadge').style.display = 'inline-flex';
+            } else {
+                $('#recordCountBadge').style.display = 'none';
+            }
+            
             if (state.isEditingCompleted) {
-                // وضع تعديل وصفة منتهية
                 $('#workspace').classList.add('editing-completed');
                 $('#finishSessionBtn').style.display = 'none';
                 $('#saveCompletedEditBtn').style.display = 'flex';
@@ -958,7 +1043,6 @@
                 $('#patientStatusBadge').innerHTML = '<span class="prescription-status-badge status-pending">📋 وصفة منتهية</span>';
                 $('#patientStatusBadge').style.display = 'inline-flex';
             } else {
-                // وضع كشف عادي
                 $('#workspace').classList.remove('editing-completed');
                 $('#finishSessionBtn').style.display = 'flex';
                 $('#saveCompletedEditBtn').style.display = 'none';
@@ -1086,124 +1170,104 @@
             setTimeout(() => $('#newTemplateNameInput').focus(), 100);
         }
 
+        // ✅ تعديل فتح الملف الطبي - عرض الأدوية مع كل وصفة
         async function openPatientFile() {
             const pid = state.currentAppointment?.patient_id || state.currentAppointment?.patientId;
             if (!pid) { toast('لا يوجد ملف للمريض', true); return; }
             const modal = $('#patientFileModal'); const content = $('#patientFileContent');
             modal.style.display = 'flex'; content.innerHTML = '<div style="text-align:center;padding:30px;"><div class="loader-circle"></div></div>';
             try {
-                const [patientSnap, prescriptionsSnap] = await Promise.all([get(ref(db, `patients/${pid}`)), get(ref(db, 'prescriptions'))]);
-                const patient = patientSnap.exists() ? patientSnap.val() : {}; const patientName = patient.name || 'غير معروف';
+                const [patientSnap, prescriptionsSnap] = await Promise.all([
+                    get(ref(db, `patients/${pid}`)), 
+                    get(ref(db, 'prescriptions'))
+                ]);
+                
+                const patient = patientSnap.exists() ? patientSnap.val() : {}; 
+                const patientName = patient.name || 'غير معروف';
                 const patientRx = [];
-                if (prescriptionsSnap.exists()) { prescriptionsSnap.forEach(child => { const rx = child.val(); if (String(rx.patient_id) === String(pid)) { patientRx.push({ id: child.key, data: rx }); } }); }
+                
+                if (prescriptionsSnap.exists()) { 
+                    // جمع الوصفات مع عناصرها
+                    const promises = [];
+                    prescriptionsSnap.forEach(child => { 
+                        const rx = child.val(); 
+                        if (String(rx.patient_id) === String(pid)) {
+                            promises.push((async () => {
+                                const itemsSnap = await get(ref(db, `prescription_items/${child.key}`));
+                                let items = [];
+                                if (itemsSnap.exists()) {
+                                    items = Object.values(itemsSnap.val()).map(it => ({
+                                        drug: it.drug_name || it.drug_id || '',
+                                        form: it.form || 'tablet',
+                                        dose: it.dose || ''
+                                    }));
+                                }
+                                patientRx.push({ id: child.key, data: rx, items });
+                            })());
+                        }
+                    });
+                    await Promise.all(promises);
+                }
+                
                 patientRx.sort((a, b) => (b.data.created_at || '').localeCompare(a.data.created_at || ''));
                 const totalRx = patientRx.length;
+                
                 let html = `<div style="margin-bottom:20px;"><h4>${esc(patientName)} - ${totalRx} وصفات</h4></div>`;
-                if (patientRx.length === 0) { html += '<div style="text-align:center;padding:20px;color:var(--text-sec);">لا توجد وصفات مسجلة</div>'; }
-                else {
-                    for (const r of patientRx.slice(0, 10)) {
-                        const rx = r.data; const dateStr = rx.created_at ? new Date(rx.created_at).toLocaleDateString('ar-EG') : '—';
+                
+                if (patientRx.length === 0) { 
+                    html += '<div style="text-align:center;padding:20px;color:var(--text-sec);">لا توجد وصفات مسجلة</div>'; 
+                } else {
+                    for (const r of patientRx.slice(0, 15)) {
+                        const rx = r.data; 
+                        const dateStr = rx.created_at ? new Date(rx.created_at).toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' }) : '—';
                         const statusBadge = rx.status === 'تم الصرف' ? '<span class="prescription-status-badge status-dispensed">✅ تم الصرف</span>' : 
                                            rx.status === 'صرفت جزئياً' ? '<span class="prescription-status-badge status-partial">📦 جزئي</span>' : 
                                            '<span class="prescription-status-badge status-pending">⏳ لم تصرف</span>';
-                        html += `<div class="prescription-history-item" data-rx-id="${r.id}"><div>${statusBadge} <b>${dateStr}</b> - ${rx.diagnosis||'بدون تشخيص'}</div><button class="btn btn-outline btn-sm edit-prescription-btn" data-rx-id="${r.id}"><i class="fas fa-edit"></i> تعديل</button></div>`;
+                        
+                        // ✅ عرض الأدوية المصغرة
+                        let drugsHtml = '';
+                        if (r.items && r.items.length > 0) {
+                            drugsHtml = '<div class="prescription-history-drugs">' + 
+                                r.items.map(item => {
+                                    const formEmoji = item.form === 'tablet' ? '💊' : item.form === 'syrup' ? '🥄' : item.form === 'injection' ? '💉' : item.form === 'suppository' ? '🧴' : '💧';
+                                    return `<span class="drug-mini-tag">${formEmoji} ${esc(item.drug)} <span class="tag-dose">${esc(item.dose)}</span></span>`;
+                                }).join('') + 
+                                '</div>';
+                        }
+                        
+                        html += `
+                            <div class="prescription-history-item" data-rx-id="${r.id}">
+                                <div class="prescription-history-header">
+                                    <div style="flex:1;min-width:200px;">
+                                        ${statusBadge}
+                                        <b>${dateStr}</b>
+                                        <div style="color:var(--text-sec);font-size:0.8rem;margin-top:2px;">
+                                            ${rx.diagnosis ? esc(rx.diagnosis).substring(0, 80) + (rx.diagnosis.length > 80 ? '...' : '') : 'بدون تشخيص'}
+                                        </div>
+                                    </div>
+                                    <button class="btn btn-info btn-sm restore-prescription-btn" data-rx-id="${r.id}" style="white-space:nowrap;">
+                                        <i class="fas fa-undo"></i> استرداد
+                                    </button>
+                                </div>
+                                ${drugsHtml}
+                            </div>
+                        `;
                     }
                 }
                 content.innerHTML = html;
-                content.querySelectorAll('.edit-prescription-btn').forEach(btn => {
+                
+                // ✅ ربط أزرار الاسترداد
+                content.querySelectorAll('.restore-prescription-btn').forEach(btn => {
                     btn.addEventListener('click', (e) => {
                         e.stopPropagation();
                         const rxId = btn.dataset.rxId;
-                        openEditPrescriptionModal(rxId, patientName);
+                        restorePrescription(rxId);
                     });
                 });
-            } catch (err) { content.innerHTML = '<div style="color:var(--danger);">خطأ في تحميل الملف</div>'; }
-        }
-
-        async function openEditPrescriptionModal(rxId, patientName) {
-            state.editingRxId = rxId; state.editingPatientName = patientName; state.editingPrescription = { diagnosis: '', items: [] };
-            try {
-                const [rxSnap, itemsSnap] = await Promise.all([get(ref(db, `prescriptions/${rxId}`)), get(ref(db, `prescription_items/${rxId}`))]);
-                if (rxSnap.exists()) { state.editingPrescription.diagnosis = rxSnap.val().diagnosis || ''; }
-                if (itemsSnap.exists()) { state.editingPrescription.items = Object.values(itemsSnap.val()).map(it => ({ drug: it.drug_name || it.drug_id || '', form: it.form || 'tablet', dose: it.dose || '' })); }
-                renderEditModal();
-                $('#editPrescriptionInfo').textContent = `المريض: ${patientName} | رقم الوصفة: ${rxId}`;
-                $('#editPrescriptionModal').style.display = 'flex';
-            } catch (err) { toast('خطأ في تحميل الوصفة', true); }
-        }
-
-        function renderEditModal() {
-            const items = state.editingPrescription?.items || [];
-            const container = $('#editRxItemsContainer');
-            container.innerHTML = items.map((item, i) => `
-                <span class="editable-rx-chip">
-                    <input type="text" value="${esc(item.drug)}" data-index="${i}" class="edit-drug-name" placeholder="الدواء" style="width:100px;">
-                    <select data-index="${i}" class="edit-drug-form">
-                        <option value="tablet" ${item.form==='tablet'?'selected':''}>أقراص</option>
-                        <option value="syrup" ${item.form==='syrup'?'selected':''}>شراب</option>
-                        <option value="injection" ${item.form==='injection'?'selected':''}>حقن</option>
-                        <option value="suppository" ${item.form==='suppository'?'selected':''}>لبوس</option>
-                        <option value="drops" ${item.form==='drops'?'selected':''}>نقط</option>
-                    </select>
-                    <input type="text" value="${esc(item.dose)}" data-index="${i}" class="edit-drug-dose" placeholder="الجرعة" style="width:80px;">
-                    <button class="remove-edit-chip" data-index="${i}">×</button>
-                </span>
-            `).join('');
-            $('#editDiagnosisInput').value = state.editingPrescription?.diagnosis || '';
-            container.querySelectorAll('.remove-edit-chip').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const index = parseInt(btn.dataset.index);
-                    state.editingPrescription.items.splice(index, 1);
-                    renderEditModal();
-                });
-            });
-            container.querySelectorAll('.edit-drug-name').forEach(input => {
-                input.addEventListener('input', () => {
-                    const index = parseInt(input.dataset.index);
-                    if (state.editingPrescription.items[index]) state.editingPrescription.items[index].drug = input.value;
-                });
-            });
-            container.querySelectorAll('.edit-drug-form').forEach(select => {
-                select.addEventListener('change', () => {
-                    const index = parseInt(select.dataset.index);
-                    if (state.editingPrescription.items[index]) state.editingPrescription.items[index].form = select.value;
-                });
-            });
-            container.querySelectorAll('.edit-drug-dose').forEach(input => {
-                input.addEventListener('input', () => {
-                    const index = parseInt(input.dataset.index);
-                    if (state.editingPrescription.items[index]) state.editingPrescription.items[index].dose = input.value;
-                });
-            });
-        }
-
-        async function saveEditedPrescription() {
-            if (!state.editingRxId) return;
-            const diagnosis = $('#editDiagnosisInput').value.trim();
-            const items = state.editingPrescription.items.filter(it => it.drug.trim() !== '');
-            try {
-                const updates = {};
-                updates[`prescriptions/${state.editingRxId}/diagnosis`] = diagnosis;
-                updates[`prescriptions/${state.editingRxId}/item_count`] = items.length;
-                updates[`prescriptions/${state.editingRxId}/updated_at`] = new Date().toISOString();
-                const oldItemsSnap = await get(ref(db, `prescription_items/${state.editingRxId}`));
-                if (oldItemsSnap.exists()) { Object.keys(oldItemsSnap.val()).forEach(key => { updates[`prescription_items/${state.editingRxId}/${key}`] = null; }); }
-                items.forEach((item, i) => { updates[`prescription_items/${state.editingRxId}/item_${i}`] = { drug_name: item.drug, dose: item.dose, form: item.form }; });
-                await update(ref(db), updates);
-                toast('✅ تم حفظ تعديلات الوصفة بنجاح');
-                $('#editPrescriptionModal').style.display = 'none';
-                if ($('#patientFileModal').style.display === 'flex') openPatientFile();
-            } catch (err) { toast('خطأ في حفظ التعديلات', true); }
-        }
-
-        function addDrugToEdit() {
-            const drugName = $('#editDrugSearchInput').value.trim();
-            const form = $('#editDrugFormSelect').value;
-            const dose = $('#editDoseInput').value.trim();
-            if (!drugName || !dose) { toast('أدخل اسم الدواء والجرعة', true); return; }
-            state.editingPrescription.items.push({ drug: drugName, form, dose });
-            renderEditModal();
-            $('#editDrugSearchInput').value = ''; $('#editDoseInput').value = '';
+                
+            } catch (err) { 
+                content.innerHTML = '<div style="color:var(--danger);">خطأ في تحميل الملف</div>'; 
+            }
         }
 
         async function handleFinishSession() {
@@ -1285,6 +1349,8 @@
                             state.activeSessionId = session.id;
                             state.isEditingCompleted = false;
                             state.editingCompletedRxId = null;
+                            const patientId = session.appointment.patient_id || session.appointment.patientId;
+                            state.previousRecordsCount = await fetchPreviousRecordsCount(patientId);
                             const diagInput = $('#diagnosisInput');
                             if (diagInput) diagInput.value = session.diagnosis || '';
                             updateWorkspace();
@@ -1306,7 +1372,6 @@
         }
 
         async function loadTemplate(templateId, templateName) {
-            // لا نسمح بتحميل قالب في وضع تعديل وصفة منتهية
             if (state.isEditingCompleted) {
                 toast('لا يمكن تحميل قالب أثناء تعديل وصفة منتهية', true);
                 return;
@@ -1382,6 +1447,7 @@
                 state.loadedTemplateName = null;
                 state.isEditingCompleted = false;
                 state.editingCompletedRxId = null;
+                state.previousRecordsCount = 0;
                 const diagInput = $('#diagnosisInput'); 
                 if (diagInput) diagInput.value = '';
                 updateWorkspace(); 
@@ -1407,7 +1473,6 @@
                 updateQueueCount();
             });
             
-            // ✅ تعديل: السماح بالنقر على المرضى المنتهين
             ['currentPatientsList', 'waitingPatientsList', 'donePatientsList'].forEach(id => {
                 const container = $('#' + id);
                 if (container) {
@@ -1518,10 +1583,7 @@
                 $('#templateNameError').style.display = 'none';
             });
 
-            // ✅ زر حفظ تعديلات الوصفة المنتهية
             $('#saveCompletedEditBtn').addEventListener('click', saveCompletedPrescriptionEdit);
-            
-            // ✅ زر إلغاء تعديل الوصفة المنتهية
             $('#cancelEditCompletedBtn').addEventListener('click', cancelCompletedEdit);
 
             $('#finishSessionBtn').addEventListener('click', handleFinishSession);
@@ -1557,10 +1619,6 @@
             });
             document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { $$('.modal').forEach(m => m.style.display = 'none'); } });
 
-            $('#closeEditPrescriptionBtn').addEventListener('click', () => $('#editPrescriptionModal').style.display = 'none');
-            $('#cancelEditPrescriptionBtn').addEventListener('click', () => $('#editPrescriptionModal').style.display = 'none');
-            $('#saveEditedPrescriptionBtn').addEventListener('click', saveEditedPrescription);
-            $('#addEditDrugBtn').addEventListener('click', addDrugToEdit);
             $('#closePatientFileBtn').addEventListener('click', () => $('#patientFileModal').style.display = 'none');
             $('#closeSaveTemplateBtn').addEventListener('click', () => $('#saveTemplateModal').style.display = 'none');
         };
@@ -1606,7 +1664,12 @@
                 });
                 
                 const restored = await restoreSession();
-                if (restored) { updateWorkspace(); toast('🔄 تم استعادة آخر جلسة'); }
+                if (restored) { 
+                    const patientId = state.currentAppointment?.patient_id || state.currentAppointment?.patientId;
+                    if (patientId) state.previousRecordsCount = await fetchPreviousRecordsCount(patientId);
+                    updateWorkspace(); 
+                    toast('🔄 تم استعادة آخر جلسة'); 
+                }
                 
                 $('#appLoader').style.display = 'none'; 
                 $('#mainContainer').style.display = 'block';
