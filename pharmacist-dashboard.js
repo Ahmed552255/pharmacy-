@@ -98,7 +98,7 @@ function clearAllLoginData() {
         
         console.log('✅ تم مسح جميع بيانات الجلسة بنجاح');
     } catch (e) {
-        console.warn('تعذر مسح بعض بيانات الجلسة:', e.message);
+        console.warn('⚠️ تعذر مسح بعض بيانات الجلسة:', e.message);
     }
 }
 
@@ -415,35 +415,26 @@ UI.tabBtns.forEach(btn => {
 });
 
 // ✅ زر تسجيل الخروج مع مسح كامل لبيانات الدخول
-UI.logoutBtn.addEventListener('click', async () => {
-    try {
-        // 1. إلغاء مستمعي Firebase
-        if (unsubscribePrescriptions) {
-            unsubscribePrescriptions();
-            unsubscribePrescriptions = null;
-        }
-        if (unsubscribeDoctors) {
-            unsubscribeDoctors();
-            unsubscribeDoctors = null;
-        }
-        if (unsubscribePatients) {
-            unsubscribePatients();
-            unsubscribePatients = null;
-        }
-        
-        // 2. ✅ مسح جميع بيانات الجلسة من localStorage و sessionStorage
-        clearAllLoginData();
-        
-        // 3. إعادة التوجيه لصفحة تسجيل الدخول
-        window.location.href = 'index.html';
-        
-    } catch (error) {
-        console.error('خطأ أثناء تسجيل الخروج:', error);
-        
-        // حتى في حالة الخطأ، نمسح البيانات ونتوجه لصفحة الدخول
-        clearAllLoginData();
-        window.location.href = 'index.html';
+UI.logoutBtn.addEventListener('click', () => {
+    // 1. إلغاء مستمعي Firebase
+    if (unsubscribePrescriptions) {
+        unsubscribePrescriptions();
+        unsubscribePrescriptions = null;
     }
+    if (unsubscribeDoctors) {
+        unsubscribeDoctors();
+        unsubscribeDoctors = null;
+    }
+    if (unsubscribePatients) {
+        unsubscribePatients();
+        unsubscribePatients = null;
+    }
+    
+    // 2. ✅ مسح جميع بيانات الجلسة من localStorage و sessionStorage
+    clearAllLoginData();
+    
+    // 3. إعادة التوجيه لصفحة تسجيل الدخول
+    window.location.href = 'index.html';
 });
 
 // إغلاق المودال بزر ESC
