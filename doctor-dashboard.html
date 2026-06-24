@@ -322,6 +322,28 @@
             cursor: pointer; font-size: 0.65rem; display: flex; align-items: center; justify-content: center; color: var(--text-sec);
         }
 
+        /* تنسيق حقل البحث عن الدواء بدون فلترة الشكل */
+        .drug-search-wrapper {
+            position: relative;
+            flex: 1;
+            min-width: min(140px, 100%);
+        }
+        
+        .drug-search-wrapper .search-icon {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-sec);
+            font-size: 0.9rem;
+            pointer-events: none;
+        }
+        
+        .drug-search-wrapper input {
+            padding-right: 35px !important;
+            width: 100%;
+        }
+
         .modal {
             display: none; position: fixed; inset: 0; background: rgba(26,60,74,0.15); backdrop-filter: blur(4px);
             -webkit-backdrop-filter: blur(4px); align-items: center; justify-content: center; z-index: 2000;
@@ -476,12 +498,14 @@
                         </div>
                     </div>
 
+                    <!-- ============ ✅ شريط الإضافة السريع - البحث منفصل عن الشكل الصيدلي ============ -->
                     <div class="quick-add-bar" id="addDrugBar" style="position:relative;">
-                        <div style="position:relative;flex:1;min-width:min(140px,100%);">
-                            <input type="text" id="drugSearchInput" placeholder="🔍 اسم الدواء..." autocomplete="off" enterkeyhint="search" aria-label="البحث عن دواء">
+                        <div class="drug-search-wrapper" style="position:relative;">
+                            <span class="search-icon">🔍</span>
+                            <input type="text" id="drugSearchInput" placeholder="ابحث عن الدواء بالاسم..." autocomplete="off" enterkeyhint="search" aria-label="البحث عن دواء">
                             <div id="drugSuggestions" class="suggestions-dropdown" role="listbox" aria-label="اقتراحات الأدوية"></div>
                         </div>
-                        <select id="drugFormSelect" aria-label="شكل الدواء">
+                        <select id="drugFormSelect" aria-label="شكل الدواء للروشتة فقط" title="الشكل الصيدلي للروشتة">
                             <option value="tablet">💊 أقراص</option>
                             <option value="syrup">🥄 شراب</option>
                             <option value="injection">💉 حقن</option>
@@ -697,6 +721,7 @@
             async delete(id) { if (!this.db) await this.open(); return new Promise((resolve, reject) => { const tx = this.db.transaction(this.storeName, 'readwrite'); tx.objectStore(this.storeName).delete(id); tx.oncomplete = resolve; tx.onerror = () => reject(tx.error); }); }
         }
 
+        // ============ ✅ FavoriteDrugsDB - محدثة لدعم البحث غير الحساس لحالة الأحرف ============
         class FavoriteDrugsDB {
             constructor() { 
                 this._dbName = null;
@@ -715,7 +740,29 @@
             async getAll() { if (!this.db) await this.open(); return new Promise((resolve, reject) => { const tx = this.db.transaction(this.storeName, 'readonly'); const req = tx.objectStore(this.storeName).getAll(); req.onsuccess = () => resolve(req.result || []); req.onerror = () => reject(req.error); }); }
             async incrementAndSave(fullName, name, form, strength) { if (!this.db) await this.open(); const tx = this.db.transaction(this.storeName, 'readwrite'); const store = tx.objectStore(this.storeName); const req = store.get(fullName); req.onsuccess = () => { let drug = req.result; if (drug) { drug.usageCount = (drug.usageCount || 0) + 1; drug.lastUsed = new Date().toISOString(); } else { drug = { fullName, name, form, strength, usageCount: 1, hidden: false, firstUsed: new Date().toISOString(), lastUsed: new Date().toISOString() }; } store.put(drug); }; }
             async hideDrug(fullName) { if (!this.db) await this.open(); return new Promise((resolve) => { const tx = this.db.transaction(this.storeName, 'readwrite'); const store = tx.objectStore(this.storeName); const req = store.get(fullName); req.onsuccess = () => { let drug = req.result || { fullName, usageCount: 0 }; drug.hidden = true; store.put(drug); resolve(); }; req.onerror = () => resolve(); }); }
-            async search(term, formFilter = null, limit = 5) { const all = await this.getAll(); const termLower = term.toLowerCase(); let results = all.filter(d => { if (d.hidden) return false; if (formFilter && d.form !== formFilter) return false; return d.name?.toLowerCase().includes(termLower) || d.fullName?.toLowerCase().includes(termLower); }); results.sort((a, b) => (b.usageCount || 0) - (a.usageCount || 0)); return results.slice(0, limit); }
+            
+            // ✅ البحث غير الحساس لحالة الأحرف - Case-insensitive search
+            async search(term, formFilter = null, limit = 5) { 
+                const all = await this.getAll(); 
+                const termLower = term.toLowerCase(); 
+                let results = all.filter(d => { 
+                    if (d.hidden) return false; 
+                    // ✅ الفلترة بالشكل الصيدلي تكون اختيارية فقط - لو الدكتور اختار شكل معين
+                    // لكن الأساسي أن البحث يتم بدون فلترة الشكل
+                    // إذا تم تمرير formFilter (للاستخدامات الخاصة فقط) نفلتر به
+                    // لكن في الوضع العادي نبحث في كل الأشكال
+                    const nameLower = (d.name || '').toLowerCase();
+                    const fullNameLower = (d.fullName || '').toLowerCase();
+                    const strengthLower = (d.strength || '').toLowerCase();
+                    
+                    // ✅ البحث الذكي: يبحث في الاسم والاسم الكامل والتركيز
+                    return nameLower.includes(termLower) || 
+                           fullNameLower.includes(termLower) || 
+                           strengthLower.includes(termLower);
+                }); 
+                results.sort((a, b) => (b.usageCount || 0) - (a.usageCount || 0)); 
+                return results.slice(0, limit); 
+            }
         }
 
         class FavoriteDosesDB {
@@ -880,6 +927,7 @@
             async recordUsage(drugName, form, dose, freqLabel) { await favoriteDosesDB.recordDose(drugName, form, dose, freqLabel); }
         };
 
+        // ============ ✅ drugManager - محدث بالكامل: بحث ذكي غير حساس لحالة الأحرف وبدون فلترة بالشكل ============
         const drugManager = {
             _cachePromise: null,
             async loadCache() {
@@ -895,21 +943,77 @@
                             state.globalDrugsCache = globalSnap.exists() ? Object.values(globalSnap.val()) : [];
                         }
                     } catch(e) { state.globalDrugsCache = []; }
-                    try { const module = await import('./drugs-database.js'); const localDrugs = module.default || module.drugsDatabase || []; const seen = new Set(state.globalDrugsCache.map(d => d.name?.toLowerCase())); localDrugs.forEach(name => { if (!seen.has(name.toLowerCase())) { state.globalDrugsCache.push({ id: `local_${state.globalDrugsCache.length}`, name, form: 'tablet', freq: 0 }); } }); } catch(e) {}
+                    try { const module = await import('./drugs-database.js'); const localDrugs = module.default || module.drugsDatabase || []; const seen = new Set(state.globalDrugsCache.map(d => (d.name || '').toLowerCase())); localDrugs.forEach(name => { if (!seen.has(name.toLowerCase())) { state.globalDrugsCache.push({ id: `local_${state.globalDrugsCache.length}`, name, form: 'tablet', freq: 0 }); } }); } catch(e) {}
                     state.drugCache = [...state.globalDrugsCache];
                 })();
                 return this._cachePromise;
             },
-            async getSuggestions(term, form) {
-                const termLower = term.toLowerCase(); const suggestions = []; const seenNames = new Set();
-                const localFavs = await favoritesDB.search(termLower, form, 2);
-                localFavs.forEach(d => { const key = `${d.name}_${d.form}_${d.strength}`.toLowerCase(); if (!seenNames.has(key)) { seenNames.add(key); suggestions.push({ name: d.fullName || `${d.name} ${d.strength}`, form: d.form, strength: d.strength, freq: d.usageCount, source: 'favorite', originalName: d.name }); } });
+            
+            // ✅ دالة البحث الرئيسية - غير حساسة لحالة الأحرف وبدون فلترة بالشكل الصيدلي
+            // الشكل الصيدلي يُستخدم فقط للعرض في الروشتة للصيدلي
+            async getSuggestions(term, form = null) {
+                const termLower = term.toLowerCase().trim();
+                const suggestions = []; 
+                const seenNames = new Set();
+                
+                // ✅ 1. البحث في المفضلات المحلية أولاً - بحث ذكي غير حساس لحالة الأحرف
+                // نمرر null كـ formFilter عشان نبحث في كل الأشكال
+                const localFavs = await favoritesDB.search(termLower, null, 3);
+                localFavs.forEach(d => { 
+                    const key = `${(d.name || '').toLowerCase()}_${(d.form || '').toLowerCase()}_${(d.strength || '').toLowerCase()}`; 
+                    if (!seenNames.has(key)) { 
+                        seenNames.add(key); 
+                        suggestions.push({ 
+                            name: d.fullName || `${d.name} ${d.strength || ''}`.trim(), 
+                            form: d.form || 'tablet', 
+                            strength: d.strength || '', 
+                            freq: d.usageCount || 0, 
+                            source: 'favorite', 
+                            originalName: d.name || '' 
+                        }); 
+                    } 
+                });
+                
+                // ✅ 2. البحث في قاعدة البيانات العامة - غير حساس لحالة الأحرف
                 const remainingSlots = 5 - suggestions.length;
-                if (remainingSlots > 0) { let globalResults = state.globalDrugsCache.filter(d => { const name = (d.name || '').toLowerCase(); return name.includes(termLower); }); if (form) globalResults = globalResults.filter(d => d.form === form); globalResults.sort((a, b) => (b.freq || 0) - (a.freq || 0)); for (const d of globalResults) { const key = `${d.name}_${d.form}`.toLowerCase(); if (!seenNames.has(key) && suggestions.length < 5) { seenNames.add(key); suggestions.push({ name: d.name, form: d.form, strength: d.strength || extractStrength(d.name), freq: d.freq || 0, source: 'global', originalName: d.name }); } } }
+                if (remainingSlots > 0) { 
+                    let globalResults = state.globalDrugsCache.filter(d => { 
+                        const name = (d.name || '').toLowerCase(); 
+                        const strength = (d.strength || '').toLowerCase();
+                        // ✅ بحث ذكي: لو الـ term موجود في الاسم أو التركيز
+                        return name.includes(termLower) || 
+                               (d.fullName || '').toLowerCase().includes(termLower) ||
+                               strength.includes(termLower);
+                    }); 
+                    // ✅ لا نفلتر بالشكل - الشكل للعرض فقط في الروشتة
+                    // if (form) globalResults = globalResults.filter(d => d.form === form); 
+                    globalResults.sort((a, b) => (b.freq || 0) - (a.freq || 0)); 
+                    for (const d of globalResults) { 
+                        const key = `${(d.name || '').toLowerCase()}_${(d.form || '').toLowerCase()}`; 
+                        if (!seenNames.has(key) && suggestions.length < 5) { 
+                            seenNames.add(key); 
+                            suggestions.push({ 
+                                name: d.name || '', 
+                                form: d.form || 'tablet', 
+                                strength: d.strength || extractStrength(d.name || ''), 
+                                freq: d.freq || 0, 
+                                source: 'global', 
+                                originalName: d.name || '' 
+                            }); 
+                        } 
+                    } 
+                }
                 return suggestions;
             },
-            async recordUsage(fullDrugName, name, form, strength) { const now = new Date().toISOString(); await favoritesDB.incrementAndSave(fullDrugName, name, form, strength); },
-            async hideSuggestion(fullDrugName, name, form) { await favoritesDB.hideDrug(fullDrugName); toast(`تم تقليل ظهور "${fullDrugName}"`); }
+            
+            async recordUsage(fullDrugName, name, form, strength) { 
+                const now = new Date().toISOString(); 
+                await favoritesDB.incrementAndSave(fullDrugName, name, form, strength); 
+            },
+            async hideSuggestion(fullDrugName, name, form) { 
+                await favoritesDB.hideDrug(fullDrugName); 
+                toast(`تم تقليل ظهور "${fullDrugName}"`); 
+            }
         };
 
         async function saveSessionToDB() { 
@@ -1207,6 +1311,7 @@
                 if (!dose) { toast('أدخل الجرعة', true); doseInput.focus(); return; }
                 const strength = extractStrength(drugName); const pureName = strength ? drugName.replace(strength, '').trim() : drugName;
                 const freqMatch = dose.match(/كل\s+(\d+)\s*ساعة|مرة\s*واحدة|يومياً|عند\s*اللزوم/); const freqLabel = freqMatch ? freqMatch[0] : '';
+                // ✅ الشكل الصيدلي يُحفظ في الروشتة فقط للصيدلي
                 state.prescription.push({ drug: drugName, form: form, dose });
                 drugManager.recordUsage(drugName, pureName, form, strength);
                 if (freqLabel) doseManager.recordUsage(drugName, form, dose, freqLabel);
@@ -1222,7 +1327,7 @@
             if (!snap.exists()) return false;
             const templates = snap.val();
             const nameLower = name.trim().toLowerCase();
-            return Object.values(templates).some(t => t.name?.toLowerCase() === nameLower);
+            return Object.values(templates).some(t => (t.name || '').toLowerCase() === nameLower);
         }
 
         async function saveAsNewTemplate() {
@@ -1653,14 +1758,15 @@
                 } 
             });
 
+            // ============ ✅ مستمع حدث البحث - محدث: بحث ذكي غير حساس لحالة الأحرف وبدون فلترة بالشكل ============
             let searchTimer;
             $('#drugSearchInput').addEventListener('input', () => {
                 const term = $('#drugSearchInput').value.trim();
                 clearTimeout(searchTimer);
                 if (term.length < 1) { $('#drugSuggestions').style.display = 'none'; return; }
                 searchTimer = setTimeout(async () => {
-                    const form = $('#drugFormSelect').value;
-                    const results = await drugManager.getSuggestions(term, form);
+                    // ✅ نمرر null كـ form عشان البحث يكون بدون فلترة بالشكل الصيدلي
+                    const results = await drugManager.getSuggestions(term, null);
                     const dd = $('#drugSuggestions');
                     if (results.length === 0) { 
                         dd.innerHTML = `<div class="suggestion-item" id="createNewDrug" style="color:var(--accent);">➕ إضافة "${esc(term)}" كدواء جديد</div>`; 
@@ -1674,12 +1780,16 @@
                             });
                         }
                     } else {
-                        dd.innerHTML = results.map(d => `<div class="suggestion-item" data-name="${esc(d.name)}" data-form="${d.form}"><div class="suggestion-content">${esc(d.name)} <span class="usage-count">${d.freq||0}x</span></div><button class="hide-suggestion-btn" data-fullname="${esc(d.name)}" data-name="${esc(d.originalName||d.name)}" data-form="${d.form}">×</button></div>`).join('');
+                        dd.innerHTML = results.map(d => `<div class="suggestion-item" data-name="${esc(d.name)}" data-form="${d.form || 'tablet'}"><div class="suggestion-content">${esc(d.name)} <span class="usage-count">${d.freq||0}x</span></div><button class="hide-suggestion-btn" data-fullname="${esc(d.name)}" data-name="${esc(d.originalName||d.name)}" data-form="${d.form || 'tablet'}">×</button></div>`).join('');
                         dd.style.display = 'block';
                         dd.querySelectorAll('.suggestion-item').forEach(item => {
                             item.addEventListener('click', (e) => {
                                 if (e.target.closest('.hide-suggestion-btn')) return;
                                 $('#drugSearchInput').value = item.dataset.name;
+                                // ✅ عند اختيار الدواء، يمكن تحديث الشكل الصيدلي تلقائياً إذا كان موجوداً في الاقتراح
+                                if (item.dataset.form && item.dataset.form !== 'tablet') {
+                                    $('#drugFormSelect').value = item.dataset.form;
+                                }
                                 $('#drugSuggestions').style.display = 'none';
                                 $('#doseInput').focus();
                             });
@@ -1737,7 +1847,7 @@
             // ============ ✅ تسجيل الخروج - نفس منطق الأدمن والممرض ============
             $('#logoutBtn').addEventListener('click', async () => { 
                 try {
-                    showToast ? toast('👋 جاري تسجيل الخروج...') : null;
+                    toast('👋 جاري تسجيل الخروج...');
                     
                     // 1. ✅ مسح بيانات الجلسة فقط (وليس بيانات المجمع)
                     clearLoginSessionOnly();
@@ -1874,6 +1984,9 @@
         });
 
         console.log('🚀 لوحة الطبيب - نظام المجمعات الطبية المتعددة');
+        console.log('🔍 البحث الذكي: غير حساس لحالة الأحرف (Case-Insensitive)');
+        console.log('💊 الشكل الصيدلي: يُحفظ في الروشتة فقط للصيدلي - لا يؤثر على البحث');
+        console.log('⭐ المفضلات: تبحث بشكل ذكي مع كل حرف يُكتب');
         console.log('🔒 كل طبيب يشوف كشوفاته هو فقط في مجمعه');
         console.log('💾 وضع الحفظ: يمسح جلسة الدخول فقط - يحتفظ ببيانات المجمع');
     </script>
