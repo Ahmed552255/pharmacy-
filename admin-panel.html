@@ -6,12 +6,9 @@
     <meta name="theme-color" content="#00AEEF">
     <title>شفاء | لوحة الإدارة</title>
     
-    <!-- خط محلي احتياطي سريع -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap&subset=arabic" rel="stylesheet">
-    
-    <!-- Font Awesome مضغوط -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
     
     <style>
@@ -34,18 +31,13 @@
             --radius-xl: 50px;
         }
         
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         
         html {
             font-size: 15px;
             -webkit-tap-highlight-color: transparent;
             -webkit-font-smoothing: antialiased;
             -webkit-text-size-adjust: 100%;
-            text-rendering: optimizeSpeed;
         }
         
         body {
@@ -56,18 +48,10 @@
             min-height: 100dvh;
             padding: 14px;
             overflow-x: hidden;
-            -webkit-backface-visibility: hidden;
-            backface-visibility: hidden;
         }
         
-        /* إزالة أي خلفيات متحركة */
+        .container { max-width: 1300px; margin: 0 auto; }
         
-        .container {
-            max-width: 1300px;
-            margin: 0 auto;
-        }
-        
-        /* لودر مبسط */
         #authCheckLoader {
             position: fixed;
             inset: 0;
@@ -89,17 +73,10 @@
             animation: spin 0.7s linear infinite;
         }
         
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
+        @keyframes spin { to { transform: rotate(360deg); } }
         
-        .loader-text {
-            font-size: 1rem;
-            font-weight: 600;
-            color: var(--primary-dark);
-        }
+        .loader-text { font-size: 1rem; font-weight: 600; color: var(--primary-dark); }
         
-        /* هيدر مبسط - بدون blur */
         .app-header {
             display: flex;
             align-items: center;
@@ -117,23 +94,10 @@
             z-index: 100;
         }
         
-        .logo h2 {
-            font-size: 1.4rem;
-            font-weight: 800;
-            color: var(--primary-dark);
-            white-space: nowrap;
-        }
+        .logo h2 { font-size: 1.4rem; font-weight: 800; color: var(--primary-dark); white-space: nowrap; }
+        .logo i { color: var(--primary); }
         
-        .logo i {
-            color: var(--primary);
-        }
-        
-        .header-actions {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
+        .header-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
         
         .search-wrapper {
             background: #F5FAFC;
@@ -146,14 +110,8 @@
             min-width: 180px;
         }
         
-        .search-wrapper:focus-within {
-            border-color: var(--primary);
-        }
-        
-        .search-wrapper i {
-            color: var(--primary);
-            font-size: 0.9rem;
-        }
+        .search-wrapper:focus-within { border-color: var(--primary); }
+        .search-wrapper i { color: var(--primary); font-size: 0.9rem; }
         
         .search-wrapper input {
             background: transparent;
@@ -166,11 +124,8 @@
             color: var(--ink);
         }
         
-        .search-wrapper input::placeholder {
-            color: #B0C8D0;
-        }
+        .search-wrapper input::placeholder { color: #B0C8D0; }
         
-        /* أزرار مبسطة */
         .btn {
             padding: 10px 18px;
             border-radius: var(--radius-xl);
@@ -189,47 +144,14 @@
             transition: opacity 0.15s;
         }
         
-        .btn:active {
-            opacity: 0.8;
-        }
+        .btn:active { opacity: 0.8; }
+        .btn-primary { background: var(--primary); color: white; box-shadow: 0 3px 10px rgba(0, 174, 239, 0.2); }
+        .btn-outline { background: var(--white); color: var(--ink); border: 1.5px solid var(--border); }
+        .btn-icon { width: 42px; height: 42px; padding: 0; justify-content: center; border-radius: 50%; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-success { background: var(--success); color: white; }
         
-        .btn-primary {
-            background: var(--primary);
-            color: white;
-            box-shadow: 0 3px 10px rgba(0, 174, 239, 0.2);
-        }
-        
-        .btn-outline {
-            background: var(--white);
-            color: var(--ink);
-            border: 1.5px solid var(--border);
-        }
-        
-        .btn-icon {
-            width: 42px;
-            height: 42px;
-            padding: 0;
-            justify-content: center;
-            border-radius: 50%;
-        }
-        
-        .btn-danger {
-            background: var(--danger);
-            color: white;
-        }
-        
-        .btn-success {
-            background: var(--success);
-            color: white;
-        }
-        
-        /* شريط الإحصائيات */
-        .stats-bar {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
+        .stats-bar { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
         
         .stat-card {
             background: var(--white);
@@ -254,19 +176,9 @@
             font-size: 1.2rem;
         }
         
-        .stat-info h4 {
-            font-size: 1.5rem;
-            font-weight: 800;
-            line-height: 1;
-        }
+        .stat-info h4 { font-size: 1.5rem; font-weight: 800; line-height: 1; }
+        .stat-info span { font-size: 0.75rem; color: var(--text-sec); font-weight: 500; }
         
-        .stat-info span {
-            font-size: 0.75rem;
-            color: var(--text-sec);
-            font-weight: 500;
-        }
-        
-        /* شبكة المستخدمين */
         .users-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
@@ -284,9 +196,7 @@
             transition: box-shadow 0.15s;
         }
         
-        .user-card:active {
-            box-shadow: var(--shadow-md);
-        }
+        .user-card:active { box-shadow: var(--shadow-md); }
         
         .card-status-dot {
             position: absolute;
@@ -298,19 +208,10 @@
             border: 2px solid white;
         }
         
-        .card-status-dot.active {
-            background: var(--success);
-        }
+        .card-status-dot.active { background: var(--success); }
+        .card-status-dot.blocked { background: var(--danger); }
         
-        .card-status-dot.blocked {
-            background: var(--danger);
-        }
-        
-        .card-avatar {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 14px;
-        }
+        .card-avatar { display: flex; justify-content: center; margin-bottom: 14px; }
         
         .avatar-circle {
             width: 70px;
@@ -398,18 +299,9 @@
             color: var(--text-sec);
         }
         
-        .empty-state i {
-            font-size: 2.5rem;
-            color: #B0C8D0;
-            margin-bottom: 14px;
-        }
+        .empty-state i { font-size: 2.5rem; color: #B0C8D0; margin-bottom: 14px; }
+        .empty-state h3 { font-size: 1.1rem; margin-bottom: 6px; }
         
-        .empty-state h3 {
-            font-size: 1.1rem;
-            margin-bottom: 6px;
-        }
-        
-        /* المودالات - مبسطة بدون blur */
         .modal {
             display: none;
             position: fixed;
@@ -430,7 +322,6 @@
             overflow-y: auto;
             box-shadow: 0 20px 50px rgba(0,0,0,0.15);
             border: 1px solid var(--border);
-            /* ✅ تحسين السحب على الموبايل */
             -webkit-overflow-scrolling: touch;
             overscroll-behavior: contain;
         }
@@ -448,10 +339,7 @@
             z-index: 10;
         }
         
-        .modal-header h3 {
-            font-size: 1.1rem;
-            font-weight: 700;
-        }
+        .modal-header h3 { font-size: 1.1rem; font-weight: 700; }
         
         .close-btn {
             background: none;
@@ -467,19 +355,11 @@
             justify-content: center;
         }
         
-        .close-btn:active {
-            background: rgba(0,0,0,0.05);
-        }
+        .close-btn:active { background: rgba(0,0,0,0.05); }
         
-        .modal-body {
-            padding: 20px;
-            /* ✅ مساحة إضافية للسحب فوق لوحة المفاتيح */
-            padding-bottom: 45vh;
-        }
+        .modal-body { padding: 20px; padding-bottom: 45vh; }
         
-        .form-group {
-            margin-bottom: 16px;
-        }
+        .form-group { margin-bottom: 16px; }
         
         .form-group label {
             display: block;
@@ -489,9 +369,7 @@
             color: var(--ink);
         }
         
-        input,
-        select,
-        textarea {
+        input, select, textarea {
             width: 100%;
             padding: 10px 14px;
             border-radius: var(--radius-sm);
@@ -504,18 +382,13 @@
             appearance: none;
         }
         
-        input:focus,
-        select:focus,
-        textarea:focus {
+        input:focus, select:focus, textarea:focus {
             outline: none;
             border-color: var(--primary);
             background: white;
         }
         
-        textarea {
-            resize: vertical;
-            min-height: 60px;
-        }
+        textarea { resize: vertical; min-height: 60px; }
         
         .multi-select {
             background: #F5FAFC;
@@ -524,7 +397,6 @@
             padding: 6px;
             max-height: 180px;
             overflow-y: auto;
-            /* ✅ تحسين السحب */
             -webkit-overflow-scrolling: touch;
         }
         
@@ -540,14 +412,8 @@
             font-size: 0.85rem;
         }
         
-        .multi-select label:active {
-            background: var(--primary-light);
-        }
-        
-        .multi-select label.selected {
-            background: #E0F7FA;
-            border-right: 3px solid var(--primary);
-        }
+        .multi-select label:active { background: var(--primary-light); }
+        .multi-select label.selected { background: #E0F7FA; border-right: 3px solid var(--primary); }
         
         .multi-select input[type="checkbox"] {
             width: 18px;
@@ -556,22 +422,10 @@
             cursor: pointer;
         }
         
-        .checkmark-icon {
-            color: var(--primary);
-            font-size: 0.85rem;
-            margin-right: auto;
-        }
+        .checkmark-icon { color: var(--primary); font-size: 0.85rem; margin-right: auto; }
+        .field-hint { font-size: 0.75rem; color: var(--text-sec); margin-top: 5px; padding-right: 4px; }
         
-        .field-hint {
-            font-size: 0.75rem;
-            color: var(--text-sec);
-            margin-top: 5px;
-            padding-right: 4px;
-        }
-        
-        .password-section {
-            position: relative;
-        }
+        .password-section { position: relative; }
         
         .password-toggle {
             position: absolute;
@@ -586,18 +440,8 @@
             touch-action: manipulation;
         }
         
-        .row-buttons {
-            display: flex;
-            gap: 8px;
-            margin-top: 20px;
-            flex-wrap: wrap;
-        }
-        
-        .action-btns {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
+        .row-buttons { display: flex; gap: 8px; margin-top: 20px; flex-wrap: wrap; }
+        .action-btns { display: flex; gap: 8px; flex-wrap: wrap; }
         
         .detail-row {
             display: flex;
@@ -607,11 +451,7 @@
             font-size: 0.88rem;
         }
         
-        .detail-row i {
-            width: 22px;
-            color: var(--primary);
-            text-align: center;
-        }
+        .detail-row i { width: 22px; color: var(--primary); text-align: center; }
         
         .password-display {
             background: #F5FAFC;
@@ -627,15 +467,8 @@
             font-size: 0.85rem;
         }
         
-        /* ✅ spacer للسحب - غير مرئي لكنه يوفر مساحة */
-        .keyboard-scroll-spacer {
-            height: 1px;
-            width: 100%;
-            pointer-events: none;
-            opacity: 0;
-        }
+        .keyboard-scroll-spacer { height: 1px; width: 100%; pointer-events: none; opacity: 0; }
         
-        /* توست مبسط */
         .toast-container {
             position: fixed;
             bottom: 20px;
@@ -663,13 +496,8 @@
             gap: 8px;
         }
         
-        .toast.error {
-            background: #C62828;
-        }
-        
-        .toast.removing {
-            animation: toastOut 0.3s ease forwards;
-        }
+        .toast.error { background: #C62828; }
+        .toast.removing { animation: toastOut 0.3s ease forwards; }
         
         @keyframes toastIn {
             from { transform: translateY(15px); opacity: 0; }
@@ -681,7 +509,6 @@
             to { transform: translateY(-15px); opacity: 0; }
         }
         
-        /* مؤشر المزامنة */
         .sync-indicator {
             display: inline-block;
             width: 8px;
@@ -690,97 +517,46 @@
             margin-left: 6px;
         }
         
-        .sync-indicator.synced {
-            background: var(--success);
-        }
-        
-        .sync-indicator.syncing {
-            background: #FFB74D;
-            animation: pulse 1s infinite;
-        }
+        .sync-indicator.synced { background: var(--success); }
+        .sync-indicator.syncing { background: #FFB74D; animation: pulse 1s infinite; }
         
         @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.3; }
         }
         
-        /* تحسينات للشاشات الصغيرة */
+        .tenant-info {
+            background: var(--primary-light);
+            padding: 4px 12px;
+            border-radius: var(--radius-xl);
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--primary-dark);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
         @media (max-width: 768px) {
-            body {
-                padding: 8px;
-            }
-            
-            .app-header {
-                padding: 10px 14px;
-                border-radius: var(--radius-md);
-                top: 4px;
-            }
-            
-            .logo h2 {
-                font-size: 1.2rem;
-            }
-            
-            .search-wrapper {
-                min-width: 150px;
-            }
-            
-            .search-wrapper input {
-                width: 100px;
-            }
-            
-            .users-grid {
-                grid-template-columns: 1fr;
-                gap: 10px;
-            }
-            
-            .stats-bar {
-                gap: 8px;
-            }
-            
-            .stat-card {
-                min-width: 100px;
-                padding: 10px 12px;
-            }
-            
-            .stat-info h4 {
-                font-size: 1.3rem;
-            }
-            
-            .modal-card {
-                max-width: 100%;
-                border-radius: var(--radius-md);
-            }
-            
-            .btn {
-                padding: 8px 14px;
-                font-size: 0.8rem;
-            }
-            
-            /* ✅ مساحة أكبر على الموبايل */
-            .modal-body {
-                padding-bottom: 55vh;
-            }
+            body { padding: 8px; }
+            .app-header { padding: 10px 14px; border-radius: var(--radius-md); top: 4px; }
+            .logo h2 { font-size: 1.2rem; }
+            .search-wrapper { min-width: 150px; }
+            .search-wrapper input { width: 100px; }
+            .users-grid { grid-template-columns: 1fr; gap: 10px; }
+            .stats-bar { gap: 8px; }
+            .stat-card { min-width: 100px; padding: 10px 12px; }
+            .stat-info h4 { font-size: 1.3rem; }
+            .modal-card { max-width: 100%; border-radius: var(--radius-md); }
+            .btn { padding: 8px 14px; font-size: 0.8rem; }
+            .modal-body { padding-bottom: 55vh; }
         }
         
         @media (max-width: 360px) {
-            .app-header {
-                padding: 8px 10px;
-                gap: 8px;
-            }
-            
-            .stats-bar {
-                flex-wrap: wrap;
-            }
-            
-            .stat-card {
-                flex: 1 1 45%;
-                min-width: 0;
-            }
-            
-            /* ✅ مساحة أكبر للشاشات الصغيرة جداً */
-            .modal-body {
-                padding-bottom: 65vh;
-            }
+            .app-header { padding: 8px 10px; gap: 8px; }
+            .stats-bar { flex-wrap: wrap; }
+            .stat-card { flex: 1 1 45%; min-width: 0; }
+            .modal-body { padding-bottom: 65vh; }
         }
         
         @media (prefers-reduced-motion: reduce) {
@@ -790,24 +566,10 @@
             }
         }
         
-        /* سكرول بار خفيف */
-        .modal-card::-webkit-scrollbar {
-            width: 5px;
-        }
-        
-        .modal-card::-webkit-scrollbar-thumb {
-            background: #D0D0D0;
-            border-radius: 10px;
-        }
-        
-        .multi-select::-webkit-scrollbar {
-            width: 4px;
-        }
-        
-        .multi-select::-webkit-scrollbar-thumb {
-            background: #D0D0D0;
-            border-radius: 10px;
-        }
+        .modal-card::-webkit-scrollbar { width: 5px; }
+        .modal-card::-webkit-scrollbar-thumb { background: #D0D0D0; border-radius: 10px; }
+        .multi-select::-webkit-scrollbar { width: 4px; }
+        .multi-select::-webkit-scrollbar-thumb { background: #D0D0D0; border-radius: 10px; }
     </style>
 </head>
 <body>
@@ -822,9 +584,16 @@
     <div class="container" id="mainContainer" style="display: none;">
         <header class="app-header">
             <div class="logo">
-                <h2><i class="fas fa-heartbeat"></i> شفاء · الإدارة <span class="sync-indicator synced" id="syncIndicator" title="حالة المزامنة"></span></h2>
+                <h2>
+                    <i class="fas fa-heartbeat"></i> شفاء · الإدارة 
+                    <span class="sync-indicator synced" id="syncIndicator" title="حالة المزامنة"></span>
+                </h2>
             </div>
             <div class="header-actions">
+                <div class="tenant-info" id="tenantInfo">
+                    <i class="fas fa-hospital"></i>
+                    <span id="tenantIdDisplay">مجمع طبي</span>
+                </div>
                 <div class="search-wrapper">
                     <i class="fas fa-search"></i>
                     <input type="text" id="searchInput" placeholder="ابحث عن مستخدم...">
@@ -942,7 +711,6 @@
                     <button id="editModalBtn" class="btn btn-primary"><i class="fas fa-edit"></i> تعديل</button>
                 </div>
                 
-                <!-- ✅ spacer للسحب فوق لوحة المفاتيح -->
                 <div class="keyboard-scroll-spacer"></div>
             </div>
         </div>
@@ -990,7 +758,6 @@
                     <label>لمحة سريعة</label>
                     <textarea id="quickBlurb" rows="2" placeholder="خبرة، ملاحظات إضافية..."></textarea>
                 </div>
-                <!-- ✅ حقل كلمة المرور للإضافة فقط -->
                 <div class="form-group password-section" id="passwordFieldGroup">
                     <label>كلمة المرور *</label>
                     <input type="password" id="userPassword" placeholder="••••••••" required>
@@ -999,7 +766,6 @@
                     </button>
                     <div class="field-hint" id="passwordHint">أدخل كلمة مرور قوية (6 أحرف على الأقل)</div>
                 </div>
-                <!-- ✅ تم حذف قسم تعديل كلمة المرور بالكامل -->
                 <div class="form-group">
                     <label>الحالة</label>
                     <select id="userStatus">
@@ -1011,7 +777,6 @@
                     <button id="saveFormBtn" class="btn btn-primary"><i class="fas fa-save"></i> حفظ</button>
                 </div>
                 
-                <!-- ✅ spacer للسحب فوق لوحة المفاتيح -->
                 <div class="keyboard-scroll-spacer"></div>
             </div>
         </div>
@@ -1027,22 +792,27 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
         const auth = getAuth(app);
-        const usersRef = ref(db, 'users');
-        const linksRef = ref(db, 'doctor_nurse_links');
         const API_KEY = firebaseConfig.apiKey;
         const SIGN_UP_URL = `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${API_KEY}`;
         const DELETE_URL = `https://identitytoolkit.googleapis.com/v1/accounts:delete?key=${API_KEY}`;
 
-        // ============ ثوابت التخزين المحلي ============
-        const LOCAL_DB_KEY = 'shifa_admin_local_users';
-        const LOCAL_LINKS_KEY = 'shifa_admin_local_links';
-        const LOCAL_PASSWORDS_KEY = 'shifa_admin_local_passwords';
+        // ============ متغير المجمع الطبي (Tenant ID) ============
+        let currentAdminId = null;
+        let currentTenantId = null;
         
-        // ✅ مفاتيح التخزين المحلي من صفحة تسجيل الدخول
+        // ============ مراجع Firebase مع ربط بالمجمع ============
+        let tenantUsersRef = null;
+        let tenantLinksRef = null;
+
+        // ============ ثوابت التخزين المحلي ============
+        const STORAGE_PREFIX = 'shifa_tenant_';
+        
+        // ✅ مفاتيح تسجيل الدخول فقط (اللي هتمسح عند الخروج)
         const LOGIN_STORAGE_KEYS = [
-            'shifa_session',        // الجلسة الدائمة
-            'shifa_remember',       // تذكرني
-            'shifa_last_login'      // آخر تسجيل دخول
+            'shifa_session',           // الجلسة القديمة
+            'shifa_remember',          // تذكرني
+            'shifa_last_login',        // آخر تسجيل دخول
+            'shifa_secure_session'     // الجلسة المشفرة الجديدة
         ];
 
         // ============ المتغيرات العامة ============
@@ -1074,16 +844,18 @@
             toast.className = `toast ${isError ? 'error' : ''}`;
             toast.innerHTML = `<i class="fas ${isError ? 'fa-exclamation-circle' : 'fa-check-circle'}"></i> ${msg}`;
             container.appendChild(toast);
-            
-            // إزالة التوست بعد 2.5 ثانية
             setTimeout(() => {
                 toast.classList.add('removing');
                 setTimeout(() => toast.remove(), 300);
             }, 2500);
         };
 
-        // ============ إدارة التخزين المحلي (قاعدة بيانات محلية) ============
+        // ============ دوال التخزين المحلي لكل مجمع ============
         
+        const getTenantStorageKey = (baseKey) => {
+            return currentTenantId ? `${STORAGE_PREFIX}${currentTenantId}_${baseKey}` : baseKey;
+        };
+
         const setSyncStatus = (status) => {
             const indicator = $('#syncIndicator');
             if (indicator) {
@@ -1093,24 +865,25 @@
         };
 
         const saveToLocalDB = () => {
+            if (!currentTenantId) return;
             try {
                 const usersData = {};
                 allUsers.forEach(u => {
                     usersData[u.id] = { ...u };
-                    // حذف الخصائص المؤقتة قبل الحفظ
                     delete usersData[u.id]._linkedDoctorIds;
                 });
-                localStorage.setItem(LOCAL_DB_KEY, JSON.stringify(usersData));
-                localStorage.setItem(LOCAL_LINKS_KEY, JSON.stringify(linksMap));
+                localStorage.setItem(getTenantStorageKey('users'), JSON.stringify(usersData));
+                localStorage.setItem(getTenantStorageKey('links'), JSON.stringify(linksMap));
             } catch (e) {
                 console.warn('تعذر الحفظ في التخزين المحلي:', e.message);
             }
         };
 
         const loadFromLocalDB = () => {
+            if (!currentTenantId) return false;
             try {
-                const usersData = localStorage.getItem(LOCAL_DB_KEY);
-                const linksData = localStorage.getItem(LOCAL_LINKS_KEY);
+                const usersData = localStorage.getItem(getTenantStorageKey('users'));
+                const linksData = localStorage.getItem(getTenantStorageKey('links'));
                 
                 if (usersData) {
                     const parsed = JSON.parse(usersData);
@@ -1132,18 +905,22 @@
         };
 
         const savePasswordLocally = (uid, password) => {
+            if (!currentTenantId) return;
             try {
-                const passwords = JSON.parse(localStorage.getItem(LOCAL_PASSWORDS_KEY) || '{}');
+                const storageKey = getTenantStorageKey('passwords');
+                const passwords = JSON.parse(localStorage.getItem(storageKey) || '{}');
                 passwords[uid] = password;
-                localStorage.setItem(LOCAL_PASSWORDS_KEY, JSON.stringify(passwords));
+                localStorage.setItem(storageKey, JSON.stringify(passwords));
             } catch (e) {
                 console.warn('تعذر حفظ كلمة المرور محلياً:', e.message);
             }
         };
 
         const getPasswordLocally = (uid) => {
+            if (!currentTenantId) return null;
             try {
-                const passwords = JSON.parse(localStorage.getItem(LOCAL_PASSWORDS_KEY) || '{}');
+                const storageKey = getTenantStorageKey('passwords');
+                const passwords = JSON.parse(localStorage.getItem(storageKey) || '{}');
                 return passwords[uid] || null;
             } catch (e) {
                 return null;
@@ -1151,10 +928,12 @@
         };
 
         const removePasswordLocally = (uid) => {
+            if (!currentTenantId) return;
             try {
-                const passwords = JSON.parse(localStorage.getItem(LOCAL_PASSWORDS_KEY) || '{}');
+                const storageKey = getTenantStorageKey('passwords');
+                const passwords = JSON.parse(localStorage.getItem(storageKey) || '{}');
                 delete passwords[uid];
-                localStorage.setItem(LOCAL_PASSWORDS_KEY, JSON.stringify(passwords));
+                localStorage.setItem(storageKey, JSON.stringify(passwords));
             } catch (e) {
                 // تجاهل
             }
@@ -1198,11 +977,13 @@
         };
 
         const startListeners = () => {
+            if (!tenantUsersRef || !tenantLinksRef) return;
+            
             if (unsubscribeUsers) unsubscribeUsers();
             if (unsubscribeLinks) unsubscribeLinks();
 
-            // مستمع Firebase للبيانات
-            unsubscribeUsers = onValue(usersRef, (snap) => {
+            // مستمع Firebase للبيانات - مربوط بالمجمع الحالي
+            unsubscribeUsers = onValue(tenantUsersRef, (snap) => {
                 const usersArray = [];
                 snap.forEach(child => {
                     usersArray.push({ id: child.key, ...child.val() });
@@ -1213,14 +994,14 @@
             }, (error) => {
                 console.warn('خطأ في الاتصال بـ Firebase، استخدام البيانات المحلية:', error.message);
                 setSyncStatus('syncing');
-                // استخدام البيانات المحلية في حالة فشل الاتصال
                 if (allUsers.length === 0) {
                     loadFromLocalDB();
                     combineAndRender();
                 }
             });
 
-            unsubscribeLinks = onValue(linksRef, (snap) => {
+            // مستمع الروابط - مربوط بالمجمع الحالي
+            unsubscribeLinks = onValue(tenantLinksRef, (snap) => {
                 linksMap = snap.val() || {};
                 if (allUsers.length) combineAndRender();
             }, (error) => {
@@ -1345,7 +1126,6 @@
             if (!user) return;
             currentViewId = id;
             
-            // استرجاع كلمة المرور من التخزين المحلي
             const savedPassword = getPasswordLocally(id);
             currentUserPassword = savedPassword || 'غير معروفة';
             
@@ -1448,7 +1228,6 @@
             $('#quickBlurb').value = user.quickBlurb || '';
             $('#userStatus').value = user.status || 'active';
             
-            // ✅ إخفاء حقل كلمة المرور في وضع التعديل
             $('#passwordFieldGroup').style.display = 'none';
             $('#userPassword').required = false;
             $('#userPassword').value = '';
@@ -1491,7 +1270,6 @@
             $('#specialtyGroup').style.display = role === 'doctor' ? 'block' : 'none';
         });
 
-        // تبديل كلمة المرور في الإضافة
         $('#togglePassword').addEventListener('click', function() {
             const pwdField = $('#userPassword');
             const icon = this.querySelector('i');
@@ -1504,7 +1282,6 @@
             }
         });
 
-        // نسخ كلمة المرور
         $('#detailPassword').addEventListener('click', () => {
             if (currentUserPassword && currentUserPassword !== 'غير معروفة') {
                 navigator.clipboard.writeText(currentUserPassword).then(() => {
@@ -1532,6 +1309,7 @@
                 return;
             }
 
+            // إضافة معرف المجمع الطبي للبيانات
             const userData = {
                 name,
                 email,
@@ -1539,7 +1317,9 @@
                 role,
                 specialty: role === 'doctor' ? specialty : '',
                 quickBlurb,
-                status
+                status,
+                tenantId: currentTenantId,
+                createdBy: currentAdminId
             };
 
             let selectedDoctorIds = [];
@@ -1554,8 +1334,8 @@
 
             try {
                 if (currentEditId) {
-                    // ✅ تعديل مستخدم موجود (بدون تغيير كلمة المرور)
-                    await update(ref(db, `users/${currentEditId}`), userData);
+                    // تعديل مستخدم موجود (بدون تغيير كلمة المرور)
+                    await update(ref(db, `tenants/${currentTenantId}/users/${currentEditId}`), userData);
                     
                     if (role === 'nurse') {
                         await saveNurseDoctorLinks(currentEditId, selectedDoctorIds);
@@ -1592,9 +1372,11 @@
                     
                     const uid = signUpData.localId;
                     userData.created_at = new Date().toISOString();
-                    await set(ref(db, `users/${uid}`), userData);
                     
-                    // ✅ حفظ كلمة المرور في التخزين المحلي
+                    // حفظ المستخدم في مسار المجمع الخاص
+                    await set(ref(db, `tenants/${currentTenantId}/users/${uid}`), userData);
+                    
+                    // حفظ كلمة المرور في التخزين المحلي
                     savePasswordLocally(uid, password);
                     
                     if (role === 'nurse') {
@@ -1612,7 +1394,7 @@
         };
 
         const saveNurseDoctorLinks = async (nurseId, doctorIds) => {
-            const linkRef = ref(db, `doctor_nurse_links/${nurseId}`);
+            const linkRef = ref(db, `tenants/${currentTenantId}/links/${nurseId}`);
             await set(linkRef, null);
             if (doctorIds.length === 0) return;
             const updates = {};
@@ -1621,7 +1403,7 @@
         };
 
         const toggleBlockUser = async (id, newStatus) => {
-            await update(ref(db, `users/${id}`), { status: newStatus });
+            await update(ref(db, `tenants/${currentTenantId}/users/${id}`), { status: newStatus });
             showToast(newStatus === 'blocked' ? '🔒 تم الحظر' : '🔓 تم إلغاء الحظر');
             closeDetailModal();
         };
@@ -1644,19 +1426,18 @@
 
             try {
                 if (user.role === 'nurse') {
-                    await remove(ref(db, `doctor_nurse_links/${id}`));
+                    await remove(ref(db, `tenants/${currentTenantId}/links/${id}`));
                 }
 
-                await remove(ref(db, `users/${id}`));
+                await remove(ref(db, `tenants/${currentTenantId}/users/${id}`));
 
-                // ✅ حذف كلمة المرور المخزنة محلياً
+                // حذف كلمة المرور المخزنة محلياً
                 removePasswordLocally(id);
 
                 try {
                     const currentUser = auth.currentUser;
                     if (currentUser) {
                         const idToken = await currentUser.getIdToken();
-                        
                         await fetch(DELETE_URL, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
@@ -1667,7 +1448,7 @@
                         });
                     }
                 } catch (authError) {
-                    console.warn('لم يتم حذف حساب Authentication (قد يكون محذوفاً بالفعل):', authError);
+                    console.warn('لم يتم حذف حساب Authentication:', authError);
                 }
 
                 showToast('🗑️ تم حذف المستخدم بنجاح');
@@ -1678,39 +1459,47 @@
             }
         };
 
-        // ============ ✅ تسجيل الخروج مع مسح بيانات الجلسة ============
+        // ============ ✅ تسجيل الخروج - يمسح بيانات الجلسة فقط ويحتفظ ببيانات المجمع ============
         
         /**
-         * مسح جميع بيانات التخزين المحلي المتعلقة بتسجيل الدخول
+         * مسح مفاتيح تسجيل الدخول فقط (الجلسة المشفرة)
+         * مع الحفاظ على بيانات المجمع المحلية (المستخدمين، الروابط، كلمات المرور)
          */
-        const clearAllLoginData = () => {
+        const clearLoginSessionOnly = () => {
             try {
-                // مسح مفاتيح التخزين المحلي من صفحة تسجيل الدخول
+                // 1️⃣ مسح مفاتيح تسجيل الدخول المعروفة
                 LOGIN_STORAGE_KEYS.forEach(key => {
                     localStorage.removeItem(key);
                 });
                 
-                // مسح بيانات sessionStorage
-                sessionStorage.removeItem('userUid');
-                sessionStorage.removeItem('userRole');
-                sessionStorage.removeItem('userName');
+                // 2️⃣ مسح أي مفاتيح تبدأ بـ shifa_session أو shifa_secure (الجلسات فقط)
+                // لكن نحتفظ بـ shifa_tenant_ (بيانات المجمع)
+                const sessionKeysToRemove = [];
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key && (key.startsWith('shifa_session') || key.startsWith('shifa_secure'))) {
+                        sessionKeysToRemove.push(key);
+                    }
+                }
+                sessionKeysToRemove.forEach(key => localStorage.removeItem(key));
                 
-                // مسح البيانات المحلية للوحة الإدارة (اختياري - يحافظ على الأداء)
-                // localStorage.removeItem(LOCAL_DB_KEY);
-                // localStorage.removeItem(LOCAL_LINKS_KEY);
-                // localStorage.removeItem(LOCAL_PASSWORDS_KEY);
+                // 3️⃣ مسح sessionStorage بالكامل (بيانات الجلسة المؤقتة)
+                sessionStorage.clear();
                 
-                console.log('✅ تم مسح جميع بيانات الجلسة بنجاح');
+                console.log(`✅ تم مسح ${LOGIN_STORAGE_KEYS.length + sessionKeysToRemove.length} مفتاح جلسة`);
+                console.log('💾 تم الإبقاء على بيانات المجمع المحلية (المستخدمين، الروابط، كلمات المرور)');
             } catch (e) {
-                console.warn('تعذر مسح بعض بيانات الجلسة:', e.message);
+                console.warn('تعذر مسح بيانات الجلسة:', e.message);
             }
         };
 
         /**
-         * تسجيل الخروج الآمن مع تنظيف كامل
+         * تسجيل الخروج الآمن - يمسح الجلسة فقط ويحتفظ ببيانات المجمع
          */
         const logout = async () => {
             try {
+                showToast('👋 جاري تسجيل الخروج...');
+                
                 // 1. إلغاء مستمعي Firebase
                 if (unsubscribeUsers) {
                     unsubscribeUsers();
@@ -1721,20 +1510,27 @@
                     unsubscribeLinks = null;
                 }
                 
-                // 2. ✅ مسح جميع بيانات الجلسة من localStorage و sessionStorage
-                clearAllLoginData();
+                // 2. ✅ مسح بيانات الجلسة فقط (وليس بيانات المجمع)
+                clearLoginSessionOnly();
                 
-                // 3. تسجيل الخروج من Firebase Auth
+                // 3. مسح المتغيرات العامة في الذاكرة فقط
+                allUsers = [];
+                doctorsList = [];
+                linksMap = {};
+                currentAdminId = null;
+                currentTenantId = null;
+                
+                // 4. تسجيل الخروج من Firebase Auth
                 await signOut(auth);
                 
-                // 4. إعادة التوجيه لصفحة تسجيل الدخول
+                // 5. إعادة التوجيه لصفحة تسجيل الدخول
                 window.location.href = 'index.html';
                 
             } catch (error) {
                 console.error('خطأ أثناء تسجيل الخروج:', error);
                 
-                // حتى في حالة الخطأ، نمسح البيانات ونتوجه لصفحة الدخول
-                clearAllLoginData();
+                // حتى في حالة الخطأ، نمسح الجلسة فقط ونتوجه لصفحة الدخول
+                clearLoginSessionOnly();
                 window.location.href = 'index.html';
             }
         };
@@ -1742,47 +1538,92 @@
         // ============ التحقق من الصلاحية ============
         
         const checkAdminAuth = () => {
-            // ✅ تحميل البيانات المحلية فوراً للعرض السريع
-            loadFromLocalDB();
-            if (allUsers.length > 0) {
-                combineAndRender();
-            }
-            
             onAuthStateChanged(auth, async (user) => {
                 if (!user) {
-                    // ✅ مسح بيانات الجلسة لو المستخدم مش موجود
-                    clearAllLoginData();
+                    // مسح بيانات الجلسة فقط
+                    clearLoginSessionOnly();
                     window.location.href = 'index.html';
                     return;
                 }
+                
                 try {
-                    const snap = await get(ref(db, `users/${user.uid}`));
-                    if (!snap.exists() || snap.val().role !== 'admin') {
+                    // البحث عن بيانات الأدمن في مسار المجمع
+                    const adminRef = ref(db, `tenants/${user.uid}/users/${user.uid}`);
+                    const adminSnap = await get(adminRef);
+                    
+                    let adminData = null;
+                    if (adminSnap.exists()) {
+                        adminData = adminSnap.val();
+                    } else {
+                        // توافق مع المسار القديم
+                        const oldRef = ref(db, `users/${user.uid}`);
+                        const oldSnap = await get(oldRef);
+                        if (oldSnap.exists()) {
+                            adminData = oldSnap.val();
+                        }
+                    }
+                    
+                    if (!adminData || adminData.role !== 'admin') {
                         showToast('غير مصرح لك بالدخول', true);
-                        // ✅ مسح البيانات قبل الخروج
-                        clearAllLoginData();
+                        clearLoginSessionOnly();
                         await signOut(auth);
                         window.location.href = 'index.html';
                         return;
                     }
+                    
+                    // تعيين معرفات المجمع الحالي
+                    currentAdminId = user.uid;
+                    currentTenantId = user.uid;
+                    
+                    // إعداد مراجع Firebase للمجمع الحالي
+                    tenantUsersRef = ref(db, `tenants/${currentTenantId}/users`);
+                    tenantLinksRef = ref(db, `tenants/${currentTenantId}/links`);
+                    
+                    // عرض معرف المجمع
+                    const tenantDisplay = adminData.tenantName || adminData.name || 'المجمع الطبي';
+                    $('#tenantIdDisplay').textContent = tenantDisplay;
+                    
+                    // تحميل البيانات المحلية فوراً للعرض السريع
+                    loadFromLocalDB();
+                    if (allUsers.length > 0) {
+                        combineAndRender();
+                    }
+                    
                     $('#authCheckLoader').style.display = 'none';
                     $('#mainContainer').style.display = 'block';
                     startListeners();
+                    
                 } catch (err) {
-                    console.error(err);
-                    // ✅ استخدام البيانات المحلية في حالة فشل الاتصال
-                    const localSession = localStorage.getItem('shifa_session');
+                    console.error('خطأ في التحقق من الصلاحية:', err);
+                    
+                    // استخدام البيانات المحلية في حالة فشل الاتصال
+                    const localSession = localStorage.getItem('shifa_secure_session') || 
+                                        localStorage.getItem('shifa_session');
                     if (localSession) {
-                        const session = JSON.parse(localSession);
-                        if (session.role === 'admin') {
-                            $('#authCheckLoader').style.display = 'none';
-                            $('#mainContainer').style.display = 'block';
-                            if (!unsubscribeUsers) startListeners();
-                            return;
+                        try {
+                            const session = JSON.parse(localSession);
+                            if (session.role === 'admin' && session.uid === user.uid) {
+                                currentAdminId = user.uid;
+                                currentTenantId = user.uid;
+                                tenantUsersRef = ref(db, `tenants/${currentTenantId}/users`);
+                                tenantLinksRef = ref(db, `tenants/${currentTenantId}/links`);
+                                
+                                $('#tenantIdDisplay').textContent = session.name || 'المجمع الطبي';
+                                $('#authCheckLoader').style.display = 'none';
+                                $('#mainContainer').style.display = 'block';
+                                
+                                loadFromLocalDB();
+                                combineAndRender();
+                                if (!unsubscribeUsers) startListeners();
+                                return;
+                            }
+                        } catch (parseError) {
+                            // تجاهل
                         }
                     }
-                    // ✅ مسح البيانات في حالة الفشل التام
-                    clearAllLoginData();
+                    
+                    // فشل تام
+                    clearLoginSessionOnly();
                     window.location.href = 'index.html';
                 }
             });
@@ -1805,7 +1646,6 @@
             $('#refreshBtn').onclick = () => {
                 setSyncStatus('syncing');
                 showToast('🔄 جاري تحديث البيانات...');
-                // Firebase هيعمل تحديث تلقائي via onValue
                 setTimeout(() => setSyncStatus('synced'), 1500);
             };
             $('#logoutBtn').onclick = logout;
@@ -1836,12 +1676,10 @@
                 }
             });
             
-            // ✅ مستمع لحالة الاتصال بالإنترنت
             window.addEventListener('online', () => {
                 isOnline = true;
                 setSyncStatus('syncing');
                 showToast('📡 تم استعادة الاتصال - جاري المزامنة');
-                // إعادة تحميل البيانات من السحابة
                 if (unsubscribeUsers) {
                     unsubscribeUsers();
                     unsubscribeUsers = null;
@@ -1859,9 +1697,7 @@
                 showToast('⚠️ انقطع الاتصال - استخدام البيانات المحلية', true);
             });
             
-            // ✅ مستمع لحدث إغلاق الصفحة - تنظيف اختياري
             window.addEventListener('beforeunload', () => {
-                // يمكن إضافة أي تنظيف نهائي هنا
                 if (unsubscribeUsers) unsubscribeUsers();
                 if (unsubscribeLinks) unsubscribeLinks();
             });
@@ -1871,7 +1707,8 @@
         initEvents();
         checkAdminAuth();
         
-        console.log('🚀 لوحة إدارة شفاء - وضع خفيف مع تخزين محلي وتنظيف كامل للجلسة');
+        console.log('🚀 لوحة إدارة شفاء - نظام المجمعات الطبية المتعددة');
+        console.log('💾 وضع الحفظ: يمسح جلسة الدخول فقط - يحتفظ ببيانات المجمع');
     </script>
 </body>
 </html>
