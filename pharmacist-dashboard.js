@@ -139,135 +139,41 @@ function clearLoginSessionOnly() {
     }
 }
 
-// ✅ البحث عن بيانات الصيدلي في كل المجمعات (متوافق مع النظام الجديد)
-async function findPharmacistInTenants(uid) {
-    try {
-        // 1️⃣ نجيب كل المجمعات
-        const tenantsSnap = await get(ref(db, 'tenants'));
-        
-        if (tenantsSnap.exists()) {
-            const tenants = tenantsSnap.val();
-            
-            // 2️⃣ ندور على الصيدلي في كل مجمع
-            for (const tenantId of Object.keys(tenants)) {
-                const tenantUserSnap = await get(ref(db, `tenants/${tenantId}/users/${uid}`));
-                
-                if (tenantUserSnap.exists()) {
-                    const userData = tenantUserSnap.val();
-                    
-                    if (!userData.tenantId) {
-                        userData.tenantId = tenantId;
-                    }
-                    
-                    const tenantName = tenants[tenantId]?.name || tenants[tenantId]?.tenantName || 
-                                      (tenants[tenantId]?.users?.[tenantId]?.name) || 'المجمع الطبي';
-                    userData.tenantName = userData.tenantName || tenantName;
-                    
-                    console.log(`✅ تم العثور على الصيدلي في مجمع: ${tenantId}`);
-                    return { found: true, userData, tenantId };
-                }
-            }
-        }
-        
-        // 3️⃣ لو ملقتش في المجمعات، جرب المسار العام
-        const publicSnap = await get(ref(db, `users/${uid}`));
-        if (publicSnap.exists()) {
-            const userData = publicSnap.val();
-            userData.tenantId = userData.tenantId || uid;
-            console.log(`⚠️ تم العثور على الصيدلي في المسار العام`);
-            return { found: true, userData, tenantId: userData.tenantId };
-        }
-        
-        return { found: false, userData: null, tenantId: null };
-        
-    } catch (error) {
-        console.error('❌ خطأ في البحث عن الصيدلي:', error);
-        
-        // آخر محاولة: المسار العام
-        try {
-            const publicSnap = await get(ref(db, `users/${uid}`));
-            if (publicSnap.exists()) {
-                const userData = publicSnap.val();
-                userData.tenantId = userData.tenantId || uid;
-                return { found: true, userData, tenantId: userData.tenantId };
-            }
-        } catch (e) {
-            // تجاهل
-        }
-        
-        return { found: false, userData: null, tenantId: null };
-    }
-}
-
+// ✅ تحميل بيانات الصيدلي - بدون طرد للمستخدم
 async function loadPharmacistData(user) {
     try {
+        // محاولة تحميل البيانات من مسار المجمع
+        const tenantPharmacistSnap = await get(ref(db, `tenants/${currentTenantId}/users/${user.uid}`));
+        
         let userData = null;
-        let foundTenantId = null;
-        
-        // ✅ 1. نجيب tenantId من الرابط الأول
-        const urlParams = new URLSearchParams(window.location.search);
-        const tenantFromUrl = urlParams.get('tenant');
-        
-        if (tenantFromUrl) {
-            // ✅ جرب نجيب بيانات الصيدلي من المجمع اللي في الرابط
-            const tenantUserSnap = await get(ref(db, `tenants/${tenantFromUrl}/users/${user.uid}`));
-            if (tenantUserSnap.exists()) {
-                userData = tenantUserSnap.val();
-                userData.tenantId = tenantFromUrl;
-                foundTenantId = tenantFromUrl;
-                console.log(`✅ تم تحميل بيانات الصيدلي من مجمع الرابط: ${tenantFromUrl}`);
+        if (tenantPharmacistSnap.exists()) {
+            userData = tenantPharmacistSnap.val();
+            console.log('✅ تم تحميل بيانات الصيدلي من مسار المجمع');
+        } else {
+            // محاولة المسار العام للتوافق
+            const publicSnap = await get(ref(db, `users/${user.uid}`));
+            if (publicSnap.exists()) {
+                userData = publicSnap.val();
+                console.log('⚠️ تم تحميل بيانات الصيدلي من المسار العام');
             }
         }
         
-        // ✅ 2. لو مش موجود في مجمع الرابط، ندور في كل المجمعات
         if (!userData) {
-            const result = await findPharmacistInTenants(user.uid);
-            if (result.found) {
-                userData = result.userData;
-                foundTenantId = result.tenantId;
-            }
+            UI.welcomeMessage.textContent = 'أهلاً، صيدلي';
+            console.log('⚠️ لم يتم العثور على بيانات الصيدلي، استخدام الوضع الافتراضي');
+            
+            // ✅ عرض اسم المجمع من الجلسة
+            const tenantName = localStorage.getItem('shifa_tenant_name') || 'المجمع الطبي';
+            if (UI.tenantName) UI.tenantName.textContent = tenantName;
+            
+            pharmacistInfo = { name: 'صيدلي', role: 'pharmacist' };
+            return true;
         }
         
-        // ✅ 3. لو لسه مش موجود، جرب الجلسة
-        if (!userData) {
-            try {
-                const encrypted = localStorage.getItem('shifa_secure_session');
-                if (encrypted) {
-                    const decoded = atob(encrypted);
-                    const match = decoded.match(/"tenantId":"([^"]+)"/);
-                    if (match) {
-                        foundTenantId = match[1];
-                        const tenantUserSnap = await get(ref(db, `tenants/${foundTenantId}/users/${user.uid}`));
-                        if (tenantUserSnap.exists()) {
-                            userData = tenantUserSnap.val();
-                            userData.tenantId = foundTenantId;
-                            console.log(`📦 تم تحميل بيانات الصيدلي من الجلسة: ${foundTenantId}`);
-                        }
-                    }
-                }
-            } catch (e) {
-                console.warn('تعذر فك تشفير الجلسة:', e.message);
-            }
-        }
-        
-        // ✅ 4. لو لسه مش موجود، استخدم uid كمجمع
-        if (!userData) {
-            foundTenantId = user.uid;
-            const tenantUserSnap = await get(ref(db, `tenants/${foundTenantId}/users/${user.uid}`));
-            if (tenantUserSnap.exists()) {
-                userData = tenantUserSnap.val();
-                userData.tenantId = foundTenantId;
-            }
-        }
-        
-        if (!userData || userData.role !== 'pharmacist') {
+        if (userData.role && userData.role !== 'pharmacist') {
             showToast('هذا الحساب ليس حساب صيدلي.', true);
             return false;
         }
-        
-        // ✅ تعيين معرف المجمع
-        currentTenantId = foundTenantId || userData.tenantId || user.uid;
-        console.log(`✅ تم تحديد المجمع الطبي للصيدلي: ${currentTenantId}`);
         
         pharmacistInfo = userData;
         UI.welcomeMessage.textContent = `أهلاً، ${pharmacistInfo.name || 'صيدلي'}`;
@@ -275,12 +181,17 @@ async function loadPharmacistData(user) {
         // ✅ عرض اسم المجمع
         const tenantName = userData.tenantName || 'المجمع الطبي';
         if (UI.tenantName) UI.tenantName.textContent = tenantName;
-        if (UI.tenantBadge) UI.tenantBadge.style.display = 'flex';
         
         return true;
     } catch (err) {
-        showToast('فشل تحميل البيانات', true);
-        return false;
+        console.warn('تعذر تحميل بيانات الصيدلي:', err.message);
+        UI.welcomeMessage.textContent = 'أهلاً، صيدلي';
+        
+        const tenantName = localStorage.getItem('shifa_tenant_name') || 'المجمع الطبي';
+        if (UI.tenantName) UI.tenantName.textContent = tenantName;
+        
+        pharmacistInfo = { name: 'صيدلي', role: 'pharmacist' };
+        return true;
     }
 }
 
@@ -735,7 +646,7 @@ window.addEventListener('offline', () => {
     showToast('⚠️ انقطع الاتصال - استخدام البيانات المحلية', true);
 });
 
-// ---------- ✅ بدء التشغيل - tenantId من الرابط أو البحث في المجمعات ----------
+// ---------- ✅ بدء التشغيل المبسط - بدون طرد للمستخدم ----------
 onAuthStateChanged(auth, async (user) => {
     if (!user) {
         clearLoginSessionOnly();
@@ -744,15 +655,49 @@ onAuthStateChanged(auth, async (user) => {
     }
     
     currentUser = user;
+
+    // ✅ 1. نجيب tenantId من الرابط (صفحة تسجيل الدخول بتبعته)
+    const urlParams = new URLSearchParams(window.location.search);
+    const tenantFromUrl = urlParams.get('tenant');
     
-    // ✅ جرب تحميل بيانات الصيدلي (بدون طرد لو فشل)
-    const valid = await loadPharmacistData(user);
-    if (!valid) {
-        UI.welcomeMessage.textContent = '⚠️ تعذر تحميل البيانات - حاول تحديث الصفحة';
-        // ✅ منغيرش نطرد المستخدم - نخليه يقدر يستخدم الأزرار
-        // بس مش هنقدر نكمل تحميل البيانات
-        return;
+    if (tenantFromUrl) {
+        currentTenantId = tenantFromUrl;
+        console.log(`✅ تم استلام معرف المجمع من الرابط: ${currentTenantId}`);
+    } else {
+        // ✅ 2. لو مش موجود في الرابط، نجيب من الجلسة المشفرة
+        try {
+            const encrypted = localStorage.getItem('shifa_secure_session');
+            if (encrypted) {
+                const decoded = atob(encrypted);
+                const match = decoded.match(/"tenantId":"([^"]+)"/);
+                if (match) {
+                    currentTenantId = match[1];
+                    console.log(`📦 تم استخراج معرف المجمع من الجلسة: ${currentTenantId}`);
+                }
+            }
+        } catch (e) {
+            console.warn('تعذر فك تشفير الجلسة:', e.message);
+        }
+        
+        // ✅ 3. لو لسه مش موجود، نجرب الجلسة القديمة
+        if (!currentTenantId) {
+            const oldSession = localStorage.getItem('shifa_session');
+            if (oldSession) {
+                try {
+                    const parsed = JSON.parse(oldSession);
+                    currentTenantId = parsed.tenantId || user.uid;
+                } catch (e) {
+                    currentTenantId = user.uid;
+                }
+            } else {
+                currentTenantId = user.uid;
+            }
+            console.log(`📦 تم تحديد المجمع من الجلسة القديمة: ${currentTenantId}`);
+        }
     }
+
+    // ✅ تحميل بيانات الصيدلي - حتى لو فشلت بنكمل عادي
+    await loadPharmacistData(user);
     
     // ✅ تحميل الطبيب المحفوظ من التخزين المحلي للمجمع
     const savedDoctorId = loadSavedDoctor();
