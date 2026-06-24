@@ -645,17 +645,12 @@
         
         const encryptData = (data) => {
             try {
-                // تحويل البيانات إلى نص
                 const jsonString = JSON.stringify(data);
-                
-                // تشفير بسيط: XOR مع المفتاح + Base64
                 let encrypted = '';
                 for (let i = 0; i < jsonString.length; i++) {
                     const charCode = jsonString.charCodeAt(i) ^ ENCRYPTION_KEY.charCodeAt(i % ENCRYPTION_KEY.length);
                     encrypted += String.fromCharCode(charCode);
                 }
-                
-                // تحويل إلى Base64 للتخزين الآمن
                 return btoa(unescape(encodeURIComponent(encrypted)));
             } catch (error) {
                 console.error('خطأ في التشفير:', error);
@@ -665,16 +660,12 @@
         
         const decryptData = (encryptedData) => {
             try {
-                // فك Base64
                 const encrypted = decodeURIComponent(escape(atob(encryptedData)));
-                
-                // فك تشفير XOR
                 let decrypted = '';
                 for (let i = 0; i < encrypted.length; i++) {
                     const charCode = encrypted.charCodeAt(i) ^ ENCRYPTION_KEY.charCodeAt(i % ENCRYPTION_KEY.length);
                     decrypted += String.fromCharCode(charCode);
                 }
-                
                 return JSON.parse(decrypted);
             } catch (error) {
                 console.error('خطأ في فك التشفير:', error);
@@ -715,10 +706,44 @@
         // ============ محتوى الزر الافتراضي ============
         const defaultBtnContent = dom.btnContent.innerHTML;
 
+        // ============ ✅ جلب بيانات المستخدم من المسارين (العام والمجمع) ============
+        const fetchUserData = async (uid) => {
+            try {
+                // 1️⃣ جرب المسار العام أولاً (للتوافق مع البيانات القديمة)
+                const publicSnap = await get(ref(db, `users/${uid}`));
+                const userData = publicSnap.exists() ? publicSnap.val() : null;
+                
+                if (!userData || !userData.role) {
+                    return null;
+                }
+                
+                // 2️⃣ حدد معرف المجمع
+                const tenantId = userData.tenantId || uid;
+                
+                // 3️⃣ جرب تجيب بيانات إضافية من مسار المجمع
+                try {
+                    const tenantSnap = await get(ref(db, `tenants/${tenantId}/users/${uid}`));
+                    if (tenantSnap.exists()) {
+                        // دمج البيانات من المسارين (المجمع له الأولوية)
+                        return { ...userData, ...tenantSnap.val(), tenantId };
+                    }
+                } catch (e) {
+                    // المسار مش موجود، استخدم البيانات العامة عادي
+                }
+                
+                // 4️⃣ رجع البيانات العامة مع tenantId
+                return { ...userData, tenantId };
+                
+            } catch (error) {
+                console.error("خطأ في جلب بيانات المستخدم:", error);
+                return null;
+            }
+        };
+
         // ============ إدارة الجلسة المشفرة ============
         
         /**
-         * حفظ الجلسة في localStorage مع تشفير
+         * ✅ حفظ الجلسة في localStorage مع تشفير - متوافقة مع نظام المجمعات
          */
         const saveEncryptedSession = (userData) => {
             try {
@@ -727,6 +752,7 @@
                     email: userData.email,
                     role: userData.role,
                     name: userData.name,
+                    tenantId: userData.tenantId || null,  // ✅ معرف المجمع
                     timestamp: Date.now()
                 };
                 
@@ -757,7 +783,7 @@
                 }
                 
                 // التحقق من صلاحية الجلسة (24 ساعة)
-                const MAX_SESSION_AGE = 24 * 60 * 60 * 1000; // 24 ساعة
+                const MAX_SESSION_AGE = 24 * 60 * 60 * 1000;
                 if (Date.now() - session.timestamp > MAX_SESSION_AGE) {
                     console.log('🕐 انتهت صلاحية الجلسة');
                     clearSession();
@@ -862,19 +888,8 @@
             dom.passwordInput.focus();
         });
 
-        // جلب بيانات المستخدم من قاعدة البيانات
-        const fetchUserData = async (uid) => {
-            try {
-                const snapshot = await get(ref(db, `users/${uid}`));
-                return snapshot.exists() ? snapshot.val() : null;
-            } catch (error) {
-                console.error("خطأ في جلب بيانات المستخدم:", error);
-                return null;
-            }
-        };
-
-        // ============ توجيه المستخدم حسب الصلاحية ============
-        const redirectUser = (role, name) => {
+        // ============ ✅ توجيه المستخدم حسب الصلاحية - مع تمرير tenantId ============
+        const redirectUser = (role, name, tenantId = null) => {
             const pages = {
                 admin: 'admin-panel.html',
                 doctor: 'doctor-dashboard.html',
@@ -882,7 +897,13 @@
                 pharmacist: 'pharmacy-dashboard.html',
             };
             
-            const redirectUrl = pages[role] || 'dashboard.html';
+            let redirectUrl = pages[role] || 'dashboard.html';
+            
+            // ✅ تمرير tenantId في الرابط للصفحات اللي محتاجاه
+            if (tenantId) {
+                const separator = redirectUrl.includes('?') ? '&' : '?';
+                redirectUrl += `${separator}tenant=${encodeURIComponent(tenantId)}`;
+            }
             
             showToast(`👋 مرحباً ${name}!`, 'success');
             
@@ -930,6 +951,7 @@
                 const userCredential = await signInWithEmailAndPassword(auth, email, password);
                 const user = userCredential.user;
 
+                // ✅ جلب بيانات المستخدم من المسارين (العام + المجمع)
                 const userData = await fetchUserData(user.uid);
 
                 if (!userData || !userData.role) {
@@ -945,20 +967,23 @@
                 }
 
                 const displayName = userData.name || email.split('@')[0];
+                const tenantId = userData.tenantId || null;
 
-                // ✅ حفظ الجلسة مشفرة في localStorage فقط
+                // ✅ حفظ الجلسة مشفرة مع tenantId
                 const saved = saveEncryptedSession({
                     uid: user.uid,
                     email: email,
                     role: userData.role,
-                    name: displayName
+                    name: displayName,
+                    tenantId: tenantId
                 });
 
                 if (!saved) {
                     console.warn('⚠️ تعذر حفظ الجلسة محلياً');
                 }
 
-                redirectUser(userData.role, displayName);
+                // ✅ توجيه المستخدم مع تمرير tenantId
+                redirectUser(userData.role, displayName, tenantId);
 
             } catch (error) {
                 console.error("خطأ تسجيل الدخول:", error);
@@ -1039,32 +1064,30 @@
                 console.log('✅ تم العثور على جلسة محلية، جاري التحقق...');
                 
                 try {
-                    // التحقق من أن المستخدم لا يزال مسجل دخول في Firebase
                     const user = auth.currentUser;
                     
                     if (user && user.uid === localSession.uid) {
-                        // المستخدم مسجل دخول والجلسة متطابقة
                         console.log('✅ الجلسة صالحة، جاري التوجيه...');
-                        redirectUser(localSession.role, localSession.name);
+                        redirectUser(localSession.role, localSession.name, localSession.tenantId);
                         return;
                     }
                     
-                    // إذا كان هناك اختلاف، نحاول استرجاع بيانات Firebase الحالية
                     if (user && user.uid !== localSession.uid) {
                         console.log('⚠️ تغير المستخدم، جلب بيانات جديدة...');
                         const userData = await fetchUserData(user.uid);
                         if (userData && userData.role) {
                             const displayName = userData.name || user.email.split('@')[0];
+                            const tenantId = userData.tenantId || null;
                             
-                            // تحديث الجلسة المحلية
                             saveEncryptedSession({
                                 uid: user.uid,
                                 email: user.email,
                                 role: userData.role,
-                                name: displayName
+                                name: displayName,
+                                tenantId: tenantId
                             });
                             
-                            redirectUser(userData.role, displayName);
+                            redirectUser(userData.role, displayName, tenantId);
                             return;
                         }
                     }
@@ -1073,22 +1096,15 @@
                 }
             }
             
-            // 2️⃣ إذا لم تكن هناك جلسة، ننتظر حالة المصادقة من Firebase
             console.log('🔍 في انتظار حالة المصادقة من Firebase...');
-            
-            // إخفاء شاشة التحميل وإظهار نموذج الدخول
             showLoginForm();
         };
 
         // ============ إظهار نموذج تسجيل الدخول ============
         const showLoginForm = () => {
-            // إخفاء شاشة التحميل
             dom.splashScreen.classList.add('hidden');
-            
-            // إظهار النموذج
             dom.mainCard.style.display = '';
             
-            // ملء البريد الإلكتروني من الجلسة القديمة إذا وجدت
             try {
                 const oldSession = getEncryptedSession();
                 if (oldSession && oldSession.email) {
@@ -1103,49 +1119,44 @@
         const initApp = async () => {
             console.log('🚀 نظام شفاء — جاري التحقق من الجلسة...');
             
-            // مستمع لحالة المصادقة من Firebase
             onAuthStateChanged(auth, async (user) => {
                 if (user) {
                     console.log('✅ مستخدم مسجل دخول في Firebase');
                     
                     const localSession = getEncryptedSession();
                     
-                    // إذا لم تكن هناك جلسة محلية أو كانت قديمة
                     if (!localSession || localSession.uid !== user.uid) {
                         try {
                             const userData = await fetchUserData(user.uid);
                             if (userData && userData.role) {
                                 const displayName = userData.name || user.email.split('@')[0];
+                                const tenantId = userData.tenantId || null;
                                 
-                                // حفظ جلسة جديدة
                                 saveEncryptedSession({
                                     uid: user.uid,
                                     email: user.email,
                                     role: userData.role,
-                                    name: displayName
+                                    name: displayName,
+                                    tenantId: tenantId
                                 });
                                 
-                                // توجيه المستخدم
-                                redirectUser(userData.role, displayName);
+                                redirectUser(userData.role, displayName, tenantId);
                                 return;
                             }
                         } catch (error) {
                             console.error('خطأ في جلب بيانات المستخدم:', error);
                         }
                     } else if (localSession) {
-                        // الجلسة المحلية متطابقة مع Firebase
-                        redirectUser(localSession.role, localSession.name);
+                        redirectUser(localSession.role, localSession.name, localSession.tenantId);
                         return;
                     }
                 }
                 
-                // لا يوجد مستخدم مسجل - إظهار نموذج الدخول
                 if (!dom.mainCard.style.display || dom.mainCard.style.display === 'none') {
                     showLoginForm();
                 }
             });
             
-            // بدء التحقق من الجلسة
             await checkSessionAndRedirect();
         };
 
@@ -1161,5 +1172,3 @@
     </script>
 </body>
 </html>
-خد اعد كتابته علشان يلائم النظام لو سمحت 
-ومتغيرش ولا تحزف فى اى منطق تانى
