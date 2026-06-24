@@ -690,7 +690,7 @@
 
     <div id="authLoader">
         <div class="loader-spin"></div>
-        <span class="loader-text">جارٍ التحقق من الصلاحية...</span>
+        <span class="loader-text">جارٍ تحميل البيانات...</span>
     </div>
 
     <div class="toast-container" id="toastContainer"></div>
@@ -881,10 +881,9 @@
         const auth = getAuth(app);
         const db = getDatabase(app);
 
-        // ============ ✅ ثوابت التخزين المحلي - نفس منطق الأدمن ============
+        // ============ ✅ ثوابت التخزين المحلي ============
         const STORAGE_PREFIX = 'shifa_tenant_';
         
-        // ✅ مفاتيح تسجيل الدخول فقط (اللي هتمسح عند الخروج)
         const LOGIN_STORAGE_KEYS = [
             'shifa_session',
             'shifa_remember',
@@ -892,10 +891,8 @@
             'shifa_secure_session'
         ];
         
-        // ✅ معرف المجمع الطبي الحالي
         let currentTenantId = null;
         
-        // ✅ دوال مفاتيح التخزين لكل مجمع
         const getTenantStorageKey = (baseKey) => {
             return currentTenantId ? `${STORAGE_PREFIX}${currentTenantId}_${baseKey}` : baseKey;
         };
@@ -941,21 +938,13 @@
             }, 2500);
         };
 
-        // ============ ✅ مسح بيانات الجلسة فقط (نفس منطق الأدمن بالظبط) ============
-        
-        /**
-         * مسح مفاتيح تسجيل الدخول فقط (الجلسة المشفرة)
-         * مع الحفاظ على بيانات المجمع المحلية (الكشوفات، المرضى، الأطباء)
-         */
+        // ============ ✅ مسح بيانات الجلسة فقط ============
         const clearLoginSessionOnly = () => {
             try {
-                // 1️⃣ مسح مفاتيح تسجيل الدخول المعروفة
                 LOGIN_STORAGE_KEYS.forEach(key => {
                     localStorage.removeItem(key);
                 });
                 
-                // 2️⃣ مسح أي مفاتيح تبدأ بـ shifa_session أو shifa_secure (الجلسات فقط)
-                // لكن نحتفظ بـ shifa_tenant_ (بيانات المجمع)
                 const sessionKeysToRemove = [];
                 for (let i = 0; i < localStorage.length; i++) {
                     const key = localStorage.key(i);
@@ -965,11 +954,10 @@
                 }
                 sessionKeysToRemove.forEach(key => localStorage.removeItem(key));
                 
-                // 3️⃣ مسح sessionStorage بالكامل (بيانات الجلسة المؤقتة)
                 sessionStorage.clear();
                 
                 console.log(`✅ تم مسح ${LOGIN_STORAGE_KEYS.length + sessionKeysToRemove.length} مفتاح جلسة`);
-                console.log('💾 تم الإبقاء على بيانات المجمع المحلية (الكشوفات، المرضى، الأطباء)');
+                console.log('💾 تم الإبقاء على بيانات المجمع المحلية');
             } catch (e) {
                 console.warn('تعذر مسح بيانات الجلسة:', e.message);
             }
@@ -981,9 +969,6 @@
         const getLocalDoctorsKey = () => getTenantStorageKey('nurse_doctors');
         const getLocalPatientsKey = () => getTenantStorageKey('nurse_patients');
         
-        /**
-         * حفظ الكشوفات في التخزين المحلي
-         */
         const saveBookingsToLocal = (bookings) => {
             if (!currentTenantId) return;
             try {
@@ -998,9 +983,6 @@
             }
         };
 
-        /**
-         * حفظ بيانات مريض في التخزين المحلي
-         */
         const savePatientToLocal = (patientId, patientData) => {
             if (!currentTenantId) return;
             try {
@@ -1017,9 +999,6 @@
             }
         };
 
-        /**
-         * تحميل الكشوفات من التخزين المحلي
-         */
         const loadBookingsFromLocal = (doctorId, date) => {
             if (!currentTenantId) return null;
             try {
@@ -1031,7 +1010,7 @@
                 if (!data.bookings) return null;
                 
                 const now = Date.now();
-                const expiryMs = 50 * 24 * 60 * 60 * 1000; // 50 يوم
+                const expiryMs = 50 * 24 * 60 * 60 * 1000;
                 
                 const filtered = data.bookings.filter(b => {
                     const isFresh = (now - b._cachedAt) < expiryMs;
@@ -1045,9 +1024,6 @@
             }
         };
 
-        /**
-         * البحث عن مريض في التخزين المحلي
-         */
         const searchPatientsLocal = (term) => {
             if (!currentTenantId) return [];
             try {
@@ -1076,9 +1052,6 @@
             }
         };
 
-        /**
-         * حفظ قائمة الأطباء محلياً
-         */
         const saveDoctorsToLocal = (doctors) => {
             if (!currentTenantId) return;
             try {
@@ -1093,9 +1066,6 @@
             }
         };
 
-        /**
-         * تحميل قائمة الأطباء من المحلي
-         */
         const loadDoctorsFromLocal = () => {
             if (!currentTenantId) return null;
             try {
@@ -1128,10 +1098,8 @@
         // ============ ✅ تحميل بيانات الممرض من مسار المجمع ============
         const loadNurseData = async (uid) => {
             try {
-                // ✅ جلب بيانات الممرض من مسار المجمع الطبي
                 const nurseSnap = await get(ref(db, `tenants/${currentTenantId}/users/${uid}`));
                 
-                // ✅ لو مش موجود في مسار المجمع، نجرب المسار القديم للتوافق
                 let nurseData = null;
                 if (nurseSnap.exists()) {
                     nurseData = { id: uid, ...nurseSnap.val() };
@@ -1150,16 +1118,13 @@
                 state.nurseData = nurseData;
                 $('#welcomeMsg').textContent = `أهلاً، ${state.nurseData.name || 'ممرض'}`;
                 
-                // ✅ عرض اسم المجمع
                 const tenantName = nurseData.tenantName || 'المجمع الطبي';
                 $('#tenantName').textContent = tenantName;
 
-                // ✅ جلب روابط الممرض بالأطباء من مسار المجمع
                 const linksSnap = await get(ref(db, `tenants/${currentTenantId}/links/${uid}`));
                 const doctorIds = linksSnap.exists() ? Object.keys(linksSnap.val()) : [];
 
                 if (doctorIds.length === 0) {
-                    // ✅ محاولة تحميل الأطباء من التخزين المحلي
                     const localDoctors = loadDoctorsFromLocal();
                     if (localDoctors && localDoctors.length > 0) {
                         state.assignedDoctors = localDoctors;
@@ -1185,19 +1150,16 @@
                     return false;
                 }
 
-                // ✅ جلب بيانات الأطباء من مسار المجمع
                 const doctorPromises = doctorIds.map(async (docId) => {
                     const snap = await get(ref(db, `tenants/${currentTenantId}/users/${docId}`));
                     if (snap.exists()) {
                         return { id: docId, name: snap.val().name || 'دكتور' };
                     }
-                    // ✅ محاولة المسار القديم للتوافق
                     const oldSnap = await get(ref(db, `users/${docId}`));
                     return { id: docId, name: oldSnap.exists() ? oldSnap.val().name : 'دكتور' };
                 });
                 state.assignedDoctors = await Promise.all(doctorPromises);
                 
-                // ✅ حفظ الأطباء محلياً
                 saveDoctorsToLocal(state.assignedDoctors);
 
                 renderDoctorsTabs();
@@ -1209,7 +1171,6 @@
                 return true;
 
             } catch (err) {
-                // ✅ محاولة تحميل الأطباء من التخزين المحلي
                 const localDoctors = loadDoctorsFromLocal();
                 if (localDoctors && localDoctors.length > 0) {
                     state.assignedDoctors = localDoctors;
@@ -1264,19 +1225,17 @@
             ).join('');
         };
 
-        // ============ ✅ تحميل الكشوفات من مسار المجمع للدكتور المحدد ============
+        // ============ ✅ تحميل الكشوفات من مسار المجمع ============
         const loadBookings = () => {
             if (state.unsubscribeBookings) state.unsubscribeBookings();
             if (!state.selectedDoctorId || !currentTenantId) return;
 
-            // ✅ الاستعلام عن كشوفات الدكتور المحدد في المجمع الحالي
             const bookingsRef = ref(db, `tenants/${currentTenantId}/appointments`);
             
             state.unsubscribeBookings = onValue(bookingsRef, (snap) => {
                 const bookings = [];
                 snap.forEach(child => {
                     const apt = child.val();
-                    // ✅ تصفية حسب الدكتور والتاريخ
                     if (apt.doctor_id === state.selectedDoctorId && apt.date === state.currentDate) {
                         bookings.push({ id: child.key, ...apt });
                     }
@@ -1284,7 +1243,6 @@
                 bookings.sort((a, b) => (a.time || '').localeCompare(b.time || ''));
                 state.allBookings = bookings;
                 
-                // ✅ حفظ في التخزين المحلي
                 saveBookingsToLocal(bookings);
                 setSyncStatus(true);
                 
@@ -1292,7 +1250,6 @@
                 updateStats();
                 renderTable();
             }, (error) => {
-                // ✅ استخدام البيانات المحلية عند فشل الاتصال
                 console.warn('خطأ في تحميل الكشوفات، استخدام المحلي:', error.message);
                 const localBookings = loadBookingsFromLocal(state.selectedDoctorId, state.currentDate);
                 if (localBookings) {
@@ -1392,7 +1349,6 @@
 
         const cancelBooking = async (id) => {
             try {
-                // ✅ تحديث في مسار المجمع
                 await update(ref(db, `tenants/${currentTenantId}/appointments/${id}`), { status: 'ملغي' });
                 showToast('تم إلغاء الكشف');
             } catch (err) {
@@ -1452,13 +1408,11 @@
             searchTimer = setTimeout(async () => {
                 let results = [];
                 
-                // ✅ البحث في التخزين المحلي أولاً
                 const localResults = searchPatientsLocal(term);
                 if (localResults.length > 0) {
                     results = localResults;
                 }
                 
-                // ✅ البحث في Firebase في مسار المجمع
                 try {
                     const snap = await get(ref(db, `tenants/${currentTenantId}/patients`));
                     snap.forEach(child => {
@@ -1537,7 +1491,6 @@
             try {
                 let patientId = state.selectedPatientId;
 
-                // ✅ حفظ المريض في مسار المجمع
                 if (!patientId) {
                     const newRef = push(ref(db, `tenants/${currentTenantId}/patients`));
                     patientId = newRef.key;
@@ -1550,34 +1503,29 @@
                         created_at: new Date().toISOString()
                     };
                     await set(newRef, patientData);
-                    
-                    // ✅ حفظ المريض محلياً
                     savePatientToLocal(patientId, patientData);
                 }
 
-                // ✅ بيانات الكشف مع ربط بالمجمع والدكتور والممرض
                 const bookingData = {
                     patient_name: name,
                     patient_id: patientId,
                     age: age || null,
                     phone: phone || null,
                     doctor_id: doctorId,
-                    nurse_id: state.currentUser.uid,  // ✅ معرف الممرض اللي أنشأ الكشف
+                    nurse_id: state.currentUser.uid,
                     visit_type: visitType,
                     date,
                     time,
                     status: 'انتظار',
-                    tenantId: currentTenantId  // ✅ معرف المجمع
+                    tenantId: currentTenantId
                 };
 
                 if (editId) {
-                    // ✅ تحديث في مسار المجمع
                     await update(ref(db, `tenants/${currentTenantId}/appointments/${editId}`), bookingData);
                     showToast('تم تعديل الكشف بنجاح');
                 } else {
                     bookingData.created_at = new Date().toISOString();
                     bookingData.created_by = state.currentUser.uid;
-                    // ✅ حفظ في مسار المجمع
                     await set(ref(db, `tenants/${currentTenantId}/appointments/${push(ref(db, `tenants/${currentTenantId}/appointments`)).key}`), bookingData);
                     showToast('تم حجز الكشف بنجاح');
                 }
@@ -1613,36 +1561,29 @@
             if (state.selectedDoctorId) loadBookings();
         });
 
-        // ============ ✅ تسجيل الخروج - نفس منطق الأدمن بالظبط ============
+        // ============ ✅ تسجيل الخروج ============
         $('#logoutBtn').addEventListener('click', async () => {
             try {
                 showToast('👋 جاري تسجيل الخروج...');
                 
-                // 1. إلغاء مستمع Firebase
                 if (state.unsubscribeBookings) {
                     state.unsubscribeBookings();
                     state.unsubscribeBookings = null;
                 }
                 
-                // 2. ✅ مسح بيانات الجلسة فقط (وليس بيانات المجمع)
                 clearLoginSessionOnly();
                 
-                // 3. مسح المتغيرات في الذاكرة
                 state.currentUser = null;
                 state.nurseData = null;
                 state.assignedDoctors = [];
                 state.allBookings = [];
                 
-                // 4. تسجيل الخروج من Firebase Auth
                 await signOut(auth);
                 
-                // 5. إعادة التوجيه لصفحة تسجيل الدخول
                 window.location.href = 'index.html';
                 
             } catch (error) {
                 console.error('خطأ أثناء تسجيل الخروج:', error);
-                
-                // حتى في حالة الخطأ، نمسح الجلسة فقط ونتوجه لصفحة الدخول
                 clearLoginSessionOnly();
                 window.location.href = 'index.html';
             }
@@ -1670,7 +1611,7 @@
             showToast('⚠️ انقطع الاتصال - استخدام البيانات المحلية', true);
         });
 
-        // ============ ✅ بدء التشغيل مع التحقق من المجمع ============
+        // ============ ✅ بدء التشغيل المبسط - بدون طرد للمستخدم ============
         onAuthStateChanged(auth, async (user) => {
             if (!user) {
                 clearLoginSessionOnly();
@@ -1678,62 +1619,43 @@
                 return;
             }
 
-            try {
-                // ✅ البحث عن بيانات المستخدم لتحديد المجمع
-                let userData = null;
-                let foundTenantId = null;
-                
-                // البحث في المسار العام أولاً لمعرفة المجمع
-                const publicSnap = await get(ref(db, `users/${user.uid}`));
-                if (publicSnap.exists()) {
-                    userData = publicSnap.val();
-                    foundTenantId = userData.tenantId || user.uid;
+            // ✅ 1. نجيب tenantId من الرابط (صفحة تسجيل الدخول بتبعته)
+            const urlParams = new URLSearchParams(window.location.search);
+            const tenantFromUrl = urlParams.get('tenant');
+            
+            if (tenantFromUrl) {
+                currentTenantId = tenantFromUrl;
+                console.log(`✅ تم استلام معرف المجمع من الرابط: ${currentTenantId}`);
+            } else {
+                // ✅ 2. لو مش موجود في الرابط، نجيب من الجلسة المشفرة
+                try {
+                    const encrypted = localStorage.getItem('shifa_secure_session');
+                    if (encrypted) {
+                        const decoded = atob(encrypted);
+                        const match = decoded.match(/"tenantId":"([^"]+)"/);
+                        if (match) {
+                            currentTenantId = match[1];
+                            console.log(`📦 تم استخراج معرف المجمع من الجلسة: ${currentTenantId}`);
+                        }
+                    }
+                } catch (e) {
+                    console.warn('تعذر فك تشفير الجلسة:', e.message);
                 }
                 
-                if (!userData || userData.role !== 'nurse') {
-                    showToast('غير مصرح لك بالدخول', true);
-                    clearLoginSessionOnly();
-                    await signOut(auth);
-                    setTimeout(() => { window.location.href = 'index.html'; }, 2000);
-                    return;
-                }
-                
-                // ✅ تعيين معرف المجمع
-                currentTenantId = foundTenantId;
-                
-                // ✅ التحقق من وجود الممرض في مسار المجمع
-                const tenantNurseSnap = await get(ref(db, `tenants/${currentTenantId}/users/${user.uid}`));
-                if (!tenantNurseSnap.exists() || tenantNurseSnap.val().role !== 'nurse') {
-                    showToast('غير مصرح لك بالدخول لهذا المجمع', true);
-                    clearLoginSessionOnly();
-                    await signOut(auth);
-                    setTimeout(() => { window.location.href = 'index.html'; }, 2000);
-                    return;
-                }
-                
-                console.log(`✅ تم التحقق من المجمع: ${currentTenantId}`);
-                console.log(`👤 الممرض: ${userData.name || 'ممرض'}`);
-                
-            } catch (err) {
-                console.warn('تعذر التحقق من المجمع، استخدام البيانات المحلية:', err.message);
-                
-                // ✅ محاولة استخدام البيانات المحلية
-                const localSession = localStorage.getItem('shifa_secure_session') || 
-                                    localStorage.getItem('shifa_session');
-                if (localSession) {
-                    try {
-                        const session = JSON.parse(localSession);
-                        if (session.role === 'nurse' && session.tenantId) {
-                            currentTenantId = session.tenantId;
-                            console.log(`📦 استخدام المجمع من الجلسة المحلية: ${currentTenantId}`);
-                        } else {
+                // ✅ 3. لو لسه مش موجود، نجرب الجلسة القديمة
+                if (!currentTenantId) {
+                    const oldSession = localStorage.getItem('shifa_session');
+                    if (oldSession) {
+                        try {
+                            const parsed = JSON.parse(oldSession);
+                            currentTenantId = parsed.tenantId || user.uid;
+                        } catch (e) {
                             currentTenantId = user.uid;
                         }
-                    } catch (parseError) {
+                    } else {
                         currentTenantId = user.uid;
                     }
-                } else {
-                    currentTenantId = user.uid;
+                    console.log(`📦 تم تحديد المجمع من الجلسة القديمة: ${currentTenantId}`);
                 }
             }
 
@@ -1755,10 +1677,13 @@
                     renderTable();
                 }
 
+                // ✅ إخفاء شاشة التحميل وبدء التشغيل
+                $('#authLoader').style.display = 'none';
+                $('#mainContainer').style.display = 'block';
+
                 const success = await loadNurseData(user.uid);
-                if (success) {
-                    $('#authLoader').style.display = 'none';
-                    $('#mainContainer').style.display = 'block';
+                if (!success) {
+                    showToast('⚠️ تعذر تحميل بعض البيانات', true);
                 }
             }
         });
