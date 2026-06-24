@@ -116,7 +116,7 @@
         
         .logo i { color: var(--primary); }
         
-        .header-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+        .header-actions { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
 
         .btn {
             padding: 8px 14px;
@@ -156,6 +156,11 @@
             background: var(--success);
             color: white;
             box-shadow: 0 3px 10px rgba(38,166,154,0.2);
+        }
+        
+        .btn-danger {
+            background: var(--danger);
+            color: white;
         }
         
         .btn-sm { 
@@ -257,6 +262,29 @@
             background: #E8F5E9;
             color: #00695C;
         }
+
+        .tenant-badge {
+            background: var(--primary-light);
+            padding: 4px 10px;
+            border-radius: var(--radius-xl);
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: var(--primary-dark);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .sync-dot {
+            display: inline-block;
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            margin-left: 5px;
+            vertical-align: middle;
+        }
+        .sync-dot.on { background: var(--success); }
+        .sync-dot.off { background: #FFB74D; }
 
         .rx-table-wrap {
             overflow-x: auto;
@@ -465,14 +493,20 @@
     <div class="container" id="mainContent" style="display:none;">
         <header class="app-header">
             <div class="logo">
-                <h2><i class="fas fa-heartbeat"></i> شفاء</h2>
+                <h2><i class="fas fa-heartbeat"></i> شفاء <span class="sync-dot on" id="syncDot" title="حالة المزامنة"></span></h2>
             </div>
             <div class="header-actions">
+                <span class="tenant-badge" id="tenantBadge" style="display:none;">
+                    <i class="fas fa-hospital"></i> <span id="tenantName">المجمع الطبي</span>
+                </span>
                 <button class="btn btn-outline btn-sm" id="printBtn">
                     <i class="fas fa-print"></i> طباعة
                 </button>
                 <button class="btn btn-outline btn-sm" id="backBtn">
                     <i class="fas fa-arrow-right"></i> العودة
+                </button>
+                <button class="btn btn-outline btn-sm" id="logoutBtn" style="display:none;">
+                    <i class="fas fa-sign-out-alt"></i> خروج
                 </button>
             </div>
         </header>
@@ -483,21 +517,42 @@
     <script type="module">
         import { firebaseConfig } from './firebase-config.js';
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getDatabase(app);
 
+        // ============ ✅ ثوابت التخزين المحلي ============
+        const STORAGE_PREFIX = 'shifa_tenant_';
+        
+        const LOGIN_STORAGE_KEYS = [
+            'shifa_session',
+            'shifa_remember',
+            'shifa_last_login',
+            'shifa_secure_session'
+        ];
+
+        // ✅ قراءة معرف المجمع من الرابط
         const urlParams = new URLSearchParams(window.location.search);
         const prescriptionId = urlParams.get('id');
+        const currentTenantId = urlParams.get('tenant'); // ✅ معرف المجمع
         const patientIdFromUrl = urlParams.get('patientId');
         const patientNameFromUrl = urlParams.get('patientName');
         const doctorIdFromUrl = urlParams.get('doctorId');
 
+        console.log('📋 معلمات الرابط:', {
+            prescriptionId,
+            currentTenantId,
+            patientIdFromUrl,
+            patientNameFromUrl,
+            doctorIdFromUrl
+        });
+
         let currentUser = null;
         let pharmacistData = null;
+        let isPharmacist = false;
 
         const $ = (sel) => document.querySelector(sel);
         
@@ -520,6 +575,45 @@
             }, 2500);
         };
 
+        // ✅ مسح بيانات الجلسة فقط
+        const clearLoginSessionOnly = () => {
+            try {
+                LOGIN_STORAGE_KEYS.forEach(key => {
+                    localStorage.removeItem(key);
+                });
+                
+                const sessionKeysToRemove = [];
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key && (key.startsWith('shifa_session') || key.startsWith('shifa_secure'))) {
+                        sessionKeysToRemove.push(key);
+                    }
+                }
+                sessionKeysToRemove.forEach(key => localStorage.removeItem(key));
+                
+                sessionStorage.clear();
+            } catch (e) {
+                console.warn('تعذر مسح بيانات الجلسة:', e.message);
+            }
+        };
+
+        // ✅ تحديث مؤشر المزامنة
+        const setSyncStatus = (online) => {
+            const dot = $('#syncDot');
+            if (dot) {
+                dot.className = `sync-dot ${online ? 'on' : 'off'}`;
+                dot.title = online ? 'متصل بالسحابة' : 'غير متصل';
+            }
+        };
+
+        // ✅ الحصول على مسار البيانات الصحيح
+        const getDataPath = (path) => {
+            if (currentTenantId) {
+                return `tenants/${currentTenantId}/${path}`;
+            }
+            return path;
+        };
+
         async function loadPrescription() {
             if (!prescriptionId) {
                 showErrorState('معرف الروشتة غير موجود');
@@ -527,69 +621,99 @@
             }
 
             try {
-                // ✅ جلب الروشتة
-                const presSnap = await get(ref(db, `prescriptions/${prescriptionId}`));
+                // ✅ جلب الروشتة من مسار المجمع أو المسار العام
+                let presSnap = null;
+                
+                if (currentTenantId) {
+                    // جرب مسار المجمع أولاً
+                    presSnap = await get(ref(db, getDataPath(`prescriptions/${prescriptionId}`)));
+                    if (!presSnap.exists()) {
+                        console.log('⚠️ الروشتة غير موجودة في مسار المجمع، محاولة المسار العام...');
+                        presSnap = await get(ref(db, `prescriptions/${prescriptionId}`));
+                    }
+                } else {
+                    presSnap = await get(ref(db, `prescriptions/${prescriptionId}`));
+                }
+                
                 if (!presSnap.exists()) {
                     showErrorState('الروشتة غير موجودة');
                     return;
                 }
-                const rx = { id: prescriptionId, ...presSnap.val() };
                 
+                const rx = { id: prescriptionId, ...presSnap.val() };
                 console.log('📋 بيانات الروشتة:', rx);
 
                 // ✅ جلب عناصر الروشتة
-                const itemsSnap = await get(ref(db, `prescription_items/${prescriptionId}`));
+                let itemsSnap = null;
+                if (currentTenantId) {
+                    itemsSnap = await get(ref(db, getDataPath(`prescription_items/${prescriptionId}`)));
+                    if (!itemsSnap.exists()) {
+                        itemsSnap = await get(ref(db, `prescription_items/${prescriptionId}`));
+                    }
+                } else {
+                    itemsSnap = await get(ref(db, `prescription_items/${prescriptionId}`));
+                }
+                
                 let items = [];
                 if (itemsSnap.exists()) {
                     const itemsData = itemsSnap.val();
-                    console.log('💊 العناصر الخام:', itemsData);
-                    
-                    // ✅ تحويل العناصر لصفيف بالشكل الصحيح
-                    items = Object.entries(itemsData).map(([key, value]) => {
-                        console.log(`🔍 عنصر ${key}:`, value);
-                        return {
-                            key,
-                            drug_name: value.drug_name || value.drug || value.name || '—',
-                            form: value.form || 'tablet',
-                            dose: value.dose || '—'
-                        };
-                    });
-                    
-                    console.log('💊 العناصر بعد المعالجة:', items);
+                    items = Object.entries(itemsData).map(([key, value]) => ({
+                        key,
+                        drug_name: value.drug_name || value.drug || value.name || '—',
+                        form: value.form || 'tablet',
+                        dose: value.dose || '—'
+                    }));
+                    console.log('💊 العناصر:', items);
                 }
 
-                // ✅ جلب بيانات الطبيب من users
+                // ✅ جلب بيانات الطبيب من مسار المجمع
                 const doctorId = rx.doctor_id || doctorIdFromUrl;
                 let doctorName = '';
                 let doctorSpecialty = '';
                 
                 if (doctorId) {
                     try {
-                        const doctorSnap = await get(ref(db, `users/${doctorId}`));
+                        let doctorSnap = null;
+                        if (currentTenantId) {
+                            doctorSnap = await get(ref(db, getDataPath(`users/${doctorId}`)));
+                            if (!doctorSnap.exists()) {
+                                doctorSnap = await get(ref(db, `users/${doctorId}`));
+                            }
+                        } else {
+                            doctorSnap = await get(ref(db, `users/${doctorId}`));
+                        }
+                        
                         if (doctorSnap.exists()) {
                             const doctorData = doctorSnap.val();
                             doctorName = doctorData.name || '';
                             doctorSpecialty = doctorData.specialty || '';
-                            console.log('👨‍⚕️ بيانات الطبيب:', doctorData);
                         }
                     } catch(e) {
                         console.warn('تعذر جلب بيانات الطبيب:', e);
                     }
                 }
 
-                // ✅ جلب بيانات المريض
+                // ✅ جلب بيانات المريض من مسار المجمع
                 const patientId = rx.patient_id || patientIdFromUrl;
                 let patientName = patientNameFromUrl || rx.patient_name || 'غير معروف';
                 let patientPhone = rx.patient_phone || '';
                 
                 if (patientId && (!patientName || patientName === 'غير معروف')) {
                     try {
-                        const patientSnap = await get(ref(db, `patients/${patientId}`));
+                        let patientSnap = null;
+                        if (currentTenantId) {
+                            patientSnap = await get(ref(db, getDataPath(`patients/${patientId}`)));
+                            if (!patientSnap.exists()) {
+                                patientSnap = await get(ref(db, `patients/${patientId}`));
+                            }
+                        } else {
+                            patientSnap = await get(ref(db, `patients/${patientId}`));
+                        }
+                        
                         if (patientSnap.exists()) {
                             const patientData = patientSnap.val();
                             patientName = patientData.name || patientName;
                             patientPhone = patientData.phone || patientPhone;
-                            console.log('👤 بيانات المريض:', patientData);
                         }
                     } catch(e) {
                         console.warn('تعذر جلب بيانات المريض:', e);
@@ -670,8 +794,6 @@
                     const form = item.form || 'tablet';
                     const dose = item.dose || '—';
                     
-                    console.log(`💊 صف ${i}:`, { drugName, form, dose });
-                    
                     return `
                     <tr>
                         <td><strong>${esc(drugName)}</strong></td>
@@ -683,7 +805,7 @@
                 itemsHtml = '<tr><td colspan="3" style="text-align:center;padding:20px;color:var(--text-sec);">لا توجد أدوية مسجلة</td></tr>';
             }
 
-            // ✅ قسم الصرف
+            // ✅ قسم الصرف (متاح للصيادلة في نفس المجمع)
             let dispenseSection = '';
             if (isDispensed) {
                 let notesHtml = '';
@@ -708,8 +830,15 @@
                         </div>
                     </div>
                     ${notesHtml}
+                    ${isPharmacist ? `
+                    <div style="margin-top:12px;">
+                        <button class="btn btn-outline btn-sm" id="undoDispenseBtn" style="color:var(--danger);border-color:var(--danger);">
+                            <i class="fas fa-undo"></i> إلغاء الصرف
+                        </button>
+                    </div>` : ''}
                 </div>`;
-            } else if (pharmacistData) {
+            } else if (isPharmacist) {
+                // ✅ الصيدلي المسجل دخوله في نفس المجمع يقدر يصرف
                 dispenseSection = `
                 <div class="card dispense-card">
                     <div class="card-header">
@@ -842,7 +971,7 @@
                 const pid = data._patientId;
                 const pname = data._patientName;
                 if (pid) {
-                    window.open(`patient-file.html?patientId=${pid}&patientName=${encodeURIComponent(pname)}`, '_blank');
+                    window.open(`patient-file.html?patientId=${pid}&patientName=${encodeURIComponent(pname)}&tenant=${currentTenantId || ''}`, '_blank');
                 }
             });
 
@@ -852,12 +981,12 @@
                     const pid = patientNameLink.dataset.patientId;
                     const pname = patientNameLink.dataset.patientName;
                     if (pid) {
-                        window.open(`patient-file.html?patientId=${pid}&patientName=${encodeURIComponent(pname)}`, '_blank');
+                        window.open(`patient-file.html?patientId=${pid}&patientName=${encodeURIComponent(pname)}&tenant=${currentTenantId || ''}`, '_blank');
                     }
                 });
             }
 
-            // ✅ زر الصرف مع حفظ الملاحظات
+            // ✅ زر الصرف مع حفظ الملاحظات (متاح لأي صيدلي في المجمع)
             const dispenseBtn = $('#dispenseBtn');
             if (dispenseBtn) {
                 dispenseBtn.addEventListener('click', async () => {
@@ -872,7 +1001,7 @@
                         const updateData = {
                             status: 'تم الصرف',
                             pharmacist_id: currentUser.uid,
-                            pharmacist_name: pharmacistData.name || 'صيدلي',
+                            pharmacist_name: pharmacistData?.name || currentUser.displayName || 'صيدلي',
                             dispensed_at: new Date().toISOString()
                         };
                         
@@ -880,12 +1009,17 @@
                             updateData.pharmacist_notes = notes;
                         }
                         
-                        await update(ref(db, `prescriptions/${prescriptionId}`), updateData);
+                        // ✅ تحديث في مسار المجمع الصحيح
+                        const updatePath = currentTenantId 
+                            ? `tenants/${currentTenantId}/prescriptions/${prescriptionId}`
+                            : `prescriptions/${prescriptionId}`;
+                        
+                        await update(ref(db, updatePath), updateData);
                         
                         toast('✅ تم صرف الروشتة بنجاح');
                         
                         setTimeout(() => {
-                            window.location.href = 'pharmacy-dashboard.html';
+                            window.location.reload();
                         }, 1200);
                     } catch (err) {
                         console.error('❌ خطأ في الصرف:', err);
@@ -896,27 +1030,114 @@
                 });
             }
 
+            // ✅ زر إلغاء الصرف (متاح للصيادلة)
+            const undoDispenseBtn = $('#undoDispenseBtn');
+            if (undoDispenseBtn) {
+                undoDispenseBtn.addEventListener('click', async () => {
+                    if (!confirm('هل أنت متأكد من إلغاء صرف هذه الروشتة؟')) return;
+                    
+                    undoDispenseBtn.disabled = true;
+                    undoDispenseBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإلغاء...';
+                    
+                    try {
+                        const updateData = {
+                            status: 'لم تصرف بعد',
+                            pharmacist_id: null,
+                            pharmacist_name: null,
+                            pharmacist_notes: null,
+                            dispensed_at: null
+                        };
+                        
+                        const updatePath = currentTenantId 
+                            ? `tenants/${currentTenantId}/prescriptions/${prescriptionId}`
+                            : `prescriptions/${prescriptionId}`;
+                        
+                        await update(ref(db, updatePath), updateData);
+                        
+                        toast('✅ تم إلغاء صرف الروشتة');
+                        
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1200);
+                    } catch (err) {
+                        console.error('❌ خطأ في إلغاء الصرف:', err);
+                        toast('❌ فشل إلغاء الصرف: ' + err.message, true);
+                        undoDispenseBtn.disabled = false;
+                        undoDispenseBtn.innerHTML = '<i class="fas fa-undo"></i> إلغاء الصرف';
+                    }
+                });
+            }
+
             $('#pageLoader').style.display = 'none';
             $('#mainContent').style.display = 'block';
         }
 
+        // ============ ✅ تسجيل الخروج ============
+        const setupLogout = () => {
+            const logoutBtn = $('#logoutBtn');
+            if (logoutBtn) {
+                logoutBtn.style.display = 'inline-flex';
+                logoutBtn.addEventListener('click', async () => {
+                    try {
+                        toast('👋 جاري تسجيل الخروج...');
+                        clearLoginSessionOnly();
+                        await signOut(auth);
+                        window.location.href = 'index.html';
+                    } catch (error) {
+                        console.error('خطأ أثناء تسجيل الخروج:', error);
+                        clearLoginSessionOnly();
+                        window.location.href = 'index.html';
+                    }
+                });
+            }
+        };
+
+        // ============ مستمعي الاتصال ============
+        window.addEventListener('online', () => {
+            setSyncStatus(true);
+        });
+        
+        window.addEventListener('offline', () => {
+            setSyncStatus(false);
+        });
+
         // ============ بدء التشغيل ============
         onAuthStateChanged(auth, async (user) => {
             if (!user) {
-                sessionStorage.clear();
+                clearLoginSessionOnly();
                 window.location.href = 'index.html';
                 return;
             }
             
             currentUser = user;
             
-            // ✅ التحقق من صلاحية المستخدم
+            // ✅ التحقق من صلاحية المستخدم وتحديد إذا كان صيدلي
             try {
-                const userSnap = await get(ref(db, `users/${user.uid}`));
+                // جرب مسار المجمع أولاً
+                let userSnap = null;
+                if (currentTenantId) {
+                    userSnap = await get(ref(db, `tenants/${currentTenantId}/users/${user.uid}`));
+                    if (!userSnap.exists()) {
+                        userSnap = await get(ref(db, `users/${user.uid}`));
+                    }
+                } else {
+                    userSnap = await get(ref(db, `users/${user.uid}`));
+                }
+                
                 if (userSnap.exists()) {
                     const userData = userSnap.val();
+                    
+                    // ✅ عرض اسم المجمع
+                    if (userData.tenantName && $('#tenantName')) {
+                        $('#tenantName').textContent = userData.tenantName;
+                        $('#tenantBadge').style.display = 'flex';
+                    }
+                    
+                    // ✅ تحديد إذا كان صيدلي
                     if (userData.role === 'pharmacist') {
+                        isPharmacist = true;
                         pharmacistData = { id: user.uid, ...userData };
+                        setupLogout();
                     }
                 }
             } catch(e) {
@@ -926,7 +1147,9 @@
             await loadPrescription();
         });
 
-        console.log('🚀 صفحة تفاصيل الروشتة - وضع خفيف مع عرض الأدوية');
+        console.log('🚀 صفحة تفاصيل الروشتة - نظام المجمعات الطبية المتعددة');
+        console.log('🔒 تدعم مسار المجمع والمسار العام للتوافق');
+        console.log('💊 الصيادلة في نفس المجمع يمكنهم صرف الروشتات');
     </script>
 </body>
 </html>
