@@ -3,29 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>سُكُون · الملف الطبي للمريض</title>
+    <title>شفاء · الملف الطبي للمريض</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            --primary: #F8C471;
-            --primary-light: #FDEBD0;
-            --primary-dark: #E59866;
-            --accent: #E67E22;
-            --accent-soft: #FAD7A1;
-            --bg: #FFF8F0;
+            --primary: #00AEEF;
+            --primary-light: #E0F7FA;
+            --primary-dark: #008080;
+            --accent: #00AEEF;
+            --accent-soft: #B2EBF2;
+            --bg: #FAFAFA;
             --white: #FFFFFF;
-            --ink: #4A3B2C;
-            --text-sec: #8B7A66;
+            --ink: #1A3C4A;
+            --text-sec: #5A7D8A;
             --danger: #E57373;
-            --success: #5FA88D;
-            --warning: #F4B886;
-            --border-light: #F0E0D0;
-            --shadow-sm: 0 6px 12px -4px rgba(230, 126, 34, 0.08);
-            --shadow-md: 0 12px 28px -6px rgba(230, 126, 34, 0.12);
+            --success: #26A69A;
+            --warning: #FFB74D;
+            --border-light: #E0E0E0;
+            --shadow-sm: 0 4px 12px rgba(0,174,239,0.06);
+            --shadow-md: 0 8px 24px rgba(0,174,239,0.1);
             --radius-card: 24px;
+            --radius-xl: 50px;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -33,15 +34,15 @@
             background: var(--bg);
             color: var(--ink);
             min-height: 100vh;
-            padding: 16px;
+            padding: 14px;
             position: relative;
         }
         body::before {
             content: '';
             position: fixed;
             inset: 0;
-            background: radial-gradient(circle at 0% 0%, rgba(248, 196, 113, 0.08), transparent 50%),
-                        radial-gradient(circle at 100% 100%, rgba(230, 126, 34, 0.06), transparent 50%);
+            background: radial-gradient(ellipse at 15% 25%, rgba(0,174,239,0.05) 0%, transparent 50%),
+                        radial-gradient(ellipse at 85% 75%, rgba(0,128,128,0.04) 0%, transparent 50%);
             pointer-events: none;
             z-index: -1;
         }
@@ -50,138 +51,172 @@
             margin: 0 auto;
             display: flex;
             flex-direction: column;
-            gap: 24px;
+            gap: 20px;
         }
         .top-bar {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            background: rgba(255,255,255,0.8);
+            background: rgba(255,255,255,0.85);
             backdrop-filter: blur(12px);
-            border-radius: 60px;
-            padding: 12px 24px;
-            border: 1px solid rgba(255,255,255,0.6);
+            border-radius: var(--radius-xl);
+            padding: 10px 20px;
+            border: 1px solid rgba(255,255,255,0.8);
             box-shadow: var(--shadow-sm);
             flex-wrap: wrap;
+            gap: 8px;
+            position: sticky;
+            top: 8px;
+            z-index: 100;
+        }
+        .top-bar h2 {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: var(--primary-dark);
+            white-space: nowrap;
         }
         .btn {
-            padding: 10px 18px;
-            border-radius: 40px;
+            padding: 9px 16px;
+            border-radius: var(--radius-xl);
             border: none;
-            font-weight: 600;
+            font-weight: 700;
             font-family: 'Cairo', sans-serif;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
-            gap: 8px;
-            font-size: 0.9rem;
-            transition: all 0.2s;
+            gap: 6px;
+            font-size: 0.83rem;
+            transition: all 0.15s;
             background: white;
             color: var(--ink);
-            border: 1px solid var(--border-light);
+            border: 1.5px solid var(--border-light);
             white-space: nowrap;
+            touch-action: manipulation;
+            min-height: 36px;
+            text-decoration: none;
         }
+        .btn:active { opacity: 0.8; transform: scale(0.97); }
         .btn-primary {
             background: var(--primary);
-            color: #4A3B2C;
+            color: white;
             border: none;
-            box-shadow: 0 6px 14px rgba(230, 126, 34, 0.2);
+            box-shadow: 0 4px 12px rgba(0,174,239,0.2);
         }
-        .btn-outline { background: transparent; }
-        .btn-sm { padding: 6px 14px; font-size: 0.8rem; border-radius: 30px; }
+        .btn-outline { background: rgba(255,255,255,0.9); }
+        .btn-sm { padding: 6px 12px; font-size: 0.78rem; border-radius: 30px; min-height: 30px; }
+
+        .tenant-badge {
+            background: var(--primary-light);
+            padding: 4px 10px;
+            border-radius: var(--radius-xl);
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: var(--primary-dark);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
 
         .card {
-            background: rgba(255,255,255,0.75);
+            background: rgba(255,255,255,0.85);
             backdrop-filter: blur(8px);
             border-radius: var(--radius-card);
-            padding: 24px;
-            border: 1px solid rgba(255,255,255,0.7);
+            padding: 22px;
+            border: 1px solid rgba(255,255,255,0.8);
             box-shadow: var(--shadow-sm);
             transition: 0.2s;
         }
-        .card h2 { font-size: 1.4rem; margin-bottom: 16px; color: var(--accent); }
+        .card h2 { font-size: 1.3rem; margin-bottom: 14px; color: var(--primary-dark); font-weight: 800; }
         .info-row {
             display: flex;
             align-items: center;
-            gap: 12px;
-            margin-bottom: 12px;
-            font-size: 1rem;
+            gap: 10px;
+            margin-bottom: 10px;
+            font-size: 0.95rem;
         }
-        .info-row i { width: 24px; color: var(--accent); }
+        .info-row i { width: 22px; color: var(--primary); flex-shrink: 0; }
         .record-item {
             background: white;
             border-radius: 20px;
             padding: 16px;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
             border: 1px solid var(--border-light);
             position: relative;
             transition: 0.2s;
         }
-        .record-item:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.04); }
-        .record-date { font-weight: 700; color: var(--accent); margin-bottom: 8px; }
-        .record-diagnosis { margin-bottom: 8px; }
+        .record-item:hover { box-shadow: 0 4px 14px rgba(0,0,0,0.05); }
+        .record-date { font-weight: 700; color: var(--primary-dark); margin-bottom: 6px; font-size: 0.9rem; }
+        .record-diagnosis { margin-bottom: 6px; font-size: 0.9rem; }
         .drug-list {
             list-style-type: none;
-            padding-right: 20px;
+            padding-right: 18px;
             color: var(--text-sec);
+            font-size: 0.85rem;
         }
-        .drug-list li::before { content: "💊"; margin-left: 8px; }
-        .empty-state { text-align: center; padding: 40px; color: var(--text-sec); }
-        .loading { text-align: center; padding: 40px; font-size: 1.2rem; }
+        .drug-list li::before { content: "💊"; margin-left: 6px; }
+        .empty-state { text-align: center; padding: 40px 20px; color: var(--text-sec); }
+        .empty-state i { font-size: 2.5rem; opacity: 0.2; margin-bottom: 10px; display: block; }
+        .loading { text-align: center; padding: 40px; font-size: 1.1rem; color: var(--text-sec); }
+        
         .toast {
             position: fixed;
             bottom: 20px;
-            left: 20px;
-            right: 20px;
-            background: #4A3B2C;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1A3C4A;
             color: white;
-            padding: 12px 24px;
-            border-radius: 60px;
+            padding: 10px 20px;
+            border-radius: var(--radius-xl);
             text-align: center;
             z-index: 3000;
-            max-width: 500px;
-            margin: 0 auto;
+            font-weight: 600;
+            font-size: 0.82rem;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.18);
+            white-space: nowrap;
         }
+        .toast.err { background: #C62828; }
+
         .print-btn {
             position: absolute;
-            top: 16px;
-            left: 16px;
+            top: 14px;
+            left: 14px;
             background: var(--primary-light);
             border: none;
             border-radius: 20px;
-            padding: 6px 14px;
-            font-size: 0.8rem;
+            padding: 5px 12px;
+            font-size: 0.75rem;
             cursor: pointer;
-            font-weight: 600;
+            font-weight: 700;
             font-family: 'Cairo', sans-serif;
             transition: 0.2s;
+            color: var(--primary-dark);
+            touch-action: manipulation;
         }
-        .print-btn:hover { background: var(--primary); }
+        .print-btn:active { background: var(--primary); color: white; }
 
-        /* شريط البحث */
         .search-section {
             display: flex;
             align-items: center;
             gap: 8px;
             background: white;
-            border-radius: 40px;
-            padding: 6px 12px;
-            border: 1px solid var(--border-light);
+            border-radius: var(--radius-xl);
+            padding: 6px 14px;
+            border: 1.5px solid var(--border-light);
             box-shadow: var(--shadow-sm);
             flex: 1;
-            max-width: 400px;
+            max-width: 380px;
         }
-        .search-section i { color: var(--text-sec); }
+        .search-section i { color: var(--text-sec); font-size: 0.85rem; }
         .search-section input {
             border: none;
             outline: none;
             font-family: 'Cairo', sans-serif;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             flex: 1;
-            min-width: 120px;
+            min-width: 100px;
             background: transparent;
         }
-        .search-section input::placeholder { color: #C0B0A0; }
+        .search-section input::placeholder { color: #B0C8D0; }
         .clear-search-btn {
             background: none;
             border: none;
@@ -191,30 +226,56 @@
             padding: 4px;
             display: none;
             transition: 0.2s;
+            touch-action: manipulation;
         }
-        .clear-search-btn:hover { transform: scale(1.1); }
+        .clear-search-btn:active { transform: scale(1.1); }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+        .status-pending { background: #FFF3E0; color: #E65100; }
+        .status-dispensed { background: #E8F5E9; color: #00695C; }
 
         @media (max-width: 500px) {
             body { padding: 8px; }
             .container { gap: 12px; }
-            .card { padding: 16px; }
-            .top-bar { padding: 10px 16px; border-radius: 40px; }
+            .card { padding: 16px; border-radius: 20px; }
+            .top-bar { padding: 8px 14px; border-radius: var(--radius-xl); }
             .search-section { max-width: 100%; }
+            .record-item { padding: 14px; }
         }
         @media print {
-            .btn, .top-bar, .print-btn, .search-section { display: none; }
-            body { background: white; }
+            .btn, .top-bar, .print-btn, .search-section, .toast-container, .tenant-badge { display: none; }
+            body { background: white; padding: 0; }
+            .card { box-shadow: none; border: none; padding: 10px; }
         }
     </style>
 </head>
 <body>
 <div class="container">
     <div class="top-bar">
-        <h2><i class="fas fa-folder-open"></i> الملف الطبي</h2>
-        <button class="btn btn-outline btn-sm" onclick="history.back()"><i class="fas fa-arrow-right"></i> عودة</button>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <h2><i class="fas fa-folder-open"></i> الملف الطبي</h2>
+            <span class="tenant-badge" id="tenantBadge" style="display:none;">
+                <i class="fas fa-hospital"></i> <span id="tenantName">المجمع الطبي</span>
+            </span>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="btn btn-outline btn-sm" onclick="history.back()">
+                <i class="fas fa-arrow-right"></i> عودة
+            </button>
+            <button class="btn btn-outline btn-sm" id="logoutBtn" style="display:none;">
+                <i class="fas fa-sign-out-alt"></i> خروج
+            </button>
+        </div>
     </div>
 
-    <!-- ملخص سريع (سيتم ملؤه ديناميكياً) -->
     <div class="card" id="summaryCard" style="display: none;">
         <h2><i class="fas fa-chart-bar"></i> ملخص</h2>
         <div id="summaryContent"></div>
@@ -225,30 +286,83 @@
     </div>
 </div>
 
+<div class="toast-container" id="toastContainer"></div>
+
 <script type="module">
     import { firebaseConfig } from './firebase-config.js';
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
-    import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-database.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+    import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+    import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getDatabase(app);
 
+    // ============ ✅ ثوابت التخزين المحلي ============
+    const STORAGE_PREFIX = 'shifa_tenant_';
+    
+    const LOGIN_STORAGE_KEYS = [
+        'shifa_session',
+        'shifa_remember',
+        'shifa_last_login',
+        'shifa_secure_session'
+    ];
+
+    // ✅ قراءة المعلمات من الرابط
     const urlParams = new URLSearchParams(window.location.search);
     const patientId = urlParams.get('patientId');
     const patientName = urlParams.get('patientName') || 'المريض';
+    const currentTenantId = urlParams.get('tenant'); // ✅ معرف المجمع
+
+    console.log('📋 معلمات الرابط:', { patientId, patientName, currentTenantId });
+
+    let currentUser = null;
+    let userRole = null;
 
     const prescriptionCache = {};
-    let allPrescriptions = []; // لتخزين الوصفات كاملة للبحث
+    let allPrescriptions = [];
 
-    if (!patientId) {
-        document.getElementById('contentArea').innerHTML = '<div class="card"><p>❌ لا يوجد معرف للمريض.</p></div>';
-    }
+    const $ = (sel) => document.querySelector(sel);
+
+    // ✅ مسح بيانات الجلسة فقط
+    const clearLoginSessionOnly = () => {
+        try {
+            LOGIN_STORAGE_KEYS.forEach(key => localStorage.removeItem(key));
+            const sessionKeysToRemove = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && (key.startsWith('shifa_session') || key.startsWith('shifa_secure'))) {
+                    sessionKeysToRemove.push(key);
+                }
+            }
+            sessionKeysToRemove.forEach(key => localStorage.removeItem(key));
+            sessionStorage.clear();
+        } catch (e) {
+            console.warn('تعذر مسح بيانات الجلسة:', e.message);
+        }
+    };
+
+    const showToast = (msg, err = false) => {
+        const old = document.querySelector('.toast');
+        if (old) old.remove();
+        const t = document.createElement('div');
+        t.className = `toast ${err ? 'err' : ''}`;
+        t.innerHTML = `<i class="fas ${err ? 'fa-exclamation-circle' : 'fa-check-circle'}"></i> ${msg}`;
+        document.body.appendChild(t);
+        setTimeout(() => t.remove(), 2500);
+    };
+
+    // ✅ الحصول على مسار البيانات الصحيح
+    const getDataPath = (path) => {
+        if (currentTenantId) {
+            return `tenants/${currentTenantId}/${path}`;
+        }
+        return path;
+    };
 
     function escapeHtml(str) {
         if (!str) return '';
-        return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'})[m] || m);
+        return str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[m] || m);
     }
 
     function printPrescription(presId) {
@@ -260,8 +374,8 @@
 
         let itemsHtml = '';
         items.forEach(item => {
-            const drugName = escapeHtml(drugNames[item.drug_id] || item.drug_id);
-            itemsHtml += `<li>${drugName} - ${escapeHtml(item.dose)}</li>`;
+            const drugName = escapeHtml(item.drug_name || drugNames[item.drug_id] || item.drug_id || '—');
+            itemsHtml += `<li>${drugName} - ${escapeHtml(item.dose || '—')}</li>`;
         });
 
         const printWindow = window.open('', '_blank', 'width=800,height=600');
@@ -270,18 +384,18 @@
             <html lang="ar" dir="rtl">
             <head><meta charset="UTF-8"><title>طباعة الروشتة</title>
             <style>
-                body { font-family: 'Cairo', sans-serif; padding: 30px; color: #333; }
+                body { font-family: 'Cairo', sans-serif; padding: 30px; color: #1A3C4A; }
                 .header { text-align: center; margin-bottom: 25px; }
-                .header h1 { color: #E67E22; }
+                .header h1 { color: #00AEEF; }
                 .info { margin-bottom: 20px; }
                 .info p { margin: 8px 0; font-size: 1.1rem; }
                 ul { list-style-type: none; padding: 0; }
-                ul li { padding: 8px 0; border-bottom: 1px dashed #ccc; }
+                ul li { padding: 8px 0; border-bottom: 1px dashed #E0E0E0; }
                 ul li::before { content: "💊 "; margin-left: 8px; }
                 @media print { body { padding: 10px; } }
             </style></head>
             <body>
-                <div class="header"><h1>روشتة طبية</h1><p style="font-size:1.2rem;">عيادة سُكُون</p></div>
+                <div class="header"><h1>روشتة طبية</h1><p style="font-size:1.2rem;">شفاء</p></div>
                 <div class="info">
                     <p><strong>المريض:</strong> ${patientDisplayName}</p>
                     <p><strong>الطبيب:</strong> د. ${escapeHtml(doctorName)}</p>
@@ -301,15 +415,38 @@
     async function loadPatientData() {
         const contentArea = document.getElementById('contentArea');
         try {
-            // 1. بيانات المريض
+            // ✅ 1. بيانات المريض من مسار المجمع
             let patientInfo = { name: patientName };
-            const patientSnap = await get(ref(db, `patients/${patientId}`));
-            if (patientSnap.exists()) {
-                patientInfo = patientSnap.val();
+            
+            if (currentTenantId) {
+                const patientSnap = await get(ref(db, getDataPath(`patients/${patientId}`)));
+                if (patientSnap.exists()) {
+                    patientInfo = { ...patientInfo, ...patientSnap.val() };
+                } else {
+                    // محاولة المسار العام
+                    const publicSnap = await get(ref(db, `patients/${patientId}`));
+                    if (publicSnap.exists()) {
+                        patientInfo = { ...patientInfo, ...publicSnap.val() };
+                    }
+                }
+            } else {
+                const patientSnap = await get(ref(db, `patients/${patientId}`));
+                if (patientSnap.exists()) {
+                    patientInfo = patientSnap.val();
+                }
             }
 
-            // 2. جميع الروشتات
-            const allPresSnap = await get(ref(db, 'prescriptions'));
+            // ✅ 2. جميع الروشتات من مسار المجمع
+            let allPresSnap = null;
+            if (currentTenantId) {
+                allPresSnap = await get(ref(db, getDataPath('prescriptions')));
+                if (!allPresSnap.exists()) {
+                    allPresSnap = await get(ref(db, 'prescriptions'));
+                }
+            } else {
+                allPresSnap = await get(ref(db, 'prescriptions'));
+            }
+            
             let patientPrescriptions = [];
             if (allPresSnap.exists()) {
                 allPresSnap.forEach(child => {
@@ -320,29 +457,59 @@
                 });
             }
             patientPrescriptions.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
-            allPrescriptions = patientPrescriptions; // حفظ للبحث
+            allPrescriptions = patientPrescriptions;
 
-            // 3. أطباء
+            // ✅ 3. أطباء من مسار المجمع
             const doctorIds = [...new Set(patientPrescriptions.map(p => p.doctor_id).filter(Boolean))];
             const doctorsMap = {};
             if (doctorIds.length > 0) {
-                const doctorPromises = doctorIds.map(docId => get(ref(db, `users/${docId}`)));
-                const doctorSnaps = await Promise.all(doctorPromises);
-                doctorSnaps.forEach((snap, idx) => {
-                    if (snap.exists()) doctorsMap[doctorIds[idx]] = snap.val();
+                const doctorPromises = doctorIds.map(async (docId) => {
+                    let snap = null;
+                    if (currentTenantId) {
+                        snap = await get(ref(db, getDataPath(`users/${docId}`)));
+                        if (!snap.exists()) {
+                            snap = await get(ref(db, `users/${docId}`));
+                        }
+                    } else {
+                        snap = await get(ref(db, `users/${docId}`));
+                    }
+                    return { docId, snap };
+                });
+                const results = await Promise.all(doctorPromises);
+                results.forEach(({ docId, snap }) => {
+                    if (snap.exists()) doctorsMap[docId] = snap.val();
                 });
             }
 
-            // 4. عناصر الوصفات (مع دعم القوالب)
+            // ✅ 4. عناصر الوصفات من مسار المجمع
             const itemsMap = {};
             for (const pres of patientPrescriptions) {
-                let itemsSnap = await get(ref(db, `prescription_items/${pres.id}`));
+                let itemsSnap = null;
+                if (currentTenantId) {
+                    itemsSnap = await get(ref(db, getDataPath(`prescription_items/${pres.id}`)));
+                    if (!itemsSnap.exists()) {
+                        itemsSnap = await get(ref(db, `prescription_items/${pres.id}`));
+                    }
+                } else {
+                    itemsSnap = await get(ref(db, `prescription_items/${pres.id}`));
+                }
+                
                 let items = [];
                 if (itemsSnap.exists()) {
                     items = Object.values(itemsSnap.val());
                 }
+                
+                // دعم القوالب
                 if (items.length === 0 && pres.template_id) {
-                    const templateItemsSnap = await get(ref(db, `template_items/${pres.template_id}`));
+                    let templateItemsSnap = null;
+                    if (currentTenantId) {
+                        templateItemsSnap = await get(ref(db, getDataPath(`template_items/${pres.template_id}`)));
+                        if (!templateItemsSnap.exists()) {
+                            templateItemsSnap = await get(ref(db, `template_items/${pres.template_id}`));
+                        }
+                    } else {
+                        templateItemsSnap = await get(ref(db, `template_items/${pres.template_id}`));
+                    }
                     if (templateItemsSnap.exists()) {
                         items = Object.values(templateItemsSnap.val());
                     }
@@ -350,7 +517,7 @@
                 itemsMap[pres.id] = items;
             }
 
-            // 5. أسماء الأدوية
+            // ✅ 5. أسماء الأدوية
             const drugIds = [];
             for (const presId in itemsMap) {
                 itemsMap[presId].forEach(item => {
@@ -360,14 +527,25 @@
             const uniqueDrugIds = [...new Set(drugIds)];
             const drugNames = {};
             if (uniqueDrugIds.length > 0) {
-                const drugPromises = uniqueDrugIds.map(did => get(ref(db, `drugs/${did}`)));
-                const drugSnaps = await Promise.all(drugPromises);
-                drugSnaps.forEach((snap, idx) => {
-                    if (snap.exists()) drugNames[uniqueDrugIds[idx]] = snap.val().name;
+                const drugPromises = uniqueDrugIds.map(async (did) => {
+                    let snap = null;
+                    if (currentTenantId) {
+                        snap = await get(ref(db, getDataPath(`drugs/${did}`)));
+                        if (!snap.exists()) {
+                            snap = await get(ref(db, `drugs/${did}`));
+                        }
+                    } else {
+                        snap = await get(ref(db, `drugs/${did}`));
+                    }
+                    return { did, snap };
+                });
+                const results = await Promise.all(drugPromises);
+                results.forEach(({ did, snap }) => {
+                    if (snap.exists()) drugNames[did] = snap.val().name;
                 });
             }
 
-            // 6. تخزين بيانات الطباعة
+            // ✅ 6. تخزين بيانات الطباعة
             patientPrescriptions.forEach(pres => {
                 prescriptionCache[pres.id] = {
                     prescription: pres,
@@ -377,15 +555,15 @@
                 };
             });
 
-            // 7. عرض الملخص
+            // ✅ 7. عرض الملخص
             renderSummary(patientInfo, patientPrescriptions);
 
-            // 8. بناء محتوى السجل الطبي مع شريط البحث
+            // ✅ 8. بناء محتوى السجل الطبي
             renderPrescriptionsList(patientPrescriptions, itemsMap, doctorsMap, drugNames);
 
         } catch (err) {
             console.error('فشل تحميل بيانات المريض:', err);
-            contentArea.innerHTML = '<div class="card"><p style="color: red;">حدث خطأ أثناء تحميل الملف.</p></div>';
+            contentArea.innerHTML = '<div class="card"><div class="empty-state"><i class="fas fa-exclamation-triangle" style="color:var(--danger);"></i><p>حدث خطأ أثناء تحميل الملف</p></div></div>';
         }
     }
 
@@ -400,6 +578,8 @@
         const lastDiagnosis = lastPres.diagnosis || 'غير مذكور';
         document.getElementById('summaryContent').innerHTML = `
             <div class="info-row"><i class="fas fa-user"></i> <strong>الاسم:</strong> ${escapeHtml(patientInfo.name || patientName)}</div>
+            ${patientInfo.phone ? `<div class="info-row"><i class="fas fa-phone"></i> <strong>الهاتف:</strong> ${escapeHtml(patientInfo.phone)}</div>` : ''}
+            ${patientInfo.age ? `<div class="info-row"><i class="fas fa-birthday-cake"></i> <strong>العمر:</strong> ${patientInfo.age} سنة</div>` : ''}
             <div class="info-row"><i class="fas fa-calendar-check"></i> <strong>عدد الوصفات:</strong> ${prescriptions.length}</div>
             <div class="info-row"><i class="far fa-clock"></i> <strong>آخر وصفة:</strong> ${lastDate}</div>
             <div class="info-row"><i class="fas fa-notes-medical"></i> <strong>آخر تشخيص:</strong> ${escapeHtml(lastDiagnosis)}</div>
@@ -410,10 +590,9 @@
     function renderPrescriptionsList(prescriptions, itemsMap, doctorsMap, drugNames) {
         const contentArea = document.getElementById('contentArea');
         
-        // إنشاء شريط البحث وقسم السجل
         const html = `
             <div class="card">
-                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 18px;">
                     <h2 style="margin-bottom:0;"><i class="fas fa-history"></i> السجل الطبي <span id="totalCount">(${prescriptions.length})</span></h2>
                     <div class="search-section">
                         <i class="fas fa-search"></i>
@@ -422,17 +601,16 @@
                     </div>
                 </div>
                 <div id="prescriptionsListContainer">
-                    ${prescriptions.length === 0 ? '<div class="empty-state">لا توجد وصفات سابقة لهذا المريض</div>' : ''}
+                    ${prescriptions.length === 0 ? '<div class="empty-state"><i class="fas fa-prescription"></i><p>لا توجد وصفات سابقة لهذا المريض</p></div>' : ''}
                 </div>
             </div>
         `;
         contentArea.innerHTML = html;
 
-        // وظيفة العرض (تأخذ مصفوفة الوصفات)
         function displayPrescriptions(list) {
             const container = document.getElementById('prescriptionsListContainer');
             if (!list.length) {
-                container.innerHTML = '<div class="empty-state">لا توجد نتائج مطابقة</div>';
+                container.innerHTML = '<div class="empty-state"><i class="fas fa-search"></i><p>لا توجد نتائج مطابقة</p></div>';
                 return;
             }
             let html = '';
@@ -442,29 +620,35 @@
                 const doctorName = docData.name || 'غير معروف';
                 const items = itemsMap[pres.id] || [];
                 const drugList = items.map(item => {
-                    const drugName = drugNames[item.drug_id] || item.drug_id;
-                    return `<li>${escapeHtml(drugName)} - ${escapeHtml(item.dose)}</li>`;
+                    const drugName = item.drug_name || drugNames[item.drug_id] || item.drug_id || '—';
+                    const dose = item.dose || '—';
+                    return `<li>${escapeHtml(drugName)} - ${escapeHtml(dose)}</li>`;
                 }).join('');
+
+                const isDispensed = pres.status === 'تم الصرف';
+                const statusClass = isDispensed ? 'status-dispensed' : 'status-pending';
+                const statusText = isDispensed ? '✅ تم الصرف' : '⏳ لم تصرف بعد';
 
                 html += `
                     <div class="record-item">
                         <button class="print-btn" data-print-id="${pres.id}"><i class="fas fa-print"></i> طباعة</button>
                         <div class="record-date"><i class="far fa-calendar-alt"></i> ${date}</div>
-                        <div><i class="fas fa-user-md"></i> <strong>الطبيب:</strong> د. ${escapeHtml(doctorName)}</div>
+                        <div style="margin-bottom:6px;"><i class="fas fa-user-md"></i> <strong>الطبيب:</strong> د. ${escapeHtml(doctorName)}</div>
                         <div class="record-diagnosis"><strong>التشخيص:</strong> ${escapeHtml(pres.diagnosis || 'غير مذكور')}</div>
                         <div><strong>الأدوية:</strong></div>
                         <ul class="drug-list">${drugList || '<li>لا توجد أدوية</li>'}</ul>
-                        <div style="margin-top: 8px;">
-                            <strong>الحالة:</strong> 
-                            ${pres.status === 'تم الصرف' ? '✅ تم الصرف' : '⏳ لم تصرف بعد'}
-                            ${pres.pharmacist_name ? ` (بواسطة ${escapeHtml(pres.pharmacist_name)})` : ''}
+                        <div style="margin-top: 8px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                            <span class="status-badge ${statusClass}">
+                                <i class="fas fa-circle" style="font-size:0.4rem;"></i> ${statusText}
+                            </span>
+                            ${pres.pharmacist_name ? `<span style="font-size:0.78rem;color:var(--text-sec);">بواسطة ${escapeHtml(pres.pharmacist_name)}</span>` : ''}
+                            ${pres.pharmacist_notes ? `<div style="width:100%;margin-top:6px;background:#FFF8E1;padding:8px 12px;border-radius:12px;font-size:0.78rem;color:#5D4037;border-right:3px solid var(--warning);"><i class="fas fa-pen"></i> ${escapeHtml(pres.pharmacist_notes)}</div>` : ''}
                         </div>
                     </div>
                 `;
             });
             container.innerHTML = html;
 
-            // ربط أزرار الطباعة
             container.querySelectorAll('.print-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
                     printPrescription(this.getAttribute('data-print-id'));
@@ -472,10 +656,8 @@
             });
         }
 
-        // عرض كل الوصفات مبدئياً
         displayPrescriptions(prescriptions);
 
-        // منطق البحث الحي
         const searchInput = document.getElementById('diagnosisSearchInput');
         const clearBtn = document.getElementById('clearSearchBtn');
         const totalSpan = document.getElementById('totalCount');
@@ -507,22 +689,87 @@
         });
     }
 
-    // التحقق من الجلسة والصلاحية
+    // ============ ✅ تسجيل الخروج ============
+    const setupLogout = () => {
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) {
+            logoutBtn.style.display = 'inline-flex';
+            logoutBtn.addEventListener('click', async () => {
+                try {
+                    showToast('👋 جاري تسجيل الخروج...');
+                    clearLoginSessionOnly();
+                    await signOut(auth);
+                    window.location.href = 'index.html';
+                } catch (error) {
+                    console.error('خطأ أثناء تسجيل الخروج:', error);
+                    clearLoginSessionOnly();
+                    window.location.href = 'index.html';
+                }
+            });
+        }
+    };
+
+    // ============ بدء التشغيل ============
+    if (!patientId) {
+        document.getElementById('contentArea').innerHTML = 
+            '<div class="card"><div class="empty-state"><i class="fas fa-exclamation-triangle" style="color:var(--danger);"></i><p>❌ لا يوجد معرف للمريض</p></div></div>';
+    }
+
     onAuthStateChanged(auth, async (user) => {
         if (!user) {
+            clearLoginSessionOnly();
             window.location.href = 'index.html';
             return;
         }
-        const userSnap = await get(ref(db, `users/${user.uid}`));
-        const role = userSnap.exists() ? userSnap.val().role : null;
-        if (role !== 'doctor' && role !== 'pharmacist') {
-            document.getElementById('contentArea').innerHTML = '<div class="card"><p>⛔ غير مصرح لك بعرض الملف الطبي.</p></div>';
-            return;
-        }
-        if (patientId) {
-            loadPatientData();
+        
+        currentUser = user;
+        
+        // ✅ التحقق من صلاحية المستخدم
+        try {
+            let userSnap = null;
+            if (currentTenantId) {
+                userSnap = await get(ref(db, `tenants/${currentTenantId}/users/${user.uid}`));
+                if (!userSnap.exists()) {
+                    userSnap = await get(ref(db, `users/${user.uid}`));
+                }
+            } else {
+                userSnap = await get(ref(db, `users/${user.uid}`));
+            }
+            
+            if (userSnap.exists()) {
+                const userData = userSnap.val();
+                userRole = userData.role;
+                
+                // ✅ عرض اسم المجمع
+                if (userData.tenantName) {
+                    document.getElementById('tenantName').textContent = userData.tenantName;
+                    document.getElementById('tenantBadge').style.display = 'flex';
+                }
+                
+                // ✅ زر الخروج متاح للكل
+                setupLogout();
+            }
+            
+            // ✅ التحقق من الصلاحية (دكتور أو صيدلي أو ممرض)
+            if (userRole && !['doctor', 'pharmacist', 'nurse'].includes(userRole)) {
+                document.getElementById('contentArea').innerHTML = 
+                    '<div class="card"><div class="empty-state"><i class="fas fa-lock" style="color:var(--danger);"></i><p>⛔ غير مصرح لك بعرض الملف الطبي</p></div></div>';
+                return;
+            }
+            
+            if (patientId) {
+                loadPatientData();
+            }
+        } catch (err) {
+            console.error('خطأ في التحقق:', err);
+            if (patientId) {
+                loadPatientData();
+            }
         }
     });
+
+    console.log('🚀 صفحة الملف الطبي - نظام المجمعات الطبية المتعددة');
+    console.log('🔒 تدعم مسار المجمع والمسار العام للتوافق');
 </script>
 </body>
 </html>
