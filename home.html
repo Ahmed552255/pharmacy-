@@ -59,6 +59,74 @@
             backface-visibility: hidden;
         }
         
+        /* شاشة التحميل الأولية */
+        .splash-screen {
+            position: fixed;
+            inset: 0;
+            background: var(--bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            transition: opacity 0.4s ease-out;
+        }
+        
+        .splash-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .splash-content {
+            text-align: center;
+        }
+        
+        .splash-logo {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border-radius: 20px;
+            margin: 0 auto 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: splashPulse 1.5s infinite ease-in-out;
+        }
+        
+        @keyframes splashPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .splash-logo svg {
+            width: 36px;
+            height: 36px;
+            color: white;
+        }
+        
+        .splash-loader {
+            width: 40px;
+            height: 4px;
+            background: rgba(0, 174, 239, 0.15);
+            border-radius: 4px;
+            margin: 1rem auto 0;
+            overflow: hidden;
+        }
+        
+        .splash-loader::after {
+            content: '';
+            display: block;
+            width: 40%;
+            height: 100%;
+            background: var(--primary);
+            border-radius: 4px;
+            animation: splashLoading 1.2s infinite ease-in-out;
+        }
+        
+        @keyframes splashLoading {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(350%); }
+        }
+        
         .bg-pattern {
             position: fixed;
             inset: 0;
@@ -468,11 +536,25 @@
     </style>
 </head>
 <body>
+    <!-- شاشة البداية -->
+    <div class="splash-screen" id="splashScreen">
+        <div class="splash-content">
+            <div class="splash-logo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/>
+                    <path d="M12 8v4l3 3"/>
+                </svg>
+            </div>
+            <p style="color: var(--ink); font-weight: 700; font-size: 1.1rem;">جاري التحقق من الجلسة...</p>
+            <div class="splash-loader"></div>
+        </div>
+    </div>
+
     <div class="bg-pattern" aria-hidden="true"></div>
     <div class="loading-bar" id="loadingBar" aria-hidden="true"></div>
     <div class="toast" id="toast" aria-live="polite"></div>
     
-    <main class="glass-card" id="mainCard">
+    <main class="glass-card" id="mainCard" style="display: none;">
         <div class="logo-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/>
@@ -558,12 +640,41 @@
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
-        // ============ ثوابت التخزين المحلي ============
-        const STORAGE_KEYS = {
-            SESSION: 'shifa_session',
-            REMEMBER_ME: 'shifa_remember',
-            LAST_LOGIN: 'shifa_last_login'
+        // ============ نظام التشفير البسيط ============
+        const ENCRYPTION_KEY = 'ShifaSecure2024!@#Key';
+        
+        const encryptData = (data) => {
+            try {
+                const jsonString = JSON.stringify(data);
+                let encrypted = '';
+                for (let i = 0; i < jsonString.length; i++) {
+                    const charCode = jsonString.charCodeAt(i) ^ ENCRYPTION_KEY.charCodeAt(i % ENCRYPTION_KEY.length);
+                    encrypted += String.fromCharCode(charCode);
+                }
+                return btoa(unescape(encodeURIComponent(encrypted)));
+            } catch (error) {
+                console.error('خطأ في التشفير:', error);
+                return null;
+            }
         };
+        
+        const decryptData = (encryptedData) => {
+            try {
+                const encrypted = decodeURIComponent(escape(atob(encryptedData)));
+                let decrypted = '';
+                for (let i = 0; i < encrypted.length; i++) {
+                    const charCode = encrypted.charCodeAt(i) ^ ENCRYPTION_KEY.charCodeAt(i % ENCRYPTION_KEY.length);
+                    decrypted += String.fromCharCode(charCode);
+                }
+                return JSON.parse(decrypted);
+            } catch (error) {
+                console.error('خطأ في فك التشفير:', error);
+                return null;
+            }
+        };
+
+        // ============ ثوابت التخزين المحلي ============
+        const STORAGE_KEY = 'shifa_secure_session';
 
         // ============ تهيئة Firebase ============
         const app = initializeApp(firebaseConfig);
@@ -572,6 +683,8 @@
 
         // ============ عناصر DOM ============
         const dom = {
+            splashScreen: document.getElementById('splashScreen'),
+            mainCard: document.getElementById('mainCard'),
             emailInput: document.getElementById('emailInput'),
             passwordInput: document.getElementById('passwordInput'),
             loginButton: document.getElementById('loginButton'),
@@ -593,70 +706,107 @@
         // ============ محتوى الزر الافتراضي ============
         const defaultBtnContent = dom.btnContent.innerHTML;
 
-        // ============ إدارة التخزين المحلي - جلسة خفيفة ============
+        // ============ ✅ جلب بيانات المستخدم من المسارين (العام والمجمع) ============
+        const fetchUserData = async (uid) => {
+            try {
+                // 1️⃣ جرب المسار العام أولاً (للتوافق مع البيانات القديمة)
+                const publicSnap = await get(ref(db, `users/${uid}`));
+                const userData = publicSnap.exists() ? publicSnap.val() : null;
+                
+                if (!userData || !userData.role) {
+                    return null;
+                }
+                
+                // 2️⃣ حدد معرف المجمع
+                const tenantId = userData.tenantId || uid;
+                
+                // 3️⃣ جرب تجيب بيانات إضافية من مسار المجمع
+                try {
+                    const tenantSnap = await get(ref(db, `tenants/${tenantId}/users/${uid}`));
+                    if (tenantSnap.exists()) {
+                        // دمج البيانات من المسارين (المجمع له الأولوية)
+                        return { ...userData, ...tenantSnap.val(), tenantId };
+                    }
+                } catch (e) {
+                    // المسار مش موجود، استخدم البيانات العامة عادي
+                }
+                
+                // 4️⃣ رجع البيانات العامة مع tenantId
+                return { ...userData, tenantId };
+                
+            } catch (error) {
+                console.error("خطأ في جلب بيانات المستخدم:", error);
+                return null;
+            }
+        };
+
+        // ============ إدارة الجلسة المشفرة ============
         
         /**
-         * حفظ بيانات الجلسة في localStorage (خفيفة - فقط للاستخدام المؤقت)
+         * ✅ حفظ الجلسة في localStorage مع تشفير - متوافقة مع نظام المجمعات
          */
-        const saveSessionToLocal = (uid, role, name, email = '') => {
+        const saveEncryptedSession = (userData) => {
             try {
                 const sessionData = {
-                    uid,
-                    role,
-                    name,
-                    email: email || dom.emailInput.value.trim().toLowerCase(),
+                    uid: userData.uid,
+                    email: userData.email,
+                    role: userData.role,
+                    name: userData.name,
+                    tenantId: userData.tenantId || null,  // ✅ معرف المجمع
                     timestamp: Date.now()
                 };
-                localStorage.setItem(STORAGE_KEYS.SESSION, JSON.stringify(sessionData));
-            } catch (e) {
-                console.warn('تعذر حفظ الجلسة محلياً:', e.message);
+                
+                const encrypted = encryptData(sessionData);
+                if (encrypted) {
+                    localStorage.setItem(STORAGE_KEY, encrypted);
+                    return true;
+                }
+                return false;
+            } catch (error) {
+                console.error('خطأ في حفظ الجلسة:', error);
+                return false;
             }
         };
 
         /**
-         * استرجاع بيانات الجلسة من localStorage
+         * استرجاع الجلسة من localStorage مع فك التشفير
          */
-        const getLocalSession = () => {
+        const getEncryptedSession = () => {
             try {
-                const data = localStorage.getItem(STORAGE_KEYS.SESSION);
-                if (!data) return null;
+                const encrypted = localStorage.getItem(STORAGE_KEY);
+                if (!encrypted) return null;
                 
-                const session = JSON.parse(data);
+                const session = decryptData(encrypted);
+                if (!session || !session.uid || !session.role) {
+                    clearSession();
+                    return null;
+                }
                 
-                if (!session.uid || !session.role) {
-                    clearLocalSession();
+                // التحقق من صلاحية الجلسة (24 ساعة)
+                const MAX_SESSION_AGE = 24 * 60 * 60 * 1000;
+                if (Date.now() - session.timestamp > MAX_SESSION_AGE) {
+                    console.log('🕐 انتهت صلاحية الجلسة');
+                    clearSession();
                     return null;
                 }
                 
                 return session;
-            } catch (e) {
-                console.warn('تعذر استرجاع الجلسة المحلية:', e.message);
-                clearLocalSession();
+            } catch (error) {
+                console.error('خطأ في استرجاع الجلسة:', error);
+                clearSession();
                 return null;
             }
         };
 
         /**
-         * مسح بيانات الجلسة المحلية
+         * مسح الجلسة
          */
-        const clearLocalSession = () => {
+        const clearSession = () => {
             try {
-                localStorage.removeItem(STORAGE_KEYS.SESSION);
-            } catch (e) {
-                console.warn('تعذر مسح الجلسة المحلية:', e.message);
+                localStorage.removeItem(STORAGE_KEY);
+            } catch (error) {
+                console.error('خطأ في مسح الجلسة:', error);
             }
-        };
-
-        /**
-         * حفظ بيانات الجلسة في sessionStorage فقط (تنتهي عند إغلاق المتصفح)
-         */
-        const saveSession = (uid, role, name, email = '') => {
-            sessionStorage.setItem('userUid', uid);
-            sessionStorage.setItem('userRole', role);
-            sessionStorage.setItem('userName', name);
-            
-            // حفظ خفيف في localStorage للاستخدامات البسيطة
-            saveSessionToLocal(uid, role, name, email);
         };
 
         // ============ دوال مساعدة ============
@@ -738,19 +888,8 @@
             dom.passwordInput.focus();
         });
 
-        // جلب بيانات المستخدم من قاعدة البيانات
-        const fetchUserData = async (uid) => {
-            try {
-                const snapshot = await get(ref(db, `users/${uid}`));
-                return snapshot.exists() ? snapshot.val() : null;
-            } catch (error) {
-                console.error("خطأ في جلب بيانات المستخدم:", error);
-                return null;
-            }
-        };
-
-        // ============ توجيه المستخدم حسب الصلاحية ============
-        const redirectUser = (role, name) => {
+        // ============ ✅ توجيه المستخدم حسب الصلاحية - مع تمرير tenantId ============
+        const redirectUser = (role, name, tenantId = null) => {
             const pages = {
                 admin: 'admin-panel.html',
                 doctor: 'doctor-dashboard.html',
@@ -758,7 +897,13 @@
                 pharmacist: 'pharmacy-dashboard.html',
             };
             
-            const redirectUrl = pages[role] || 'dashboard.html';
+            let redirectUrl = pages[role] || 'dashboard.html';
+            
+            // ✅ تمرير tenantId في الرابط للصفحات اللي محتاجاه
+            if (tenantId) {
+                const separator = redirectUrl.includes('?') ? '&' : '?';
+                redirectUrl += `${separator}tenant=${encodeURIComponent(tenantId)}`;
+            }
             
             showToast(`👋 مرحباً ${name}!`, 'success');
             
@@ -806,6 +951,7 @@
                 const userCredential = await signInWithEmailAndPassword(auth, email, password);
                 const user = userCredential.user;
 
+                // ✅ جلب بيانات المستخدم من المسارين (العام + المجمع)
                 const userData = await fetchUserData(user.uid);
 
                 if (!userData || !userData.role) {
@@ -821,11 +967,23 @@
                 }
 
                 const displayName = userData.name || email.split('@')[0];
+                const tenantId = userData.tenantId || null;
 
-                // ✅ حفظ الجلسة بشكل خفيف
-                saveSession(user.uid, userData.role, displayName, email);
+                // ✅ حفظ الجلسة مشفرة مع tenantId
+                const saved = saveEncryptedSession({
+                    uid: user.uid,
+                    email: email,
+                    role: userData.role,
+                    name: displayName,
+                    tenantId: tenantId
+                });
 
-                redirectUser(userData.role, displayName);
+                if (!saved) {
+                    console.warn('⚠️ تعذر حفظ الجلسة محلياً');
+                }
+
+                // ✅ توجيه المستخدم مع تمرير tenantId
+                redirectUser(userData.role, displayName, tenantId);
 
             } catch (error) {
                 console.error("خطأ تسجيل الدخول:", error);
@@ -897,42 +1055,109 @@
             }
         }, { passive: false });
 
-        // ============ بدء التشغيل: بدون توجيه تلقائي ============
-        const initApp = async () => {
-            console.log('👤 صفحة تسجيل الدخول جاهزة - بدون توجيه تلقائي');
+        // ============ التوجيه التلقائي عند فتح الصفحة ============
+        const checkSessionAndRedirect = async () => {
+            // 1️⃣ التحقق من وجود جلسة محلية مشفرة
+            const localSession = getEncryptedSession();
             
-            // محاولة ملء البريد الإلكتروني من الجلسة القديمة لو موجود (فقط للتذكير)
-            try {
-                const oldData = localStorage.getItem(STORAGE_KEYS.SESSION);
-                if (oldData) {
-                    const parsed = JSON.parse(oldData);
-                    if (parsed.email) {
-                        dom.emailInput.value = parsed.email;
+            if (localSession) {
+                console.log('✅ تم العثور على جلسة محلية، جاري التحقق...');
+                
+                try {
+                    const user = auth.currentUser;
+                    
+                    if (user && user.uid === localSession.uid) {
+                        console.log('✅ الجلسة صالحة، جاري التوجيه...');
+                        redirectUser(localSession.role, localSession.name, localSession.tenantId);
+                        return;
                     }
+                    
+                    if (user && user.uid !== localSession.uid) {
+                        console.log('⚠️ تغير المستخدم، جلب بيانات جديدة...');
+                        const userData = await fetchUserData(user.uid);
+                        if (userData && userData.role) {
+                            const displayName = userData.name || user.email.split('@')[0];
+                            const tenantId = userData.tenantId || null;
+                            
+                            saveEncryptedSession({
+                                uid: user.uid,
+                                email: user.email,
+                                role: userData.role,
+                                name: displayName,
+                                tenantId: tenantId
+                            });
+                            
+                            redirectUser(userData.role, displayName, tenantId);
+                            return;
+                        }
+                    }
+                } catch (error) {
+                    console.warn('⚠️ خطأ في التحقق من الجلسة:', error);
+                }
+            }
+            
+            console.log('🔍 في انتظار حالة المصادقة من Firebase...');
+            showLoginForm();
+        };
+
+        // ============ إظهار نموذج تسجيل الدخول ============
+        const showLoginForm = () => {
+            dom.splashScreen.classList.add('hidden');
+            dom.mainCard.style.display = '';
+            
+            try {
+                const oldSession = getEncryptedSession();
+                if (oldSession && oldSession.email) {
+                    dom.emailInput.value = oldSession.email;
                 }
             } catch (e) {
                 // تجاهل
             }
+        };
+
+        // ============ بدء التشغيل ============
+        const initApp = async () => {
+            console.log('🚀 نظام شفاء — جاري التحقق من الجلسة...');
             
-            // مستمع لحالة المصادقة (للتأكد من عدم وجود جلسة نشطة)
             onAuthStateChanged(auth, async (user) => {
                 if (user) {
-                    // ✅ المستخدم مسجل دخول بالفعل - نوجهه مباشرة
-                    const localSession = getLocalSession();
+                    console.log('✅ مستخدم مسجل دخول في Firebase');
+                    
+                    const localSession = getEncryptedSession();
+                    
                     if (!localSession || localSession.uid !== user.uid) {
                         try {
                             const userData = await fetchUserData(user.uid);
                             if (userData && userData.role) {
                                 const displayName = userData.name || user.email.split('@')[0];
-                                saveSession(user.uid, userData.role, displayName, user.email);
-                                redirectUser(userData.role, displayName);
+                                const tenantId = userData.tenantId || null;
+                                
+                                saveEncryptedSession({
+                                    uid: user.uid,
+                                    email: user.email,
+                                    role: userData.role,
+                                    name: displayName,
+                                    tenantId: tenantId
+                                });
+                                
+                                redirectUser(userData.role, displayName, tenantId);
+                                return;
                             }
-                        } catch (e) {
-                            console.warn('تعذر تحديث الجلسة:', e.message);
+                        } catch (error) {
+                            console.error('خطأ في جلب بيانات المستخدم:', error);
                         }
+                    } else if (localSession) {
+                        redirectUser(localSession.role, localSession.name, localSession.tenantId);
+                        return;
                     }
                 }
+                
+                if (!dom.mainCard.style.display || dom.mainCard.style.display === 'none') {
+                    showLoginForm();
+                }
             });
+            
+            await checkSessionAndRedirect();
         };
 
         // ============ تنظيف التايمرات عند مغادرة الصفحة ============
@@ -941,17 +1166,6 @@
             clearTimeout(dom._toastTimeout);
             clearTimeout(longPressTimer);
         });
-
-        // ============ تحسين أداء الصفحة ============
-        if (typeof requestIdleCallback !== 'undefined') {
-            requestIdleCallback(() => {
-                console.log('🚀 نظام شفاء — بوابة الدخول جاهزة');
-            });
-        } else {
-            setTimeout(() => {
-                console.log('🚀 نظام شفاء — بوابة الدخول جاهزة');
-            }, 200);
-        }
 
         // تشغيل التطبيق
         initApp();
