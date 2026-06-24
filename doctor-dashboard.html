@@ -322,7 +322,6 @@
             cursor: pointer; font-size: 0.65rem; display: flex; align-items: center; justify-content: center; color: var(--text-sec);
         }
 
-        /* تنسيق حقل البحث عن الدواء بدون فلترة الشكل */
         .drug-search-wrapper {
             position: relative;
             flex: 1;
@@ -498,7 +497,6 @@
                         </div>
                     </div>
 
-                    <!-- ============ ✅ شريط الإضافة السريع - البحث منفصل عن الشكل الصيدلي ============ -->
                     <div class="quick-add-bar" id="addDrugBar" style="position:relative;">
                         <div class="drug-search-wrapper" style="position:relative;">
                             <span class="search-icon">🔍</span>
@@ -671,10 +669,8 @@
         const auth = getAuth(app);
         const db = getDatabase(app);
 
-        // ============ ✅ ثوابت التخزين المحلي - نفس منطق الأدمن والممرض ============
         const STORAGE_PREFIX = 'shifa_tenant_';
         
-        // ✅ مفاتيح تسجيل الدخول فقط (اللي هتمسح عند الخروج)
         const LOGIN_STORAGE_KEYS = [
             'shifa_session',
             'shifa_remember',
@@ -682,10 +678,8 @@
             'shifa_secure_session'
         ];
         
-        // ✅ معرف المجمع الطبي الحالي
         let currentTenantId = null;
         
-        // ✅ دوال مفاتيح التخزين لكل مجمع
         const getTenantStorageKey = (baseKey) => {
             return currentTenantId ? `${STORAGE_PREFIX}${currentTenantId}_${baseKey}` : baseKey;
         };
@@ -721,7 +715,6 @@
             async delete(id) { if (!this.db) await this.open(); return new Promise((resolve, reject) => { const tx = this.db.transaction(this.storeName, 'readwrite'); tx.objectStore(this.storeName).delete(id); tx.oncomplete = resolve; tx.onerror = () => reject(tx.error); }); }
         }
 
-        // ============ ✅ FavoriteDrugsDB - محدثة لدعم البحث غير الحساس لحالة الأحرف ============
         class FavoriteDrugsDB {
             constructor() { 
                 this._dbName = null;
@@ -741,21 +734,15 @@
             async incrementAndSave(fullName, name, form, strength) { if (!this.db) await this.open(); const tx = this.db.transaction(this.storeName, 'readwrite'); const store = tx.objectStore(this.storeName); const req = store.get(fullName); req.onsuccess = () => { let drug = req.result; if (drug) { drug.usageCount = (drug.usageCount || 0) + 1; drug.lastUsed = new Date().toISOString(); } else { drug = { fullName, name, form, strength, usageCount: 1, hidden: false, firstUsed: new Date().toISOString(), lastUsed: new Date().toISOString() }; } store.put(drug); }; }
             async hideDrug(fullName) { if (!this.db) await this.open(); return new Promise((resolve) => { const tx = this.db.transaction(this.storeName, 'readwrite'); const store = tx.objectStore(this.storeName); const req = store.get(fullName); req.onsuccess = () => { let drug = req.result || { fullName, usageCount: 0 }; drug.hidden = true; store.put(drug); resolve(); }; req.onerror = () => resolve(); }); }
             
-            // ✅ البحث غير الحساس لحالة الأحرف - Case-insensitive search
             async search(term, formFilter = null, limit = 5) { 
                 const all = await this.getAll(); 
                 const termLower = term.toLowerCase(); 
                 let results = all.filter(d => { 
                     if (d.hidden) return false; 
-                    // ✅ الفلترة بالشكل الصيدلي تكون اختيارية فقط - لو الدكتور اختار شكل معين
-                    // لكن الأساسي أن البحث يتم بدون فلترة الشكل
-                    // إذا تم تمرير formFilter (للاستخدامات الخاصة فقط) نفلتر به
-                    // لكن في الوضع العادي نبحث في كل الأشكال
                     const nameLower = (d.name || '').toLowerCase();
                     const fullNameLower = (d.fullName || '').toLowerCase();
                     const strengthLower = (d.strength || '').toLowerCase();
                     
-                    // ✅ البحث الذكي: يبحث في الاسم والاسم الكامل والتركيز
                     return nameLower.includes(termLower) || 
                            fullNameLower.includes(termLower) || 
                            strengthLower.includes(termLower);
@@ -806,7 +793,6 @@
         const getPatientName = (apt) => apt?.patient_name || apt?.patientName || 'غير معروف';
         const extractStrength = (text) => { const match = text.match(/(\d+(?:\.\d+)?\s*(?:gm|g|gram|mg|mcg|mcgm|IU|MU|ml|%|mcg\/ml|mg\/ml|mg\/5ml|mcg\/puff)(?:\/\d*\s*(?:ml|gm|g))?)/i); return match ? match[1] : ''; };
 
-        // ============ ✅ مسح بيانات الجلسة فقط (نفس منطق الأدمن والممرض) ============
         const clearLoginSessionOnly = () => {
             try {
                 LOGIN_STORAGE_KEYS.forEach(key => {
@@ -831,7 +817,6 @@
             }
         };
 
-        // ============ تحديث مؤشر المزامنة ============
         const setSyncStatus = (online) => {
             const dot = $('#syncDot');
             if (dot) {
@@ -840,7 +825,6 @@
             }
         };
 
-        // ✅ دالة جلب عدد الكشوفات السابقة للمريض من مسار المجمع
         async function fetchPreviousRecordsCount(patientId) {
             if (!patientId || !currentTenantId) return 0;
             try {
@@ -857,7 +841,6 @@
             }
         }
 
-        // ✅ دالة استرداد وصفة سابقة من مسار المجمع
         async function restorePrescription(rxId) {
             try {
                 const [rxSnap, itemsSnap] = await Promise.all([
@@ -927,14 +910,12 @@
             async recordUsage(drugName, form, dose, freqLabel) { await favoriteDosesDB.recordDose(drugName, form, dose, freqLabel); }
         };
 
-        // ============ ✅ drugManager - محدث بالكامل: بحث ذكي غير حساس لحالة الأحرف وبدون فلترة بالشكل ============
         const drugManager = {
             _cachePromise: null,
             async loadCache() {
                 if (this._cachePromise) return this._cachePromise;
                 this._cachePromise = (async () => {
                     try { 
-                        // ✅ تحميل الأدوية من مسار المجمع أو العام
                         const snap = await get(ref(db, `tenants/${currentTenantId}/drugs`));
                         if (snap.exists()) {
                             state.globalDrugsCache = Object.values(snap.val());
@@ -949,15 +930,11 @@
                 return this._cachePromise;
             },
             
-            // ✅ دالة البحث الرئيسية - غير حساسة لحالة الأحرف وبدون فلترة بالشكل الصيدلي
-            // الشكل الصيدلي يُستخدم فقط للعرض في الروشتة للصيدلي
             async getSuggestions(term, form = null) {
                 const termLower = term.toLowerCase().trim();
                 const suggestions = []; 
                 const seenNames = new Set();
                 
-                // ✅ 1. البحث في المفضلات المحلية أولاً - بحث ذكي غير حساس لحالة الأحرف
-                // نمرر null كـ formFilter عشان نبحث في كل الأشكال
                 const localFavs = await favoritesDB.search(termLower, null, 3);
                 localFavs.forEach(d => { 
                     const key = `${(d.name || '').toLowerCase()}_${(d.form || '').toLowerCase()}_${(d.strength || '').toLowerCase()}`; 
@@ -974,19 +951,15 @@
                     } 
                 });
                 
-                // ✅ 2. البحث في قاعدة البيانات العامة - غير حساس لحالة الأحرف
                 const remainingSlots = 5 - suggestions.length;
                 if (remainingSlots > 0) { 
                     let globalResults = state.globalDrugsCache.filter(d => { 
                         const name = (d.name || '').toLowerCase(); 
                         const strength = (d.strength || '').toLowerCase();
-                        // ✅ بحث ذكي: لو الـ term موجود في الاسم أو التركيز
                         return name.includes(termLower) || 
                                (d.fullName || '').toLowerCase().includes(termLower) ||
                                strength.includes(termLower);
                     }); 
-                    // ✅ لا نفلتر بالشكل - الشكل للعرض فقط في الروشتة
-                    // if (form) globalResults = globalResults.filter(d => d.form === form); 
                     globalResults.sort((a, b) => (b.freq || 0) - (a.freq || 0)); 
                     for (const d of globalResults) { 
                         const key = `${(d.name || '').toLowerCase()}_${(d.form || '').toLowerCase()}`; 
@@ -1094,7 +1067,6 @@
             }
             
             if (apt.status === 'انتظار') { 
-                // ✅ تحديث في مسار المجمع
                 await update(ref(db, `tenants/${currentTenantId}/appointments/${appointmentId}`), { status: 'قيد الكشف' }); 
             }
             state.currentAppointment = apt; 
@@ -1116,7 +1088,6 @@
 
         async function openCompletedPrescriptionForEditing(apt) {
             try {
-                // ✅ جلب الوصفة من مسار المجمع
                 const prescriptionSnap = await get(ref(db, `tenants/${currentTenantId}/prescriptions/${apt.id}`));
                 const itemsSnap = await get(ref(db, `tenants/${currentTenantId}/prescription_items/${apt.id}`));
                 
@@ -1172,7 +1143,6 @@
                 const now = new Date().toISOString();
                 const updates = {};
                 
-                // ✅ حفظ في مسار المجمع
                 updates[`tenants/${currentTenantId}/prescriptions/${state.editingCompletedRxId}/diagnosis`] = diagnosis;
                 updates[`tenants/${currentTenantId}/prescriptions/${state.editingCompletedRxId}/item_count`] = items.length;
                 updates[`tenants/${currentTenantId}/prescriptions/${state.editingCompletedRxId}/updated_at`] = now;
@@ -1311,7 +1281,6 @@
                 if (!dose) { toast('أدخل الجرعة', true); doseInput.focus(); return; }
                 const strength = extractStrength(drugName); const pureName = strength ? drugName.replace(strength, '').trim() : drugName;
                 const freqMatch = dose.match(/كل\s+(\d+)\s*ساعة|مرة\s*واحدة|يومياً|عند\s*اللزوم/); const freqLabel = freqMatch ? freqMatch[0] : '';
-                // ✅ الشكل الصيدلي يُحفظ في الروشتة فقط للصيدلي
                 state.prescription.push({ drug: drugName, form: form, dose });
                 drugManager.recordUsage(drugName, pureName, form, strength);
                 if (freqLabel) doseManager.recordUsage(drugName, form, dose, freqLabel);
@@ -1353,7 +1322,6 @@
             try {
                 const diagnosis = $('#diagnosisInput').value.trim();
                 const now = new Date().toISOString();
-                // ✅ حفظ القالب في مسار المجمع
                 const templateId = push(ref(db, `tenants/${currentTenantId}/prescription_templates/${state.user.uid}`)).key;
                 
                 const templateData = {
@@ -1402,7 +1370,6 @@
             setTimeout(() => $('#newTemplateNameInput').focus(), 100);
         }
 
-        // ✅ فتح الملف الطبي من مسار المجمع
         async function openPatientFile() {
             const pid = state.currentAppointment?.patient_id || state.currentAppointment?.patientId;
             if (!pid) { toast('لا يوجد ملف للمريض', true); return; }
@@ -1606,7 +1573,6 @@
                 return;
             }
             
-            // ✅ تحميل القالب من مسار المجمع
             const snap = await get(ref(db, `tenants/${currentTenantId}/template_items/${templateId}`)); 
             state.prescription = [];
             if (snap.exists()) { state.prescription = Object.values(snap.val()).map(it => ({ drug: it.drug_name || it.drug_id, form: it.form, dose: it.dose })); }
@@ -1635,7 +1601,6 @@
             try {
                 const now = new Date().toISOString();
                 
-                // ✅ حفظ القالب في مسار المجمع
                 if (saveTemplate && templateName) { 
                     let templateId = state.loadedTemplateId; 
                     if (templateAction === 'new' || !templateId) templateId = push(ref(db, `tenants/${currentTenantId}/prescription_templates/${state.user.uid}`)).key; 
@@ -1646,7 +1611,6 @@
                     await update(ref(db), updates); 
                 }
                 
-                // ✅ حفظ الوصفة في مسار المجمع
                 const prescriptionData = { 
                     patient_id: apt.patient_id || apt.patientId || '', 
                     patient_name: getPatientName(apt), 
@@ -1758,14 +1722,12 @@
                 } 
             });
 
-            // ============ ✅ مستمع حدث البحث - محدث: بحث ذكي غير حساس لحالة الأحرف وبدون فلترة بالشكل ============
             let searchTimer;
             $('#drugSearchInput').addEventListener('input', () => {
                 const term = $('#drugSearchInput').value.trim();
                 clearTimeout(searchTimer);
                 if (term.length < 1) { $('#drugSuggestions').style.display = 'none'; return; }
                 searchTimer = setTimeout(async () => {
-                    // ✅ نمرر null كـ form عشان البحث يكون بدون فلترة بالشكل الصيدلي
                     const results = await drugManager.getSuggestions(term, null);
                     const dd = $('#drugSuggestions');
                     if (results.length === 0) { 
@@ -1786,7 +1748,6 @@
                             item.addEventListener('click', (e) => {
                                 if (e.target.closest('.hide-suggestion-btn')) return;
                                 $('#drugSearchInput').value = item.dataset.name;
-                                // ✅ عند اختيار الدواء، يمكن تحديث الشكل الصيدلي تلقائياً إذا كان موجوداً في الاقتراح
                                 if (item.dataset.form && item.dataset.form !== 'tablet') {
                                     $('#drugFormSelect').value = item.dataset.form;
                                 }
@@ -1844,23 +1805,14 @@
                 state._diagTimer = setTimeout(saveSessionToDB, 500); 
             });
             
-            // ============ ✅ تسجيل الخروج - نفس منطق الأدمن والممرض ============
             $('#logoutBtn').addEventListener('click', async () => { 
                 try {
                     toast('👋 جاري تسجيل الخروج...');
-                    
-                    // 1. ✅ مسح بيانات الجلسة فقط (وليس بيانات المجمع)
                     clearLoginSessionOnly();
-                    
-                    // 2. مسح المتغيرات في الذاكرة
                     state.user = null;
                     state.doctorData = null;
                     state.appointments = [];
-                    
-                    // 3. تسجيل الخروج من Firebase Auth
                     await signOut(auth); 
-                    
-                    // 4. إعادة التوجيه لصفحة تسجيل الدخول
                     window.location.href = 'index.html';
                 } catch(e) {
                     console.error('خطأ أثناء تسجيل الخروج:', e);
@@ -1879,7 +1831,6 @@
             $('#closePatientFileBtn').addEventListener('click', () => $('#patientFileModal').style.display = 'none');
             $('#closeSaveTemplateBtn').addEventListener('click', () => $('#saveTemplateModal').style.display = 'none');
             
-            // مستمعي الاتصال
             window.addEventListener('online', () => {
                 setSyncStatus(true);
                 toast('📡 تم استعادة الاتصال');
@@ -1891,52 +1842,67 @@
             });
         };
 
+        // ============ ✅ بدء التشغيل المبسط - tenantId من الرابط ============
         onAuthStateChanged(auth, async (user) => {
             if (!user) { 
                 clearLoginSessionOnly();
                 window.location.href = 'index.html'; 
                 return; 
             }
+            
+            // ✅ 1. نجيب tenantId من الرابط (صفحة تسجيل الدخول بتبعته)
+            const urlParams = new URLSearchParams(window.location.search);
+            const tenantFromUrl = urlParams.get('tenant');
+            
+            if (tenantFromUrl) {
+                currentTenantId = tenantFromUrl;
+                console.log(`✅ تم استلام معرف المجمع من الرابط: ${currentTenantId}`);
+            } else {
+                // ✅ 2. لو مش موجود في الرابط، نجيب من الجلسة المشفرة
+                try {
+                    const encrypted = localStorage.getItem('shifa_secure_session');
+                    if (encrypted) {
+                        const decoded = atob(encrypted);
+                        const match = decoded.match(/"tenantId":"([^"]+)"/);
+                        if (match) {
+                            currentTenantId = match[1];
+                            console.log(`📦 تم استخراج معرف المجمع من الجلسة: ${currentTenantId}`);
+                        }
+                    }
+                } catch (e) {
+                    console.warn('تعذر فك تشفير الجلسة:', e.message);
+                }
+                
+                // ✅ 3. لو لسه مش موجود، نجرب الجلسة القديمة
+                if (!currentTenantId) {
+                    const oldSession = localStorage.getItem('shifa_session');
+                    if (oldSession) {
+                        try {
+                            const parsed = JSON.parse(oldSession);
+                            currentTenantId = parsed.tenantId || user.uid;
+                        } catch (e) {
+                            currentTenantId = user.uid;
+                        }
+                    } else {
+                        currentTenantId = user.uid;
+                    }
+                    console.log(`📦 تم تحديد المجمع من الجلسة القديمة: ${currentTenantId}`);
+                }
+            }
+
             try {
-                // ✅ البحث عن بيانات المستخدم لتحديد المجمع
-                let userData = null;
-                let foundTenantId = null;
-                
-                // البحث في المسار العام أولاً لمعرفة المجمع
-                const publicSnap = await get(ref(db, `users/${user.uid}`));
-                if (publicSnap.exists()) {
-                    userData = publicSnap.val();
-                    foundTenantId = userData.tenantId || user.uid;
+                // ✅ تحميل بيانات المستخدم من مسار المجمع للعرض فقط
+                const tenantUserSnap = await get(ref(db, `tenants/${currentTenantId}/users/${user.uid}`));
+                if (tenantUserSnap.exists()) {
+                    state.user = { uid: user.uid, ...tenantUserSnap.val() };
+                } else {
+                    state.user = { uid: user.uid, name: 'طبيب' };
                 }
                 
-                if (!userData || userData.role !== 'doctor') { 
-                    toast('غير مصرح', true); 
-                    clearLoginSessionOnly();
-                    await signOut(auth); 
-                    window.location.href = 'index.html'; 
-                    return; 
-                }
-                
-                // ✅ تعيين معرف المجمع
-                currentTenantId = foundTenantId;
-                console.log(`✅ تم تحديد المجمع الطبي: ${currentTenantId}`);
-                
-                // ✅ التحقق من وجود الطبيب في مسار المجمع
-                const tenantDoctorSnap = await get(ref(db, `tenants/${currentTenantId}/users/${user.uid}`));
-                if (!tenantDoctorSnap.exists() || tenantDoctorSnap.val().role !== 'doctor') {
-                    toast('غير مصرح لك بالدخول لهذا المجمع', true);
-                    clearLoginSessionOnly();
-                    await signOut(auth);
-                    setTimeout(() => { window.location.href = 'index.html'; }, 2000);
-                    return;
-                }
-                
-                state.user = { uid: user.uid, ...userData };
                 $('#welcomeMsg').textContent = `د. ${state.user.name||'طبيب'}`; 
                 $('#welcomeMsg').style.display = 'inline';
                 
-                // ✅ عرض اسم المجمع
-                const tenantName = userData.tenantName || 'المجمع الطبي';
+                const tenantName = state.user.tenantName || 'المجمع الطبي';
                 $('#tenantName').textContent = tenantName;
                 
                 sessionStorage.setItem('userUid', user.uid); 
@@ -1946,7 +1912,6 @@
                 await Promise.all([sessionDB.open(), favoritesDB.open(), favoriteDosesDB.open(), drugManager.loadCache()]);
                 setupEventListeners();
                 
-                // ✅ قراءة الكشوفات من مسار المجمع - نفس مكان الممرض
                 const q = query(ref(db, `tenants/${currentTenantId}/appointments`), orderByChild('doctor_id'), equalTo(user.uid));
                 onValue(q, (snap) => {
                     const apps = []; 
@@ -1977,9 +1942,12 @@
                 
                 $('#appLoader').style.display = 'none'; 
                 $('#mainContainer').style.display = 'block';
+                
             } catch (error) { 
                 console.error('خطأ في بدء التشغيل:', error); 
-                toast('حدث خطأ في تحميل البيانات', true); 
+                $('#appLoader').style.display = 'none'; 
+                $('#mainContainer').style.display = 'block';
+                toast('⚠️ تعذر تحميل بعض البيانات', true); 
             }
         });
 
