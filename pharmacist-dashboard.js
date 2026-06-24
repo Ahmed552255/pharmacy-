@@ -113,13 +113,10 @@ function loadSavedDoctor() {
 // ✅ مسح بيانات الجلسة فقط (نفس منطق الأدمن والممرض والطبيب)
 function clearLoginSessionOnly() {
     try {
-        // 1️⃣ مسح مفاتيح تسجيل الدخول المعروفة
         LOGIN_STORAGE_KEYS.forEach(key => {
             localStorage.removeItem(key);
         });
         
-        // 2️⃣ مسح أي مفاتيح تبدأ بـ shifa_session أو shifa_secure (الجلسات فقط)
-        // لكن نحتفظ بـ shifa_tenant_ (بيانات المجمع)
         const sessionKeysToRemove = [];
         for (let i = 0; i < localStorage.length; i++) {
             const key = localStorage.key(i);
@@ -129,7 +126,6 @@ function clearLoginSessionOnly() {
         }
         sessionKeysToRemove.forEach(key => localStorage.removeItem(key));
         
-        // 3️⃣ مسح sessionStorage بالكامل (بيانات الجلسة المؤقتة)
         sessionStorage.clear();
         
         console.log(`✅ تم مسح ${LOGIN_STORAGE_KEYS.length + sessionKeysToRemove.length} مفتاح جلسة`);
@@ -139,43 +135,36 @@ function clearLoginSessionOnly() {
     }
 }
 
+// ✅ تحميل بيانات الصيدلي من مسار المجمع (للعرض فقط - بدون طرد)
 async function loadPharmacistData(user) {
     try {
-        // ✅ البحث عن بيانات المستخدم لتحديد المجمع
-        const publicSnap = await get(ref(db, `users/${user.uid}`));
-        if (!publicSnap.exists()) {
-            showToast('بيانات الصيدلي غير موجودة.', true);
-            return false;
+        // ✅ جلب بيانات الصيدلي من مسار المجمع
+        const tenantUserSnap = await get(ref(db, `tenants/${currentTenantId}/users/${user.uid}`));
+        
+        if (tenantUserSnap.exists()) {
+            pharmacistInfo = { id: user.uid, ...tenantUserSnap.val() };
+        } else {
+            // محاولة المسار العام للتوافق
+            const publicSnap = await get(ref(db, `users/${user.uid}`));
+            if (publicSnap.exists()) {
+                pharmacistInfo = { id: user.uid, ...publicSnap.val() };
+            } else {
+                pharmacistInfo = { id: user.uid, name: 'صيدلي', role: 'pharmacist' };
+            }
         }
         
-        const userData = publicSnap.val();
-        if (userData.role !== 'pharmacist') {
-            showToast('هذا الحساب ليس حساب صيدلي.', true);
-            return false;
-        }
-        
-        // ✅ تعيين معرف المجمع
-        currentTenantId = userData.tenantId || user.uid;
-        console.log(`✅ تم تحديد المجمع الطبي للصيدلي: ${currentTenantId}`);
-        
-        // ✅ التحقق من وجود الصيدلي في مسار المجمع
-        const tenantPharmacistSnap = await get(ref(db, `tenants/${currentTenantId}/users/${user.uid}`));
-        if (!tenantPharmacistSnap.exists() || tenantPharmacistSnap.val().role !== 'pharmacist') {
-            // لو مش موجود في مسار المجمع، استخدم البيانات العامة
-            console.log('⚠️ الصيدلي غير موجود في مسار المجمع، استخدام البيانات العامة');
-        }
-        
-        pharmacistInfo = userData;
         UI.welcomeMessage.textContent = `أهلاً، ${pharmacistInfo.name || 'صيدلي'}`;
         
         // ✅ عرض اسم المجمع
-        const tenantName = userData.tenantName || 'المجمع الطبي';
+        const tenantName = pharmacistInfo.tenantName || 'المجمع الطبي';
         if (UI.tenantName) UI.tenantName.textContent = tenantName;
         
         return true;
     } catch (err) {
-        showToast('فشل تحميل البيانات', true);
-        return false;
+        console.warn('تعذر تحميل بيانات الصيدلي:', err.message);
+        pharmacistInfo = { id: user.uid, name: 'صيدلي', role: 'pharmacist' };
+        UI.welcomeMessage.textContent = `أهلاً، صيدلي`;
+        return true;
     }
 }
 
@@ -183,7 +172,6 @@ async function loadPharmacistData(user) {
 function loadDoctors() {
     if (!currentTenantId) return;
     
-    // ✅ جلب الأطباء من مسار المجمع
     const usersRef = ref(db, `tenants/${currentTenantId}/users`);
     if (unsubscribeDoctors) unsubscribeDoctors();
     
@@ -196,7 +184,6 @@ function loadDoctors() {
             }
         });
         
-        // ✅ لو مفيش أطباء في مسار المجمع، نجرب المسار العام للتوافق
         if (docs.length === 0) {
             console.log('⚠️ لا يوجد أطباء في مسار المجمع، محاولة المسار العام...');
             loadDoctorsFromPublic();
@@ -209,7 +196,6 @@ function loadDoctors() {
     }, (error) => {
         console.warn('خطأ في تحميل الأطباء من المجمع:', error.message);
         setSyncStatus(false);
-        // محاولة التحميل من المسار العام
         loadDoctorsFromPublic();
     });
 }
@@ -223,7 +209,6 @@ function loadDoctorsFromPublic() {
         const docs = [];
         snap.forEach(child => {
             const user = child.val();
-            // ✅ التأكد من أن الدكتور في نفس المجمع
             if (user.role === 'doctor' && (user.tenantId === currentTenantId || user.tenantId === undefined)) {
                 docs.push({ id: child.key, ...user });
             }
@@ -307,7 +292,6 @@ async function refreshItemsCount() {
 function loadAllPrescriptions() {
     if (!currentTenantId) return;
     
-    // ✅ الوصفات من مسار المجمع
     const presRef = ref(db, `tenants/${currentTenantId}/prescriptions`);
     if (unsubscribePrescriptions) unsubscribePrescriptions();
     
@@ -327,7 +311,6 @@ function loadAllPrescriptions() {
     }, async (error) => {
         console.warn('خطأ في تحميل الوصفات من المجمع:', error.message);
         setSyncStatus(false);
-        // ✅ محاولة التحميل من المسار العام للتوافق
         loadPrescriptionsFromPublic();
     });
 }
@@ -341,7 +324,6 @@ function loadPrescriptionsFromPublic() {
         const prescriptions = [];
         snap.forEach(child => {
             const rx = child.val();
-            // ✅ التأكد من أن الوصفة في نفس المجمع
             if (rx.tenantId === currentTenantId || rx.tenantId === undefined) {
                 prescriptions.push({ id: child.key, ...rx });
             }
@@ -369,7 +351,6 @@ function renderPrescriptionsForDoctor() {
     const tabStatus = currentDoctorTab;
     let filtered = allPrescriptions.filter(p => p.doctor_id === selectedDoctorId && p.status === tabStatus);
 
-    // فلترة إضافية للوصفات المصروفة لتشمل تاريخ اليوم فقط
     if (tabStatus === 'تم الصرف') {
         filtered = filtered.filter(p => {
             if (!p.dispensed_at) return false;
@@ -404,7 +385,6 @@ function renderPrescriptionsForDoctor() {
     });
     UI.prescriptionsListContainer.innerHTML = html;
 
-    // ربط الأحداث
     document.querySelectorAll('.rx-item-card').forEach(card => {
         card.addEventListener('click', (e) => {
             if (e.target.closest('.open-details-btn')) return;
@@ -419,14 +399,11 @@ function renderPrescriptionsForDoctor() {
     });
 }
 
-/** فتح تفاصيل الروشتة في نفس النافذة */
 function openPrescriptionDetails(prescriptionId) {
     if (!prescriptionId) return;
-    // ✅ تمرير معرف المجمع مع الرابط
     window.location.href = `prescription-details.html?id=${prescriptionId}&tenant=${currentTenantId}`;
 }
 
-// ✅ تحميل بيانات المرضى من مسار المجمع
 function loadPatients() {
     if (!currentTenantId) return;
     
@@ -441,7 +418,6 @@ function loadPatients() {
         patientsMap = map;
     }, (error) => {
         console.warn('خطأ في تحميل المرضى من المجمع:', error.message);
-        // محاولة التحميل من المسار العام
         loadPatientsFromPublic();
     });
 }
@@ -462,7 +438,6 @@ function loadPatientsFromPublic() {
     });
 }
 
-// ---------- البحث عن مريض ----------
 function openSearchModal() {
     UI.searchPatientModal.style.display = 'flex';
     UI.patientSearchInput.value = '';
@@ -489,7 +464,6 @@ async function searchPatients() {
     let results = [];
     const seen = new Set();
 
-    // البحث في patientsMap
     for (const [id, p] of Object.entries(patientsMap)) {
         if (seen.has(id)) continue;
         const nameMatch = p.name && p.name.toLowerCase().includes(lowerTerm);
@@ -500,7 +474,6 @@ async function searchPatients() {
         }
     }
 
-    // البحث في prescriptions كخطة احتياطية
     if (results.length === 0) {
         for (const p of allPrescriptions) {
             const patientId = p.patient_id;
@@ -569,12 +542,10 @@ UI.tabBtns.forEach(btn => {
     });
 });
 
-// ✅ زر تسجيل الخروج - نفس منطق الأدمن والممرض والطبيب
 UI.logoutBtn?.addEventListener('click', async () => {
     try {
         showToast('👋 جاري تسجيل الخروج...');
         
-        // 1. إلغاء مستمعي Firebase
         if (unsubscribePrescriptions) {
             unsubscribePrescriptions();
             unsubscribePrescriptions = null;
@@ -588,38 +559,30 @@ UI.logoutBtn?.addEventListener('click', async () => {
             unsubscribePatients = null;
         }
         
-        // 2. ✅ مسح بيانات الجلسة فقط (وليس بيانات المجمع)
         clearLoginSessionOnly();
         
-        // 3. مسح المتغيرات في الذاكرة
         currentUser = null;
         pharmacistInfo = null;
         doctorsList = [];
         allPrescriptions = [];
         
-        // 4. تسجيل الخروج من Firebase Auth
         await signOut(auth);
         
-        // 5. إعادة التوجيه لصفحة تسجيل الدخول
         window.location.href = 'index.html';
         
     } catch (error) {
         console.error('خطأ أثناء تسجيل الخروج:', error);
-        
-        // حتى في حالة الخطأ، نمسح الجلسة فقط ونتوجه لصفحة الدخول
         clearLoginSessionOnly();
         window.location.href = 'index.html';
     }
 });
 
-// إغلاق المودال بزر ESC
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && UI.searchPatientModal?.style.display === 'flex') {
         closeSearchModal();
     }
 });
 
-// ---------- مستمعي الاتصال بالإنترنت ----------
 window.addEventListener('online', () => {
     setSyncStatus(true);
     showToast('📡 تم استعادة الاتصال - جاري المزامنة');
@@ -630,25 +593,58 @@ window.addEventListener('offline', () => {
     showToast('⚠️ انقطع الاتصال - استخدام البيانات المحلية', true);
 });
 
-// ---------- بدء التشغيل ----------
+// ============ ✅ بدء التشغيل المبسط - tenantId من الرابط ============
 onAuthStateChanged(auth, async (user) => {
     if (!user) {
-        // ✅ مسح بيانات الجلسة لو المستخدم مش موجود
         clearLoginSessionOnly();
         window.location.href = 'index.html';
         return;
     }
     
     currentUser = user;
-    const valid = await loadPharmacistData(user);
-    if (!valid) {
-        UI.welcomeMessage.textContent = 'خطأ في تحميل البيانات';
-        // ✅ مسح البيانات في حالة فشل التحقق
-        clearLoginSessionOnly();
-        await signOut(auth);
-        setTimeout(() => { window.location.href = 'index.html'; }, 2000);
-        return;
+    
+    // ✅ 1. نجيب tenantId من الرابط (صفحة تسجيل الدخول بتبعته)
+    const urlParams = new URLSearchParams(window.location.search);
+    const tenantFromUrl = urlParams.get('tenant');
+    
+    if (tenantFromUrl) {
+        currentTenantId = tenantFromUrl;
+        console.log(`✅ تم استلام معرف المجمع من الرابط: ${currentTenantId}`);
+    } else {
+        // ✅ 2. لو مش موجود في الرابط، نجيب من الجلسة المشفرة
+        try {
+            const encrypted = localStorage.getItem('shifa_secure_session');
+            if (encrypted) {
+                const decoded = atob(encrypted);
+                const match = decoded.match(/"tenantId":"([^"]+)"/);
+                if (match) {
+                    currentTenantId = match[1];
+                    console.log(`📦 تم استخراج معرف المجمع من الجلسة: ${currentTenantId}`);
+                }
+            }
+        } catch (e) {
+            console.warn('تعذر فك تشفير الجلسة:', e.message);
+        }
+        
+        // ✅ 3. لو لسه مش موجود، نجرب الجلسة القديمة
+        if (!currentTenantId) {
+            const oldSession = localStorage.getItem('shifa_session');
+            if (oldSession) {
+                try {
+                    const parsed = JSON.parse(oldSession);
+                    currentTenantId = parsed.tenantId || user.uid;
+                } catch (e) {
+                    currentTenantId = user.uid;
+                }
+            } else {
+                currentTenantId = user.uid;
+            }
+            console.log(`📦 تم تحديد المجمع من الجلسة القديمة: ${currentTenantId}`);
+        }
     }
+    
+    // ✅ تحميل بيانات الصيدلي (للعرض فقط - بدون طرد)
+    await loadPharmacistData(user);
     
     // ✅ تحميل الطبيب المحفوظ من التخزين المحلي للمجمع
     const savedDoctorId = loadSavedDoctor();
@@ -661,7 +657,6 @@ onAuthStateChanged(auth, async (user) => {
     loadPatients();
 });
 
-// تحسين: في الأجهزة الصغيرة، افتح الشريط الجانبي تلقائياً إذا لم يتم اختيار طبيب
 if (window.innerWidth <= 800 && !selectedDoctorId) {
     UI.doctorsSidebar?.classList.add('show');
 }
