@@ -706,36 +706,71 @@
         // ============ محتوى الزر الافتراضي ============
         const defaultBtnContent = dom.btnContent.innerHTML;
 
-        // ============ ✅ جلب بيانات المستخدم من المسارين (العام والمجمع) ============
+        // ============ ✅ جلب بيانات المستخدم من مسار المجمع (يبحث في كل المجمعات) ============
         const fetchUserData = async (uid) => {
             try {
-                // 1️⃣ جرب المسار العام أولاً (للتوافق مع البيانات القديمة)
-                const publicSnap = await get(ref(db, `users/${uid}`));
-                const userData = publicSnap.exists() ? publicSnap.val() : null;
+                // 1️⃣ نجيب كل المجمعات الموجودة
+                const tenantsSnap = await get(ref(db, 'tenants'));
                 
-                if (!userData || !userData.role) {
-                    return null;
-                }
-                
-                // 2️⃣ حدد معرف المجمع
-                const tenantId = userData.tenantId || uid;
-                
-                // 3️⃣ جرب تجيب بيانات إضافية من مسار المجمع
-                try {
-                    const tenantSnap = await get(ref(db, `tenants/${tenantId}/users/${uid}`));
-                    if (tenantSnap.exists()) {
-                        // دمج البيانات من المسارين (المجمع له الأولوية)
-                        return { ...userData, ...tenantSnap.val(), tenantId };
+                if (tenantsSnap.exists()) {
+                    const tenants = tenantsSnap.val();
+                    
+                    // 2️⃣ ندور على المستخدم في كل مجمع
+                    for (const tenantId of Object.keys(tenants)) {
+                        const tenantUserSnap = await get(ref(db, `tenants/${tenantId}/users/${uid}`));
+                        
+                        if (tenantUserSnap.exists()) {
+                            // ✅ لقينا المستخدم في المجمع ده
+                            const userData = tenantUserSnap.val();
+                            
+                            // لو معندوش tenantId، نضيفه
+                            if (!userData.tenantId) {
+                                userData.tenantId = tenantId;
+                            }
+                            
+                            // نجيب اسم المجمع لو موجود
+                            const tenantName = tenants[tenantId]?.name || tenants[tenantId]?.tenantName || 
+                                              (tenants[tenantId]?.users?.[tenantId]?.name) || 'المجمع الطبي';
+                            userData.tenantName = userData.tenantName || tenantName;
+                            
+                            console.log(`✅ تم العثور على المستخدم في مجمع: ${tenantId}`);
+                            return userData;
+                        }
                     }
-                } catch (e) {
-                    // المسار مش موجود، استخدم البيانات العامة عادي
                 }
                 
-                // 4️⃣ رجع البيانات العامة مع tenantId
-                return { ...userData, tenantId };
+                // 3️⃣ لو ملقتش في المجمعات، جرب المسار العام (للتوافق مع البيانات القديمة)
+                const publicSnap = await get(ref(db, `users/${uid}`));
+                if (publicSnap.exists()) {
+                    const userData = publicSnap.val();
+                    
+                    // لو معندوش tenantId، نخليه هو uid بتاعه
+                    if (!userData.tenantId) {
+                        userData.tenantId = uid;
+                    }
+                    
+                    console.log(`⚠️ تم العثور على المستخدم في المسار العام (قديم)`);
+                    return userData;
+                }
+                
+                // 4️⃣ المستخدم مش موجود خالص
+                return null;
                 
             } catch (error) {
-                console.error("خطأ في جلب بيانات المستخدم:", error);
+                console.error("❌ خطأ في جلب بيانات المستخدم:", error);
+                
+                // في حالة الخطأ، جرب المسار العام كآخر محاولة
+                try {
+                    const publicSnap = await get(ref(db, `users/${uid}`));
+                    if (publicSnap.exists()) {
+                        const userData = publicSnap.val();
+                        userData.tenantId = userData.tenantId || uid;
+                        return userData;
+                    }
+                } catch (e) {
+                    // تجاهل
+                }
+                
                 return null;
             }
         };
@@ -951,7 +986,7 @@
                 const userCredential = await signInWithEmailAndPassword(auth, email, password);
                 const user = userCredential.user;
 
-                // ✅ جلب بيانات المستخدم من المسارين (العام + المجمع)
+                // ✅ جلب بيانات المستخدم من مسار المجمع (يبحث في كل المجمعات)
                 const userData = await fetchUserData(user.uid);
 
                 if (!userData || !userData.role) {
