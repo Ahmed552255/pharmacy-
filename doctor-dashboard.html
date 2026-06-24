@@ -100,6 +100,19 @@
         .logo { display: flex; align-items: center; gap: clamp(4px, 1.5vw, 8px); flex-shrink: 0; }
         .logo h2 { font-size: clamp(1.1rem, 4vw, 1.4rem); font-weight: 900; background: linear-gradient(135deg, #008080, #00AEEF); -webkit-background-clip: text; background-clip: text; color: transparent; white-space: nowrap; }
         
+        .tenant-badge {
+            background: var(--primary-light);
+            padding: 4px 10px;
+            border-radius: var(--radius-xl);
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: var(--primary-dark);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            white-space: nowrap;
+        }
+
         .queue-tabs {
             display: flex; gap: 4px; background: rgba(0,0,0,0.03); border-radius: var(--radius-xl); padding: 3px;
             margin-bottom: clamp(8px, 2vw, 12px);
@@ -141,6 +154,17 @@
             width: 20px; height: 20px; font-size: 0.65rem; font-weight: 800;
             margin-left: 2px; line-height: 1;
         }
+
+        .sync-dot {
+            display: inline-block;
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            margin-left: 5px;
+            vertical-align: middle;
+        }
+        .sync-dot.on { background: var(--success); }
+        .sync-dot.off { background: #FFB74D; }
         
         .main-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(300px, 340px); gap: clamp(8px, 2vw, 12px); align-items: start; }
 
@@ -388,9 +412,12 @@
     <div class="container" id="mainContainer" style="display:none;">
         <header class="app-header">
             <div class="logo">
-                <h2><i class="fas fa-heartbeat"></i> شفاء</h2>
+                <h2><i class="fas fa-heartbeat"></i> شفاء <span class="sync-dot on" id="syncDot" title="حالة المزامنة"></span></h2>
             </div>
             <div class="header-actions">
+                <span class="tenant-badge" id="tenantBadge">
+                    <i class="fas fa-hospital"></i> <span id="tenantName">المجمع الطبي</span>
+                </span>
                 <span id="welcomeMsg" style="font-weight:600;font-size:0.85rem;display:none;"></span>
                 <button class="btn btn-outline btn-sm" id="sessionsBtn" aria-label="الجلسات المعلقة">
                     <i class="fas fa-clock"></i> <span class="hide-mobile">معلق</span>
@@ -620,18 +647,70 @@
         const auth = getAuth(app);
         const db = getDatabase(app);
 
-        const LOGIN_STORAGE_KEYS = ['shifa_session', 'shifa_remember', 'shifa_last_login'];
+        // ============ ✅ ثوابت التخزين المحلي - نفس منطق الأدمن والممرض ============
+        const STORAGE_PREFIX = 'shifa_tenant_';
+        
+        // ✅ مفاتيح تسجيل الدخول فقط (اللي هتمسح عند الخروج)
+        const LOGIN_STORAGE_KEYS = [
+            'shifa_session',
+            'shifa_remember',
+            'shifa_last_login',
+            'shifa_secure_session'
+        ];
+        
+        // ✅ معرف المجمع الطبي الحالي
+        let currentTenantId = null;
+        
+        // ✅ دوال مفاتيح التخزين لكل مجمع
+        const getTenantStorageKey = (baseKey) => {
+            return currentTenantId ? `${STORAGE_PREFIX}${currentTenantId}_${baseKey}` : baseKey;
+        };
 
         class SessionDB {
-            constructor() { this.dbName = 'ShifaDoctorDB'; this.storeName = 'pendingSessions'; this.db = null; }
-            async open() { if (this.db) return; return new Promise((resolve, reject) => { const req = indexedDB.open(this.dbName, 1); req.onupgradeneeded = (e) => { const db = e.target.result; if (!db.objectStoreNames.contains(this.storeName)) db.createObjectStore(this.storeName, { keyPath: 'id' }); }; req.onsuccess = (e) => { this.db = e.target.result; resolve(); }; req.onerror = (e) => reject(e.target.error); }); }
+            constructor() { 
+                this._dbName = null;
+            }
+            get dbName() {
+                if (!this._dbName) {
+                    this._dbName = currentTenantId ? `ShifaDoctorDB_${currentTenantId}` : 'ShifaDoctorDB';
+                }
+                return this._dbName;
+            }
+            get storeName() { return 'pendingSessions'; }
+            get db() { return this._db; }
+            set db(val) { this._db = val; }
+            
+            async open() { 
+                if (this.db) return; 
+                return new Promise((resolve, reject) => { 
+                    const req = indexedDB.open(this.dbName, 1); 
+                    req.onupgradeneeded = (e) => { 
+                        const db = e.target.result; 
+                        if (!db.objectStoreNames.contains(this.storeName)) db.createObjectStore(this.storeName, { keyPath: 'id' }); 
+                    }; 
+                    req.onsuccess = (e) => { this.db = e.target.result; resolve(); }; 
+                    req.onerror = (e) => reject(e.target.error); 
+                }); 
+            }
             async save(session) { if (!this.db) await this.open(); return new Promise((resolve, reject) => { const tx = this.db.transaction(this.storeName, 'readwrite'); tx.objectStore(this.storeName).put(session); tx.oncomplete = resolve; tx.onerror = () => reject(tx.error); }); }
             async getAll() { if (!this.db) await this.open(); return new Promise((resolve, reject) => { const tx = this.db.transaction(this.storeName, 'readonly'); const req = tx.objectStore(this.storeName).getAll(); req.onsuccess = () => resolve(req.result || []); req.onerror = () => reject(req.error); }); }
             async delete(id) { if (!this.db) await this.open(); return new Promise((resolve, reject) => { const tx = this.db.transaction(this.storeName, 'readwrite'); tx.objectStore(this.storeName).delete(id); tx.oncomplete = resolve; tx.onerror = () => reject(tx.error); }); }
         }
 
         class FavoriteDrugsDB {
-            constructor() { this.dbName = 'ShifaFavoritesDB'; this.storeName = 'favoriteDrugs'; this.db = null; }
+            constructor() { 
+                this._dbName = null;
+            }
+            get dbName() {
+                if (!this._dbName) {
+                    this._dbName = currentTenantId ? `ShifaFavoritesDB_${currentTenantId}` : 'ShifaFavoritesDB';
+                }
+                return this._dbName;
+            }
+            get storeName() { return 'favoriteDrugs'; }
+            get db() { return this._db; }
+            set db(val) { this._db = val; }
+            
             async open() { if (this.db) return; return new Promise((resolve, reject) => { const req = indexedDB.open(this.dbName, 1); req.onupgradeneeded = (e) => { const db = e.target.result; if (!db.objectStoreNames.contains(this.storeName)) { const store = db.createObjectStore(this.storeName, { keyPath: 'fullName' }); store.createIndex('usageCount', 'usageCount', { unique: false }); } }; req.onsuccess = (e) => { this.db = e.target.result; resolve(); }; req.onerror = (e) => reject(e.target.error); }); }
             async getAll() { if (!this.db) await this.open(); return new Promise((resolve, reject) => { const tx = this.db.transaction(this.storeName, 'readonly'); const req = tx.objectStore(this.storeName).getAll(); req.onsuccess = () => resolve(req.result || []); req.onerror = () => reject(req.error); }); }
             async incrementAndSave(fullName, name, form, strength) { if (!this.db) await this.open(); const tx = this.db.transaction(this.storeName, 'readwrite'); const store = tx.objectStore(this.storeName); const req = store.get(fullName); req.onsuccess = () => { let drug = req.result; if (drug) { drug.usageCount = (drug.usageCount || 0) + 1; drug.lastUsed = new Date().toISOString(); } else { drug = { fullName, name, form, strength, usageCount: 1, hidden: false, firstUsed: new Date().toISOString(), lastUsed: new Date().toISOString() }; } store.put(drug); }; }
@@ -640,7 +719,19 @@
         }
 
         class FavoriteDosesDB {
-            constructor() { this.dbName = 'ShifaDosesDB'; this.storeName = 'favoriteDoses'; this.db = null; }
+            constructor() { 
+                this._dbName = null;
+            }
+            get dbName() {
+                if (!this._dbName) {
+                    this._dbName = currentTenantId ? `ShifaDosesDB_${currentTenantId}` : 'ShifaDosesDB';
+                }
+                return this._dbName;
+            }
+            get storeName() { return 'favoriteDoses'; }
+            get db() { return this._db; }
+            set db(val) { this._db = val; }
+            
             async open() { if (this.db) return; return new Promise((resolve, reject) => { const req = indexedDB.open(this.dbName, 1); req.onupgradeneeded = (e) => { const db = e.target.result; if (!db.objectStoreNames.contains(this.storeName)) { const store = db.createObjectStore(this.storeName, { keyPath: 'id' }); store.createIndex('usageCount', 'usageCount', { unique: false }); } }; req.onsuccess = (e) => { this.db = e.target.result; resolve(); }; req.onerror = (e) => reject(e.target.error); }); }
             async getAll() { if (!this.db) await this.open(); return new Promise((resolve, reject) => { const tx = this.db.transaction(this.storeName, 'readonly'); const req = tx.objectStore(this.storeName).getAll(); req.onsuccess = () => resolve(req.result || []); req.onerror = () => reject(req.error); }); }
             async recordDose(drugName, form, dose, freqLabel) { if (!this.db) await this.open(); const id = `${drugName}_${form}_${dose}`; const tx = this.db.transaction(this.storeName, 'readwrite'); const store = tx.objectStore(this.storeName); const req = store.get(id); req.onsuccess = () => { let entry = req.result; if (entry) { entry.usageCount = (entry.usageCount || 0) + 1; entry.lastUsed = new Date().toISOString(); } else { entry = { id, drugName, form, dose, freqLabel, usageCount: 1, firstUsed: new Date().toISOString(), lastUsed: new Date().toISOString() }; } store.put(entry); }; }
@@ -657,7 +748,6 @@
             activeSessionId: null, drugCache: [], globalDrugsCache: [], currentTab: 'current',
             editingPrescription: null, editingRxId: null, editingPatientName: '',
             isEditingCompleted: false, editingCompletedRxId: null,
-            // ✅ عداد السجلات السابقة
             previousRecordsCount: 0
         };
 
@@ -669,20 +759,45 @@
         const getPatientName = (apt) => apt?.patient_name || apt?.patientName || 'غير معروف';
         const extractStrength = (text) => { const match = text.match(/(\d+(?:\.\d+)?\s*(?:gm|g|gram|mg|mcg|mcgm|IU|MU|ml|%|mcg\/ml|mg\/ml|mg\/5ml|mcg\/puff)(?:\/\d*\s*(?:ml|gm|g))?)/i); return match ? match[1] : ''; };
 
-        function clearAllLoginData() {
+        // ============ ✅ مسح بيانات الجلسة فقط (نفس منطق الأدمن والممرض) ============
+        const clearLoginSessionOnly = () => {
             try {
-                LOGIN_STORAGE_KEYS.forEach(key => localStorage.removeItem(key));
-                sessionStorage.removeItem('userUid');
-                sessionStorage.removeItem('userRole');
-                sessionStorage.removeItem('userName');
-            } catch (e) { console.warn('تعذر مسح بيانات الجلسة:', e.message); }
-        }
+                LOGIN_STORAGE_KEYS.forEach(key => {
+                    localStorage.removeItem(key);
+                });
+                
+                const sessionKeysToRemove = [];
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key && (key.startsWith('shifa_session') || key.startsWith('shifa_secure'))) {
+                        sessionKeysToRemove.push(key);
+                    }
+                }
+                sessionKeysToRemove.forEach(key => localStorage.removeItem(key));
+                
+                sessionStorage.clear();
+                
+                console.log(`✅ تم مسح ${LOGIN_STORAGE_KEYS.length + sessionKeysToRemove.length} مفتاح جلسة`);
+                console.log('💾 تم الإبقاء على بيانات المجمع المحلية');
+            } catch (e) {
+                console.warn('تعذر مسح بيانات الجلسة:', e.message);
+            }
+        };
 
-        // ✅ دالة جلب عدد الكشوفات السابقة للمريض
+        // ============ تحديث مؤشر المزامنة ============
+        const setSyncStatus = (online) => {
+            const dot = $('#syncDot');
+            if (dot) {
+                dot.className = `sync-dot ${online ? 'on' : 'off'}`;
+                dot.title = online ? 'متصل بالسحابة' : 'غير متصل - استخدام البيانات المحلية';
+            }
+        };
+
+        // ✅ دالة جلب عدد الكشوفات السابقة للمريض من مسار المجمع
         async function fetchPreviousRecordsCount(patientId) {
-            if (!patientId) return 0;
+            if (!patientId || !currentTenantId) return 0;
             try {
-                const snap = await get(ref(db, 'prescriptions'));
+                const snap = await get(ref(db, `tenants/${currentTenantId}/prescriptions`));
                 if (!snap.exists()) return 0;
                 let count = 0;
                 snap.forEach(child => {
@@ -695,12 +810,12 @@
             }
         }
 
-        // ✅ دالة استرداد وصفة سابقة
+        // ✅ دالة استرداد وصفة سابقة من مسار المجمع
         async function restorePrescription(rxId) {
             try {
                 const [rxSnap, itemsSnap] = await Promise.all([
-                    get(ref(db, `prescriptions/${rxId}`)),
-                    get(ref(db, `prescription_items/${rxId}`))
+                    get(ref(db, `tenants/${currentTenantId}/prescriptions/${rxId}`)),
+                    get(ref(db, `tenants/${currentTenantId}/prescription_items/${rxId}`))
                 ]);
                 
                 if (rxSnap.exists()) {
@@ -770,7 +885,16 @@
             async loadCache() {
                 if (this._cachePromise) return this._cachePromise;
                 this._cachePromise = (async () => {
-                    try { const snap = await get(ref(db, 'drugs')); state.globalDrugsCache = snap.exists() ? Object.values(snap.val()) : []; } catch(e) { state.globalDrugsCache = []; }
+                    try { 
+                        // ✅ تحميل الأدوية من مسار المجمع أو العام
+                        const snap = await get(ref(db, `tenants/${currentTenantId}/drugs`));
+                        if (snap.exists()) {
+                            state.globalDrugsCache = Object.values(snap.val());
+                        } else {
+                            const globalSnap = await get(ref(db, 'drugs'));
+                            state.globalDrugsCache = globalSnap.exists() ? Object.values(globalSnap.val()) : [];
+                        }
+                    } catch(e) { state.globalDrugsCache = []; }
                     try { const module = await import('./drugs-database.js'); const localDrugs = module.default || module.drugsDatabase || []; const seen = new Set(state.globalDrugsCache.map(d => d.name?.toLowerCase())); localDrugs.forEach(name => { if (!seen.has(name.toLowerCase())) { state.globalDrugsCache.push({ id: `local_${state.globalDrugsCache.length}`, name, form: 'tablet', freq: 0 }); } }); } catch(e) {}
                     state.drugCache = [...state.globalDrugsCache];
                 })();
@@ -866,7 +990,8 @@
             }
             
             if (apt.status === 'انتظار') { 
-                await update(ref(db, `appointments/${appointmentId}`), { status: 'قيد الكشف' }); 
+                // ✅ تحديث في مسار المجمع
+                await update(ref(db, `tenants/${currentTenantId}/appointments/${appointmentId}`), { status: 'قيد الكشف' }); 
             }
             state.currentAppointment = apt; 
             state.prescription = []; 
@@ -878,7 +1003,6 @@
             const diagInput = $('#diagnosisInput'); 
             if (diagInput) diagInput.value = '';
             
-            // ✅ جلب عدد الكشوفات السابقة
             const patientId = apt.patient_id || apt.patientId;
             state.previousRecordsCount = await fetchPreviousRecordsCount(patientId);
             
@@ -888,8 +1012,9 @@
 
         async function openCompletedPrescriptionForEditing(apt) {
             try {
-                const prescriptionSnap = await get(ref(db, `prescriptions/${apt.id}`));
-                const itemsSnap = await get(ref(db, `prescription_items/${apt.id}`));
+                // ✅ جلب الوصفة من مسار المجمع
+                const prescriptionSnap = await get(ref(db, `tenants/${currentTenantId}/prescriptions/${apt.id}`));
+                const itemsSnap = await get(ref(db, `tenants/${currentTenantId}/prescription_items/${apt.id}`));
                 
                 let diagnosis = '';
                 let items = [];
@@ -943,21 +1068,22 @@
                 const now = new Date().toISOString();
                 const updates = {};
                 
-                updates[`prescriptions/${state.editingCompletedRxId}/diagnosis`] = diagnosis;
-                updates[`prescriptions/${state.editingCompletedRxId}/item_count`] = items.length;
-                updates[`prescriptions/${state.editingCompletedRxId}/updated_at`] = now;
-                updates[`prescriptions/${state.editingCompletedRxId}/last_edited_by`] = state.user.uid;
-                updates[`prescriptions/${state.editingCompletedRxId}/last_edited_at`] = now;
+                // ✅ حفظ في مسار المجمع
+                updates[`tenants/${currentTenantId}/prescriptions/${state.editingCompletedRxId}/diagnosis`] = diagnosis;
+                updates[`tenants/${currentTenantId}/prescriptions/${state.editingCompletedRxId}/item_count`] = items.length;
+                updates[`tenants/${currentTenantId}/prescriptions/${state.editingCompletedRxId}/updated_at`] = now;
+                updates[`tenants/${currentTenantId}/prescriptions/${state.editingCompletedRxId}/last_edited_by`] = state.user.uid;
+                updates[`tenants/${currentTenantId}/prescriptions/${state.editingCompletedRxId}/last_edited_at`] = now;
                 
-                const oldItemsSnap = await get(ref(db, `prescription_items/${state.editingCompletedRxId}`));
+                const oldItemsSnap = await get(ref(db, `tenants/${currentTenantId}/prescription_items/${state.editingCompletedRxId}`));
                 if (oldItemsSnap.exists()) {
                     Object.keys(oldItemsSnap.val()).forEach(key => {
-                        updates[`prescription_items/${state.editingCompletedRxId}/${key}`] = null;
+                        updates[`tenants/${currentTenantId}/prescription_items/${state.editingCompletedRxId}/${key}`] = null;
                     });
                 }
                 
                 items.forEach((item, i) => {
-                    updates[`prescription_items/${state.editingCompletedRxId}/item_${i}`] = {
+                    updates[`tenants/${currentTenantId}/prescription_items/${state.editingCompletedRxId}/item_${i}`] = {
                         drug_name: item.drug,
                         dose: item.dose,
                         form: item.form
@@ -1023,7 +1149,6 @@
             $('#patientMeta').textContent = `${apt.time||''} · ${apt.age||'--'} سنة · ${apt.phone||''}`;
             $('#patientAvatar').textContent = name.charAt(0).toUpperCase();
             
-            // ✅ تحديث عداد السجلات
             if (state.previousRecordsCount > 0) {
                 $('#recordCountBadge').textContent = state.previousRecordsCount;
                 $('#recordCountBadge').style.display = 'inline-flex';
@@ -1093,7 +1218,7 @@
 
         async function checkTemplateNameExists(name) {
             if (!state.user) return false;
-            const snap = await get(ref(db, `prescription_templates/${state.user.uid}`));
+            const snap = await get(ref(db, `tenants/${currentTenantId}/prescription_templates/${state.user.uid}`));
             if (!snap.exists()) return false;
             const templates = snap.val();
             const nameLower = name.trim().toLowerCase();
@@ -1123,20 +1248,22 @@
             try {
                 const diagnosis = $('#diagnosisInput').value.trim();
                 const now = new Date().toISOString();
-                const templateId = push(ref(db, `prescription_templates/${state.user.uid}`)).key;
+                // ✅ حفظ القالب في مسار المجمع
+                const templateId = push(ref(db, `tenants/${currentTenantId}/prescription_templates/${state.user.uid}`)).key;
                 
                 const templateData = {
                     name: templateName,
                     diagnosis: diagnosis,
                     doctor_id: state.user.uid,
                     created_at: now,
-                    itemCount: state.prescription.length
+                    itemCount: state.prescription.length,
+                    tenantId: currentTenantId
                 };
                 
                 const updates = {};
-                updates[`prescription_templates/${state.user.uid}/${templateId}`] = templateData;
+                updates[`tenants/${currentTenantId}/prescription_templates/${state.user.uid}/${templateId}`] = templateData;
                 state.prescription.forEach((item, i) => {
-                    updates[`template_items/${templateId}/item_${i}`] = {
+                    updates[`tenants/${currentTenantId}/template_items/${templateId}/item_${i}`] = {
                         drug_name: item.drug,
                         form: item.form,
                         dose: item.dose
@@ -1170,7 +1297,7 @@
             setTimeout(() => $('#newTemplateNameInput').focus(), 100);
         }
 
-        // ✅ تعديل فتح الملف الطبي - عرض الأدوية مع كل وصفة
+        // ✅ فتح الملف الطبي من مسار المجمع
         async function openPatientFile() {
             const pid = state.currentAppointment?.patient_id || state.currentAppointment?.patientId;
             if (!pid) { toast('لا يوجد ملف للمريض', true); return; }
@@ -1178,8 +1305,8 @@
             modal.style.display = 'flex'; content.innerHTML = '<div style="text-align:center;padding:30px;"><div class="loader-circle"></div></div>';
             try {
                 const [patientSnap, prescriptionsSnap] = await Promise.all([
-                    get(ref(db, `patients/${pid}`)), 
-                    get(ref(db, 'prescriptions'))
+                    get(ref(db, `tenants/${currentTenantId}/patients/${pid}`)), 
+                    get(ref(db, `tenants/${currentTenantId}/prescriptions`))
                 ]);
                 
                 const patient = patientSnap.exists() ? patientSnap.val() : {}; 
@@ -1187,13 +1314,12 @@
                 const patientRx = [];
                 
                 if (prescriptionsSnap.exists()) { 
-                    // جمع الوصفات مع عناصرها
                     const promises = [];
                     prescriptionsSnap.forEach(child => { 
                         const rx = child.val(); 
                         if (String(rx.patient_id) === String(pid)) {
                             promises.push((async () => {
-                                const itemsSnap = await get(ref(db, `prescription_items/${child.key}`));
+                                const itemsSnap = await get(ref(db, `tenants/${currentTenantId}/prescription_items/${child.key}`));
                                 let items = [];
                                 if (itemsSnap.exists()) {
                                     items = Object.values(itemsSnap.val()).map(it => ({
@@ -1224,7 +1350,6 @@
                                            rx.status === 'صرفت جزئياً' ? '<span class="prescription-status-badge status-partial">📦 جزئي</span>' : 
                                            '<span class="prescription-status-badge status-pending">⏳ لم تصرف</span>';
                         
-                        // ✅ عرض الأدوية المصغرة
                         let drugsHtml = '';
                         if (r.items && r.items.length > 0) {
                             drugsHtml = '<div class="prescription-history-drugs">' + 
@@ -1256,7 +1381,6 @@
                 }
                 content.innerHTML = html;
                 
-                // ✅ ربط أزرار الاسترداد
                 content.querySelectorAll('.restore-prescription-btn').forEach(btn => {
                     btn.addEventListener('click', (e) => {
                         e.stopPropagation();
@@ -1277,9 +1401,9 @@
             
             if (state.loadedTemplateId && state.loadedTemplateName) {
                 const currentRx = JSON.stringify(state.prescription);
-                const templateSnap = await get(ref(db, `prescription_templates/${state.user.uid}/${state.loadedTemplateId}`));
+                const templateSnap = await get(ref(db, `tenants/${currentTenantId}/prescription_templates/${state.user.uid}/${state.loadedTemplateId}`));
                 if (templateSnap.exists()) {
-                    const itemsSnap = await get(ref(db, `template_items/${state.loadedTemplateId}`));
+                    const itemsSnap = await get(ref(db, `tenants/${currentTenantId}/template_items/${state.loadedTemplateId}`));
                     let origItems = []; 
                     if (itemsSnap.exists()) { origItems = Object.values(itemsSnap.val()).map(it => ({ drug: it.drug_name || it.drug_id, form: it.form, dose: it.dose })); }
                     const currentDx = $('#diagnosisInput').value.trim();
@@ -1314,7 +1438,7 @@
         }
 
         async function handleTemplates() {
-            const snap = await get(ref(db, `prescription_templates/${state.user.uid}`)); 
+            const snap = await get(ref(db, `tenants/${currentTenantId}/prescription_templates/${state.user.uid}`)); 
             const list = $('#templatesList');
             if (!snap.exists()) { list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-sec);">لا توجد قوالب</div>'; }
             else { 
@@ -1377,10 +1501,11 @@
                 return;
             }
             
-            const snap = await get(ref(db, `template_items/${templateId}`)); 
+            // ✅ تحميل القالب من مسار المجمع
+            const snap = await get(ref(db, `tenants/${currentTenantId}/template_items/${templateId}`)); 
             state.prescription = [];
             if (snap.exists()) { state.prescription = Object.values(snap.val()).map(it => ({ drug: it.drug_name || it.drug_id, form: it.form, dose: it.dose })); }
-            const templateSnap = await get(ref(db, `prescription_templates/${state.user.uid}/${templateId}`));
+            const templateSnap = await get(ref(db, `tenants/${currentTenantId}/prescription_templates/${state.user.uid}/${templateId}`));
             if (templateSnap.exists() && templateSnap.val().diagnosis) { 
                 const diagInput = $('#diagnosisInput'); 
                 if (diagInput) diagInput.value = templateSnap.val().diagnosis; 
@@ -1405,16 +1530,18 @@
             try {
                 const now = new Date().toISOString();
                 
+                // ✅ حفظ القالب في مسار المجمع
                 if (saveTemplate && templateName) { 
                     let templateId = state.loadedTemplateId; 
-                    if (templateAction === 'new' || !templateId) templateId = push(ref(db, `prescription_templates/${state.user.uid}`)).key; 
-                    const templateData = { name: templateName, diagnosis, doctor_id: state.user.uid, created_at: now, itemCount: state.prescription.length }; 
+                    if (templateAction === 'new' || !templateId) templateId = push(ref(db, `tenants/${currentTenantId}/prescription_templates/${state.user.uid}`)).key; 
+                    const templateData = { name: templateName, diagnosis, doctor_id: state.user.uid, created_at: now, itemCount: state.prescription.length, tenantId: currentTenantId }; 
                     const updates = {}; 
-                    updates[`prescription_templates/${state.user.uid}/${templateId}`] = templateData; 
-                    state.prescription.forEach((item, i) => { updates[`template_items/${templateId}/item_${i}`] = { drug_name: item.drug, form: item.form, dose: item.dose }; }); 
+                    updates[`tenants/${currentTenantId}/prescription_templates/${state.user.uid}/${templateId}`] = templateData; 
+                    state.prescription.forEach((item, i) => { updates[`tenants/${currentTenantId}/template_items/${templateId}/item_${i}`] = { drug_name: item.drug, form: item.form, dose: item.dose }; }); 
                     await update(ref(db), updates); 
                 }
                 
+                // ✅ حفظ الوصفة في مسار المجمع
                 const prescriptionData = { 
                     patient_id: apt.patient_id || apt.patientId || '', 
                     patient_name: getPatientName(apt), 
@@ -1423,19 +1550,20 @@
                     diagnosis, 
                     created_at: now, 
                     status: 'لم تصرف بعد',
-                    item_count: state.prescription.length 
+                    item_count: state.prescription.length,
+                    tenantId: currentTenantId
                 };
                 
                 const finalUpdates = {}; 
-                finalUpdates[`prescriptions/${prescriptionId}`] = prescriptionData;
+                finalUpdates[`tenants/${currentTenantId}/prescriptions/${prescriptionId}`] = prescriptionData;
                 state.prescription.forEach((item, i) => { 
-                    finalUpdates[`prescription_items/${prescriptionId}/item_${i}`] = { 
+                    finalUpdates[`tenants/${currentTenantId}/prescription_items/${prescriptionId}/item_${i}`] = { 
                         drug_name: item.drug, 
                         dose: item.dose, 
                         form: item.form 
                     }; 
                 });
-                finalUpdates[`appointments/${apt.id}/status`] = 'منتهي';
+                finalUpdates[`tenants/${currentTenantId}/appointments/${apt.id}/status`] = 'منتهي';
                 
                 await update(ref(db), finalUpdates);
                 await deleteSession(apt.id);
@@ -1606,10 +1734,29 @@
                 state._diagTimer = setTimeout(saveSessionToDB, 500); 
             });
             
+            // ============ ✅ تسجيل الخروج - نفس منطق الأدمن والممرض ============
             $('#logoutBtn').addEventListener('click', async () => { 
-                try { await signOut(auth); } catch(e) {} 
-                clearAllLoginData();
-                window.location.href = 'index.html'; 
+                try {
+                    showToast ? toast('👋 جاري تسجيل الخروج...') : null;
+                    
+                    // 1. ✅ مسح بيانات الجلسة فقط (وليس بيانات المجمع)
+                    clearLoginSessionOnly();
+                    
+                    // 2. مسح المتغيرات في الذاكرة
+                    state.user = null;
+                    state.doctorData = null;
+                    state.appointments = [];
+                    
+                    // 3. تسجيل الخروج من Firebase Auth
+                    await signOut(auth); 
+                    
+                    // 4. إعادة التوجيه لصفحة تسجيل الدخول
+                    window.location.href = 'index.html';
+                } catch(e) {
+                    console.error('خطأ أثناء تسجيل الخروج:', e);
+                    clearLoginSessionOnly();
+                    window.location.href = 'index.html';
+                }
             });
             
             $$('.close-btn').forEach(b => b.addEventListener('click', () => { b.closest('.modal').style.display = 'none'; }));
@@ -1621,25 +1768,67 @@
 
             $('#closePatientFileBtn').addEventListener('click', () => $('#patientFileModal').style.display = 'none');
             $('#closeSaveTemplateBtn').addEventListener('click', () => $('#saveTemplateModal').style.display = 'none');
+            
+            // مستمعي الاتصال
+            window.addEventListener('online', () => {
+                setSyncStatus(true);
+                toast('📡 تم استعادة الاتصال');
+            });
+            
+            window.addEventListener('offline', () => {
+                setSyncStatus(false);
+                toast('⚠️ انقطع الاتصال - استخدام البيانات المحلية', true);
+            });
         };
 
         onAuthStateChanged(auth, async (user) => {
             if (!user) { 
-                clearAllLoginData();
+                clearLoginSessionOnly();
                 window.location.href = 'index.html'; 
                 return; 
             }
             try {
-                const userSnap = await get(ref(db, `users/${user.uid}`));
-                if (!userSnap.exists() || userSnap.val().role !== 'doctor') { 
+                // ✅ البحث عن بيانات المستخدم لتحديد المجمع
+                let userData = null;
+                let foundTenantId = null;
+                
+                // البحث في المسار العام أولاً لمعرفة المجمع
+                const publicSnap = await get(ref(db, `users/${user.uid}`));
+                if (publicSnap.exists()) {
+                    userData = publicSnap.val();
+                    foundTenantId = userData.tenantId || user.uid;
+                }
+                
+                if (!userData || userData.role !== 'doctor') { 
                     toast('غير مصرح', true); 
+                    clearLoginSessionOnly();
                     await signOut(auth); 
                     window.location.href = 'index.html'; 
                     return; 
                 }
-                state.user = { uid: user.uid, ...userSnap.val() };
+                
+                // ✅ تعيين معرف المجمع
+                currentTenantId = foundTenantId;
+                console.log(`✅ تم تحديد المجمع الطبي: ${currentTenantId}`);
+                
+                // ✅ التحقق من وجود الطبيب في مسار المجمع
+                const tenantDoctorSnap = await get(ref(db, `tenants/${currentTenantId}/users/${user.uid}`));
+                if (!tenantDoctorSnap.exists() || tenantDoctorSnap.val().role !== 'doctor') {
+                    toast('غير مصرح لك بالدخول لهذا المجمع', true);
+                    clearLoginSessionOnly();
+                    await signOut(auth);
+                    setTimeout(() => { window.location.href = 'index.html'; }, 2000);
+                    return;
+                }
+                
+                state.user = { uid: user.uid, ...userData };
                 $('#welcomeMsg').textContent = `د. ${state.user.name||'طبيب'}`; 
                 $('#welcomeMsg').style.display = 'inline';
+                
+                // ✅ عرض اسم المجمع
+                const tenantName = userData.tenantName || 'المجمع الطبي';
+                $('#tenantName').textContent = tenantName;
+                
                 sessionStorage.setItem('userUid', user.uid); 
                 sessionStorage.setItem('userRole', 'doctor'); 
                 sessionStorage.setItem('userName', state.user.name||'');
@@ -1647,7 +1836,8 @@
                 await Promise.all([sessionDB.open(), favoritesDB.open(), favoriteDosesDB.open(), drugManager.loadCache()]);
                 setupEventListeners();
                 
-                const q = query(ref(db, 'appointments'), orderByChild('doctor_id'), equalTo(user.uid));
+                // ✅ قراءة الكشوفات من مسار المجمع - نفس مكان الممرض
+                const q = query(ref(db, `tenants/${currentTenantId}/appointments`), orderByChild('doctor_id'), equalTo(user.uid));
                 onValue(q, (snap) => {
                     const apps = []; 
                     snap.forEach(c => { 
@@ -1658,9 +1848,13 @@
                     });
                     apps.sort((a,b) => (a.time||'').localeCompare(b.time||''));
                     state.appointments = apps; 
+                    setSyncStatus(true);
                     updateQueueCount(); 
                     renderSidebar();
                     if (state.currentAppointment) updateWorkspace();
+                }, (error) => {
+                    console.warn('خطأ في تحميل الكشوفات:', error.message);
+                    setSyncStatus(false);
                 });
                 
                 const restored = await restoreSession();
@@ -1678,6 +1872,10 @@
                 toast('حدث خطأ في تحميل البيانات', true); 
             }
         });
+
+        console.log('🚀 لوحة الطبيب - نظام المجمعات الطبية المتعددة');
+        console.log('🔒 كل طبيب يشوف كشوفاته هو فقط في مجمعه');
+        console.log('💾 وضع الحفظ: يمسح جلسة الدخول فقط - يحتفظ ببيانات المجمع');
     </script>
 </body>
 </html>
