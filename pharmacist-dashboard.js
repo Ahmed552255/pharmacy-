@@ -164,6 +164,7 @@ async function loadPharmacistData(user) {
         console.warn('تعذر تحميل بيانات الصيدلي:', err.message);
         // نكمل عادي حتى لو فشل
         UI.welcomeMessage.textContent = 'أهلاً، صيدلي';
+        if (UI.tenantName) UI.tenantName.textContent = 'المجمع الطبي';
         return true;
     }
 }
