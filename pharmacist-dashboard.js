@@ -138,18 +138,18 @@ function clearLoginSessionOnly() {
 // ✅ تحميل بيانات الصيدلي من مسار المجمع (للعرض فقط - بدون طرد)
 async function loadPharmacistData(user) {
     try {
-        // ✅ جلب بيانات الصيدلي من مسار المجمع
-        const tenantUserSnap = await get(ref(db, `tenants/${currentTenantId}/users/${user.uid}`));
+        // ✅ جلب بيانات الصيدلي من مسار المجمع للعرض
+        const tenantPharmacistSnap = await get(ref(db, `tenants/${currentTenantId}/users/${user.uid}`));
         
-        if (tenantUserSnap.exists()) {
-            pharmacistInfo = { id: user.uid, ...tenantUserSnap.val() };
+        if (tenantPharmacistSnap.exists()) {
+            pharmacistInfo = { id: user.uid, ...tenantPharmacistSnap.val() };
         } else {
             // محاولة المسار العام للتوافق
             const publicSnap = await get(ref(db, `users/${user.uid}`));
             if (publicSnap.exists()) {
-                pharmacistInfo = { id: user.uid, ...publicSnap.val() };
+                pharmacistInfo = publicSnap.val();
             } else {
-                pharmacistInfo = { id: user.uid, name: 'صيدلي', role: 'pharmacist' };
+                pharmacistInfo = { name: 'صيدلي' };
             }
         }
         
@@ -162,8 +162,8 @@ async function loadPharmacistData(user) {
         return true;
     } catch (err) {
         console.warn('تعذر تحميل بيانات الصيدلي:', err.message);
-        pharmacistInfo = { id: user.uid, name: 'صيدلي', role: 'pharmacist' };
-        UI.welcomeMessage.textContent = `أهلاً، صيدلي`;
+        // نكمل عادي حتى لو فشل
+        UI.welcomeMessage.textContent = 'أهلاً، صيدلي';
         return true;
     }
 }
@@ -399,11 +399,13 @@ function renderPrescriptionsForDoctor() {
     });
 }
 
+/** فتح تفاصيل الروشتة في نفس النافذة */
 function openPrescriptionDetails(prescriptionId) {
     if (!prescriptionId) return;
     window.location.href = `prescription-details.html?id=${prescriptionId}&tenant=${currentTenantId}`;
 }
 
+// ✅ تحميل بيانات المرضى من مسار المجمع
 function loadPatients() {
     if (!currentTenantId) return;
     
@@ -438,6 +440,7 @@ function loadPatientsFromPublic() {
     });
 }
 
+// ---------- البحث عن مريض ----------
 function openSearchModal() {
     UI.searchPatientModal.style.display = 'flex';
     UI.patientSearchInput.value = '';
@@ -542,6 +545,7 @@ UI.tabBtns.forEach(btn => {
     });
 });
 
+// ✅ زر تسجيل الخروج - نفس منطق الأدمن والممرض والطبيب
 UI.logoutBtn?.addEventListener('click', async () => {
     try {
         showToast('👋 جاري تسجيل الخروج...');
@@ -577,12 +581,14 @@ UI.logoutBtn?.addEventListener('click', async () => {
     }
 });
 
+// إغلاق المودال بزر ESC
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && UI.searchPatientModal?.style.display === 'flex') {
         closeSearchModal();
     }
 });
 
+// ---------- مستمعي الاتصال بالإنترنت ----------
 window.addEventListener('online', () => {
     setSyncStatus(true);
     showToast('📡 تم استعادة الاتصال - جاري المزامنة');
@@ -593,7 +599,7 @@ window.addEventListener('offline', () => {
     showToast('⚠️ انقطع الاتصال - استخدام البيانات المحلية', true);
 });
 
-// ============ ✅ بدء التشغيل المبسط - tenantId من الرابط ============
+// ---------- ✅ بدء التشغيل المبسط - tenantId من الرابط ============
 onAuthStateChanged(auth, async (user) => {
     if (!user) {
         clearLoginSessionOnly();
@@ -657,6 +663,7 @@ onAuthStateChanged(auth, async (user) => {
     loadPatients();
 });
 
+// تحسين: في الأجهزة الصغيرة، افتح الشريط الجانبي تلقائياً إذا لم يتم اختيار طبيب
 if (window.innerWidth <= 800 && !selectedDoctorId) {
     UI.doctorsSidebar?.classList.add('show');
 }
