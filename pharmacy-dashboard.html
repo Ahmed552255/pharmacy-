@@ -26,6 +26,7 @@
             --shadow-xs: 0 1px 4px rgba(0,0,0,0.03);
             --shadow-sm: 0 4px 12px rgba(0,0,0,0.05);
             --shadow-md: 0 8px 24px rgba(0,0,0,0.08);
+            --shadow-lg: 0 12px 32px rgba(0,0,0,0.1);
             --radius-xs: 8px;
             --radius-sm: 14px;
             --radius-md: 20px;
@@ -209,6 +210,7 @@
             -webkit-user-select: none;
             transition: all 0.15s ease;
             min-height: clamp(32px, 8vw, 40px);
+            text-decoration: none;
         }
         
         .btn:active { 
@@ -413,122 +415,272 @@
             background: rgba(255,255,255,0.6);
         }
 
-        /* ============ جدول الوصفات ============ */
-        .table-container {
-            background: var(--white);
-            border-radius: var(--radius-lg);
-            box-shadow: var(--shadow-sm);
-            border: 1px solid var(--border);
-            overflow: hidden;
-        }
-        
-        .table-scroll {
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-            overscroll-behavior: contain;
-        }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            text-align: center;
-            min-width: clamp(300px, 80vw, 500px);
-            font-size: clamp(0.78rem, 2vw, 0.88rem);
-        }
-        
-        th, td { 
-            padding: clamp(8px, 2vw, 12px) clamp(6px, 1.5vw, 10px); 
-        }
-        
-        thead th {
-            background: #F5FAFC;
-            font-weight: 700;
-            color: var(--ink);
-            font-size: clamp(0.72rem, 1.8vw, 0.8rem);
-            white-space: nowrap;
-            position: sticky;
-            top: 0;
-            z-index: 1;
-            border-bottom: 2px solid var(--primary-light);
-        }
-        
-        tbody tr { 
-            border-bottom: 1px solid var(--border); 
-            cursor: pointer; 
-            transition: background 0.15s ease; 
-            min-height: clamp(44px, 10vw, 52px);
-        }
-        
-        tbody tr:last-child { 
-            border-bottom: none; 
-        }
-        
-        tbody tr:active { 
-            background: var(--primary-light); 
-        }
-        
-        tbody tr:hover { 
-            background: #F8FDFE; 
+        /* ============ شبكة البطاقات ============ */
+        .rx-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr));
+            gap: clamp(10px, 2.5vw, 16px);
         }
 
-        .status-badge {
-            padding: clamp(3px, 0.8vw, 4px) clamp(8px, 2vw, 12px);
-            border-radius: 30px;
-            font-size: clamp(0.68rem, 1.6vw, 0.75rem);
-            font-weight: 700;
+        .rx-card {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            animation: cardIn 0.3s ease forwards;
+            opacity: 0;
+        }
+        
+        @keyframes cardIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .rx-card:nth-child(1) { animation-delay: 0.05s; }
+        .rx-card:nth-child(2) { animation-delay: 0.1s; }
+        .rx-card:nth-child(3) { animation-delay: 0.15s; }
+        .rx-card:nth-child(4) { animation-delay: 0.2s; }
+        .rx-card:nth-child(5) { animation-delay: 0.25s; }
+        .rx-card:nth-child(6) { animation-delay: 0.3s; }
+        
+        .rx-card:hover {
+            box-shadow: var(--shadow-md);
+            border-color: var(--primary-light);
+        }
+        
+        .rx-card:active {
+            transform: scale(0.98);
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .rx-card.pending-card {
+            border-right: 4px solid var(--warning);
+        }
+        
+        .rx-card.dispensed-card {
+            border-right: 4px solid var(--success);
+        }
+        
+        .rx-card.partial-card {
+            border-right: 4px solid var(--primary);
+        }
+
+        /* رأس البطاقة */
+        .rx-card-header {
+            padding: clamp(12px, 2.5vw, 16px) clamp(14px, 3vw, 18px);
+            display: flex;
+            align-items: center;
+            gap: clamp(10px, 2vw, 14px);
+            border-bottom: 1px solid var(--border);
+            background: #FAFDFE;
+        }
+        
+        .rx-card-avatar {
+            width: clamp(44px, 10vw, 52px);
+            height: clamp(44px, 10vw, 52px);
+            min-width: clamp(44px, 10vw, 52px);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: clamp(1.1rem, 2.5vw, 1.3rem);
+            font-weight: 800;
+            color: white;
+            flex-shrink: 0;
+            aspect-ratio: 1;
+        }
+        
+        .avatar-pending {
+            background: linear-gradient(135deg, #FFB74D, #F57C00);
+        }
+        
+        .avatar-dispensed {
+            background: linear-gradient(135deg, #66BB6A, #2E7D32);
+        }
+        
+        .avatar-partial {
+            background: linear-gradient(135deg, #42A5F5, #1565C0);
+        }
+        
+        .rx-card-patient-info {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .rx-card-patient-name {
+            font-size: clamp(0.95rem, 2.5vw, 1.1rem);
+            font-weight: 800;
+            color: var(--ink);
             white-space: nowrap;
-            display: inline-flex;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .rx-card-doctor-name {
+            font-size: clamp(0.72rem, 1.8vw, 0.8rem);
+            color: var(--primary);
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .rx-card-status-dot {
+            width: clamp(10px, 2.5vw, 12px);
+            height: clamp(10px, 2.5vw, 12px);
+            border-radius: 50%;
+            flex-shrink: 0;
+            border: 2px solid white;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        }
+        
+        .dot-pending { background: var(--warning); }
+        .dot-dispensed { background: var(--success); }
+        .dot-partial { background: var(--primary); }
+
+        /* جسم البطاقة */
+        .rx-card-body {
+            padding: clamp(10px, 2.5vw, 14px) clamp(14px, 3vw, 18px);
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: clamp(6px, 1.5vw, 10px);
+        }
+        
+        .rx-card-info-row {
+            display: flex;
+            align-items: center;
+            gap: clamp(6px, 1.5vw, 10px);
+            font-size: clamp(0.78rem, 2vw, 0.85rem);
+            color: var(--ink);
+        }
+        
+        .rx-card-info-row i {
+            color: var(--primary);
+            width: clamp(18px, 4vw, 22px);
+            text-align: center;
+            flex-shrink: 0;
+            font-size: clamp(0.8rem, 1.8vw, 0.9rem);
+        }
+        
+        .rx-card-info-row span {
+            font-weight: 500;
+        }
+        
+        .rx-card-info-row strong {
+            font-weight: 700;
+            color: var(--ink);
+            margin-left: 4px;
+        }
+        
+        .rx-card-diagnosis {
+            background: #F5FAFC;
+            border-radius: var(--radius-sm);
+            padding: clamp(8px, 2vw, 10px) clamp(10px, 2.5vw, 12px);
+            font-size: clamp(0.75rem, 1.8vw, 0.82rem);
+            color: var(--text-sec);
+            border-right: 3px solid var(--primary-light);
+            line-height: 1.5;
+            max-height: 60px;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+        
+        .rx-card-diagnosis i {
+            color: var(--primary);
+            margin-left: 4px;
+        }
+
+        /* تذييل البطاقة */
+        .rx-card-footer {
+            padding: clamp(8px, 2vw, 12px) clamp(14px, 3vw, 18px);
+            border-top: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: clamp(6px, 1.5vw, 10px);
+            flex-wrap: wrap;
+            background: #FAFDFE;
+        }
+        
+        .rx-card-date {
+            font-size: clamp(0.7rem, 1.6vw, 0.75rem);
+            color: var(--text-sec);
+            display: flex;
             align-items: center;
             gap: 4px;
         }
         
-        .s-pending { 
-            background: #FFF3E0; 
-            color: #E65100; 
-        }
-        
-        .s-dispensed { 
-            background: #E8F5E9; 
-            color: #2E7D32; 
-        }
-        
-        .s-partial { 
-            background: #E3F2FD; 
-            color: #1565C0; 
-        }
-
-        .empty-row td {
-            text-align: center;
-            padding: clamp(25px, 6vw, 40px) clamp(10px, 2vw, 16px);
-            color: var(--text-sec);
-            font-size: clamp(0.8rem, 2vw, 0.9rem);
-        }
-        
-        .empty-row i {
-            display: block;
-            font-size: clamp(1.8rem, 5vw, 2.5rem);
-            margin-bottom: 8px;
-            opacity: 0.3;
-        }
-
-        .action-btn {
+        .rx-card-items-count {
             background: var(--primary-light);
-            border: none;
-            border-radius: var(--radius-sm);
-            padding: clamp(5px, 1vw, 6px) clamp(10px, 2vw, 14px);
-            cursor: pointer;
+            padding: clamp(3px, 0.8vw, 4px) clamp(8px, 2vw, 10px);
+            border-radius: var(--radius-xl);
+            font-size: clamp(0.7rem, 1.6vw, 0.75rem);
+            font-weight: 700;
             color: var(--primary-dark);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .rx-card-action-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: var(--radius-xl);
+            padding: clamp(6px, 1.5vw, 8px) clamp(12px, 2.5vw, 16px);
             font-family: 'Cairo', system-ui, sans-serif;
             font-weight: 700;
-            font-size: clamp(0.7rem, 1.6vw, 0.78rem);
-            touch-action: manipulation;
+            font-size: clamp(0.72rem, 1.8vw, 0.8rem);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
             transition: all 0.15s ease;
+            touch-action: manipulation;
             white-space: nowrap;
         }
         
-        .action-btn:active { 
-            background: var(--primary); 
-            color: white; 
+        .rx-card-action-btn:active {
+            background: var(--primary-dark);
+            transform: scale(0.95);
+        }
+        
+        .rx-card-action-btn.dispensed-btn {
+            background: var(--success);
+        }
+
+        /* حالة فارغة */
+        .empty-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: clamp(40px, 10vw, 60px) clamp(16px, 4vw, 20px);
+            color: var(--text-sec);
+        }
+        
+        .empty-state i {
+            font-size: clamp(2.5rem, 8vw, 3.5rem);
+            opacity: 0.2;
+            margin-bottom: clamp(10px, 2vw, 14px);
+            display: block;
+        }
+        
+        .empty-state h3 {
+            font-size: clamp(1rem, 2.5vw, 1.15rem);
+            margin-bottom: 6px;
+            color: var(--ink);
+        }
+        
+        .empty-state p {
+            font-size: clamp(0.8rem, 2vw, 0.88rem);
         }
 
         /* ============ المودال ============ */
@@ -755,12 +907,6 @@
             background: #C62828; 
         }
         
-        .toast.removing { 
-            opacity: 0; 
-            transform: translateY(-10px); 
-            transition: all 0.3s ease; 
-        }
-        
         @keyframes toastIn { 
             from { transform: translateY(16px); opacity: 0; } 
             to { transform: translateY(0); opacity: 1; } 
@@ -780,14 +926,12 @@
 
         /* ============ ميديا كويريز ============ */
         
-        /* تابلت - شاشات متوسطة */
         @media (min-width: 769px) and (max-width: 1024px) {
             html { font-size: clamp(13px, 1.8vw, 15px); }
             .app-header { padding: 8px 14px; }
-            table { min-width: 400px; }
+            .rx-cards-grid { grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr)); }
         }
 
-        /* موبايل - شاشات صغيرة */
         @media (max-width: 768px) {
             html { font-size: clamp(13px, 3.5vw, 14px); }
             
@@ -836,27 +980,19 @@
                 padding: 1px 6px; 
             }
             
-            table { 
-                min-width: 280px; 
-                font-size: 0.75rem; 
+            .rx-cards-grid { 
+                grid-template-columns: 1fr; 
+                gap: 10px; 
             }
             
-            th, td { 
-                padding: 6px 4px; 
-            }
+            .rx-card-header { padding: 10px 12px; }
+            .rx-card-body { padding: 10px 12px; }
+            .rx-card-footer { padding: 8px 12px; }
             
-            thead th { 
-                font-size: 0.68rem; 
-            }
-            
-            .status-badge { 
-                padding: 2px 6px; 
-                font-size: 0.65rem; 
-            }
-            
-            .action-btn { 
-                padding: 4px 8px; 
-                font-size: 0.68rem; 
+            .rx-card-avatar {
+                width: 40px;
+                height: 40px;
+                min-width: 40px;
             }
             
             .modal-card { 
@@ -876,7 +1012,6 @@
             #welcomeMsg { max-width: 80px; }
         }
 
-        /* موبايل صغير جداً */
         @media (max-width: 400px) {
             html { font-size: clamp(12px, 4vw, 13px); }
             
@@ -900,10 +1035,10 @@
             }
         }
 
-        /* شاشات كبيرة */
         @media (min-width: 1400px) {
             html { font-size: clamp(15px, 1.2vw, 17px); }
             .container { max-width: 1300px; }
+            .rx-cards-grid { grid-template-columns: repeat(auto-fill, minmax(min(350px, 100%), 1fr)); }
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -956,35 +1091,18 @@
             </button>
         </div>
 
-        <div class="table-container">
-            <div class="table-scroll">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>المريض</th>
-                            <th>الطبيب</th>
-                            <th>الأصناف</th>
-                            <th>الحالة</th>
-                            <th>تفاصيل</th>
-                        </tr>
-                    </thead>
-                    <tbody id="prescriptionsBody">
-                        <tr class="empty-row">
-                            <td colspan="6">
-                                <i class="fas fa-hand-point-up"></i> 
-                                اختر طبيباً من القائمة أعلاه
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+        <div class="rx-cards-grid" id="prescriptionsGrid">
+            <div class="empty-state">
+                <i class="fas fa-hand-point-up"></i>
+                <h3>اختر طبيباً من القائمة أعلاه</h3>
+                <p>ستظهر الوصفات الطبية هنا</p>
             </div>
         </div>
 
         <div class="keyboard-scroll-spacer"></div>
     </div>
 
-    <!-- مودال تفاصيل الوصفة والصرف -->
+    <!-- مودال الصرف -->
     <div id="dispenseModal" class="modal">
         <div class="modal-card">
             <div class="modal-header">
@@ -1034,14 +1152,12 @@
         import { firebaseConfig } from './firebase-config.js';
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-        import { getDatabase, ref, onValue, get, update, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+        import { getDatabase, ref, onValue, get, update } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
-        // ============ تهيئة Firebase ============
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getDatabase(app);
 
-        // ============ ثوابت التخزين المحلي ============
         const STORAGE_PREFIX = 'shifa_tenant_';
         
         const LOGIN_STORAGE_KEYS = [
@@ -1057,7 +1173,6 @@
             return currentTenantId ? `${STORAGE_PREFIX}${currentTenantId}_${baseKey}` : baseKey;
         };
 
-        // ============ حالة التطبيق ============
         const state = {
             currentUser: null,
             pharmacistData: null,
@@ -1065,11 +1180,9 @@
             selectedDoctorId: null,
             allPrescriptions: [],
             currentTab: 'لم تصرف بعد',
-            patientsMap: {},
             unsubscribePrescriptions: null,
         };
 
-        // ============ دوال مساعدة ============
         const $ = (sel) => document.querySelector(sel);
         const $$ = (sel) => document.querySelectorAll(sel);
 
@@ -1101,17 +1214,13 @@
             const dot = $('#syncDot');
             if (dot) {
                 dot.className = `sync-dot ${online ? 'on' : 'off'}`;
-                dot.title = online ? 'متصل بالسحابة' : 'غير متصل - استخدام البيانات المحلية';
+                dot.title = online ? 'متصل بالسحابة' : 'غير متصل';
             }
         };
 
-        // ============ مسح بيانات الجلسة فقط ============
         const clearLoginSessionOnly = () => {
             try {
-                LOGIN_STORAGE_KEYS.forEach(key => {
-                    localStorage.removeItem(key);
-                });
-                
+                LOGIN_STORAGE_KEYS.forEach(key => localStorage.removeItem(key));
                 const sessionKeysToRemove = [];
                 for (let i = 0; i < localStorage.length; i++) {
                     const key = localStorage.key(i);
@@ -1120,44 +1229,31 @@
                     }
                 }
                 sessionKeysToRemove.forEach(key => localStorage.removeItem(key));
-                
                 sessionStorage.clear();
-            } catch (e) {
-                console.warn('تعذر مسح بيانات الجلسة:', e.message);
-            }
+            } catch (e) {}
         };
 
-        // ============ تحميل بيانات الصيدلي من مسار المجمعات ============
         const loadPharmacistData = async (uid) => {
             try {
                 const tenantsSnap = await get(ref(db, 'tenants'));
-                
                 if (tenantsSnap.exists()) {
                     const tenants = tenantsSnap.val();
-                    
                     for (const tenantId of Object.keys(tenants)) {
                         const userSnap = await get(ref(db, `tenants/${tenantId}/users/${uid}`));
-                        
                         if (userSnap.exists()) {
                             const userData = userSnap.val();
-                            
                             if (userData.role === 'pharmacist') {
                                 currentTenantId = tenantId;
                                 state.pharmacistData = { id: uid, ...userData };
-                                
                                 const tenantName = tenants[tenantId]?.name || tenants[tenantId]?.tenantName || 'المجمع الطبي';
                                 state.pharmacistData.tenantName = tenantName;
-                                
                                 $('#welcomeMsg').textContent = `أهلاً، ${state.pharmacistData.name || 'صيدلي'}`;
                                 $('#tenantName').textContent = tenantName;
-                                
                                 return true;
                             }
                         }
                     }
                 }
-                
-                // المسار القديم للتوافق
                 const oldSnap = await get(ref(db, `users/${uid}`));
                 if (oldSnap.exists() && oldSnap.val().role === 'pharmacist') {
                     currentTenantId = uid;
@@ -1165,89 +1261,63 @@
                     $('#welcomeMsg').textContent = `أهلاً، ${state.pharmacistData.name || 'صيدلي'}`;
                     return true;
                 }
-                
                 showToast('هذا الحساب ليس حساب صيدلي', true);
                 return false;
-                
             } catch (err) {
-                console.error('خطأ في تحميل بيانات الصيدلي:', err);
                 showToast('خطأ في تحميل البيانات', true);
                 return false;
             }
         };
 
-        // ============ تحميل الأطباء من مسار المجمع ============
         const loadDoctors = () => {
             if (!currentTenantId) return;
-            
             const usersRef = ref(db, `tenants/${currentTenantId}/users`);
-            
             onValue(usersRef, (snap) => {
                 const doctors = [];
                 snap.forEach(child => {
                     const user = child.val();
-                    if (user.role === 'doctor') {
-                        doctors.push({ id: child.key, ...user });
-                    }
+                    if (user.role === 'doctor') doctors.push({ id: child.key, ...user });
                 });
                 state.doctorsList = doctors;
-                
                 if (state.selectedDoctorId && !doctors.find(d => d.id === state.selectedDoctorId)) {
                     state.selectedDoctorId = null;
                     localStorage.removeItem(getTenantStorageKey('selected_doctor'));
                 }
-                
                 renderDoctorsStrip();
                 updateCounts();
-                renderTable();
+                renderCards();
             }, (error) => {
-                console.warn('خطأ في تحميل الأطباء:', error.message);
                 setSyncStatus(false);
             });
         };
 
-        // ============ تحميل الوصفات من مسار المجمع ============
         const loadPrescriptions = () => {
             if (!currentTenantId) return;
-            
-            if (state.unsubscribePrescriptions) {
-                state.unsubscribePrescriptions();
-            }
-            
+            if (state.unsubscribePrescriptions) state.unsubscribePrescriptions();
             const presRef = ref(db, `tenants/${currentTenantId}/prescriptions`);
-            
             state.unsubscribePrescriptions = onValue(presRef, (snap) => {
                 const prescriptions = [];
                 snap.forEach(child => {
                     prescriptions.push({ id: child.key, ...child.val() });
                 });
-                
                 state.allPrescriptions = prescriptions;
-                
                 setSyncStatus(true);
                 updateCounts();
-                renderTable();
+                renderCards();
                 renderDoctorsStrip();
             }, (error) => {
-                console.warn('خطأ في تحميل الوصفات:', error.message);
                 setSyncStatus(false);
             });
         };
 
-        // ============ عرض شريط الأطباء ============
         const renderDoctorsStrip = () => {
             const container = $('#doctorStripContainer');
-            
             if (state.doctorsList.length === 0) {
                 container.innerHTML = '<div style="padding:10px;color:var(--text-sec);text-align:center;width:100%;">لا يوجد أطباء مسجلين</div>';
                 return;
             }
-            
             container.innerHTML = state.doctorsList.map(doc => {
-                const pendingCount = state.allPrescriptions.filter(
-                    p => p.doctor_id === doc.id && p.status === 'لم تصرف بعد'
-                ).length;
-                
+                const pendingCount = state.allPrescriptions.filter(p => p.doctor_id === doc.id && p.status === 'لم تصرف بعد').length;
                 return `
                     <div class="doctor-pill ${state.selectedDoctorId === doc.id ? 'active' : ''}" data-id="${doc.id}">
                         <div class="pill-avatar"><i class="fas fa-user-md"></i></div>
@@ -1256,60 +1326,48 @@
                     </div>
                 `;
             }).join('');
-            
             container.querySelectorAll('.doctor-pill').forEach(pill => {
                 pill.addEventListener('click', () => {
                     state.selectedDoctorId = pill.dataset.id;
                     localStorage.setItem(getTenantStorageKey('selected_doctor'), state.selectedDoctorId);
                     renderDoctorsStrip();
                     updateCounts();
-                    renderTable();
-                    
+                    renderCards();
                     pill.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
                 });
             });
         };
 
-        // ============ تحديث العدادات ============
         const updateCounts = () => {
-            let pendingCount = 0;
-            let dispensedCount = 0;
-            
+            let pendingCount = 0, dispensedCount = 0;
             const filtered = state.selectedDoctorId 
                 ? state.allPrescriptions.filter(p => p.doctor_id === state.selectedDoctorId)
                 : state.allPrescriptions;
-            
             filtered.forEach(p => {
                 if (p.status === 'لم تصرف بعد') pendingCount++;
-                else if (p.status === 'تم الصرف' || p.status === 'صرفت جزئياً') {
-                    if (p.dispensed_at && p.dispensed_at.startsWith(getToday())) {
-                        dispensedCount++;
-                    }
+                else if ((p.status === 'تم الصرف' || p.status === 'صرفت جزئياً') && p.dispensed_at && p.dispensed_at.startsWith(getToday())) {
+                    dispensedCount++;
                 }
             });
-            
             $('#countPending').textContent = pendingCount;
             $('#countDispensed').textContent = dispensedCount;
         };
 
-        // ============ ✅ عرض الجدول (بدون أعمدة الأدوية والتشخيص والتاريخ) ============
-        const renderTable = () => {
-            const tbody = $('#prescriptionsBody');
+        // ============ عرض البطاقات ============
+        const renderCards = () => {
+            const grid = $('#prescriptionsGrid');
             
             if (!state.selectedDoctorId) {
-                tbody.innerHTML = `
-                    <tr class="empty-row">
-                        <td colspan="6">
-                            <i class="fas fa-hand-point-up"></i> 
-                            اختر طبيباً من القائمة أعلاه
-                        </td>
-                    </tr>`;
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-hand-point-up"></i>
+                        <h3>اختر طبيباً من القائمة أعلاه</h3>
+                        <p>ستظهر الوصفات الطبية هنا</p>
+                    </div>`;
                 return;
             }
             
-            let filtered = state.allPrescriptions.filter(
-                p => p.doctor_id === state.selectedDoctorId
-            );
+            let filtered = state.allPrescriptions.filter(p => p.doctor_id === state.selectedDoctorId);
             
             if (state.currentTab === 'لم تصرف بعد') {
                 filtered = filtered.filter(p => p.status === 'لم تصرف بعد');
@@ -1324,70 +1382,129 @@
             
             if (filtered.length === 0) {
                 const msg = state.currentTab === 'لم تصرف بعد' ? 'لا توجد وصفات جديدة' : 'لا توجد وصفات مصروفة اليوم';
-                tbody.innerHTML = `
-                    <tr class="empty-row">
-                        <td colspan="6">
-                            <i class="fas fa-prescription"></i> ${msg}
-                        </td>
-                    </tr>`;
+                const icon = state.currentTab === 'لم تصرف بعد' ? 'fa-clock' : 'fa-check-circle';
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas ${icon}"></i>
+                        <h3>${msg}</h3>
+                        <p>${state.currentTab === 'لم تصرف بعد' ? 'كل الوصفات تم صرفها ✓' : 'لم يتم صرف أي وصفة اليوم'}</p>
+                    </div>`;
                 return;
             }
             
-            tbody.innerHTML = filtered.map((p, i) => {
+            grid.innerHTML = filtered.map(p => {
                 const doctor = state.doctorsList.find(d => d.id === p.doctor_id);
                 const doctorName = doctor ? doctor.name : 'طبيب';
                 const patientName = p.patient_name || 'مريض';
                 const itemCount = p.item_count || 0;
+                const diagnosis = p.diagnosis || '';
+                const patientPhone = p.phone || '';
+                const patientAge = p.age || '';
+                const dateStr = p.created_at ? new Date(p.created_at).toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' }) : '';
+                const timeStr = p.created_at ? new Date(p.created_at).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }) : '';
                 
-                const statusClass = p.status === 'تم الصرف' ? 's-dispensed' : 
-                                   p.status === 'صرفت جزئياً' ? 's-partial' : 's-pending';
-                const statusText = p.status === 'تم الصرف' ? '✅ تم الصرف' :
-                                  p.status === 'صرفت جزئياً' ? '📦 جزئي' : '⏳ جديد';
+                // تحديد نوع البطاقة
+                const isPending = p.status === 'لم تصرف بعد';
+                const isDispensed = p.status === 'تم الصرف';
+                const isPartial = p.status === 'صرفت جزئياً';
+                
+                const cardClass = isPending ? 'pending-card' : isDispensed ? 'dispensed-card' : 'partial-card';
+                const avatarClass = isPending ? 'avatar-pending' : isDispensed ? 'avatar-dispensed' : 'avatar-partial';
+                const dotClass = isPending ? 'dot-pending' : isDispensed ? 'dot-dispensed' : 'dot-partial';
+                
+                const statusText = isPending ? '⏳ جديد' : isDispensed ? '✅ تم الصرف' : '📦 جزئي';
+                const statusBg = isPending ? '#FFF3E0' : isDispensed ? '#E8F5E9' : '#E3F2FD';
+                const statusColor = isPending ? '#E65100' : isDispensed ? '#2E7D32' : '#1565C0';
+                
+                // معلومات إضافية للمصروفة
+                let extraInfo = '';
+                if (!isPending) {
+                    const pharmacistName = p.pharmacist_name || '';
+                    const dispensedDate = p.dispensed_at ? new Date(p.dispensed_at).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }) : '';
+                    extraInfo = `
+                        <div class="rx-card-info-row">
+                            <i class="fas fa-user-check"></i>
+                            <span>صرف: <strong>${escapeHtml(pharmacistName)}</strong> - ${dispensedDate}</span>
+                        </div>`;
+                }
                 
                 return `
-                    <tr data-id="${p.id}" style="cursor:pointer;">
-                        <td>${i + 1}</td>
-                        <td><b>${escapeHtml(patientName)}</b></td>
-                        <td>د. ${escapeHtml(doctorName)}</td>
-                        <td>${itemCount} أصناف</td>
-                        <td><span class="status-badge ${statusClass}">${statusText}</span></td>
-                        <td>
-                            <button class="action-btn" data-action="details" data-id="${p.id}">
-                                <i class="fas fa-external-link-alt"></i> تفاصيل
-                            </button>
-                        </td>
-                    </tr>
-                `;
+                <div class="rx-card ${cardClass}" data-id="${p.id}">
+                    <div class="rx-card-header">
+                        <div class="rx-card-avatar ${avatarClass}">
+                            ${escapeHtml(patientName.charAt(0))}
+                        </div>
+                        <div class="rx-card-patient-info">
+                            <div class="rx-card-patient-name">${escapeHtml(patientName)}</div>
+                            <div class="rx-card-doctor-name">
+                                <i class="fas fa-user-md"></i> د. ${escapeHtml(doctorName)}
+                            </div>
+                        </div>
+                        <div class="rx-card-status-dot ${dotClass}" title="${statusText}"></div>
+                    </div>
+                    
+                    <div class="rx-card-body">
+                        ${patientAge ? `
+                        <div class="rx-card-info-row">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span>العمر: <strong>${escapeHtml(patientAge)} سنة</strong></span>
+                        </div>` : ''}
+                        
+                        ${patientPhone ? `
+                        <div class="rx-card-info-row">
+                            <i class="fas fa-phone"></i>
+                            <span>${escapeHtml(patientPhone)}</span>
+                        </div>` : ''}
+                        
+                        ${extraInfo}
+                        
+                        ${diagnosis ? `
+                        <div class="rx-card-diagnosis">
+                            <i class="fas fa-notes-medical"></i> ${escapeHtml(diagnosis)}
+                        </div>` : ''}
+                    </div>
+                    
+                    <div class="rx-card-footer">
+                        <div class="rx-card-date">
+                            <i class="far fa-clock"></i> ${dateStr} · ${timeStr}
+                        </div>
+                        
+                        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                            <span style="background:${statusBg};color:${statusColor};padding:3px 10px;border-radius:20px;font-size:0.72rem;font-weight:700;">
+                                ${statusText}
+                            </span>
+                            
+                            <span class="rx-card-items-count">
+                                <i class="fas fa-pills"></i> ${itemCount} أصناف
+                            </span>
+                            
+                            ${isPending ? `
+                            <button class="rx-card-action-btn" data-action="dispense" data-id="${p.id}">
+                                <i class="fas fa-check"></i> صرف
+                            </button>` : `
+                            <button class="rx-card-action-btn dispensed-btn" data-action="details" data-id="${p.id}">
+                                <i class="fas fa-eye"></i> تفاصيل
+                            </button>`}
+                        </div>
+                    </div>
+                </div>`;
             }).join('');
         };
 
-        // ============ فتح صفحة التفاصيل ============
         const openPrescriptionDetails = (prescriptionId) => {
             if (!prescriptionId) return;
-            const url = `prescription-details.html?id=${prescriptionId}&tenant=${currentTenantId || ''}`;
-            window.location.href = url;
+            window.location.href = `prescription-details.html?id=${prescriptionId}&tenant=${currentTenantId || ''}`;
         };
 
-        // ============ فتح مودال الصرف (للوصفات الجديدة) ============
         const openDispenseModal = async (prescriptionId) => {
             const prescription = state.allPrescriptions.find(p => p.id === prescriptionId);
-            if (!prescription) return;
-            
-            // لو الوصفة متصرفة، روح لصفحة التفاصيل
-            if (prescription.status !== 'لم تصرف بعد') {
-                openPrescriptionDetails(prescriptionId);
-                return;
-            }
+            if (!prescription || prescription.status !== 'لم تصرف بعد') return;
             
             let items = [];
             try {
                 const itemsSnap = await get(ref(db, `tenants/${currentTenantId}/prescription_items/${prescriptionId}`));
-                if (itemsSnap.exists()) {
-                    items = Object.values(itemsSnap.val());
-                }
-            } catch (e) {
-                console.warn('تعذر تحميل عناصر الوصفة:', e.message);
-            }
+                if (itemsSnap.exists()) items = Object.values(itemsSnap.val());
+            } catch (e) {}
             
             const doctor = state.doctorsList.find(d => d.id === prescription.doctor_id);
             const doctorName = doctor ? doctor.name : 'طبيب';
@@ -1401,32 +1518,26 @@
                         <b>${escapeHtml(prescription.patient_name || 'مريض')}</b>
                         <div style="font-size:0.78rem;color:var(--text-sec);">د. ${escapeHtml(doctorName)}</div>
                     </div>
-                </div>
-            `;
+                </div>`;
             
-            if (items.length === 0) {
-                $('#dispenseItemsList').innerHTML = '<div style="color:var(--text-sec);">لا توجد عناصر في الوصفة</div>';
-            } else {
-                const formLabels = { 'tablet': '💊 أقراص', 'syrup': '🥄 شراب', 'injection': '💉 حقن', 'suppository': '🧴 لبوس', 'drops': '💧 نقط' };
-                $('#dispenseItemsList').innerHTML = items.map((item, i) => `
+            const formLabels = { 'tablet': '💊 أقراص', 'syrup': '🥄 شراب', 'injection': '💉 حقن', 'suppository': '🧴 لبوس', 'drops': '💧 نقط' };
+            $('#dispenseItemsList').innerHTML = items.length === 0 
+                ? '<div style="color:var(--text-sec);">لا توجد عناصر في الوصفة</div>'
+                : items.map(item => `
                     <div class="rx-detail-item">
                         <div class="drug-icon">${formLabels[item.form]?.split(' ')[0] || '💊'}</div>
                         <div style="flex:1;">
-                            <b>${escapeHtml(item.drug_name || item.drug_id || 'دواء')}</b>
+                            <b>${escapeHtml(item.drug_name || 'دواء')}</b>
                             <div style="font-size:0.75rem;color:var(--text-sec);">${escapeHtml(item.dose || '')}</div>
                         </div>
-                    </div>
-                `).join('');
-            }
+                    </div>`).join('');
             
             $('#dispenseModal').dataset.prescriptionId = prescriptionId;
             $('#dispenseStatus').value = 'تم الصرف';
             $('#dispenseNotes').value = '';
-            
             $('#dispenseModal').style.display = 'flex';
         };
 
-        // ============ تأكيد الصرف ============
         const confirmDispense = async () => {
             const prescriptionId = $('#dispenseModal').dataset.prescriptionId;
             if (!prescriptionId) return;
@@ -1441,136 +1552,104 @@
                 updates[`tenants/${currentTenantId}/prescriptions/${prescriptionId}/dispensed_at`] = now;
                 updates[`tenants/${currentTenantId}/prescriptions/${prescriptionId}/pharmacist_id`] = state.currentUser.uid;
                 updates[`tenants/${currentTenantId}/prescriptions/${prescriptionId}/pharmacist_name`] = state.pharmacistData.name || 'صيدلي';
-                if (notes) {
-                    updates[`tenants/${currentTenantId}/prescriptions/${prescriptionId}/pharmacist_notes`] = notes;
-                }
+                if (notes) updates[`tenants/${currentTenantId}/prescriptions/${prescriptionId}/pharmacist_notes`] = notes;
                 
                 await update(ref(db), updates);
-                
                 $('#dispenseModal').style.display = 'none';
                 showToast('✅ تم صرف الوصفة بنجاح');
             } catch (err) {
-                console.error('خطأ في صرف الوصفة:', err);
                 showToast('❌ خطأ في صرف الوصفة', true);
             }
         };
 
-        // ============ البحث عن مريض ============
         let searchTimer;
         const searchPatients = async (term) => {
-            if (!term || term.length < 2) {
-                $('#searchResults').style.display = 'none';
-                return;
-            }
-            
+            if (!term || term.length < 2) { $('#searchResults').style.display = 'none'; return; }
             const termLower = term.toLowerCase();
             let results = [];
-            
             try {
                 const prescriptionsSnap = await get(ref(db, `tenants/${currentTenantId}/prescriptions`));
                 const seen = new Set();
-                
                 if (prescriptionsSnap.exists()) {
                     prescriptionsSnap.forEach(child => {
                         const p = child.val();
                         const patientId = p.patient_id;
                         const patientName = (p.patient_name || '').toLowerCase();
-                        
-                        if (!seen.has(patientId) && 
-                            (patientName.includes(termLower) || 
-                             (p.phone && p.phone.includes(term)))) {
+                        if (!seen.has(patientId) && (patientName.includes(termLower) || (p.phone && p.phone.includes(term)))) {
                             seen.add(patientId);
-                            results.push({
-                                id: patientId,
-                                name: p.patient_name || 'مريض',
-                                phone: p.phone || '',
-                            });
+                            results.push({ id: patientId, name: p.patient_name || 'مريض', phone: p.phone || '' });
                         }
                     });
                 }
-            } catch (e) {
-                console.warn('خطأ في البحث:', e.message);
-            }
+            } catch (e) {}
             
             const container = $('#searchResults');
-            
-            if (results.length === 0) {
-                container.innerHTML = '<div class="search-item" style="color:var(--text-sec);">لا توجد نتائج</div>';
-            } else {
-                container.innerHTML = results.slice(0, 10).map(p => `
+            container.innerHTML = results.length === 0 
+                ? '<div class="search-item" style="color:var(--text-sec);">لا توجد نتائج</div>'
+                : results.slice(0, 10).map(p => `
                     <div class="search-item" data-id="${p.id}">
                         <b>${escapeHtml(p.name)}</b>
                         <small style="color:var(--text-sec);margin-right:auto;">${escapeHtml(p.phone)}</small>
-                    </div>
-                `).join('');
-            }
-            
+                    </div>`).join('');
             container.style.display = 'block';
         };
 
-        // ============ تسجيل الخروج ============
         const logout = async () => {
             try {
                 showToast('👋 جاري تسجيل الخروج...');
-                
-                if (state.unsubscribePrescriptions) {
-                    state.unsubscribePrescriptions();
-                    state.unsubscribePrescriptions = null;
-                }
-                
+                if (state.unsubscribePrescriptions) { state.unsubscribePrescriptions(); state.unsubscribePrescriptions = null; }
                 clearLoginSessionOnly();
-                
                 state.currentUser = null;
                 state.pharmacistData = null;
                 state.doctorsList = [];
                 state.allPrescriptions = [];
-                
                 await signOut(auth);
-                
                 window.location.href = 'index.html';
-                
             } catch (error) {
-                console.error('خطأ أثناء تسجيل الخروج:', error);
                 clearLoginSessionOnly();
                 window.location.href = 'index.html';
             }
         };
 
-        // ============ ربط الأحداث ============
         const initEvents = () => {
-            // تبويبات الحالة
             $$('.status-tab').forEach(tab => {
                 tab.addEventListener('click', () => {
                     $$('.status-tab').forEach(t => t.classList.remove('active'));
                     tab.classList.add('active');
                     state.currentTab = tab.dataset.tab;
                     updateCounts();
-                    renderTable();
+                    renderCards();
                 });
             });
             
-            // أحداث الجدول - الضغط على الصف يفتح التفاصيل
-            $('#prescriptionsBody').addEventListener('click', (e) => {
-                const row = e.target.closest('tr[data-id]');
-                if (!row) return;
+            // الضغط على البطاقة
+            $('#prescriptionsGrid').addEventListener('click', (e) => {
+                const actionBtn = e.target.closest('[data-action]');
+                if (actionBtn) {
+                    e.stopPropagation();
+                    const id = actionBtn.dataset.id;
+                    if (actionBtn.dataset.action === 'dispense') {
+                        openDispenseModal(id);
+                    } else {
+                        openPrescriptionDetails(id);
+                    }
+                    return;
+                }
                 
-                const id = row.dataset.id;
+                const card = e.target.closest('.rx-card');
+                if (!card) return;
+                const id = card.dataset.id;
                 const prescription = state.allPrescriptions.find(p => p.id === id);
-                
-                // لو الوصفة جديدة، افتح مودال الصرف
                 if (prescription && prescription.status === 'لم تصرف بعد') {
                     openDispenseModal(id);
                 } else {
-                    // لو متصرفة، روح لصفحة التفاصيل
                     openPrescriptionDetails(id);
                 }
             });
             
-            // مودال الصرف
             $('#confirmDispenseBtn').addEventListener('click', confirmDispense);
             $('#closeDispenseBtn').addEventListener('click', () => $('#dispenseModal').style.display = 'none');
             
-            // مودال البحث
             $('#searchPatientBtn').addEventListener('click', () => {
                 $('#searchModal').style.display = 'flex';
                 $('#patientSearchInput').value = '';
@@ -1581,15 +1660,11 @@
             
             $('#patientSearchInput').addEventListener('input', () => {
                 clearTimeout(searchTimer);
-                searchTimer = setTimeout(() => {
-                    searchPatients($('#patientSearchInput').value.trim());
-                }, 300);
+                searchTimer = setTimeout(() => searchPatients($('#patientSearchInput').value.trim()), 300);
             });
             
-            // تسجيل الخروج
             $('#logoutBtn').addEventListener('click', logout);
             
-            // إغلاق المودالات
             window.addEventListener('click', (e) => {
                 if (e.target === $('#dispenseModal')) $('#dispenseModal').style.display = 'none';
                 if (e.target === $('#searchModal')) $('#searchModal').style.display = 'none';
@@ -1608,64 +1683,31 @@
                 }
             });
             
-            // مستمعي الاتصال
-            window.addEventListener('online', () => {
-                setSyncStatus(true);
-                showToast('📡 تم استعادة الاتصال');
-            });
-            
-            window.addEventListener('offline', () => {
-                setSyncStatus(false);
-                showToast('⚠️ انقطع الاتصال', true);
-            });
-            
-            window.addEventListener('beforeunload', () => {
-                if (state.unsubscribePrescriptions) {
-                    state.unsubscribePrescriptions();
-                }
-            });
+            window.addEventListener('online', () => { setSyncStatus(true); showToast('📡 تم استعادة الاتصال'); });
+            window.addEventListener('offline', () => { setSyncStatus(false); showToast('⚠️ انقطع الاتصال', true); });
+            window.addEventListener('beforeunload', () => { if (state.unsubscribePrescriptions) state.unsubscribePrescriptions(); });
         };
 
-        // ============ بدء التشغيل ============
         onAuthStateChanged(auth, async (user) => {
-            if (!user) {
-                clearLoginSessionOnly();
-                window.location.href = 'index.html';
-                return;
-            }
+            if (!user) { clearLoginSessionOnly(); window.location.href = 'index.html'; return; }
             
-            // ✅ 1. نجيب tenantId من الرابط
             const urlParams = new URLSearchParams(window.location.search);
             const tenantFromUrl = urlParams.get('tenant');
             
             if (tenantFromUrl) {
                 currentTenantId = tenantFromUrl;
             } else {
-                // ✅ 2. من الجلسة المشفرة
                 try {
                     const encrypted = localStorage.getItem('shifa_secure_session');
                     if (encrypted) {
                         const decoded = atob(encrypted);
                         const match = decoded.match(/"tenantId":"([^"]+)"/);
-                        if (match) {
-                            currentTenantId = match[1];
-                        }
+                        if (match) currentTenantId = match[1];
                     }
                 } catch (e) {}
-                
-                // ✅ 3. من الجلسة القديمة
                 if (!currentTenantId) {
                     const oldSession = localStorage.getItem('shifa_session');
-                    if (oldSession) {
-                        try {
-                            const parsed = JSON.parse(oldSession);
-                            currentTenantId = parsed.tenantId || user.uid;
-                        } catch (e) {
-                            currentTenantId = user.uid;
-                        }
-                    } else {
-                        currentTenantId = user.uid;
-                    }
+                    currentTenantId = oldSession ? (JSON.parse(oldSession).tenantId || user.uid) : user.uid;
                 }
             }
             
@@ -1674,17 +1716,11 @@
             
             if (!state.currentUser) {
                 state.currentUser = { uid: user.uid };
-                
                 const success = await loadPharmacistData(user.uid);
-                if (!success) {
-                    showToast('⚠️ تعذر تحميل بيانات الصيدلي', true);
-                    return;
-                }
+                if (!success) { showToast('⚠️ تعذر تحميل بيانات الصيدلي', true); return; }
                 
                 const savedDoctor = localStorage.getItem(getTenantStorageKey('selected_doctor'));
-                if (savedDoctor) {
-                    state.selectedDoctorId = savedDoctor;
-                }
+                if (savedDoctor) state.selectedDoctorId = savedDoctor;
                 
                 initEvents();
                 loadDoctors();
