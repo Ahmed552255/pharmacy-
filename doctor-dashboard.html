@@ -910,11 +910,13 @@
             async recordUsage(drugName, form, dose, freqLabel) { await favoriteDosesDB.recordDose(drugName, form, dose, freqLabel); }
         };
 
+        // ============ ✅ التعديل الأساسي: drugManager مع تحميل مباشر من الملف المحلي ============
         const drugManager = {
             _cachePromise: null,
             async loadCache() {
                 if (this._cachePromise) return this._cachePromise;
                 this._cachePromise = (async () => {
+                    // 1. محاولة تحميل الأدوية من Firebase أولاً
                     try { 
                         const snap = await get(ref(db, `tenants/${currentTenantId}/drugs`));
                         if (snap.exists()) {
@@ -923,8 +925,62 @@
                             const globalSnap = await get(ref(db, 'drugs'));
                             state.globalDrugsCache = globalSnap.exists() ? Object.values(globalSnap.val()) : [];
                         }
-                    } catch(e) { state.globalDrugsCache = []; }
-                    try { const module = await import('./drugs-database.js'); const localDrugs = module.default || module.drugsDatabase || []; const seen = new Set(state.globalDrugsCache.map(d => (d.name || '').toLowerCase())); localDrugs.forEach(name => { if (!seen.has(name.toLowerCase())) { state.globalDrugsCache.push({ id: `local_${state.globalDrugsCache.length}`, name, form: 'tablet', freq: 0 }); } }); } catch(e) {}
+                    } catch(e) { 
+                        state.globalDrugsCache = []; 
+                    }
+                    
+                    // 2. تحميل الأدوية من الملف المحلي (أولوية على Firebase إذا كانت Firebase فارغة)
+                    // هذا هو التعديل الرئيسي - نتعامل مع الملف المحلي مباشرة
+                    try {
+                        // استيراد الملف المحلي
+                        const module = await import('./drugs-database.js');
+                        
+                        // الملف بيصدر المصفوفة باسم drugsDatabase
+                        const localDrugs = module.drugsDatabase || module.default || [];
+                        
+                        // نتأكد إنها مصفوفة
+                        if (Array.isArray(localDrugs) && localDrugs.length > 0) {
+                            // نخلي Set علشان نمنع التكرار
+                            const seen = new Set(state.globalDrugsCache.map(d => (d.name || '').toLowerCase()));
+                            
+                            // نضيف الأدوية المحلية
+                            localDrugs.forEach(drugEntry => {
+                                // لو كان مجرد نص (string) نحوله لكائن
+                                let drugName, drugForm = 'tablet', drugStrength = '';
+                                
+                                if (typeof drugEntry === 'string') {
+                                    // ده نص زي "ACICLOVIR MYLAN 500MG 5 VIALS"
+                                    drugName = drugEntry;
+                                    drugStrength = extractStrength(drugName);
+                                } else if (typeof drugEntry === 'object' && drugEntry !== null) {
+                                    // ده كائن { name: "..." } أو { fullName: "..." }
+                                    drugName = drugEntry.fullName || drugEntry.name || '';
+                                    drugForm = drugEntry.form || 'tablet';
+                                    drugStrength = drugEntry.strength || extractStrength(drugName) || '';
+                                }
+                                
+                                if (drugName && !seen.has(drugName.toLowerCase())) {
+                                    seen.add(drugName.toLowerCase());
+                                    state.globalDrugsCache.push({
+                                        id: `local_${state.globalDrugsCache.length}`,
+                                        name: drugName,
+                                        fullName: drugName,
+                                        form: drugForm,
+                                        strength: drugStrength,
+                                        freq: 0
+                                    });
+                                }
+                            });
+                            
+                            console.log(`✅ تم تحميل ${localDrugs.length} دواء من الملف المحلي`);
+                            console.log(`📦 إجمالي الأدوية في الذاكرة: ${state.globalDrugsCache.length}`);
+                        }
+                    } catch(importError) {
+                        console.warn('⚠️ تعذر تحميل ملف drugs-database.js:', importError.message);
+                        console.warn('💡 تأكد من وجود الملف في نفس المجلد واسمه drugs-database.js');
+                        console.warn('💡 الملف يجب أن يصدر المصفوفة كـ export default drugsDatabase');
+                    }
+                    
                     state.drugCache = [...state.globalDrugsCache];
                 })();
                 return this._cachePromise;
@@ -935,6 +991,7 @@
                 const suggestions = []; 
                 const seenNames = new Set();
                 
+                // 1. البحث في المفضلات المحلية أولاً
                 const localFavs = await favoritesDB.search(termLower, null, 3);
                 localFavs.forEach(d => { 
                     const key = `${(d.name || '').toLowerCase()}_${(d.form || '').toLowerCase()}_${(d.strength || '').toLowerCase()}`; 
@@ -951,13 +1008,15 @@
                     } 
                 });
                 
+                // 2. البحث في قاعدة الأدوية العامة (تشمل الأدوية المحملة من الملف المحلي)
                 const remainingSlots = 5 - suggestions.length;
                 if (remainingSlots > 0) { 
                     let globalResults = state.globalDrugsCache.filter(d => { 
                         const name = (d.name || '').toLowerCase(); 
+                        const fullName = (d.fullName || '').toLowerCase();
                         const strength = (d.strength || '').toLowerCase();
                         return name.includes(termLower) || 
-                               (d.fullName || '').toLowerCase().includes(termLower) ||
+                               fullName.includes(termLower) ||
                                strength.includes(termLower);
                     }); 
                     globalResults.sort((a, b) => (b.freq || 0) - (a.freq || 0)); 
@@ -966,7 +1025,7 @@
                         if (!seenNames.has(key) && suggestions.length < 5) { 
                             seenNames.add(key); 
                             suggestions.push({ 
-                                name: d.name || '', 
+                                name: d.fullName || d.name || '', 
                                 form: d.form || 'tablet', 
                                 strength: d.strength || extractStrength(d.name || ''), 
                                 freq: d.freq || 0, 
@@ -1909,6 +1968,7 @@
                 sessionStorage.setItem('userRole', 'doctor'); 
                 sessionStorage.setItem('userName', state.user.name||'');
                 
+                // تحميل قواعد البيانات المحلية والأدوية
                 await Promise.all([sessionDB.open(), favoritesDB.open(), favoriteDosesDB.open(), drugManager.loadCache()]);
                 setupEventListeners();
                 
@@ -1957,6 +2017,7 @@
         console.log('⭐ المفضلات: تبحث بشكل ذكي مع كل حرف يُكتب');
         console.log('🔒 كل طبيب يشوف كشوفاته هو فقط في مجمعه');
         console.log('💾 وضع الحفظ: يمسح جلسة الدخول فقط - يحتفظ ببيانات المجمع');
+        console.log('📁 تحميل الأدوية من الملف المحلي drugs-database.js');
     </script>
 </body>
 </html>
