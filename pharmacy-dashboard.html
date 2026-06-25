@@ -23,75 +23,157 @@
             --success: #26A69A;
             --warning: #FFB74D;
             --border: #E0E0E0;
+            --shadow-xs: 0 1px 4px rgba(0,0,0,0.03);
             --shadow-sm: 0 4px 12px rgba(0,0,0,0.05);
             --shadow-md: 0 8px 24px rgba(0,0,0,0.08);
+            --radius-xs: 8px;
             --radius-sm: 14px;
             --radius-md: 20px;
             --radius-lg: 28px;
             --radius-xl: 50px;
             --safe-bottom: env(safe-area-inset-bottom, 16px);
+            --safe-top: env(safe-area-inset-top, 0px);
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        input, textarea { -webkit-user-select: text; user-select: text; }
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+            -webkit-tap-highlight-color: transparent; 
+        }
+        
+        input, textarea, select { 
+            -webkit-user-select: text; 
+            user-select: text; 
+        }
 
         html {
-            font-size: 15px;
+            font-size: clamp(13px, 2.8vw, 16px);
             -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
             -webkit-text-size-adjust: 100%;
+            text-rendering: optimizeLegibility;
         }
 
         body {
-            font-family: 'Cairo', sans-serif;
+            font-family: 'Cairo', system-ui, -apple-system, sans-serif;
             background: var(--bg);
             color: var(--ink);
             min-height: 100vh;
             min-height: 100dvh;
-            padding: 12px;
-            padding-bottom: calc(12px + var(--safe-bottom) + 45vh);
+            padding: clamp(6px, 1.5vw, 12px);
+            padding-bottom: calc(clamp(6px, 1.5vw, 12px) + var(--safe-bottom) + 45vh);
+            padding-top: calc(clamp(6px, 1.5vw, 12px) + var(--safe-top));
             overflow-x: hidden;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
             -webkit-overflow-scrolling: touch;
+            position: relative;
         }
 
-        .container { max-width: 1300px; margin: 0 auto; }
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(ellipse at 15% 25%, rgba(0,174,239,0.04) 0%, transparent 50%),
+                        radial-gradient(ellipse at 85% 75%, rgba(0,128,128,0.03) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
 
+        .container { 
+            max-width: min(1400px, 98vw); 
+            margin: 0 auto; 
+        }
+
+        /* ============ شاشة التحميل ============ */
+        #appLoader {
+            position: fixed;
+            inset: 0;
+            background: rgba(250,250,250,0.95);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 3000;
+            flex-direction: column;
+            gap: clamp(12px, 2vw, 16px);
+        }
+        
+        .loader-circle {
+            width: clamp(36px, 8vw, 44px);
+            height: clamp(36px, 8vw, 44px);
+            border: 3px solid var(--primary-light);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+        
+        @keyframes spin { 
+            to { transform: rotate(360deg); } 
+        }
+        
+        .loader-text {
+            font-size: clamp(0.9rem, 2.5vw, 1rem);
+            font-weight: 600;
+            color: var(--primary-dark);
+        }
+
+        /* ============ الهيدر ============ */
         .app-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            background: var(--white);
+            background: rgba(255,255,255,0.92);
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
             border-radius: var(--radius-lg);
-            padding: 10px 18px;
-            margin-bottom: 14px;
-            border: 1px solid var(--border);
+            padding: clamp(8px, 2vw, 10px) clamp(12px, 3vw, 18px);
+            margin-bottom: clamp(8px, 2vw, 14px);
+            border: 1px solid rgba(255,255,255,0.9);
             box-shadow: var(--shadow-sm);
             flex-wrap: wrap;
-            gap: 10px;
+            gap: clamp(6px, 1.5vw, 10px);
             position: sticky;
-            top: 6px;
+            top: clamp(4px, 1vw, 6px);
             z-index: 100;
         }
 
+        .logo { 
+            display: flex; 
+            align-items: center; 
+            gap: clamp(4px, 1vw, 6px); 
+            flex-shrink: 0; 
+        }
+        
         .logo h2 {
-            font-size: 1.3rem;
-            font-weight: 800;
-            color: var(--primary-dark);
+            font-size: clamp(1.1rem, 3.5vw, 1.4rem);
+            font-weight: 900;
+            background: linear-gradient(135deg, #008080, #00AEEF);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
             white-space: nowrap;
         }
-        .logo i { color: var(--primary); }
+        
+        .logo i { 
+            color: var(--primary); 
+            font-size: clamp(0.9rem, 2.5vw, 1.1rem); 
+        }
 
         .header-actions {
             display: flex;
-            gap: 8px;
+            gap: clamp(4px, 1vw, 8px);
             align-items: center;
             flex-wrap: wrap;
         }
 
         .tenant-badge {
             background: var(--primary-light);
-            padding: 4px 10px;
+            padding: clamp(3px, 0.8vw, 4px) clamp(8px, 2vw, 10px);
             border-radius: var(--radius-xl);
-            font-size: 0.72rem;
+            font-size: clamp(0.68rem, 1.8vw, 0.75rem);
             font-weight: 600;
             color: var(--primary-dark);
             display: flex;
@@ -102,161 +184,236 @@
 
         #welcomeMsg {
             font-weight: 600;
-            font-size: 0.85rem;
+            font-size: clamp(0.78rem, 2vw, 0.88rem);
             color: var(--text-sec);
+            white-space: nowrap;
+            max-width: clamp(80px, 20vw, 150px);
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .btn {
-            padding: 9px 16px;
+            padding: clamp(7px, 1.5vw, 9px) clamp(12px, 2.5vw, 16px);
             border-radius: var(--radius-xl);
             border: none;
             font-weight: 700;
-            font-family: 'Cairo', sans-serif;
+            font-family: 'Cairo', system-ui, sans-serif;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
-            gap: 6px;
-            font-size: 0.83rem;
+            gap: clamp(4px, 1vw, 6px);
+            font-size: clamp(0.75rem, 2vw, 0.85rem);
             white-space: nowrap;
             touch-action: manipulation;
             user-select: none;
             -webkit-user-select: none;
-            transition: opacity 0.15s;
+            transition: all 0.15s ease;
+            min-height: clamp(32px, 8vw, 40px);
         }
-        .btn:active { opacity: 0.8; }
-        .btn-primary { background: var(--primary); color: white; box-shadow: 0 3px 10px rgba(0,174,239,0.2); }
-        .btn-outline { background: var(--white); color: var(--ink); border: 1.5px solid var(--border); }
-        .btn-sm { padding: 6px 12px; font-size: 0.78rem; border-radius: var(--radius-sm); }
+        
+        .btn:active { 
+            transform: scale(0.96); 
+            opacity: 0.85; 
+        }
+        
+        .btn-primary { 
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark)); 
+            color: white; 
+            box-shadow: 0 4px 12px rgba(0,174,239,0.25); 
+        }
+        
+        .btn-outline { 
+            background: rgba(255,255,255,0.9); 
+            color: var(--ink); 
+            border: 1.5px solid var(--border); 
+        }
+        
+        .btn-sm { 
+            padding: clamp(5px, 1vw, 6px) clamp(8px, 2vw, 12px); 
+            font-size: clamp(0.7rem, 1.8vw, 0.8rem); 
+            min-height: clamp(28px, 7vw, 34px);
+            border-radius: var(--radius-sm); 
+        }
+        
+        .btn-icon { 
+            width: clamp(34px, 8vw, 42px); 
+            height: clamp(34px, 8vw, 42px); 
+            padding: 0; 
+            justify-content: center; 
+            flex-shrink: 0;
+            aspect-ratio: 1;
+        }
 
         .sync-dot {
             display: inline-block;
-            width: 7px;
-            height: 7px;
+            width: clamp(6px, 1.5vw, 8px);
+            height: clamp(6px, 1.5vw, 8px);
             border-radius: 50%;
-            margin-left: 5px;
+            margin-left: 4px;
             vertical-align: middle;
         }
         .sync-dot.on { background: var(--success); }
-        .sync-dot.off { background: #FFB74D; }
+        .sync-dot.off { background: #FFB74D; animation: pulse 1.5s infinite; }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
 
+        /* ============ شريط الأطباء ============ */
         .doctors-strip {
             background: var(--white);
             border-radius: var(--radius-xl);
-            padding: 6px;
+            padding: clamp(4px, 1vw, 6px);
             border: 1px solid var(--border);
             box-shadow: var(--shadow-sm);
-            margin-bottom: 14px;
+            margin-bottom: clamp(8px, 2vw, 14px);
             overflow: hidden;
         }
+        
         .doctors-strip .strip-scroll {
             display: flex;
-            gap: 6px;
+            gap: clamp(4px, 1vw, 6px);
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
             scroll-behavior: smooth;
-            padding: 4px;
+            scroll-snap-type: x proximity;
+            padding: clamp(3px, 0.8vw, 4px);
             scrollbar-width: none;
             -ms-overflow-style: none;
         }
-        .doctors-strip .strip-scroll::-webkit-scrollbar { display: none; }
+        
+        .doctors-strip .strip-scroll::-webkit-scrollbar { 
+            display: none; 
+        }
 
         .doctor-pill {
             display: flex;
             align-items: center;
-            gap: 8px;
-            padding: 10px 16px;
+            gap: clamp(6px, 1.5vw, 8px);
+            padding: clamp(8px, 2vw, 10px) clamp(12px, 2.5vw, 16px);
             background: var(--white);
             border-radius: var(--radius-xl);
             border: 1.5px solid var(--border);
             cursor: pointer;
             white-space: nowrap;
             flex-shrink: 0;
-            transition: all 0.2s;
+            scroll-snap-align: start;
+            transition: all 0.2s ease;
             font-weight: 600;
-            font-size: 0.85rem;
+            font-size: clamp(0.78rem, 2vw, 0.88rem);
             touch-action: manipulation;
+            min-height: clamp(36px, 9vw, 44px);
         }
-        .doctor-pill:active { transform: scale(0.96); }
+        
+        .doctor-pill:active { 
+            transform: scale(0.95); 
+        }
+        
         .doctor-pill.active {
-            background: var(--primary);
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
             color: white;
             border-color: var(--primary);
-            box-shadow: 0 4px 12px rgba(0,174,239,0.25);
+            box-shadow: 0 4px 14px rgba(0,174,239,0.3);
+            font-weight: 700;
         }
+        
         .doctor-pill .pill-avatar {
-            width: 30px;
-            height: 30px;
-            min-width: 30px;
+            width: clamp(26px, 6vw, 30px);
+            height: clamp(26px, 6vw, 30px);
+            min-width: clamp(26px, 6vw, 30px);
             background: var(--primary-light);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.8rem;
+            font-size: clamp(0.7rem, 1.8vw, 0.8rem);
             color: var(--primary-dark);
+            font-weight: 700;
         }
+        
         .doctor-pill.active .pill-avatar {
             background: rgba(255,255,255,0.3);
             color: white;
         }
+        
         .doctor-pill .pill-badge {
             background: var(--danger);
             color: white;
             border-radius: 20px;
             padding: 2px 8px;
-            font-size: 0.7rem;
+            font-size: clamp(0.65rem, 1.6vw, 0.72rem);
             font-weight: 700;
+            animation: badgePop 0.3s ease;
         }
+        
         .doctor-pill.active .pill-badge {
-            background: rgba(255,255,255,0.4);
+            background: rgba(255,255,255,0.35);
+        }
+        
+        @keyframes badgePop {
+            from { transform: scale(0.5); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
         }
 
+        /* ============ تبويبات الحالة ============ */
         .status-tabs {
             display: flex;
-            gap: 6px;
-            margin-bottom: 14px;
+            gap: clamp(3px, 0.8vw, 6px);
+            margin-bottom: clamp(8px, 2vw, 14px);
             flex-wrap: wrap;
             background: var(--white);
             border-radius: var(--radius-xl);
-            padding: 5px;
+            padding: clamp(3px, 0.8vw, 5px);
             border: 1px solid var(--border);
             box-shadow: var(--shadow-sm);
         }
+        
         .status-tab {
             background: transparent;
             border: none;
-            padding: 9px 16px;
+            padding: clamp(7px, 1.5vw, 9px) clamp(10px, 2.5vw, 16px);
             border-radius: var(--radius-xl);
             font-weight: 600;
-            font-family: 'Cairo', sans-serif;
+            font-family: 'Cairo', system-ui, sans-serif;
             cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 6px;
-            font-size: 0.82rem;
+            gap: clamp(4px, 1vw, 6px);
+            font-size: clamp(0.75rem, 2vw, 0.85rem);
             color: var(--text-sec);
             flex: 1;
             justify-content: center;
-            min-width: 80px;
+            min-width: clamp(60px, 15vw, 80px);
             touch-action: manipulation;
+            transition: all 0.2s ease;
         }
+        
         .status-tab .badge {
-            background: rgba(0,0,0,0.04);
+            background: rgba(0,0,0,0.05);
             border-radius: 30px;
             padding: 2px 9px;
-            font-size: 0.75rem;
+            font-size: clamp(0.7rem, 1.6vw, 0.75rem);
             font-weight: 700;
+            transition: all 0.2s ease;
         }
+        
         .status-tab.active {
             background: white;
             color: var(--primary);
-            box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
         }
+        
         .status-tab.active .badge {
             background: var(--primary-light);
             color: var(--primary);
         }
+        
+        .status-tab:active:not(.active) {
+            background: rgba(255,255,255,0.6);
+        }
 
+        /* ============ جدول الوصفات ============ */
         .table-container {
             background: var(--white);
             border-radius: var(--radius-lg);
@@ -264,91 +421,160 @@
             border: 1px solid var(--border);
             overflow: hidden;
         }
+        
         .table-scroll {
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
         }
+        
         table {
             width: 100%;
             border-collapse: collapse;
             text-align: center;
-            min-width: 700px;
-            font-size: 0.85rem;
+            min-width: clamp(300px, 80vw, 500px);
+            font-size: clamp(0.78rem, 2vw, 0.88rem);
         }
-        th, td { padding: 12px 8px; }
+        
+        th, td { 
+            padding: clamp(8px, 2vw, 12px) clamp(6px, 1.5vw, 10px); 
+        }
+        
         thead th {
             background: #F5FAFC;
             font-weight: 700;
             color: var(--ink);
-            font-size: 0.78rem;
+            font-size: clamp(0.72rem, 1.8vw, 0.8rem);
             white-space: nowrap;
             position: sticky;
             top: 0;
             z-index: 1;
+            border-bottom: 2px solid var(--primary-light);
         }
-        tbody tr { border-bottom: 1px solid var(--border); }
-        tbody tr:last-child { border-bottom: none; }
-        tbody tr { cursor: pointer; transition: background 0.15s; }
-        tbody tr:active { background: var(--primary-light); }
+        
+        tbody tr { 
+            border-bottom: 1px solid var(--border); 
+            cursor: pointer; 
+            transition: background 0.15s ease; 
+            min-height: clamp(44px, 10vw, 52px);
+        }
+        
+        tbody tr:last-child { 
+            border-bottom: none; 
+        }
+        
+        tbody tr:active { 
+            background: var(--primary-light); 
+        }
+        
+        tbody tr:hover { 
+            background: #F8FDFE; 
+        }
 
         .status-badge {
-            padding: 4px 12px;
+            padding: clamp(3px, 0.8vw, 4px) clamp(8px, 2vw, 12px);
             border-radius: 30px;
-            font-size: 0.72rem;
+            font-size: clamp(0.68rem, 1.6vw, 0.75rem);
             font-weight: 700;
             white-space: nowrap;
             display: inline-flex;
             align-items: center;
-            gap: 3px;
+            gap: 4px;
         }
-        .s-pending { background: #FFF3E0; color: #E65100; }
-        .s-dispensed { background: #E8F5E9; color: #2E7D32; }
-        .s-partial { background: #E3F2FD; color: #1565C0; }
+        
+        .s-pending { 
+            background: #FFF3E0; 
+            color: #E65100; 
+        }
+        
+        .s-dispensed { 
+            background: #E8F5E9; 
+            color: #2E7D32; 
+        }
+        
+        .s-partial { 
+            background: #E3F2FD; 
+            color: #1565C0; 
+        }
 
         .empty-row td {
             text-align: center;
-            padding: 35px;
+            padding: clamp(25px, 6vw, 40px) clamp(10px, 2vw, 16px);
             color: var(--text-sec);
+            font-size: clamp(0.8rem, 2vw, 0.9rem);
+        }
+        
+        .empty-row i {
+            display: block;
+            font-size: clamp(1.8rem, 5vw, 2.5rem);
+            margin-bottom: 8px;
+            opacity: 0.3;
         }
 
         .action-btn {
             background: var(--primary-light);
             border: none;
             border-radius: var(--radius-sm);
-            padding: 5px 10px;
+            padding: clamp(5px, 1vw, 6px) clamp(10px, 2vw, 14px);
             cursor: pointer;
             color: var(--primary-dark);
-            font-family: 'Cairo', sans-serif;
-            font-weight: 600;
-            font-size: 0.75rem;
+            font-family: 'Cairo', system-ui, sans-serif;
+            font-weight: 700;
+            font-size: clamp(0.7rem, 1.6vw, 0.78rem);
             touch-action: manipulation;
+            transition: all 0.15s ease;
+            white-space: nowrap;
         }
-        .action-btn:active { background: var(--primary); color: white; }
+        
+        .action-btn:active { 
+            background: var(--primary); 
+            color: white; 
+        }
 
+        /* ============ المودال ============ */
         .modal {
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.25);
+            background: rgba(26,60,74,0.15);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
             align-items: center;
             justify-content: center;
-            z-index: 1000;
-            padding: 16px;
+            z-index: 2000;
+            padding: clamp(8px, 2vw, 16px);
+            animation: fadeIn 0.2s ease;
         }
+        
+        @keyframes fadeIn { 
+            from { opacity: 0; } 
+            to { opacity: 1; } 
+        }
+        
         .modal-card {
-            background: var(--white);
+            background: rgba(255,255,255,0.98);
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
             border-radius: var(--radius-lg);
             width: 100%;
-            max-width: 500px;
+            max-width: min(550px, 95vw);
             max-height: 85vh;
+            max-height: 85dvh;
             overflow-y: auto;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.12);
-            border: 1px solid var(--border);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+            border: 1px solid rgba(255,255,255,0.9);
+            animation: slideUp 0.25s ease;
             -webkit-overflow-scrolling: touch;
             overscroll-behavior: contain;
         }
+        
+        @keyframes slideUp { 
+            from { transform: translateY(30px); opacity: 0; } 
+            to { transform: translateY(0); opacity: 1; } 
+        }
+        
         .modal-header {
-            padding: 14px 18px;
+            padding: clamp(12px, 2.5vw, 16px) clamp(16px, 3vw, 20px);
             background: #F5FAFC;
             border-bottom: 1px solid var(--border);
             border-radius: var(--radius-lg) var(--radius-lg) 0 0;
@@ -359,75 +585,106 @@
             top: 0;
             z-index: 10;
         }
-        .modal-header h3 { font-size: 1.05rem; font-weight: 700; }
+        
+        .modal-header h3 { 
+            font-size: clamp(0.95rem, 2.5vw, 1.1rem); 
+            font-weight: 800; 
+        }
+        
         .close-btn {
-            background: none;
+            background: rgba(0,0,0,0.04);
             border: none;
-            width: 34px;
-            height: 34px;
+            width: clamp(30px, 7vw, 36px);
+            height: clamp(30px, 7vw, 36px);
             border-radius: 50%;
-            font-size: 22px;
+            font-size: clamp(18px, 4vw, 22px);
             color: var(--text-sec);
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: all 0.15s ease;
+            touch-action: manipulation;
+            aspect-ratio: 1;
         }
-        .close-btn:active { background: rgba(0,0,0,0.05); }
-        .modal-body {
-            padding: 18px;
-            padding-bottom: 45vh;
+        
+        .close-btn:active { 
+            background: rgba(0,0,0,0.08); 
+        }
+        
+        .modal-body { 
+            padding: clamp(14px, 3vw, 20px);
+            padding-bottom: clamp(40vh, 50vh, 55vh);
         }
 
-        .form-group { margin-bottom: 14px; }
+        .form-group { 
+            margin-bottom: clamp(10px, 2.5vw, 14px); 
+        }
+        
         .form-group label {
             display: block;
             margin-bottom: 5px;
-            font-weight: 600;
-            font-size: 0.83rem;
+            font-weight: 700;
+            font-size: clamp(0.8rem, 2vw, 0.88rem);
             color: var(--ink);
         }
+        
         .form-control {
             width: 100%;
-            padding: 10px 14px;
+            padding: clamp(8px, 2vw, 10px) clamp(12px, 2.5vw, 14px);
             border-radius: var(--radius-sm);
             border: 1.5px solid var(--border);
             background: #F5FAFC;
-            font-family: 'Cairo', sans-serif;
-            font-size: 0.85rem;
+            font-family: 'Cairo', system-ui, sans-serif;
+            font-size: clamp(0.8rem, 2vw, 0.88rem);
             color: var(--ink);
             -webkit-appearance: none;
             appearance: none;
+            transition: all 0.15s ease;
         }
+        
         .form-control:focus {
             outline: none;
             border-color: var(--primary);
             background: white;
+            box-shadow: 0 0 0 3px rgba(0,174,239,0.1);
+        }
+        
+        textarea.form-control {
+            resize: vertical;
+            min-height: clamp(60px, 15vw, 80px);
         }
 
         .rx-detail-item {
             display: flex;
             align-items: center;
-            gap: 8px;
-            padding: 8px 12px;
+            gap: clamp(6px, 1.5vw, 10px);
+            padding: clamp(8px, 2vw, 10px) clamp(10px, 2.5vw, 14px);
             background: #F5FAFC;
             border-radius: var(--radius-sm);
             margin-bottom: 6px;
             border: 1px solid var(--border);
+            transition: all 0.15s ease;
         }
+        
         .rx-detail-item .drug-icon {
-            width: 32px;
-            height: 32px;
+            width: clamp(28px, 7vw, 36px);
+            height: clamp(28px, 7vw, 36px);
             border-radius: 50%;
             background: var(--primary-light);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.9rem;
+            font-size: clamp(0.8rem, 2vw, 1rem);
             flex-shrink: 0;
+            aspect-ratio: 1;
         }
 
-        .search-box { position: relative; }
+        /* ============ البحث عن مريض ============ */
+        .search-box { 
+            position: relative; 
+        }
+        
         .search-results {
             position: absolute;
             top: 100%;
@@ -436,48 +693,83 @@
             background: white;
             border: 1px solid var(--border);
             border-radius: var(--radius-sm);
-            margin-top: 3px;
-            max-height: 160px;
+            margin-top: 4px;
+            max-height: clamp(150px, 40vh, 200px);
             overflow-y: auto;
             display: none;
             z-index: 20;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
             -webkit-overflow-scrolling: touch;
         }
+        
         .search-item {
-            padding: 9px 12px;
+            padding: clamp(8px, 2vw, 10px) clamp(10px, 2.5vw, 14px);
             cursor: pointer;
             border-bottom: 1px solid var(--border);
-            font-size: 0.83rem;
+            font-size: clamp(0.78rem, 2vw, 0.85rem);
+            transition: background 0.15s ease;
+            min-height: clamp(36px, 8vw, 44px);
+            display: flex;
+            align-items: center;
         }
-        .search-item:active { background: var(--primary-light); }
+        
+        .search-item:active { 
+            background: var(--primary-light); 
+        }
+        
+        .search-item:last-child { 
+            border-bottom: none; 
+        }
 
+        /* ============ التوست ============ */
         .toast-container {
             position: fixed;
-            bottom: 20px;
+            bottom: max(16px, 3vw);
             left: 50%;
             transform: translateX(-50%);
-            z-index: 3000;
+            z-index: 4000;
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: clamp(4px, 1vw, 6px);
             pointer-events: none;
+            padding-bottom: var(--safe-bottom);
+            max-width: 90vw;
         }
+        
         .toast {
             background: #1A3C4A;
             color: white;
-            padding: 11px 20px;
+            padding: clamp(8px, 2vw, 12px) clamp(14px, 3vw, 22px);
             border-radius: var(--radius-xl);
-            font-weight: 600;
-            font-size: 0.82rem;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.18);
+            font-weight: 700;
+            font-size: clamp(0.78rem, 2vw, 0.85rem);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+            animation: toastIn 0.3s ease, toastOut 0.3s ease 2.2s forwards;
             white-space: nowrap;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: clamp(6px, 1.5vw, 8px);
         }
-        .toast.err { background: #C62828; }
-        .toast.removing { opacity: 0; transform: translateY(-10px); transition: all 0.3s ease; }
+        
+        .toast.err { 
+            background: #C62828; 
+        }
+        
+        .toast.removing { 
+            opacity: 0; 
+            transform: translateY(-10px); 
+            transition: all 0.3s ease; 
+        }
+        
+        @keyframes toastIn { 
+            from { transform: translateY(16px); opacity: 0; } 
+            to { transform: translateY(0); opacity: 1; } 
+        }
+        
+        @keyframes toastOut { 
+            from { transform: translateY(0); opacity: 1; } 
+            to { transform: translateY(-16px); opacity: 0; } 
+        }
 
         .keyboard-scroll-spacer {
             height: 1px;
@@ -486,28 +778,132 @@
             opacity: 0;
         }
 
-        @media (max-width: 768px) {
-            body {
-                padding: 8px;
-                padding-bottom: calc(8px + var(--safe-bottom) + 55vh);
-            }
-            .app-header { padding: 8px 12px; top: 4px; border-radius: var(--radius-md); }
-            .logo h2 { font-size: 1.15rem; }
-            .btn { padding: 7px 12px; font-size: 0.78rem; }
-            .doctor-pill { padding: 8px 12px; font-size: 0.8rem; }
-            .status-tab { padding: 7px 10px; font-size: 0.76rem; }
-            table { min-width: 550px; font-size: 0.78rem; }
-            th, td { padding: 8px 5px; }
-            .modal-card { max-width: 100%; border-radius: var(--radius-md); }
-            .modal-body { padding-bottom: 55vh; }
-            .hide-mobile { display: none; }
+        /* ============ ميديا كويريز ============ */
+        
+        /* تابلت - شاشات متوسطة */
+        @media (min-width: 769px) and (max-width: 1024px) {
+            html { font-size: clamp(13px, 1.8vw, 15px); }
+            .app-header { padding: 8px 14px; }
+            table { min-width: 400px; }
         }
 
+        /* موبايل - شاشات صغيرة */
+        @media (max-width: 768px) {
+            html { font-size: clamp(13px, 3.5vw, 14px); }
+            
+            body { 
+                padding: 4px; 
+                padding-bottom: calc(4px + var(--safe-bottom) + 55vh); 
+            }
+            
+            .app-header { 
+                padding: 6px 10px; 
+                top: 3px; 
+                border-radius: var(--radius-md); 
+                gap: 6px;
+            }
+            
+            .logo h2 { font-size: clamp(1rem, 4vw, 1.2rem); }
+            
+            .header-actions { gap: 4px; }
+            
+            .btn { 
+                padding: 5px 8px; 
+                font-size: 0.72rem; 
+                gap: 3px; 
+                min-height: clamp(28px, 7vw, 32px); 
+            }
+            
+            .btn-sm { 
+                padding: 4px 7px; 
+                font-size: 0.68rem; 
+            }
+            
+            .doctor-pill { 
+                padding: 6px 10px; 
+                font-size: 0.75rem; 
+                min-height: clamp(32px, 8vw, 38px); 
+            }
+            
+            .status-tab { 
+                padding: 6px 8px; 
+                font-size: 0.72rem; 
+                min-width: 50px;
+            }
+            
+            .status-tab .badge { 
+                font-size: 0.65rem; 
+                padding: 1px 6px; 
+            }
+            
+            table { 
+                min-width: 280px; 
+                font-size: 0.75rem; 
+            }
+            
+            th, td { 
+                padding: 6px 4px; 
+            }
+            
+            thead th { 
+                font-size: 0.68rem; 
+            }
+            
+            .status-badge { 
+                padding: 2px 6px; 
+                font-size: 0.65rem; 
+            }
+            
+            .action-btn { 
+                padding: 4px 8px; 
+                font-size: 0.68rem; 
+            }
+            
+            .modal-card { 
+                max-width: 100%; 
+                border-radius: var(--radius-md); 
+                max-height: 90vh;
+                max-height: 90dvh;
+            }
+            
+            .modal-body { 
+                padding: 12px; 
+                padding-bottom: 55vh; 
+            }
+            
+            .hide-mobile { display: none; }
+            
+            #welcomeMsg { max-width: 80px; }
+        }
+
+        /* موبايل صغير جداً */
         @media (max-width: 400px) {
-            .status-tabs { flex-direction: column; gap: 3px; }
-            .status-tab { justify-content: space-between; }
-            body { padding-bottom: calc(8px + var(--safe-bottom) + 65vh); }
-            .modal-body { padding-bottom: 65vh; }
+            html { font-size: clamp(12px, 4vw, 13px); }
+            
+            body { 
+                padding: 2px; 
+                padding-bottom: calc(2px + var(--safe-bottom) + 65vh); 
+            }
+            
+            .status-tabs { 
+                flex-direction: column; 
+                gap: 2px; 
+            }
+            
+            .status-tab { 
+                justify-content: space-between; 
+                text-align: right;
+            }
+            
+            .modal-body { 
+                padding-bottom: 65vh; 
+            }
+        }
+
+        /* شاشات كبيرة */
+        @media (min-width: 1400px) {
+            html { font-size: clamp(15px, 1.2vw, 17px); }
+            .container { max-width: 1300px; }
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -533,17 +929,19 @@
                 </span>
                 <span id="welcomeMsg">مرحباً</span>
                 <button class="btn btn-outline btn-sm" id="searchPatientBtn">
-                    <i class="fas fa-search"></i> <span class="hide-mobile">بحث عن مريض</span>
+                    <i class="fas fa-search"></i> <span class="hide-mobile">بحث</span>
                 </button>
                 <button class="btn btn-outline btn-sm" id="logoutBtn">
-                    <i class="fas fa-sign-out-alt"></i> خروج
+                    <i class="fas fa-sign-out-alt"></i> <span class="hide-mobile">خروج</span>
                 </button>
             </div>
         </header>
 
         <div class="doctors-strip" id="doctorsStrip">
             <div class="strip-scroll" id="doctorStripContainer">
-                <div style="padding:10px;color:var(--text-sec);">جاري تحميل الأطباء...</div>
+                <div style="padding:10px;color:var(--text-sec);text-align:center;width:100%;">
+                    <i class="fas fa-spinner fa-spin"></i> جاري تحميل الأطباء...
+                </div>
             </div>
         </div>
 
@@ -566,15 +964,18 @@
                             <th>#</th>
                             <th>المريض</th>
                             <th>الطبيب</th>
-                            <th>التاريخ</th>
-                            <th>الأدوية</th>
-                            <th>التشخيص</th>
+                            <th>الأصناف</th>
                             <th>الحالة</th>
-                            <th>إجراء</th>
+                            <th>تفاصيل</th>
                         </tr>
                     </thead>
                     <tbody id="prescriptionsBody">
-                        <tr class="empty-row"><td colspan="8">اختر طبيباً من القائمة أعلاه</td></tr>
+                        <tr class="empty-row">
+                            <td colspan="6">
+                                <i class="fas fa-hand-point-up"></i> 
+                                اختر طبيباً من القائمة أعلاه
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -721,9 +1122,6 @@
                 sessionKeysToRemove.forEach(key => localStorage.removeItem(key));
                 
                 sessionStorage.clear();
-                
-                console.log(`✅ تم مسح ${LOGIN_STORAGE_KEYS.length + sessionKeysToRemove.length} مفتاح جلسة`);
-                console.log('💾 تم الإبقاء على بيانات المجمع المحلية');
             } catch (e) {
                 console.warn('تعذر مسح بيانات الجلسة:', e.message);
             }
@@ -732,7 +1130,6 @@
         // ============ تحميل بيانات الصيدلي من مسار المجمعات ============
         const loadPharmacistData = async (uid) => {
             try {
-                // 1️⃣ البحث في كل المجمعات
                 const tenantsSnap = await get(ref(db, 'tenants'));
                 
                 if (tenantsSnap.exists()) {
@@ -748,30 +1145,24 @@
                                 currentTenantId = tenantId;
                                 state.pharmacistData = { id: uid, ...userData };
                                 
-                                if (!userData.tenantId) {
-                                    userData.tenantId = tenantId;
-                                }
-                                
                                 const tenantName = tenants[tenantId]?.name || tenants[tenantId]?.tenantName || 'المجمع الطبي';
                                 state.pharmacistData.tenantName = tenantName;
                                 
                                 $('#welcomeMsg').textContent = `أهلاً، ${state.pharmacistData.name || 'صيدلي'}`;
                                 $('#tenantName').textContent = tenantName;
                                 
-                                console.log(`✅ تم العثور على الصيدلي في مجمع: ${tenantId}`);
                                 return true;
                             }
                         }
                     }
                 }
                 
-                // 2️⃣ المسار القديم للتوافق
+                // المسار القديم للتوافق
                 const oldSnap = await get(ref(db, `users/${uid}`));
                 if (oldSnap.exists() && oldSnap.val().role === 'pharmacist') {
                     currentTenantId = uid;
                     state.pharmacistData = { id: uid, ...oldSnap.val() };
                     $('#welcomeMsg').textContent = `أهلاً، ${state.pharmacistData.name || 'صيدلي'}`;
-                    console.log('⚠️ تم العثور على الصيدلي في المسار القديم');
                     return true;
                 }
                 
@@ -801,7 +1192,6 @@
                 });
                 state.doctorsList = doctors;
                 
-                // التحقق من صحة الطبيب المحدد
                 if (state.selectedDoctorId && !doctors.find(d => d.id === state.selectedDoctorId)) {
                     state.selectedDoctorId = null;
                     localStorage.removeItem(getTenantStorageKey('selected_doctor'));
@@ -832,7 +1222,6 @@
                     prescriptions.push({ id: child.key, ...child.val() });
                 });
                 
-                // فلترة وصفات اليوم فقط للتبويب "تم الصرف"
                 state.allPrescriptions = prescriptions;
                 
                 setSyncStatus(true);
@@ -850,7 +1239,7 @@
             const container = $('#doctorStripContainer');
             
             if (state.doctorsList.length === 0) {
-                container.innerHTML = '<div style="padding:10px;color:var(--text-sec);">لا يوجد أطباء مسجلين</div>';
+                container.innerHTML = '<div style="padding:10px;color:var(--text-sec);text-align:center;width:100%;">لا يوجد أطباء مسجلين</div>';
                 return;
             }
             
@@ -868,7 +1257,6 @@
                 `;
             }).join('');
             
-            // ربط الأحداث
             container.querySelectorAll('.doctor-pill').forEach(pill => {
                 pill.addEventListener('click', () => {
                     state.selectedDoctorId = pill.dataset.id;
@@ -877,7 +1265,6 @@
                     updateCounts();
                     renderTable();
                     
-                    // تمرير العنصر النشط
                     pill.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
                 });
             });
@@ -895,7 +1282,6 @@
             filtered.forEach(p => {
                 if (p.status === 'لم تصرف بعد') pendingCount++;
                 else if (p.status === 'تم الصرف' || p.status === 'صرفت جزئياً') {
-                    // فلترة المصروفة اليوم فقط
                     if (p.dispensed_at && p.dispensed_at.startsWith(getToday())) {
                         dispensedCount++;
                     }
@@ -906,12 +1292,18 @@
             $('#countDispensed').textContent = dispensedCount;
         };
 
-        // ============ عرض الجدول ============
+        // ============ ✅ عرض الجدول (بدون أعمدة الأدوية والتشخيص والتاريخ) ============
         const renderTable = () => {
             const tbody = $('#prescriptionsBody');
             
             if (!state.selectedDoctorId) {
-                tbody.innerHTML = '<tr class="empty-row"><td colspan="8"><i class="fas fa-hand-point-up"></i> اختر طبيباً من القائمة أعلاه</td></tr>';
+                tbody.innerHTML = `
+                    <tr class="empty-row">
+                        <td colspan="6">
+                            <i class="fas fa-hand-point-up"></i> 
+                            اختر طبيباً من القائمة أعلاه
+                        </td>
+                    </tr>`;
                 return;
             }
             
@@ -932,7 +1324,12 @@
             
             if (filtered.length === 0) {
                 const msg = state.currentTab === 'لم تصرف بعد' ? 'لا توجد وصفات جديدة' : 'لا توجد وصفات مصروفة اليوم';
-                tbody.innerHTML = `<tr class="empty-row"><td colspan="8"><i class="fas fa-prescription"></i> ${msg}</td></tr>`;
+                tbody.innerHTML = `
+                    <tr class="empty-row">
+                        <td colspan="6">
+                            <i class="fas fa-prescription"></i> ${msg}
+                        </td>
+                    </tr>`;
                 return;
             }
             
@@ -941,7 +1338,6 @@
                 const doctorName = doctor ? doctor.name : 'طبيب';
                 const patientName = p.patient_name || 'مريض';
                 const itemCount = p.item_count || 0;
-                const dateStr = p.created_at ? new Date(p.created_at).toLocaleDateString('ar-EG') : '-';
                 
                 const statusClass = p.status === 'تم الصرف' ? 's-dispensed' : 
                                    p.status === 'صرفت جزئياً' ? 's-partial' : 's-pending';
@@ -949,35 +1345,40 @@
                                   p.status === 'صرفت جزئياً' ? '📦 جزئي' : '⏳ جديد';
                 
                 return `
-                    <tr data-id="${p.id}">
+                    <tr data-id="${p.id}" style="cursor:pointer;">
                         <td>${i + 1}</td>
                         <td><b>${escapeHtml(patientName)}</b></td>
                         <td>د. ${escapeHtml(doctorName)}</td>
-                        <td>${dateStr}</td>
                         <td>${itemCount} أصناف</td>
-                        <td>${escapeHtml((p.diagnosis || '').substring(0, 40))}${(p.diagnosis || '').length > 40 ? '...' : ''}</td>
                         <td><span class="status-badge ${statusClass}">${statusText}</span></td>
                         <td>
-                            ${p.status === 'لم تصرف بعد' ? 
-                                `<button class="action-btn" data-action="dispense" data-id="${p.id}">
-                                    <i class="fas fa-check"></i> صرف
-                                </button>` : 
-                                `<button class="action-btn" data-action="view" data-id="${p.id}">
-                                    <i class="fas fa-eye"></i> عرض
-                                </button>`
-                            }
+                            <button class="action-btn" data-action="details" data-id="${p.id}">
+                                <i class="fas fa-external-link-alt"></i> تفاصيل
+                            </button>
                         </td>
                     </tr>
                 `;
             }).join('');
         };
 
-        // ============ فتح مودال الصرف ============
+        // ============ فتح صفحة التفاصيل ============
+        const openPrescriptionDetails = (prescriptionId) => {
+            if (!prescriptionId) return;
+            const url = `prescription-details.html?id=${prescriptionId}&tenant=${currentTenantId || ''}`;
+            window.location.href = url;
+        };
+
+        // ============ فتح مودال الصرف (للوصفات الجديدة) ============
         const openDispenseModal = async (prescriptionId) => {
             const prescription = state.allPrescriptions.find(p => p.id === prescriptionId);
             if (!prescription) return;
             
-            // تحميل عناصر الوصفة
+            // لو الوصفة متصرفة، روح لصفحة التفاصيل
+            if (prescription.status !== 'لم تصرف بعد') {
+                openPrescriptionDetails(prescriptionId);
+                return;
+            }
+            
             let items = [];
             try {
                 const itemsSnap = await get(ref(db, `tenants/${currentTenantId}/prescription_items/${prescriptionId}`));
@@ -991,7 +1392,6 @@
             const doctor = state.doctorsList.find(d => d.id === prescription.doctor_id);
             const doctorName = doctor ? doctor.name : 'طبيب';
             
-            // معلومات المريض
             $('#dispensePatientInfo').innerHTML = `
                 <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
                     <div style="width:44px;height:44px;background:var(--primary-light);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.1rem;color:var(--primary-dark);">
@@ -1002,31 +1402,23 @@
                         <div style="font-size:0.78rem;color:var(--text-sec);">د. ${escapeHtml(doctorName)}</div>
                     </div>
                 </div>
-                ${prescription.diagnosis ? `<div style="font-size:0.82rem;color:var(--text-sec);margin-bottom:8px;">📋 ${escapeHtml(prescription.diagnosis)}</div>` : ''}
             `;
             
-            // عناصر الوصفة
             if (items.length === 0) {
                 $('#dispenseItemsList').innerHTML = '<div style="color:var(--text-sec);">لا توجد عناصر في الوصفة</div>';
             } else {
-                $('#dispenseItemsList').innerHTML = items.map((item, i) => {
-                    const formEmoji = item.form === 'tablet' ? '💊' : 
-                                     item.form === 'syrup' ? '🥄' : 
-                                     item.form === 'injection' ? '💉' : 
-                                     item.form === 'suppository' ? '🧴' : '💧';
-                    return `
-                        <div class="rx-detail-item">
-                            <div class="drug-icon">${formEmoji}</div>
-                            <div style="flex:1;">
-                                <b>${escapeHtml(item.drug_name || item.drug_id || 'دواء')}</b>
-                                <div style="font-size:0.75rem;color:var(--text-sec);">${escapeHtml(item.dose || '')}</div>
-                            </div>
+                const formLabels = { 'tablet': '💊 أقراص', 'syrup': '🥄 شراب', 'injection': '💉 حقن', 'suppository': '🧴 لبوس', 'drops': '💧 نقط' };
+                $('#dispenseItemsList').innerHTML = items.map((item, i) => `
+                    <div class="rx-detail-item">
+                        <div class="drug-icon">${formLabels[item.form]?.split(' ')[0] || '💊'}</div>
+                        <div style="flex:1;">
+                            <b>${escapeHtml(item.drug_name || item.drug_id || 'دواء')}</b>
+                            <div style="font-size:0.75rem;color:var(--text-sec);">${escapeHtml(item.dose || '')}</div>
                         </div>
-                    `;
-                }).join('');
+                    </div>
+                `).join('');
             }
             
-            // حفظ معرف الوصفة الحالية
             $('#dispenseModal').dataset.prescriptionId = prescriptionId;
             $('#dispenseStatus').value = 'تم الصرف';
             $('#dispenseNotes').value = '';
@@ -1075,7 +1467,6 @@
             let results = [];
             
             try {
-                // البحث في الوصفات
                 const prescriptionsSnap = await get(ref(db, `tenants/${currentTenantId}/prescriptions`));
                 const seen = new Set();
                 
@@ -1093,7 +1484,6 @@
                                 id: patientId,
                                 name: p.patient_name || 'مريض',
                                 phone: p.phone || '',
-                                lastVisit: p.created_at
                             });
                         }
                     });
@@ -1107,89 +1497,15 @@
             if (results.length === 0) {
                 container.innerHTML = '<div class="search-item" style="color:var(--text-sec);">لا توجد نتائج</div>';
             } else {
-                results.sort((a, b) => (b.lastVisit || '').localeCompare(a.lastVisit || ''));
-                
                 container.innerHTML = results.slice(0, 10).map(p => `
                     <div class="search-item" data-id="${p.id}">
                         <b>${escapeHtml(p.name)}</b>
-                        <small style="color:var(--text-sec);">${escapeHtml(p.phone)}</small>
+                        <small style="color:var(--text-sec);margin-right:auto;">${escapeHtml(p.phone)}</small>
                     </div>
                 `).join('');
-                
-                container.querySelectorAll('.search-item').forEach(item => {
-                    item.addEventListener('click', () => {
-                        showPatientHistory(item.dataset.id);
-                        $('#searchResults').style.display = 'none';
-                    });
-                });
             }
             
             container.style.display = 'block';
-        };
-
-        // ============ عرض تاريخ المريض ============
-        const showPatientHistory = async (patientId) => {
-            const container = $('#patientHistoryContainer');
-            container.innerHTML = '<div style="text-align:center;padding:10px;"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</div>';
-            
-            try {
-                const prescriptionsSnap = await get(ref(db, `tenants/${currentTenantId}/prescriptions`));
-                const patientPrescriptions = [];
-                
-                if (prescriptionsSnap.exists()) {
-                    prescriptionsSnap.forEach(child => {
-                        const p = child.val();
-                        if (String(p.patient_id) === String(patientId)) {
-                            patientPrescriptions.push({ id: child.key, ...p });
-                        }
-                    });
-                }
-                
-                patientPrescriptions.sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''));
-                
-                if (patientPrescriptions.length === 0) {
-                    container.innerHTML = '<div style="color:var(--text-sec);padding:10px;">لا توجد وصفات سابقة</div>';
-                    return;
-                }
-                
-                container.innerHTML = `
-                    <h4 style="margin-bottom:10px;">📋 الوصفات السابقة (${patientPrescriptions.length})</h4>
-                    ${patientPrescriptions.slice(0, 5).map(p => {
-                        const statusClass = p.status === 'تم الصرف' ? 's-dispensed' : 
-                                           p.status === 'صرفت جزئياً' ? 's-partial' : 's-pending';
-                        const dateStr = p.created_at ? new Date(p.created_at).toLocaleDateString('ar-EG') : '-';
-                        
-                        return `
-                            <div class="rx-detail-item" style="cursor:pointer;" data-id="${p.id}">
-                                <div class="drug-icon"><i class="fas fa-prescription"></i></div>
-                                <div style="flex:1;">
-                                    <b>${dateStr}</b>
-                                    <div style="font-size:0.75rem;color:var(--text-sec);">
-                                        ${p.item_count || 0} أدوية
-                                        <span class="status-badge ${statusClass}" style="margin-right:6px;">${p.status || 'جديد'}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                    }).join('')}
-                `;
-                
-                container.querySelectorAll('.rx-detail-item[data-id]').forEach(item => {
-                    item.addEventListener('click', () => {
-                        const pres = patientPrescriptions.find(p => p.id === item.dataset.id);
-                        if (pres && pres.status === 'لم تصرف بعد') {
-                            $('#searchModal').style.display = 'none';
-                            openDispenseModal(pres.id);
-                        } else if (pres) {
-                            $('#searchModal').style.display = 'none';
-                            openDispenseModal(pres.id);
-                        }
-                    });
-                });
-                
-            } catch (e) {
-                container.innerHTML = '<div style="color:var(--danger);">خطأ في تحميل التاريخ</div>';
-            }
         };
 
         // ============ تسجيل الخروج ============
@@ -1233,16 +1549,20 @@
                 });
             });
             
-            // أحداث الجدول
+            // أحداث الجدول - الضغط على الصف يفتح التفاصيل
             $('#prescriptionsBody').addEventListener('click', (e) => {
-                const actionBtn = e.target.closest('[data-action]');
-                if (!actionBtn) return;
+                const row = e.target.closest('tr[data-id]');
+                if (!row) return;
                 
-                const id = actionBtn.dataset.id;
-                const action = actionBtn.dataset.action;
+                const id = row.dataset.id;
+                const prescription = state.allPrescriptions.find(p => p.id === id);
                 
-                if (action === 'dispense' || action === 'view') {
+                // لو الوصفة جديدة، افتح مودال الصرف
+                if (prescription && prescription.status === 'لم تصرف بعد') {
                     openDispenseModal(id);
+                } else {
+                    // لو متصرفة، روح لصفحة التفاصيل
+                    openPrescriptionDetails(id);
                 }
             });
             
@@ -1255,7 +1575,6 @@
                 $('#searchModal').style.display = 'flex';
                 $('#patientSearchInput').value = '';
                 $('#searchResults').style.display = 'none';
-                $('#patientHistoryContainer').innerHTML = '';
             });
             
             $('#closeSearchBtn').addEventListener('click', () => $('#searchModal').style.display = 'none');
@@ -1321,7 +1640,6 @@
             
             if (tenantFromUrl) {
                 currentTenantId = tenantFromUrl;
-                console.log(`✅ تم استلام معرف المجمع من الرابط: ${currentTenantId}`);
             } else {
                 // ✅ 2. من الجلسة المشفرة
                 try {
@@ -1331,12 +1649,9 @@
                         const match = decoded.match(/"tenantId":"([^"]+)"/);
                         if (match) {
                             currentTenantId = match[1];
-                            console.log(`📦 تم استخراج معرف المجمع من الجلسة: ${currentTenantId}`);
                         }
                     }
-                } catch (e) {
-                    console.warn('تعذر فك تشفير الجلسة:', e.message);
-                }
+                } catch (e) {}
                 
                 // ✅ 3. من الجلسة القديمة
                 if (!currentTenantId) {
@@ -1351,38 +1666,29 @@
                     } else {
                         currentTenantId = user.uid;
                     }
-                    console.log(`📦 تم تحديد المجمع من الجلسة القديمة: ${currentTenantId}`);
                 }
             }
             
-            // ✅ تهيئة الجلسة
             sessionStorage.setItem('userUid', user.uid);
             sessionStorage.setItem('userRole', 'pharmacist');
             
             if (!state.currentUser) {
                 state.currentUser = { uid: user.uid };
                 
-                // ✅ تحميل بيانات الصيدلي (يدور في كل المجمعات)
                 const success = await loadPharmacistData(user.uid);
                 if (!success) {
                     showToast('⚠️ تعذر تحميل بيانات الصيدلي', true);
                     return;
                 }
                 
-                // استعادة الطبيب المحدد
                 const savedDoctor = localStorage.getItem(getTenantStorageKey('selected_doctor'));
                 if (savedDoctor) {
                     state.selectedDoctorId = savedDoctor;
                 }
                 
-                // بدء تحميل البيانات
                 initEvents();
                 loadDoctors();
                 loadPrescriptions();
-                
-                console.log('🚀 لوحة الصيدلي - نظام المجمعات الطبية المتعددة');
-                console.log('🔒 كل صيدلي يشوف وصفات مجمعه فقط');
-                console.log('💾 وضع الحفظ: يمسح جلسة الدخول فقط - يحتفظ ببيانات المجمع');
             }
         });
     </script>
