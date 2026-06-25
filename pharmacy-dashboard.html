@@ -236,15 +236,6 @@
             min-height: clamp(28px, 7vw, 34px);
             border-radius: var(--radius-sm); 
         }
-        
-        .btn-icon { 
-            width: clamp(34px, 8vw, 42px); 
-            height: clamp(34px, 8vw, 42px); 
-            padding: 0; 
-            justify-content: center; 
-            flex-shrink: 0;
-            aspect-ratio: 1;
-        }
 
         .sync-dot {
             display: inline-block;
@@ -346,16 +337,10 @@
             padding: 2px 8px;
             font-size: clamp(0.65rem, 1.6vw, 0.72rem);
             font-weight: 700;
-            animation: badgePop 0.3s ease;
         }
         
         .doctor-pill.active .pill-badge {
             background: rgba(255,255,255,0.35);
-        }
-        
-        @keyframes badgePop {
-            from { transform: scale(0.5); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
         }
 
         /* ============ تبويبات الحالة ============ */
@@ -428,7 +413,7 @@
             border: 1px solid var(--border);
             box-shadow: var(--shadow-sm);
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.25s ease;
             overflow: hidden;
             position: relative;
             display: flex;
@@ -452,11 +437,11 @@
         .rx-card:hover {
             box-shadow: var(--shadow-md);
             border-color: var(--primary-light);
+            transform: translateY(-2px);
         }
         
         .rx-card:active {
             transform: scale(0.98);
-            box-shadow: var(--shadow-sm);
         }
         
         .rx-card.pending-card {
@@ -925,10 +910,8 @@
         }
 
         /* ============ ميديا كويريز ============ */
-        
         @media (min-width: 769px) and (max-width: 1024px) {
             html { font-size: clamp(13px, 1.8vw, 15px); }
-            .app-header { padding: 8px 14px; }
             .rx-cards-grid { grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr)); }
         }
 
@@ -948,91 +931,29 @@
             }
             
             .logo h2 { font-size: clamp(1rem, 4vw, 1.2rem); }
-            
             .header-actions { gap: 4px; }
-            
-            .btn { 
-                padding: 5px 8px; 
-                font-size: 0.72rem; 
-                gap: 3px; 
-                min-height: clamp(28px, 7vw, 32px); 
-            }
-            
-            .btn-sm { 
-                padding: 4px 7px; 
-                font-size: 0.68rem; 
-            }
-            
-            .doctor-pill { 
-                padding: 6px 10px; 
-                font-size: 0.75rem; 
-                min-height: clamp(32px, 8vw, 38px); 
-            }
-            
-            .status-tab { 
-                padding: 6px 8px; 
-                font-size: 0.72rem; 
-                min-width: 50px;
-            }
-            
-            .status-tab .badge { 
-                font-size: 0.65rem; 
-                padding: 1px 6px; 
-            }
-            
-            .rx-cards-grid { 
-                grid-template-columns: 1fr; 
-                gap: 10px; 
-            }
-            
+            .btn { padding: 5px 8px; font-size: 0.72rem; min-height: clamp(28px, 7vw, 32px); }
+            .btn-sm { padding: 4px 7px; font-size: 0.68rem; }
+            .doctor-pill { padding: 6px 10px; font-size: 0.75rem; min-height: clamp(32px, 8vw, 38px); }
+            .status-tab { padding: 6px 8px; font-size: 0.72rem; min-width: 50px; }
+            .status-tab .badge { font-size: 0.65rem; padding: 1px 6px; }
+            .rx-cards-grid { grid-template-columns: 1fr; gap: 10px; }
             .rx-card-header { padding: 10px 12px; }
             .rx-card-body { padding: 10px 12px; }
             .rx-card-footer { padding: 8px 12px; }
-            
-            .rx-card-avatar {
-                width: 40px;
-                height: 40px;
-                min-width: 40px;
-            }
-            
-            .modal-card { 
-                max-width: 100%; 
-                border-radius: var(--radius-md); 
-                max-height: 90vh;
-                max-height: 90dvh;
-            }
-            
-            .modal-body { 
-                padding: 12px; 
-                padding-bottom: 55vh; 
-            }
-            
+            .rx-card-avatar { width: 40px; height: 40px; min-width: 40px; }
+            .modal-card { max-width: 100%; border-radius: var(--radius-md); max-height: 90vh; }
+            .modal-body { padding: 12px; padding-bottom: 55vh; }
             .hide-mobile { display: none; }
-            
             #welcomeMsg { max-width: 80px; }
         }
 
         @media (max-width: 400px) {
             html { font-size: clamp(12px, 4vw, 13px); }
-            
-            body { 
-                padding: 2px; 
-                padding-bottom: calc(2px + var(--safe-bottom) + 65vh); 
-            }
-            
-            .status-tabs { 
-                flex-direction: column; 
-                gap: 2px; 
-            }
-            
-            .status-tab { 
-                justify-content: space-between; 
-                text-align: right;
-            }
-            
-            .modal-body { 
-                padding-bottom: 65vh; 
-            }
+            body { padding: 2px; padding-bottom: calc(2px + var(--safe-bottom) + 65vh); }
+            .status-tabs { flex-direction: column; gap: 2px; }
+            .status-tab { justify-content: space-between; text-align: right; }
+            .modal-body { padding-bottom: 65vh; }
         }
 
         @media (min-width: 1400px) {
@@ -1353,6 +1274,27 @@
             $('#countDispensed').textContent = dispensedCount;
         };
 
+        // ============ ✅ فتح صفحة التفاصيل مع تمرير كل البيانات ============
+        const openPrescriptionDetails = (prescription) => {
+            if (!prescription) return;
+            
+            const doctor = state.doctorsList.find(d => d.id === prescription.doctor_id);
+            const doctorName = doctor ? doctor.name : '';
+            
+            // بناء الرابط مع كل البيانات المطلوبة
+            const params = new URLSearchParams();
+            params.set('id', prescription.id);
+            params.set('tenant', currentTenantId || '');
+            
+            if (prescription.patient_id) params.set('patientId', prescription.patient_id);
+            if (prescription.patient_name) params.set('patientName', prescription.patient_name);
+            if (prescription.doctor_id) params.set('doctorId', prescription.doctor_id);
+            if (doctorName) params.set('doctorName', doctorName);
+            
+            const url = `prescription-details.html?${params.toString()}`;
+            window.location.href = url;
+        };
+
         // ============ عرض البطاقات ============
         const renderCards = () => {
             const grid = $('#prescriptionsGrid');
@@ -1403,7 +1345,6 @@
                 const dateStr = p.created_at ? new Date(p.created_at).toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' }) : '';
                 const timeStr = p.created_at ? new Date(p.created_at).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }) : '';
                 
-                // تحديد نوع البطاقة
                 const isPending = p.status === 'لم تصرف بعد';
                 const isDispensed = p.status === 'تم الصرف';
                 const isPartial = p.status === 'صرفت جزئياً';
@@ -1416,7 +1357,6 @@
                 const statusBg = isPending ? '#FFF3E0' : isDispensed ? '#E8F5E9' : '#E3F2FD';
                 const statusColor = isPending ? '#E65100' : isDispensed ? '#2E7D32' : '#1565C0';
                 
-                // معلومات إضافية للمصروفة
                 let extraInfo = '';
                 if (!isPending) {
                     const pharmacistName = p.pharmacist_name || '';
@@ -1491,11 +1431,7 @@
             }).join('');
         };
 
-        const openPrescriptionDetails = (prescriptionId) => {
-            if (!prescriptionId) return;
-            window.location.href = `prescription-details.html?id=${prescriptionId}&tenant=${currentTenantId || ''}`;
-        };
-
+        // ============ ✅ فتح مودال الصرف (للوصفات الجديدة فقط) ============
         const openDispenseModal = async (prescriptionId) => {
             const prescription = state.allPrescriptions.find(p => p.id === prescriptionId);
             if (!prescription || prescription.status !== 'لم تصرف بعد') return;
@@ -1622,28 +1558,39 @@
                 });
             });
             
-            // الضغط على البطاقة
+            // ✅ الضغط على البطاقة أو الأزرار
             $('#prescriptionsGrid').addEventListener('click', (e) => {
+                // ✅ الضغط على زر الصرف أو التفاصيل
                 const actionBtn = e.target.closest('[data-action]');
                 if (actionBtn) {
                     e.stopPropagation();
                     const id = actionBtn.dataset.id;
+                    const prescription = state.allPrescriptions.find(p => p.id === id);
+                    
                     if (actionBtn.dataset.action === 'dispense') {
+                        // فتح مودال الصرف للوصفات الجديدة
                         openDispenseModal(id);
                     } else {
-                        openPrescriptionDetails(id);
+                        // ✅ فتح صفحة التفاصيل مع كل البيانات
+                        openPrescriptionDetails(prescription);
                     }
                     return;
                 }
                 
+                // ✅ الضغط على البطاقة نفسها
                 const card = e.target.closest('.rx-card');
                 if (!card) return;
                 const id = card.dataset.id;
                 const prescription = state.allPrescriptions.find(p => p.id === id);
-                if (prescription && prescription.status === 'لم تصرف بعد') {
-                    openDispenseModal(id);
-                } else {
-                    openPrescriptionDetails(id);
+                
+                if (prescription) {
+                    if (prescription.status === 'لم تصرف بعد') {
+                        // الوصفات الجديدة: افتح مودال الصرف
+                        openDispenseModal(id);
+                    } else {
+                        // ✅ الوصفات المصروفة: افتح صفحة التفاصيل
+                        openPrescriptionDetails(prescription);
+                    }
                 }
             });
             
