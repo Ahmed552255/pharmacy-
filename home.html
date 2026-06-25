@@ -4,437 +4,185 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#00AEEF">
-    <title>شفاء · لوحة الصيدلي</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>شفاء — بوابة الدخول</title>
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap&subset=arabic" rel="stylesheet">
     
     <style>
         :root {
             --primary: #00AEEF;
-            --primary-light: #E0F7FA;
             --primary-dark: #008080;
+            --primary-light: #E0F7FA;
             --bg: #FAFAFA;
             --white: #FFFFFF;
             --ink: #1A3C4A;
             --text-sec: #5A7D8A;
             --danger: #E57373;
             --success: #26A69A;
-            --warning: #FFB74D;
-            --border: #E0E0E0;
-            --shadow-xs: 0 1px 4px rgba(0,0,0,0.03);
-            --shadow-sm: 0 4px 12px rgba(0,0,0,0.05);
-            --shadow-md: 0 8px 24px rgba(0,0,0,0.08);
-            --shadow-lg: 0 12px 32px rgba(0,0,0,0.1);
-            --radius-xs: 8px;
-            --radius-sm: 14px;
-            --radius-md: 20px;
-            --radius-lg: 28px;
-            --radius-xl: 50px;
-            --safe-bottom: env(safe-area-inset-bottom, 16px);
-            --safe-top: env(safe-area-inset-top, 0px);
+            --shadow: 0 10px 30px rgba(0, 174, 239, 0.08);
+            --border-light: rgba(0, 174, 239, 0.2);
+            --transition-speed: 0.15s;
         }
-
+        
         * { 
             margin: 0; 
             padding: 0; 
             box-sizing: border-box; 
-            -webkit-tap-highlight-color: transparent; 
         }
         
-        input, textarea, select { 
-            -webkit-user-select: text; 
-            user-select: text; 
-        }
-
-        html {
-            font-size: clamp(13px, 2.8vw, 16px);
+        html { 
+            font-size: 16px; 
+            -webkit-tap-highlight-color: transparent;
             -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
             -webkit-text-size-adjust: 100%;
-            text-rendering: optimizeLegibility;
+            text-rendering: optimizeSpeed;
         }
-
+        
         body {
-            font-family: 'Cairo', system-ui, -apple-system, sans-serif;
-            background: var(--bg);
+            font-family: 'Cairo', sans-serif;
             color: var(--ink);
             min-height: 100vh;
             min-height: 100dvh;
-            padding: clamp(6px, 1.5vw, 12px);
-            padding-bottom: calc(clamp(6px, 1.5vw, 12px) + var(--safe-bottom) + 45vh);
-            padding-top: calc(clamp(6px, 1.5vw, 12px) + var(--safe-top));
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1.25rem;
+            background: var(--bg);
+            position: relative;
             overflow-x: hidden;
+            contain: layout style paint;
             -webkit-backface-visibility: hidden;
             backface-visibility: hidden;
-            -webkit-overflow-scrolling: touch;
-            position: relative;
         }
-
-        body::before {
-            content: '';
+        
+        /* شاشة التحميل الأولية */
+        .splash-screen {
             position: fixed;
             inset: 0;
-            background: radial-gradient(ellipse at 15% 25%, rgba(0,174,239,0.04) 0%, transparent 50%),
-                        radial-gradient(ellipse at 85% 75%, rgba(0,128,128,0.03) 0%, transparent 50%);
-            pointer-events: none;
-            z-index: -1;
-        }
-
-        .container { 
-            max-width: min(1400px, 98vw); 
-            margin: 0 auto; 
-        }
-
-        /* ============ شاشة التحميل ============ */
-        #appLoader {
-            position: fixed;
-            inset: 0;
-            background: rgba(250,250,250,0.95);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
+            background: var(--bg);
             display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 3000;
-            flex-direction: column;
-            gap: clamp(12px, 2vw, 16px);
+            z-index: 1000;
+            transition: opacity 0.4s ease-out;
         }
         
-        .loader-circle {
-            width: clamp(36px, 8vw, 44px);
-            height: clamp(36px, 8vw, 44px);
-            border: 3px solid var(--primary-light);
-            border-top-color: var(--primary);
-            border-radius: 50%;
-            animation: spin 0.7s linear infinite;
-        }
-        
-        @keyframes spin { 
-            to { transform: rotate(360deg); } 
-        }
-        
-        .loader-text {
-            font-size: clamp(0.9rem, 2.5vw, 1rem);
-            font-weight: 600;
-            color: var(--primary-dark);
-        }
-
-        /* ============ الهيدر ============ */
-        .app-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: rgba(255,255,255,0.92);
-            backdrop-filter: blur(16px) saturate(180%);
-            -webkit-backdrop-filter: blur(16px) saturate(180%);
-            border-radius: var(--radius-lg);
-            padding: clamp(8px, 2vw, 10px) clamp(12px, 3vw, 18px);
-            margin-bottom: clamp(8px, 2vw, 14px);
-            border: 1px solid rgba(255,255,255,0.9);
-            box-shadow: var(--shadow-sm);
-            flex-wrap: wrap;
-            gap: clamp(6px, 1.5vw, 10px);
-            position: sticky;
-            top: clamp(4px, 1vw, 6px);
-            z-index: 100;
-        }
-
-        .logo { 
-            display: flex; 
-            align-items: center; 
-            gap: clamp(4px, 1vw, 6px); 
-            flex-shrink: 0; 
-        }
-        
-        .logo h2 {
-            font-size: clamp(1.1rem, 3.5vw, 1.4rem);
-            font-weight: 900;
-            background: linear-gradient(135deg, #008080, #00AEEF);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            white-space: nowrap;
-        }
-        
-        .logo i { 
-            color: var(--primary); 
-            font-size: clamp(0.9rem, 2.5vw, 1.1rem); 
-        }
-
-        .header-actions {
-            display: flex;
-            gap: clamp(4px, 1vw, 8px);
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .tenant-badge {
-            background: var(--primary-light);
-            padding: clamp(3px, 0.8vw, 4px) clamp(8px, 2vw, 10px);
-            border-radius: var(--radius-xl);
-            font-size: clamp(0.68rem, 1.8vw, 0.75rem);
-            font-weight: 600;
-            color: var(--primary-dark);
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            white-space: nowrap;
-        }
-
-        #welcomeMsg {
-            font-weight: 600;
-            font-size: clamp(0.78rem, 2vw, 0.88rem);
-            color: var(--text-sec);
-            white-space: nowrap;
-            max-width: clamp(80px, 20vw, 150px);
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .btn {
-            padding: clamp(7px, 1.5vw, 9px) clamp(12px, 2.5vw, 16px);
-            border-radius: var(--radius-xl);
-            border: none;
-            font-weight: 700;
-            font-family: 'Cairo', system-ui, sans-serif;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: clamp(4px, 1vw, 6px);
-            font-size: clamp(0.75rem, 2vw, 0.85rem);
-            white-space: nowrap;
-            touch-action: manipulation;
-            user-select: none;
-            -webkit-user-select: none;
-            transition: all 0.15s ease;
-            min-height: clamp(32px, 8vw, 40px);
-            text-decoration: none;
-        }
-        
-        .btn:active { 
-            transform: scale(0.96); 
-            opacity: 0.85; 
-        }
-        
-        .btn-primary { 
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark)); 
-            color: white; 
-            box-shadow: 0 4px 12px rgba(0,174,239,0.25); 
-        }
-        
-        .btn-outline { 
-            background: rgba(255,255,255,0.9); 
-            color: var(--ink); 
-            border: 1.5px solid var(--border); 
-        }
-        
-        .btn-sm { 
-            padding: clamp(5px, 1vw, 6px) clamp(8px, 2vw, 12px); 
-            font-size: clamp(0.7rem, 1.8vw, 0.8rem); 
-            min-height: clamp(28px, 7vw, 34px);
-            border-radius: var(--radius-sm); 
-        }
-        
-        .btn-icon { 
-            width: clamp(34px, 8vw, 42px); 
-            height: clamp(34px, 8vw, 42px); 
-            padding: 0; 
-            justify-content: center; 
-            flex-shrink: 0;
-            aspect-ratio: 1;
-        }
-
-        .sync-dot {
-            display: inline-block;
-            width: clamp(6px, 1.5vw, 8px);
-            height: clamp(6px, 1.5vw, 8px);
-            border-radius: 50%;
-            margin-left: 4px;
-            vertical-align: middle;
-        }
-        .sync-dot.on { background: var(--success); }
-        .sync-dot.off { background: #FFB74D; animation: pulse 1.5s infinite; }
-        
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.4; }
-        }
-
-        /* ============ شريط الأطباء ============ */
-        .doctors-strip {
-            background: var(--white);
-            border-radius: var(--radius-xl);
-            padding: clamp(4px, 1vw, 6px);
-            border: 1px solid var(--border);
-            box-shadow: var(--shadow-sm);
-            margin-bottom: clamp(8px, 2vw, 14px);
-            overflow: hidden;
-        }
-        
-        .doctors-strip .strip-scroll {
-            display: flex;
-            gap: clamp(4px, 1vw, 6px);
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-            scroll-behavior: smooth;
-            scroll-snap-type: x proximity;
-            padding: clamp(3px, 0.8vw, 4px);
-            scrollbar-width: none;
-            -ms-overflow-style: none;
-        }
-        
-        .doctors-strip .strip-scroll::-webkit-scrollbar { 
-            display: none; 
-        }
-
-        .doctor-pill {
-            display: flex;
-            align-items: center;
-            gap: clamp(6px, 1.5vw, 8px);
-            padding: clamp(8px, 2vw, 10px) clamp(12px, 2.5vw, 16px);
-            background: var(--white);
-            border-radius: var(--radius-xl);
-            border: 1.5px solid var(--border);
-            cursor: pointer;
-            white-space: nowrap;
-            flex-shrink: 0;
-            scroll-snap-align: start;
-            transition: all 0.2s ease;
-            font-weight: 600;
-            font-size: clamp(0.78rem, 2vw, 0.88rem);
-            touch-action: manipulation;
-            min-height: clamp(36px, 9vw, 44px);
-        }
-        
-        .doctor-pill:active { 
-            transform: scale(0.95); 
-        }
-        
-        .doctor-pill.active {
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            color: white;
-            border-color: var(--primary);
-            box-shadow: 0 4px 14px rgba(0,174,239,0.3);
-            font-weight: 700;
-        }
-        
-        .doctor-pill .pill-avatar {
-            width: clamp(26px, 6vw, 30px);
-            height: clamp(26px, 6vw, 30px);
-            min-width: clamp(26px, 6vw, 30px);
-            background: var(--primary-light);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: clamp(0.7rem, 1.8vw, 0.8rem);
-            color: var(--primary-dark);
-            font-weight: 700;
-        }
-        
-        .doctor-pill.active .pill-avatar {
-            background: rgba(255,255,255,0.3);
-            color: white;
-        }
-        
-        .doctor-pill .pill-badge {
-            background: var(--danger);
-            color: white;
-            border-radius: 20px;
-            padding: 2px 8px;
-            font-size: clamp(0.65rem, 1.6vw, 0.72rem);
-            font-weight: 700;
-            animation: badgePop 0.3s ease;
-        }
-        
-        .doctor-pill.active .pill-badge {
-            background: rgba(255,255,255,0.35);
-        }
-        
-        @keyframes badgePop {
-            from { transform: scale(0.5); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
-        }
-
-        /* ============ تبويبات الحالة ============ */
-        .status-tabs {
-            display: flex;
-            gap: clamp(3px, 0.8vw, 6px);
-            margin-bottom: clamp(8px, 2vw, 14px);
-            flex-wrap: wrap;
-            background: var(--white);
-            border-radius: var(--radius-xl);
-            padding: clamp(3px, 0.8vw, 5px);
-            border: 1px solid var(--border);
-            box-shadow: var(--shadow-sm);
-        }
-        
-        .status-tab {
-            background: transparent;
-            border: none;
-            padding: clamp(7px, 1.5vw, 9px) clamp(10px, 2.5vw, 16px);
-            border-radius: var(--radius-xl);
-            font-weight: 600;
-            font-family: 'Cairo', system-ui, sans-serif;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: clamp(4px, 1vw, 6px);
-            font-size: clamp(0.75rem, 2vw, 0.85rem);
-            color: var(--text-sec);
-            flex: 1;
-            justify-content: center;
-            min-width: clamp(60px, 15vw, 80px);
-            touch-action: manipulation;
-            transition: all 0.2s ease;
-        }
-        
-        .status-tab .badge {
-            background: rgba(0,0,0,0.05);
-            border-radius: 30px;
-            padding: 2px 9px;
-            font-size: clamp(0.7rem, 1.6vw, 0.75rem);
-            font-weight: 700;
-            transition: all 0.2s ease;
-        }
-        
-        .status-tab.active {
-            background: white;
-            color: var(--primary);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        }
-        
-        .status-tab.active .badge {
-            background: var(--primary-light);
-            color: var(--primary);
-        }
-        
-        .status-tab:active:not(.active) {
-            background: rgba(255,255,255,0.6);
-        }
-
-        /* ============ شبكة البطاقات ============ */
-        .rx-cards-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr));
-            gap: clamp(10px, 2.5vw, 16px);
-        }
-
-        .rx-card {
-            background: var(--white);
-            border-radius: var(--radius-lg);
-            border: 1px solid var(--border);
-            box-shadow: var(--shadow-sm);
-            cursor: pointer;
-            transition: all 0.2s ease;
-            overflow: hidden;
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            animation: cardIn 0.3s ease forwards;
+        .splash-screen.hidden {
             opacity: 0;
+            pointer-events: none;
+        }
+        
+        .splash-content {
+            text-align: center;
+        }
+        
+        .splash-logo {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border-radius: 20px;
+            margin: 0 auto 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: splashPulse 1.5s infinite ease-in-out;
+        }
+        
+        @keyframes splashPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .splash-logo svg {
+            width: 36px;
+            height: 36px;
+            color: white;
+        }
+        
+        .splash-loader {
+            width: 40px;
+            height: 4px;
+            background: rgba(0, 174, 239, 0.15);
+            border-radius: 4px;
+            margin: 1rem auto 0;
+            overflow: hidden;
+        }
+        
+        .splash-loader::after {
+            content: '';
+            display: block;
+            width: 40%;
+            height: 100%;
+            background: var(--primary);
+            border-radius: 4px;
+            animation: splashLoading 1.2s infinite ease-in-out;
+        }
+        
+        @keyframes splashLoading {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(350%); }
+        }
+        
+        .bg-pattern {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            pointer-events: none;
+            contain: strict;
+        }
+        
+        .bg-pattern::before {
+            content: '';
+            position: absolute;
+            top: -30%;
+            right: -20%;
+            width: 60vw;
+            height: 60vw;
+            max-width: 500px;
+            max-height: 500px;
+            background: radial-gradient(circle, rgba(0, 174, 239, 0.06) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: simpleFloat 30s infinite alternate ease-in-out;
+        }
+        
+        .bg-pattern::after {
+            content: '';
+            position: absolute;
+            bottom: -25%;
+            left: -15%;
+            width: 50vw;
+            height: 50vw;
+            max-width: 400px;
+            max-height: 400px;
+            background: radial-gradient(circle, rgba(0, 128, 128, 0.04) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: simpleFloat 35s infinite alternate-reverse ease-in-out;
+        }
+        
+        @keyframes simpleFloat {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(15px, 15px); }
+        }
+        
+        .glass-card {
+            background: var(--white);
+            border: 1px solid var(--border-light);
+            border-radius: 28px;
+            box-shadow: var(--shadow);
+            width: 100%;
+            max-width: 420px;
+            padding: 2.2rem 1.8rem;
+            text-align: center;
+            z-index: 1;
+            animation: cardIn 0.4s ease-out forwards;
+            opacity: 0;
+            contain: layout style;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
         }
         
         @keyframes cardIn {
@@ -442,1291 +190,1019 @@
             to { opacity: 1; transform: translateY(0); }
         }
         
-        .rx-card:nth-child(1) { animation-delay: 0.05s; }
-        .rx-card:nth-child(2) { animation-delay: 0.1s; }
-        .rx-card:nth-child(3) { animation-delay: 0.15s; }
-        .rx-card:nth-child(4) { animation-delay: 0.2s; }
-        .rx-card:nth-child(5) { animation-delay: 0.25s; }
-        .rx-card:nth-child(6) { animation-delay: 0.3s; }
-        
-        .rx-card:hover {
-            box-shadow: var(--shadow-md);
-            border-color: var(--primary-light);
-        }
-        
-        .rx-card:active {
-            transform: scale(0.98);
-            box-shadow: var(--shadow-sm);
-        }
-        
-        .rx-card.pending-card {
-            border-right: 4px solid var(--warning);
-        }
-        
-        .rx-card.dispensed-card {
-            border-right: 4px solid var(--success);
-        }
-        
-        .rx-card.partial-card {
-            border-right: 4px solid var(--primary);
-        }
-
-        /* رأس البطاقة */
-        .rx-card-header {
-            padding: clamp(12px, 2.5vw, 16px) clamp(14px, 3vw, 18px);
-            display: flex;
-            align-items: center;
-            gap: clamp(10px, 2vw, 14px);
-            border-bottom: 1px solid var(--border);
-            background: #FAFDFE;
-        }
-        
-        .rx-card-avatar {
-            width: clamp(44px, 10vw, 52px);
-            height: clamp(44px, 10vw, 52px);
-            min-width: clamp(44px, 10vw, 52px);
-            border-radius: 50%;
+        .logo-icon {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border-radius: 18px;
+            margin: 0 auto 1.2rem;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: clamp(1.1rem, 2.5vw, 1.3rem);
-            font-weight: 800;
+            box-shadow: 0 8px 20px rgba(0, 174, 239, 0.2);
+            position: relative;
+            contain: strict;
+        }
+        
+        .logo-icon svg {
+            width: 32px;
+            height: 32px;
             color: white;
-            flex-shrink: 0;
-            aspect-ratio: 1;
         }
         
-        .avatar-pending {
-            background: linear-gradient(135deg, #FFB74D, #F57C00);
-        }
-        
-        .avatar-dispensed {
-            background: linear-gradient(135deg, #66BB6A, #2E7D32);
-        }
-        
-        .avatar-partial {
-            background: linear-gradient(135deg, #42A5F5, #1565C0);
-        }
-        
-        .rx-card-patient-info {
-            flex: 1;
-            min-width: 0;
-        }
-        
-        .rx-card-patient-name {
-            font-size: clamp(0.95rem, 2.5vw, 1.1rem);
+        .card-header h1 {
+            font-size: 2rem;
             font-weight: 800;
-            color: var(--ink);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        
-        .rx-card-doctor-name {
-            font-size: clamp(0.72rem, 1.8vw, 0.8rem);
-            color: var(--primary);
-            font-weight: 600;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        
-        .rx-card-status-dot {
-            width: clamp(10px, 2.5vw, 12px);
-            height: clamp(10px, 2.5vw, 12px);
-            border-radius: 50%;
-            flex-shrink: 0;
-            border: 2px solid white;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-        }
-        
-        .dot-pending { background: var(--warning); }
-        .dot-dispensed { background: var(--success); }
-        .dot-partial { background: var(--primary); }
-
-        /* جسم البطاقة */
-        .rx-card-body {
-            padding: clamp(10px, 2.5vw, 14px) clamp(14px, 3vw, 18px);
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: clamp(6px, 1.5vw, 10px);
-        }
-        
-        .rx-card-info-row {
-            display: flex;
-            align-items: center;
-            gap: clamp(6px, 1.5vw, 10px);
-            font-size: clamp(0.78rem, 2vw, 0.85rem);
-            color: var(--ink);
-        }
-        
-        .rx-card-info-row i {
-            color: var(--primary);
-            width: clamp(18px, 4vw, 22px);
-            text-align: center;
-            flex-shrink: 0;
-            font-size: clamp(0.8rem, 1.8vw, 0.9rem);
-        }
-        
-        .rx-card-info-row span {
-            font-weight: 500;
-        }
-        
-        .rx-card-info-row strong {
-            font-weight: 700;
-            color: var(--ink);
-            margin-left: 4px;
-        }
-        
-        .rx-card-diagnosis {
-            background: #F5FAFC;
-            border-radius: var(--radius-sm);
-            padding: clamp(8px, 2vw, 10px) clamp(10px, 2.5vw, 12px);
-            font-size: clamp(0.75rem, 1.8vw, 0.82rem);
-            color: var(--text-sec);
-            border-right: 3px solid var(--primary-light);
-            line-height: 1.5;
-            max-height: 60px;
-            overflow: hidden;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-        }
-        
-        .rx-card-diagnosis i {
-            color: var(--primary);
-            margin-left: 4px;
-        }
-
-        /* تذييل البطاقة */
-        .rx-card-footer {
-            padding: clamp(8px, 2vw, 12px) clamp(14px, 3vw, 18px);
-            border-top: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: clamp(6px, 1.5vw, 10px);
-            flex-wrap: wrap;
-            background: #FAFDFE;
-        }
-        
-        .rx-card-date {
-            font-size: clamp(0.7rem, 1.6vw, 0.75rem);
-            color: var(--text-sec);
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-        
-        .rx-card-items-count {
-            background: var(--primary-light);
-            padding: clamp(3px, 0.8vw, 4px) clamp(8px, 2vw, 10px);
-            border-radius: var(--radius-xl);
-            font-size: clamp(0.7rem, 1.6vw, 0.75rem);
-            font-weight: 700;
             color: var(--primary-dark);
-            display: flex;
-            align-items: center;
-            gap: 4px;
+            letter-spacing: -0.3px;
+            margin-bottom: 0.3rem;
         }
         
-        .rx-card-action-btn {
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: var(--radius-xl);
-            padding: clamp(6px, 1.5vw, 8px) clamp(12px, 2.5vw, 16px);
-            font-family: 'Cairo', system-ui, sans-serif;
-            font-weight: 700;
-            font-size: clamp(0.72rem, 1.8vw, 0.8rem);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            transition: all 0.15s ease;
-            touch-action: manipulation;
-            white-space: nowrap;
-        }
-        
-        .rx-card-action-btn:active {
-            background: var(--primary-dark);
-            transform: scale(0.95);
-        }
-        
-        .rx-card-action-btn.dispensed-btn {
-            background: var(--success);
-        }
-
-        /* حالة فارغة */
-        .empty-state {
-            grid-column: 1 / -1;
-            text-align: center;
-            padding: clamp(40px, 10vw, 60px) clamp(16px, 4vw, 20px);
+        .card-header p {
+            font-size: 0.95rem;
             color: var(--text-sec);
+            font-weight: 500;
+            margin-bottom: 0.5rem;
         }
         
-        .empty-state i {
-            font-size: clamp(2.5rem, 8vw, 3.5rem);
-            opacity: 0.2;
-            margin-bottom: clamp(10px, 2vw, 14px);
+        .secure-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(38, 166, 154, 0.08);
+            color: var(--success);
+            font-size: 0.78rem;
+            padding: 5px 14px;
+            border-radius: 30px;
+            font-weight: 600;
+            margin-bottom: 1.6rem;
+            border: 1px solid rgba(38, 166, 154, 0.15);
+        }
+        
+        .secure-badge svg {
+            width: 14px;
+            height: 14px;
+        }
+        
+        .input-wrapper {
+            margin-bottom: 1.2rem;
+            text-align: right;
+        }
+        
+        .input-label {
             display: block;
-        }
-        
-        .empty-state h3 {
-            font-size: clamp(1rem, 2.5vw, 1.15rem);
-            margin-bottom: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
             color: var(--ink);
+            margin-bottom: 0.4rem;
+            padding-right: 0.3rem;
         }
         
-        .empty-state p {
-            font-size: clamp(0.8rem, 2vw, 0.88rem);
-        }
-
-        /* ============ المودال ============ */
-        .modal {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(26,60,74,0.15);
-            backdrop-filter: blur(4px);
-            -webkit-backdrop-filter: blur(4px);
-            align-items: center;
-            justify-content: center;
-            z-index: 2000;
-            padding: clamp(8px, 2vw, 16px);
-            animation: fadeIn 0.2s ease;
+        .input-group {
+            position: relative;
         }
         
-        @keyframes fadeIn { 
-            from { opacity: 0; } 
-            to { opacity: 1; } 
+        .input-group .input-icon {
+            position: absolute;
+            top: 50%;
+            right: 1rem;
+            transform: translateY(-50%);
+            color: var(--primary);
+            width: 20px;
+            height: 20px;
+            pointer-events: none;
+            transition: color var(--transition-speed);
         }
         
-        .modal-card {
-            background: rgba(255,255,255,0.98);
-            backdrop-filter: blur(16px) saturate(180%);
-            -webkit-backdrop-filter: blur(16px) saturate(180%);
-            border-radius: var(--radius-lg);
+        .input-group input {
             width: 100%;
-            max-width: min(550px, 95vw);
-            max-height: 85vh;
-            max-height: 85dvh;
-            overflow-y: auto;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.15);
-            border: 1px solid rgba(255,255,255,0.9);
-            animation: slideUp 0.25s ease;
-            -webkit-overflow-scrolling: touch;
-            overscroll-behavior: contain;
-        }
-        
-        @keyframes slideUp { 
-            from { transform: translateY(30px); opacity: 0; } 
-            to { transform: translateY(0); opacity: 1; } 
-        }
-        
-        .modal-header {
-            padding: clamp(12px, 2.5vw, 16px) clamp(16px, 3vw, 20px);
+            padding: 0.85rem 2.8rem 0.85rem 2.8rem;
             background: #F5FAFC;
-            border-bottom: 1px solid var(--border);
-            border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
-        
-        .modal-header h3 { 
-            font-size: clamp(0.95rem, 2.5vw, 1.1rem); 
-            font-weight: 800; 
-        }
-        
-        .close-btn {
-            background: rgba(0,0,0,0.04);
-            border: none;
-            width: clamp(30px, 7vw, 36px);
-            height: clamp(30px, 7vw, 36px);
-            border-radius: 50%;
-            font-size: clamp(18px, 4vw, 22px);
-            color: var(--text-sec);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.15s ease;
-            touch-action: manipulation;
-            aspect-ratio: 1;
-        }
-        
-        .close-btn:active { 
-            background: rgba(0,0,0,0.08); 
-        }
-        
-        .modal-body { 
-            padding: clamp(14px, 3vw, 20px);
-            padding-bottom: clamp(40vh, 50vh, 55vh);
-        }
-
-        .form-group { 
-            margin-bottom: clamp(10px, 2.5vw, 14px); 
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 700;
-            font-size: clamp(0.8rem, 2vw, 0.88rem);
+            border: 1.5px solid rgba(0, 174, 239, 0.15);
+            border-radius: 16px;
+            outline: none;
+            font-size: 0.95rem;
+            font-family: 'Cairo', sans-serif;
             color: var(--ink);
-        }
-        
-        .form-control {
-            width: 100%;
-            padding: clamp(8px, 2vw, 10px) clamp(12px, 2.5vw, 14px);
-            border-radius: var(--radius-sm);
-            border: 1.5px solid var(--border);
-            background: #F5FAFC;
-            font-family: 'Cairo', system-ui, sans-serif;
-            font-size: clamp(0.8rem, 2vw, 0.88rem);
-            color: var(--ink);
+            transition: border-color var(--transition-speed), box-shadow var(--transition-speed);
             -webkit-appearance: none;
             appearance: none;
-            transition: all 0.15s ease;
+            touch-action: manipulation;
         }
         
-        .form-control:focus {
-            outline: none;
+        .input-group input:focus {
             border-color: var(--primary);
-            background: white;
-            box-shadow: 0 0 0 3px rgba(0,174,239,0.1);
+            box-shadow: 0 0 0 3px rgba(0, 174, 239, 0.1);
+            background: #ffffff;
         }
         
-        textarea.form-control {
-            resize: vertical;
-            min-height: clamp(60px, 15vw, 80px);
-        }
-
-        .rx-detail-item {
-            display: flex;
-            align-items: center;
-            gap: clamp(6px, 1.5vw, 10px);
-            padding: clamp(8px, 2vw, 10px) clamp(10px, 2.5vw, 14px);
-            background: #F5FAFC;
-            border-radius: var(--radius-sm);
-            margin-bottom: 6px;
-            border: 1px solid var(--border);
-            transition: all 0.15s ease;
+        .input-group input:focus ~ .input-icon {
+            color: var(--primary-dark);
         }
         
-        .rx-detail-item .drug-icon {
-            width: clamp(28px, 7vw, 36px);
-            height: clamp(28px, 7vw, 36px);
-            border-radius: 50%;
-            background: var(--primary-light);
+        .input-group input::placeholder {
+            color: #B0C8D0;
+            font-weight: 400;
+        }
+        
+        .password-toggle {
+            position: absolute;
+            top: 50%;
+            left: 0.8rem;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--primary);
+            cursor: pointer;
+            padding: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: clamp(0.8rem, 2vw, 1rem);
-            flex-shrink: 0;
-            aspect-ratio: 1;
-        }
-
-        /* ============ البحث عن مريض ============ */
-        .search-box { 
-            position: relative; 
+            border-radius: 8px;
+            transition: background var(--transition-speed);
+            min-width: 44px;
+            min-height: 44px;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
         }
         
-        .search-results {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: white;
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            margin-top: 4px;
-            max-height: clamp(150px, 40vh, 200px);
-            overflow-y: auto;
-            display: none;
-            z-index: 20;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-            -webkit-overflow-scrolling: touch;
+        .password-toggle:active {
+            background: rgba(0, 174, 239, 0.15);
         }
         
-        .search-item {
-            padding: clamp(8px, 2vw, 10px) clamp(10px, 2.5vw, 14px);
+        .error-message {
+            color: var(--danger);
+            font-weight: 600;
+            font-size: 0.85rem;
+            padding: 0.6rem 1rem;
+            background: rgba(229, 115, 115, 0.05);
+            border-radius: 14px;
+            opacity: 0;
+            transition: opacity var(--transition-speed);
+            border: 1px solid rgba(229, 115, 115, 0.1);
+            margin-bottom: 0.8rem;
+            max-height: 0;
+            overflow: hidden;
+            padding-top: 0;
+            padding-bottom: 0;
+            border-width: 0;
+        }
+        
+        .error-message.show {
+            opacity: 1;
+            max-height: 100px;
+            padding: 0.6rem 1rem;
+            border-width: 1px;
+        }
+        
+        .btn-login {
+            width: 100%;
+            padding: 0.95rem;
+            border: none;
+            border-radius: 18px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            font-family: 'Cairo', sans-serif;
             cursor: pointer;
-            border-bottom: 1px solid var(--border);
-            font-size: clamp(0.78rem, 2vw, 0.85rem);
-            transition: background 0.15s ease;
-            min-height: clamp(36px, 8vw, 44px);
+            transition: transform 0.1s, box-shadow 0.15s;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            box-shadow: 0 6px 18px rgba(0, 174, 239, 0.2);
+            position: relative;
+            overflow: hidden;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+            contain: layout style;
+        }
+        
+        .btn-login:active:not(:disabled) {
+            transform: scale(0.98);
+            box-shadow: 0 4px 12px rgba(0, 174, 239, 0.15);
+            transition: transform 0.05s, box-shadow 0.05s;
+        }
+        
+        .btn-login:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .btn-content {
             display: flex;
             align-items: center;
-        }
-        
-        .search-item:active { 
-            background: var(--primary-light); 
-        }
-        
-        .search-item:last-child { 
-            border-bottom: none; 
-        }
-
-        /* ============ التوست ============ */
-        .toast-container {
-            position: fixed;
-            bottom: max(16px, 3vw);
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 4000;
-            display: flex;
-            flex-direction: column;
-            gap: clamp(4px, 1vw, 6px);
+            justify-content: center;
+            gap: 8px;
             pointer-events: none;
-            padding-bottom: var(--safe-bottom);
-            max-width: 90vw;
+        }
+        
+        .spinner {
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.5s linear infinite;
+            contain: strict;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
         
         .toast {
-            background: #1A3C4A;
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-120px);
             color: white;
-            padding: clamp(8px, 2vw, 12px) clamp(14px, 3vw, 22px);
-            border-radius: var(--radius-xl);
+            padding: 12px 24px;
+            border-radius: 30px;
             font-weight: 700;
-            font-size: clamp(0.78rem, 2vw, 0.85rem);
-            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
-            animation: toastIn 0.3s ease, toastOut 0.3s ease 2.2s forwards;
-            white-space: nowrap;
+            z-index: 9999;
+            font-family: 'Cairo', sans-serif;
+            font-size: 0.9rem;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+            transition: transform 0.25s ease-out;
+            pointer-events: none;
             display: flex;
             align-items: center;
-            gap: clamp(6px, 1.5vw, 8px);
+            gap: 8px;
+            contain: layout style;
         }
         
-        .toast.err { 
-            background: #C62828; 
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
         }
         
-        @keyframes toastIn { 
-            from { transform: translateY(16px); opacity: 0; } 
-            to { transform: translateY(0); opacity: 1; } 
+        .toast.success {
+            background: var(--success);
         }
         
-        @keyframes toastOut { 
-            from { transform: translateY(0); opacity: 1; } 
-            to { transform: translateY(-16px); opacity: 0; } 
+        .toast.error {
+            background: var(--danger);
         }
-
-        .keyboard-scroll-spacer {
-            height: 1px;
-            width: 100%;
+        
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.35);
+            transform: scale(0);
+            animation: rippleEffect 0.5s ease-out;
             pointer-events: none;
+        }
+        
+        @keyframes rippleEffect {
+            to {
+                transform: scale(3.5);
+                opacity: 0;
+            }
+        }
+        
+        .loading-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+            width: 0%;
+            z-index: 10000;
+            transition: width 1.2s ease-out;
+            transform: translateZ(0);
+        }
+        
+        .loading-bar.active {
+            width: 85%;
+        }
+        
+        .loading-bar.done {
+            width: 100%;
+            transition: width 0.25s ease;
             opacity: 0;
         }
-
-        /* ============ ميديا كويريز ============ */
         
-        @media (min-width: 769px) and (max-width: 1024px) {
-            html { font-size: clamp(13px, 1.8vw, 15px); }
-            .app-header { padding: 8px 14px; }
-            .rx-cards-grid { grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr)); }
-        }
-
-        @media (max-width: 768px) {
-            html { font-size: clamp(13px, 3.5vw, 14px); }
-            
-            body { 
-                padding: 4px; 
-                padding-bottom: calc(4px + var(--safe-bottom) + 55vh); 
+        @media (max-width: 480px) {
+            .glass-card {
+                padding: 1.8rem 1.3rem;
+                border-radius: 24px;
             }
             
-            .app-header { 
-                padding: 6px 10px; 
-                top: 3px; 
-                border-radius: var(--radius-md); 
-                gap: 6px;
+            .card-header h1 {
+                font-size: 1.7rem;
             }
             
-            .logo h2 { font-size: clamp(1rem, 4vw, 1.2rem); }
-            
-            .header-actions { gap: 4px; }
-            
-            .btn { 
-                padding: 5px 8px; 
-                font-size: 0.72rem; 
-                gap: 3px; 
-                min-height: clamp(28px, 7vw, 32px); 
+            .input-group input {
+                padding: 0.75rem 2.5rem;
+                font-size: 0.9rem;
             }
             
-            .btn-sm { 
-                padding: 4px 7px; 
-                font-size: 0.68rem; 
-            }
-            
-            .doctor-pill { 
-                padding: 6px 10px; 
-                font-size: 0.75rem; 
-                min-height: clamp(32px, 8vw, 38px); 
-            }
-            
-            .status-tab { 
-                padding: 6px 8px; 
-                font-size: 0.72rem; 
-                min-width: 50px;
-            }
-            
-            .status-tab .badge { 
-                font-size: 0.65rem; 
-                padding: 1px 6px; 
-            }
-            
-            .rx-cards-grid { 
-                grid-template-columns: 1fr; 
-                gap: 10px; 
-            }
-            
-            .rx-card-header { padding: 10px 12px; }
-            .rx-card-body { padding: 10px 12px; }
-            .rx-card-footer { padding: 8px 12px; }
-            
-            .rx-card-avatar {
-                width: 40px;
-                height: 40px;
-                min-width: 40px;
-            }
-            
-            .modal-card { 
-                max-width: 100%; 
-                border-radius: var(--radius-md); 
-                max-height: 90vh;
-                max-height: 90dvh;
-            }
-            
-            .modal-body { 
-                padding: 12px; 
-                padding-bottom: 55vh; 
-            }
-            
-            .hide-mobile { display: none; }
-            
-            #welcomeMsg { max-width: 80px; }
-        }
-
-        @media (max-width: 400px) {
-            html { font-size: clamp(12px, 4vw, 13px); }
-            
-            body { 
-                padding: 2px; 
-                padding-bottom: calc(2px + var(--safe-bottom) + 65vh); 
-            }
-            
-            .status-tabs { 
-                flex-direction: column; 
-                gap: 2px; 
-            }
-            
-            .status-tab { 
-                justify-content: space-between; 
-                text-align: right;
-            }
-            
-            .modal-body { 
-                padding-bottom: 65vh; 
+            .bg-pattern::before,
+            .bg-pattern::after {
+                animation-duration: 45s;
             }
         }
-
-        @media (min-width: 1400px) {
-            html { font-size: clamp(15px, 1.2vw, 17px); }
-            .container { max-width: 1300px; }
-            .rx-cards-grid { grid-template-columns: repeat(auto-fill, minmax(min(350px, 100%), 1fr)); }
+        
+        @media (max-width: 360px) {
+            .glass-card {
+                padding: 1.5rem 1rem;
+                border-radius: 20px;
+            }
+            
+            .card-header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .btn-login {
+                padding: 0.85rem;
+                font-size: 1rem;
+            }
         }
-
+        
         @media (prefers-reduced-motion: reduce) {
             *, *::before, *::after {
                 animation-duration: 0.001ms !important;
+                animation-iteration-count: 1 !important;
                 transition-duration: 0.001ms !important;
+            }
+        }
+        
+        @media (prefers-reduced-data: reduce) {
+            .bg-pattern {
+                display: none;
             }
         }
     </style>
 </head>
 <body>
-
-    <div class="toast-container" id="toastContainer"></div>
-
-    <div class="container" id="mainContainer">
-        <header class="app-header">
-            <div class="logo">
-                <h2><i class="fas fa-heartbeat"></i> شفاء · الصيدلي <span class="sync-dot on" id="syncDot" title="حالة المزامنة"></span></h2>
+    <!-- شاشة البداية -->
+    <div class="splash-screen" id="splashScreen">
+        <div class="splash-content">
+            <div class="splash-logo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/>
+                    <path d="M12 8v4l3 3"/>
+                </svg>
             </div>
-            <div class="header-actions">
-                <span class="tenant-badge" id="tenantBadge">
-                    <i class="fas fa-hospital"></i> <span id="tenantName">المجمع الطبي</span>
-                </span>
-                <span id="welcomeMsg">مرحباً</span>
-                <button class="btn btn-outline btn-sm" id="searchPatientBtn">
-                    <i class="fas fa-search"></i> <span class="hide-mobile">بحث</span>
-                </button>
-                <button class="btn btn-outline btn-sm" id="logoutBtn">
-                    <i class="fas fa-sign-out-alt"></i> <span class="hide-mobile">خروج</span>
-                </button>
-            </div>
+            <p style="color: var(--ink); font-weight: 700; font-size: 1.1rem;">جاري التحقق من الجلسة...</p>
+            <div class="splash-loader"></div>
+        </div>
+    </div>
+
+    <div class="bg-pattern" aria-hidden="true"></div>
+    <div class="loading-bar" id="loadingBar" aria-hidden="true"></div>
+    <div class="toast" id="toast" aria-live="polite"></div>
+    
+    <main class="glass-card" id="mainCard" style="display: none;">
+        <div class="logo-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/>
+                <path d="M12 8v4l3 3"/>
+            </svg>
+        </div>
+        
+        <header class="card-header">
+            <h1>شفاء</h1>
+            <p>منصة إدارة العيادات والصيدليات</p>
         </header>
-
-        <div class="doctors-strip" id="doctorsStrip">
-            <div class="strip-scroll" id="doctorStripContainer">
-                <div style="padding:10px;color:var(--text-sec);text-align:center;width:100%;">
-                    <i class="fas fa-spinner fa-spin"></i> جاري تحميل الأطباء...
+        
+        <div class="secure-badge" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            اتصال آمن ومشفر
+        </div>
+        
+        <form id="loginForm" novalidate autocomplete="on">
+            <div class="input-wrapper">
+                <label class="input-label" for="emailInput">البريد الإلكتروني</label>
+                <div class="input-group">
+                    <svg class="input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <rect x="2" y="4" width="20" height="16" rx="2"/>
+                        <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+                    </svg>
+                    <input 
+                        type="email" 
+                        id="emailInput" 
+                        placeholder="example@domain.com" 
+                        required 
+                        autocomplete="email"
+                        inputmode="email"
+                        dir="ltr"
+                    >
                 </div>
             </div>
-        </div>
-
-        <div class="status-tabs">
-            <button class="status-tab active" data-tab="لم تصرف بعد">
-                <i class="fas fa-clock"></i> جديدة
-                <span class="badge" id="countPending">0</span>
+            
+            <div class="input-wrapper">
+                <label class="input-label" for="passwordInput">كلمة المرور</label>
+                <div class="input-group">
+                    <svg class="input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                    </svg>
+                    <input 
+                        type="password" 
+                        id="passwordInput" 
+                        placeholder="••••••••" 
+                        required 
+                        autocomplete="current-password"
+                    >
+                    <button type="button" class="password-toggle" id="togglePasswordBtn" aria-label="إظهار/إخفاء كلمة المرور" tabindex="-1">
+                        <svg id="eyeIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="error-message" id="errorMessage" role="alert" aria-live="assertive"></div>
+            
+            <button type="submit" class="btn-login" id="loginButton">
+                <span class="btn-content" id="btnContent">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+                        <polyline points="10 17 15 12 10 7"/>
+                        <line x1="15" y1="12" x2="3" y2="12"/>
+                    </svg>
+                    تسجيل الدخول
+                </span>
             </button>
-            <button class="status-tab" data-tab="تم الصرف">
-                <i class="fas fa-check-circle"></i> مصروفة
-                <span class="badge" id="countDispensed">0</span>
-            </button>
-        </div>
-
-        <div class="rx-cards-grid" id="prescriptionsGrid">
-            <div class="empty-state">
-                <i class="fas fa-hand-point-up"></i>
-                <h3>اختر طبيباً من القائمة أعلاه</h3>
-                <p>ستظهر الوصفات الطبية هنا</p>
-            </div>
-        </div>
-
-        <div class="keyboard-scroll-spacer"></div>
-    </div>
-
-    <!-- مودال الصرف -->
-    <div id="dispenseModal" class="modal">
-        <div class="modal-card">
-            <div class="modal-header">
-                <h3><i class="fas fa-prescription"></i> صرف الوصفة</h3>
-                <button class="close-btn" id="closeDispenseBtn">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div id="dispensePatientInfo" style="margin-bottom:12px;"></div>
-                <div id="dispenseItemsList" style="margin-bottom:14px;"></div>
-                <div class="form-group">
-                    <label>حالة الصرف</label>
-                    <select id="dispenseStatus" class="form-control">
-                        <option value="تم الصرف">✅ تم الصرف كاملاً</option>
-                        <option value="صرفت جزئياً">📦 صرفت جزئياً</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>ملاحظات الصيدلي</label>
-                    <textarea id="dispenseNotes" class="form-control" rows="2" placeholder="ملاحظات إضافية..."></textarea>
-                </div>
-                <button class="btn btn-primary" id="confirmDispenseBtn" style="width:100%;">
-                    <i class="fas fa-check"></i> تأكيد الصرف
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- مودال البحث عن مريض -->
-    <div id="searchModal" class="modal">
-        <div class="modal-card">
-            <div class="modal-header">
-                <h3><i class="fas fa-search"></i> بحث عن مريض</h3>
-                <button class="close-btn" id="closeSearchBtn">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="search-box">
-                    <input type="text" id="patientSearchInput" class="form-control" placeholder="اسم المريض أو رقم الهاتف..." autocomplete="off">
-                    <div id="searchResults" class="search-results"></div>
-                </div>
-                <div id="patientHistoryContainer" style="margin-top:14px;"></div>
-                <div class="keyboard-scroll-spacer"></div>
-            </div>
-        </div>
-    </div>
+        </form>
+    </main>
 
     <script type="module">
+        // ============ استيراد Firebase ============
         import { firebaseConfig } from './firebase-config.js';
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-        import { getDatabase, ref, onValue, get, update } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
+        // ============ نظام التشفير البسيط ============
+        const ENCRYPTION_KEY = 'ShifaSecure2024!@#Key';
+        
+        const encryptData = (data) => {
+            try {
+                const jsonString = JSON.stringify(data);
+                let encrypted = '';
+                for (let i = 0; i < jsonString.length; i++) {
+                    const charCode = jsonString.charCodeAt(i) ^ ENCRYPTION_KEY.charCodeAt(i % ENCRYPTION_KEY.length);
+                    encrypted += String.fromCharCode(charCode);
+                }
+                return btoa(unescape(encodeURIComponent(encrypted)));
+            } catch (error) {
+                console.error('خطأ في التشفير:', error);
+                return null;
+            }
+        };
+        
+        const decryptData = (encryptedData) => {
+            try {
+                const encrypted = decodeURIComponent(escape(atob(encryptedData)));
+                let decrypted = '';
+                for (let i = 0; i < encrypted.length; i++) {
+                    const charCode = encrypted.charCodeAt(i) ^ ENCRYPTION_KEY.charCodeAt(i % ENCRYPTION_KEY.length);
+                    decrypted += String.fromCharCode(charCode);
+                }
+                return JSON.parse(decrypted);
+            } catch (error) {
+                console.error('خطأ في فك التشفير:', error);
+                return null;
+            }
+        };
+
+        // ============ ثوابت التخزين المحلي ============
+        const STORAGE_KEY = 'shifa_secure_session';
+
+        // ============ تهيئة Firebase ============
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getDatabase(app);
 
-        const STORAGE_PREFIX = 'shifa_tenant_';
+        // ============ عناصر DOM ============
+        const dom = {
+            splashScreen: document.getElementById('splashScreen'),
+            mainCard: document.getElementById('mainCard'),
+            emailInput: document.getElementById('emailInput'),
+            passwordInput: document.getElementById('passwordInput'),
+            loginButton: document.getElementById('loginButton'),
+            btnContent: document.getElementById('btnContent'),
+            loginForm: document.getElementById('loginForm'),
+            togglePasswordBtn: document.getElementById('togglePasswordBtn'),
+            eyeIcon: document.getElementById('eyeIcon'),
+            errorMessage: document.getElementById('errorMessage'),
+            toast: document.getElementById('toast'),
+            loadingBar: document.getElementById('loadingBar'),
+        };
+
+        // ============ أيقونات العين SVG ============
+        const ICONS = {
+            eyeOpen: `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>`,
+            eyeOff: `<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>`,
+        };
+
+        // ============ محتوى الزر الافتراضي ============
+        const defaultBtnContent = dom.btnContent.innerHTML;
+
+        // ============ ✅ جلب بيانات المستخدم من مسار المجمع (يبحث في كل المجمعات) ============
+        const fetchUserData = async (uid) => {
+            try {
+                // 1️⃣ نجيب كل المجمعات الموجودة
+                const tenantsSnap = await get(ref(db, 'tenants'));
+                
+                if (tenantsSnap.exists()) {
+                    const tenants = tenantsSnap.val();
+                    
+                    // 2️⃣ ندور على المستخدم في كل مجمع
+                    for (const tenantId of Object.keys(tenants)) {
+                        const tenantUserSnap = await get(ref(db, `tenants/${tenantId}/users/${uid}`));
+                        
+                        if (tenantUserSnap.exists()) {
+                            // ✅ لقينا المستخدم في المجمع ده
+                            const userData = tenantUserSnap.val();
+                            
+                            // لو معندوش tenantId، نضيفه
+                            if (!userData.tenantId) {
+                                userData.tenantId = tenantId;
+                            }
+                            
+                            // نجيب اسم المجمع لو موجود
+                            const tenantName = tenants[tenantId]?.name || tenants[tenantId]?.tenantName || 
+                                              (tenants[tenantId]?.users?.[tenantId]?.name) || 'المجمع الطبي';
+                            userData.tenantName = userData.tenantName || tenantName;
+                            
+                            console.log(`✅ تم العثور على المستخدم في مجمع: ${tenantId}`);
+                            return userData;
+                        }
+                    }
+                }
+                
+                // 3️⃣ لو ملقتش في المجمعات، جرب المسار العام (للتوافق مع البيانات القديمة)
+                const publicSnap = await get(ref(db, `users/${uid}`));
+                if (publicSnap.exists()) {
+                    const userData = publicSnap.val();
+                    
+                    // لو معندوش tenantId، نخليه هو uid بتاعه
+                    if (!userData.tenantId) {
+                        userData.tenantId = uid;
+                    }
+                    
+                    console.log(`⚠️ تم العثور على المستخدم في المسار العام (قديم)`);
+                    return userData;
+                }
+                
+                // 4️⃣ المستخدم مش موجود خالص
+                return null;
+                
+            } catch (error) {
+                console.error("❌ خطأ في جلب بيانات المستخدم:", error);
+                
+                // في حالة الخطأ، جرب المسار العام كآخر محاولة
+                try {
+                    const publicSnap = await get(ref(db, `users/${uid}`));
+                    if (publicSnap.exists()) {
+                        const userData = publicSnap.val();
+                        userData.tenantId = userData.tenantId || uid;
+                        return userData;
+                    }
+                } catch (e) {
+                    // تجاهل
+                }
+                
+                return null;
+            }
+        };
+
+        // ============ إدارة الجلسة المشفرة ============
         
-        const LOGIN_STORAGE_KEYS = [
-            'shifa_session',
-            'shifa_remember',
-            'shifa_last_login',
-            'shifa_secure_session'
-        ];
+        /**
+         * ✅ حفظ الجلسة في localStorage مع تشفير - متوافقة مع نظام المجمعات
+         */
+        const saveEncryptedSession = (userData) => {
+            try {
+                const sessionData = {
+                    uid: userData.uid,
+                    email: userData.email,
+                    role: userData.role,
+                    name: userData.name,
+                    tenantId: userData.tenantId || null,  // ✅ معرف المجمع
+                    timestamp: Date.now()
+                };
+                
+                const encrypted = encryptData(sessionData);
+                if (encrypted) {
+                    localStorage.setItem(STORAGE_KEY, encrypted);
+                    return true;
+                }
+                return false;
+            } catch (error) {
+                console.error('خطأ في حفظ الجلسة:', error);
+                return false;
+            }
+        };
+
+        /**
+         * استرجاع الجلسة من localStorage مع فك التشفير
+         */
+        const getEncryptedSession = () => {
+            try {
+                const encrypted = localStorage.getItem(STORAGE_KEY);
+                if (!encrypted) return null;
+                
+                const session = decryptData(encrypted);
+                if (!session || !session.uid || !session.role) {
+                    clearSession();
+                    return null;
+                }
+                
+                // التحقق من صلاحية الجلسة (24 ساعة)
+                const MAX_SESSION_AGE = 24 * 60 * 60 * 1000;
+                if (Date.now() - session.timestamp > MAX_SESSION_AGE) {
+                    console.log('🕐 انتهت صلاحية الجلسة');
+                    clearSession();
+                    return null;
+                }
+                
+                return session;
+            } catch (error) {
+                console.error('خطأ في استرجاع الجلسة:', error);
+                clearSession();
+                return null;
+            }
+        };
+
+        /**
+         * مسح الجلسة
+         */
+        const clearSession = () => {
+            try {
+                localStorage.removeItem(STORAGE_KEY);
+            } catch (error) {
+                console.error('خطأ في مسح الجلسة:', error);
+            }
+        };
+
+        // ============ دوال مساعدة ============
         
-        let currentTenantId = null;
-        
-        const getTenantStorageKey = (baseKey) => {
-            return currentTenantId ? `${STORAGE_PREFIX}${currentTenantId}_${baseKey}` : baseKey;
+        const showError = (msg) => {
+            if (!msg) {
+                dom.errorMessage.classList.remove('show');
+                dom.errorMessage.textContent = '';
+                return;
+            }
+            dom.errorMessage.textContent = msg;
+            dom.errorMessage.classList.add('show');
+            clearTimeout(dom._errorTimeout);
+            dom._errorTimeout = setTimeout(() => {
+                dom.errorMessage.classList.remove('show');
+            }, 5000);
         };
 
-        const state = {
-            currentUser: null,
-            pharmacistData: null,
-            doctorsList: [],
-            selectedDoctorId: null,
-            allPrescriptions: [],
-            currentTab: 'لم تصرف بعد',
-            unsubscribePrescriptions: null,
+        const hideError = () => {
+            dom.errorMessage.classList.remove('show');
+            dom.errorMessage.textContent = '';
         };
 
-        const $ = (sel) => document.querySelector(sel);
-        const $$ = (sel) => document.querySelectorAll(sel);
-
-        const getToday = () => {
-            const d = new Date();
-            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-        };
-
-        const escapeHtml = (str) => {
-            if (!str) return '';
-            const div = document.createElement('div');
-            div.textContent = str;
-            return div.innerHTML;
-        };
-
-        const showToast = (msg, isError = false) => {
-            const container = $('#toastContainer');
-            const toast = document.createElement('div');
-            toast.className = `toast ${isError ? 'err' : ''}`;
-            toast.innerHTML = `<i class="fas ${isError ? 'fa-exclamation-circle' : 'fa-check-circle'}"></i> ${msg}`;
-            container.appendChild(toast);
-            setTimeout(() => {
-                toast.classList.add('removing');
-                setTimeout(() => toast.remove(), 300);
+        const showToast = (msg, type = 'success') => {
+            dom.toast.textContent = msg;
+            dom.toast.className = `toast ${type} show`;
+            clearTimeout(dom._toastTimeout);
+            dom._toastTimeout = setTimeout(() => {
+                dom.toast.classList.remove('show');
             }, 2500);
         };
 
-        const setSyncStatus = (online) => {
-            const dot = $('#syncDot');
-            if (dot) {
-                dot.className = `sync-dot ${online ? 'on' : 'off'}`;
-                dot.title = online ? 'متصل بالسحابة' : 'غير متصل';
-            }
+        const showLoadingBar = () => {
+            dom.loadingBar.classList.add('active');
         };
 
-        const clearLoginSessionOnly = () => {
-            try {
-                LOGIN_STORAGE_KEYS.forEach(key => localStorage.removeItem(key));
-                const sessionKeysToRemove = [];
-                for (let i = 0; i < localStorage.length; i++) {
-                    const key = localStorage.key(i);
-                    if (key && (key.startsWith('shifa_session') || key.startsWith('shifa_secure'))) {
-                        sessionKeysToRemove.push(key);
-                    }
-                }
-                sessionKeysToRemove.forEach(key => localStorage.removeItem(key));
-                sessionStorage.clear();
-            } catch (e) {}
+        const hideLoadingBar = () => {
+            dom.loadingBar.classList.add('done');
+            setTimeout(() => {
+                dom.loadingBar.classList.remove('active', 'done');
+                dom.loadingBar.style.width = '0%';
+            }, 300);
         };
 
-        const loadPharmacistData = async (uid) => {
-            try {
-                const tenantsSnap = await get(ref(db, 'tenants'));
-                if (tenantsSnap.exists()) {
-                    const tenants = tenantsSnap.val();
-                    for (const tenantId of Object.keys(tenants)) {
-                        const userSnap = await get(ref(db, `tenants/${tenantId}/users/${uid}`));
-                        if (userSnap.exists()) {
-                            const userData = userSnap.val();
-                            if (userData.role === 'pharmacist') {
-                                currentTenantId = tenantId;
-                                state.pharmacistData = { id: uid, ...userData };
-                                const tenantName = tenants[tenantId]?.name || tenants[tenantId]?.tenantName || 'المجمع الطبي';
-                                state.pharmacistData.tenantName = tenantName;
-                                $('#welcomeMsg').textContent = `أهلاً، ${state.pharmacistData.name || 'صيدلي'}`;
-                                $('#tenantName').textContent = tenantName;
-                                return true;
-                            }
-                        }
-                    }
-                }
-                const oldSnap = await get(ref(db, `users/${uid}`));
-                if (oldSnap.exists() && oldSnap.val().role === 'pharmacist') {
-                    currentTenantId = uid;
-                    state.pharmacistData = { id: uid, ...oldSnap.val() };
-                    $('#welcomeMsg').textContent = `أهلاً، ${state.pharmacistData.name || 'صيدلي'}`;
-                    return true;
-                }
-                showToast('هذا الحساب ليس حساب صيدلي', true);
-                return false;
-            } catch (err) {
-                showToast('خطأ في تحميل البيانات', true);
-                return false;
-            }
-        };
-
-        const loadDoctors = () => {
-            if (!currentTenantId) return;
-            const usersRef = ref(db, `tenants/${currentTenantId}/users`);
-            onValue(usersRef, (snap) => {
-                const doctors = [];
-                snap.forEach(child => {
-                    const user = child.val();
-                    if (user.role === 'doctor') doctors.push({ id: child.key, ...user });
-                });
-                state.doctorsList = doctors;
-                if (state.selectedDoctorId && !doctors.find(d => d.id === state.selectedDoctorId)) {
-                    state.selectedDoctorId = null;
-                    localStorage.removeItem(getTenantStorageKey('selected_doctor'));
-                }
-                renderDoctorsStrip();
-                updateCounts();
-                renderCards();
-            }, (error) => {
-                setSyncStatus(false);
-            });
-        };
-
-        const loadPrescriptions = () => {
-            if (!currentTenantId) return;
-            if (state.unsubscribePrescriptions) state.unsubscribePrescriptions();
-            const presRef = ref(db, `tenants/${currentTenantId}/prescriptions`);
-            state.unsubscribePrescriptions = onValue(presRef, (snap) => {
-                const prescriptions = [];
-                snap.forEach(child => {
-                    prescriptions.push({ id: child.key, ...child.val() });
-                });
-                state.allPrescriptions = prescriptions;
-                setSyncStatus(true);
-                updateCounts();
-                renderCards();
-                renderDoctorsStrip();
-            }, (error) => {
-                setSyncStatus(false);
-            });
-        };
-
-        const renderDoctorsStrip = () => {
-            const container = $('#doctorStripContainer');
-            if (state.doctorsList.length === 0) {
-                container.innerHTML = '<div style="padding:10px;color:var(--text-sec);text-align:center;width:100%;">لا يوجد أطباء مسجلين</div>';
-                return;
-            }
-            container.innerHTML = state.doctorsList.map(doc => {
-                const pendingCount = state.allPrescriptions.filter(p => p.doctor_id === doc.id && p.status === 'لم تصرف بعد').length;
-                return `
-                    <div class="doctor-pill ${state.selectedDoctorId === doc.id ? 'active' : ''}" data-id="${doc.id}">
-                        <div class="pill-avatar"><i class="fas fa-user-md"></i></div>
-                        <span>د. ${escapeHtml(doc.name || '---')}</span>
-                        ${pendingCount > 0 ? `<span class="pill-badge">${pendingCount}</span>` : ''}
-                    </div>
-                `;
-            }).join('');
-            container.querySelectorAll('.doctor-pill').forEach(pill => {
-                pill.addEventListener('click', () => {
-                    state.selectedDoctorId = pill.dataset.id;
-                    localStorage.setItem(getTenantStorageKey('selected_doctor'), state.selectedDoctorId);
-                    renderDoctorsStrip();
-                    updateCounts();
-                    renderCards();
-                    pill.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-                });
-            });
-        };
-
-        const updateCounts = () => {
-            let pendingCount = 0, dispensedCount = 0;
-            const filtered = state.selectedDoctorId 
-                ? state.allPrescriptions.filter(p => p.doctor_id === state.selectedDoctorId)
-                : state.allPrescriptions;
-            filtered.forEach(p => {
-                if (p.status === 'لم تصرف بعد') pendingCount++;
-                else if ((p.status === 'تم الصرف' || p.status === 'صرفت جزئياً') && p.dispensed_at && p.dispensed_at.startsWith(getToday())) {
-                    dispensedCount++;
-                }
-            });
-            $('#countPending').textContent = pendingCount;
-            $('#countDispensed').textContent = dispensedCount;
-        };
-
-        // ============ عرض البطاقات ============
-        const renderCards = () => {
-            const grid = $('#prescriptionsGrid');
-            
-            if (!state.selectedDoctorId) {
-                grid.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-hand-point-up"></i>
-                        <h3>اختر طبيباً من القائمة أعلاه</h3>
-                        <p>ستظهر الوصفات الطبية هنا</p>
-                    </div>`;
-                return;
-            }
-            
-            let filtered = state.allPrescriptions.filter(p => p.doctor_id === state.selectedDoctorId);
-            
-            if (state.currentTab === 'لم تصرف بعد') {
-                filtered = filtered.filter(p => p.status === 'لم تصرف بعد');
+        const setLoading = (loading) => {
+            dom.loginButton.disabled = loading;
+            if (loading) {
+                dom.btnContent.innerHTML = '<span class="spinner"></span> جاري التحقق...';
+                showLoadingBar();
             } else {
-                filtered = filtered.filter(
-                    p => (p.status === 'تم الصرف' || p.status === 'صرفت جزئياً') &&
-                    p.dispensed_at && p.dispensed_at.startsWith(getToday())
-                );
+                dom.btnContent.innerHTML = defaultBtnContent;
+                hideLoadingBar();
+            }
+        };
+
+        const addRippleEffect = (e) => {
+            const button = e.currentTarget;
+            const ripple = document.createElement('span');
+            ripple.className = 'ripple';
+            const rect = button.getBoundingClientRect();
+            const size = Math.max(rect.width, rect.height);
+            ripple.style.width = ripple.style.height = `${size}px`;
+            ripple.style.left = `${e.clientX - rect.left - size / 2}px`;
+            ripple.style.top = `${e.clientY - rect.top - size / 2}px`;
+            button.appendChild(ripple);
+            ripple.addEventListener('animationend', () => {
+                if (ripple.parentNode) ripple.remove();
+            });
+        };
+
+        dom.loginButton.addEventListener('click', addRippleEffect);
+
+        // تبديل إظهار/إخفاء كلمة المرور
+        dom.togglePasswordBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const isPassword = dom.passwordInput.type === 'password';
+            dom.passwordInput.type = isPassword ? 'text' : 'password';
+            dom.eyeIcon.innerHTML = isPassword ? ICONS.eyeOff : ICONS.eyeOpen;
+            dom.passwordInput.focus();
+        });
+
+        // ============ ✅ توجيه المستخدم حسب الصلاحية - مع تمرير tenantId ============
+        const redirectUser = (role, name, tenantId = null) => {
+            const pages = {
+                admin: 'admin-panel.html',
+                doctor: 'doctor-dashboard.html',
+                nurse: 'nurse-dashboard.html',
+                pharmacist: 'pharmacy-dashboard.html',
+            };
+            
+            let redirectUrl = pages[role] || 'dashboard.html';
+            
+            // ✅ تمرير tenantId في الرابط للصفحات اللي محتاجاه
+            if (tenantId) {
+                const separator = redirectUrl.includes('?') ? '&' : '?';
+                redirectUrl += `${separator}tenant=${encodeURIComponent(tenantId)}`;
             }
             
-            filtered.sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''));
+            showToast(`👋 مرحباً ${name}!`, 'success');
             
-            if (filtered.length === 0) {
-                const msg = state.currentTab === 'لم تصرف بعد' ? 'لا توجد وصفات جديدة' : 'لا توجد وصفات مصروفة اليوم';
-                const icon = state.currentTab === 'لم تصرف بعد' ? 'fa-clock' : 'fa-check-circle';
-                grid.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas ${icon}"></i>
-                        <h3>${msg}</h3>
-                        <p>${state.currentTab === 'لم تصرف بعد' ? 'كل الوصفات تم صرفها ✓' : 'لم يتم صرف أي وصفة اليوم'}</p>
-                    </div>`;
+            setTimeout(() => {
+                window.location.href = redirectUrl;
+            }, 800);
+        };
+
+        // ============ معالجة تسجيل الدخول ============
+        const handleLogin = async (e) => {
+            e.preventDefault();
+            
+            const email = dom.emailInput.value.trim().toLowerCase();
+            const password = dom.passwordInput.value;
+
+            if (!email) {
+                showError('⚠️ الرجاء إدخال البريد الإلكتروني');
+                dom.emailInput.focus();
                 return;
             }
             
-            grid.innerHTML = filtered.map(p => {
-                const doctor = state.doctorsList.find(d => d.id === p.doctor_id);
-                const doctorName = doctor ? doctor.name : 'طبيب';
-                const patientName = p.patient_name || 'مريض';
-                const itemCount = p.item_count || 0;
-                const diagnosis = p.diagnosis || '';
-                const patientPhone = p.phone || '';
-                const patientAge = p.age || '';
-                const dateStr = p.created_at ? new Date(p.created_at).toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' }) : '';
-                const timeStr = p.created_at ? new Date(p.created_at).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }) : '';
-                
-                // تحديد نوع البطاقة
-                const isPending = p.status === 'لم تصرف بعد';
-                const isDispensed = p.status === 'تم الصرف';
-                const isPartial = p.status === 'صرفت جزئياً';
-                
-                const cardClass = isPending ? 'pending-card' : isDispensed ? 'dispensed-card' : 'partial-card';
-                const avatarClass = isPending ? 'avatar-pending' : isDispensed ? 'avatar-dispensed' : 'avatar-partial';
-                const dotClass = isPending ? 'dot-pending' : isDispensed ? 'dot-dispensed' : 'dot-partial';
-                
-                const statusText = isPending ? '⏳ جديد' : isDispensed ? '✅ تم الصرف' : '📦 جزئي';
-                const statusBg = isPending ? '#FFF3E0' : isDispensed ? '#E8F5E9' : '#E3F2FD';
-                const statusColor = isPending ? '#E65100' : isDispensed ? '#2E7D32' : '#1565C0';
-                
-                // معلومات إضافية للمصروفة
-                let extraInfo = '';
-                if (!isPending) {
-                    const pharmacistName = p.pharmacist_name || '';
-                    const dispensedDate = p.dispensed_at ? new Date(p.dispensed_at).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }) : '';
-                    extraInfo = `
-                        <div class="rx-card-info-row">
-                            <i class="fas fa-user-check"></i>
-                            <span>صرف: <strong>${escapeHtml(pharmacistName)}</strong> - ${dispensedDate}</span>
-                        </div>`;
-                }
-                
-                return `
-                <div class="rx-card ${cardClass}" data-id="${p.id}">
-                    <div class="rx-card-header">
-                        <div class="rx-card-avatar ${avatarClass}">
-                            ${escapeHtml(patientName.charAt(0))}
-                        </div>
-                        <div class="rx-card-patient-info">
-                            <div class="rx-card-patient-name">${escapeHtml(patientName)}</div>
-                            <div class="rx-card-doctor-name">
-                                <i class="fas fa-user-md"></i> د. ${escapeHtml(doctorName)}
-                            </div>
-                        </div>
-                        <div class="rx-card-status-dot ${dotClass}" title="${statusText}"></div>
-                    </div>
-                    
-                    <div class="rx-card-body">
-                        ${patientAge ? `
-                        <div class="rx-card-info-row">
-                            <i class="fas fa-calendar-alt"></i>
-                            <span>العمر: <strong>${escapeHtml(patientAge)} سنة</strong></span>
-                        </div>` : ''}
-                        
-                        ${patientPhone ? `
-                        <div class="rx-card-info-row">
-                            <i class="fas fa-phone"></i>
-                            <span>${escapeHtml(patientPhone)}</span>
-                        </div>` : ''}
-                        
-                        ${extraInfo}
-                        
-                        ${diagnosis ? `
-                        <div class="rx-card-diagnosis">
-                            <i class="fas fa-notes-medical"></i> ${escapeHtml(diagnosis)}
-                        </div>` : ''}
-                    </div>
-                    
-                    <div class="rx-card-footer">
-                        <div class="rx-card-date">
-                            <i class="far fa-clock"></i> ${dateStr} · ${timeStr}
-                        </div>
-                        
-                        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-                            <span style="background:${statusBg};color:${statusColor};padding:3px 10px;border-radius:20px;font-size:0.72rem;font-weight:700;">
-                                ${statusText}
-                            </span>
-                            
-                            <span class="rx-card-items-count">
-                                <i class="fas fa-pills"></i> ${itemCount} أصناف
-                            </span>
-                            
-                            ${isPending ? `
-                            <button class="rx-card-action-btn" data-action="dispense" data-id="${p.id}">
-                                <i class="fas fa-check"></i> صرف
-                            </button>` : `
-                            <button class="rx-card-action-btn dispensed-btn" data-action="details" data-id="${p.id}">
-                                <i class="fas fa-eye"></i> تفاصيل
-                            </button>`}
-                        </div>
-                    </div>
-                </div>`;
-            }).join('');
-        };
-
-        const openPrescriptionDetails = (prescriptionId) => {
-            if (!prescriptionId) return;
-            window.location.href = `prescription-details.html?id=${prescriptionId}&tenant=${currentTenantId || ''}`;
-        };
-
-        const openDispenseModal = async (prescriptionId) => {
-            const prescription = state.allPrescriptions.find(p => p.id === prescriptionId);
-            if (!prescription || prescription.status !== 'لم تصرف بعد') return;
-            
-            let items = [];
-            try {
-                const itemsSnap = await get(ref(db, `tenants/${currentTenantId}/prescription_items/${prescriptionId}`));
-                if (itemsSnap.exists()) items = Object.values(itemsSnap.val());
-            } catch (e) {}
-            
-            const doctor = state.doctorsList.find(d => d.id === prescription.doctor_id);
-            const doctorName = doctor ? doctor.name : 'طبيب';
-            
-            $('#dispensePatientInfo').innerHTML = `
-                <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-                    <div style="width:44px;height:44px;background:var(--primary-light);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.1rem;color:var(--primary-dark);">
-                        <i class="fas fa-user"></i>
-                    </div>
-                    <div>
-                        <b>${escapeHtml(prescription.patient_name || 'مريض')}</b>
-                        <div style="font-size:0.78rem;color:var(--text-sec);">د. ${escapeHtml(doctorName)}</div>
-                    </div>
-                </div>`;
-            
-            const formLabels = { 'tablet': '💊 أقراص', 'syrup': '🥄 شراب', 'injection': '💉 حقن', 'suppository': '🧴 لبوس', 'drops': '💧 نقط' };
-            $('#dispenseItemsList').innerHTML = items.length === 0 
-                ? '<div style="color:var(--text-sec);">لا توجد عناصر في الوصفة</div>'
-                : items.map(item => `
-                    <div class="rx-detail-item">
-                        <div class="drug-icon">${formLabels[item.form]?.split(' ')[0] || '💊'}</div>
-                        <div style="flex:1;">
-                            <b>${escapeHtml(item.drug_name || 'دواء')}</b>
-                            <div style="font-size:0.75rem;color:var(--text-sec);">${escapeHtml(item.dose || '')}</div>
-                        </div>
-                    </div>`).join('');
-            
-            $('#dispenseModal').dataset.prescriptionId = prescriptionId;
-            $('#dispenseStatus').value = 'تم الصرف';
-            $('#dispenseNotes').value = '';
-            $('#dispenseModal').style.display = 'flex';
-        };
-
-        const confirmDispense = async () => {
-            const prescriptionId = $('#dispenseModal').dataset.prescriptionId;
-            if (!prescriptionId) return;
-            
-            const status = $('#dispenseStatus').value;
-            const notes = $('#dispenseNotes').value.trim();
-            const now = new Date().toISOString();
-            
-            try {
-                const updates = {};
-                updates[`tenants/${currentTenantId}/prescriptions/${prescriptionId}/status`] = status;
-                updates[`tenants/${currentTenantId}/prescriptions/${prescriptionId}/dispensed_at`] = now;
-                updates[`tenants/${currentTenantId}/prescriptions/${prescriptionId}/pharmacist_id`] = state.currentUser.uid;
-                updates[`tenants/${currentTenantId}/prescriptions/${prescriptionId}/pharmacist_name`] = state.pharmacistData.name || 'صيدلي';
-                if (notes) updates[`tenants/${currentTenantId}/prescriptions/${prescriptionId}/pharmacist_notes`] = notes;
-                
-                await update(ref(db), updates);
-                $('#dispenseModal').style.display = 'none';
-                showToast('✅ تم صرف الوصفة بنجاح');
-            } catch (err) {
-                showToast('❌ خطأ في صرف الوصفة', true);
+            if (!password) {
+                showError('⚠️ الرجاء إدخال كلمة المرور');
+                dom.passwordInput.focus();
+                return;
             }
-        };
-
-        let searchTimer;
-        const searchPatients = async (term) => {
-            if (!term || term.length < 2) { $('#searchResults').style.display = 'none'; return; }
-            const termLower = term.toLowerCase();
-            let results = [];
-            try {
-                const prescriptionsSnap = await get(ref(db, `tenants/${currentTenantId}/prescriptions`));
-                const seen = new Set();
-                if (prescriptionsSnap.exists()) {
-                    prescriptionsSnap.forEach(child => {
-                        const p = child.val();
-                        const patientId = p.patient_id;
-                        const patientName = (p.patient_name || '').toLowerCase();
-                        if (!seen.has(patientId) && (patientName.includes(termLower) || (p.phone && p.phone.includes(term)))) {
-                            seen.add(patientId);
-                            results.push({ id: patientId, name: p.patient_name || 'مريض', phone: p.phone || '' });
-                        }
-                    });
-                }
-            } catch (e) {}
             
-            const container = $('#searchResults');
-            container.innerHTML = results.length === 0 
-                ? '<div class="search-item" style="color:var(--text-sec);">لا توجد نتائج</div>'
-                : results.slice(0, 10).map(p => `
-                    <div class="search-item" data-id="${p.id}">
-                        <b>${escapeHtml(p.name)}</b>
-                        <small style="color:var(--text-sec);margin-right:auto;">${escapeHtml(p.phone)}</small>
-                    </div>`).join('');
-            container.style.display = 'block';
-        };
-
-        const logout = async () => {
-            try {
-                showToast('👋 جاري تسجيل الخروج...');
-                if (state.unsubscribePrescriptions) { state.unsubscribePrescriptions(); state.unsubscribePrescriptions = null; }
-                clearLoginSessionOnly();
-                state.currentUser = null;
-                state.pharmacistData = null;
-                state.doctorsList = [];
-                state.allPrescriptions = [];
-                await signOut(auth);
-                window.location.href = 'index.html';
-            } catch (error) {
-                clearLoginSessionOnly();
-                window.location.href = 'index.html';
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                showError('⚠️ صيغة البريد الإلكتروني غير صحيحة');
+                dom.emailInput.focus();
+                return;
             }
-        };
 
-        const initEvents = () => {
-            $$('.status-tab').forEach(tab => {
-                tab.addEventListener('click', () => {
-                    $$('.status-tab').forEach(t => t.classList.remove('active'));
-                    tab.classList.add('active');
-                    state.currentTab = tab.dataset.tab;
-                    updateCounts();
-                    renderCards();
-                });
-            });
-            
-            // الضغط على البطاقة
-            $('#prescriptionsGrid').addEventListener('click', (e) => {
-                const actionBtn = e.target.closest('[data-action]');
-                if (actionBtn) {
-                    e.stopPropagation();
-                    const id = actionBtn.dataset.id;
-                    if (actionBtn.dataset.action === 'dispense') {
-                        openDispenseModal(id);
-                    } else {
-                        openPrescriptionDetails(id);
-                    }
+            if (password.length < 6) {
+                showError('⚠️ كلمة المرور يجب أن تكون 6 أحرف على الأقل');
+                dom.passwordInput.focus();
+                return;
+            }
+
+            hideError();
+            setLoading(true);
+
+            try {
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+
+                // ✅ جلب بيانات المستخدم من مسار المجمع (يبحث في كل المجمعات)
+                const userData = await fetchUserData(user.uid);
+
+                if (!userData || !userData.role) {
+                    showError('❌ هذا الحساب غير مفعل أو لا يملك صلاحيات. تواصل مع المسؤول.');
+                    setLoading(false);
                     return;
                 }
+
+                if (userData.status === 'blocked') {
+                    showError('🚫 هذا الحساب محظور. تواصل مع المسؤول.');
+                    setLoading(false);
+                    return;
+                }
+
+                const displayName = userData.name || email.split('@')[0];
+                const tenantId = userData.tenantId || null;
+
+                // ✅ حفظ الجلسة مشفرة مع tenantId
+                const saved = saveEncryptedSession({
+                    uid: user.uid,
+                    email: email,
+                    role: userData.role,
+                    name: displayName,
+                    tenantId: tenantId
+                });
+
+                if (!saved) {
+                    console.warn('⚠️ تعذر حفظ الجلسة محلياً');
+                }
+
+                // ✅ توجيه المستخدم مع تمرير tenantId
+                redirectUser(userData.role, displayName, tenantId);
+
+            } catch (error) {
+                console.error("خطأ تسجيل الدخول:", error);
                 
-                const card = e.target.closest('.rx-card');
-                if (!card) return;
-                const id = card.dataset.id;
-                const prescription = state.allPrescriptions.find(p => p.id === id);
-                if (prescription && prescription.status === 'لم تصرف بعد') {
-                    openDispenseModal(id);
-                } else {
-                    openPrescriptionDetails(id);
+                const errorMessages = {
+                    'auth/invalid-credential': '❌ البريد الإلكتروني أو كلمة المرور غير صحيحة',
+                    'auth/user-not-found': '❌ لا يوجد حساب بهذا البريد الإلكتروني',
+                    'auth/wrong-password': '❌ كلمة المرور غير صحيحة',
+                    'auth/invalid-email': '❌ صيغة البريد الإلكتروني غير صحيحة',
+                    'auth/user-disabled': '🚫 هذا الحساب معطل. تواصل مع المسؤول.',
+                    'auth/too-many-requests': '⏳ تم تعطيل الحساب مؤقتاً بسبب محاولات كثيرة. حاول لاحقاً.',
+                    'auth/network-request-failed': '📡 خطأ في الاتصال بالإنترنت. تحقق من اتصالك.',
+                    'auth/operation-not-allowed': '⚠️ تسجيل الدخول غير مفعل حالياً.',
+                };
+                
+                const message = errorMessages[error.code] || '⚠️ حدث خطأ غير متوقع. حاول مرة أخرى.';
+                showError(message);
+                setLoading(false);
+                
+                if (error.code === 'auth/network-request-failed') {
+                    showToast('📡 لا يوجد اتصال بالإنترنت', 'error');
                 }
-            });
-            
-            $('#confirmDispenseBtn').addEventListener('click', confirmDispense);
-            $('#closeDispenseBtn').addEventListener('click', () => $('#dispenseModal').style.display = 'none');
-            
-            $('#searchPatientBtn').addEventListener('click', () => {
-                $('#searchModal').style.display = 'flex';
-                $('#patientSearchInput').value = '';
-                $('#searchResults').style.display = 'none';
-            });
-            
-            $('#closeSearchBtn').addEventListener('click', () => $('#searchModal').style.display = 'none');
-            
-            $('#patientSearchInput').addEventListener('input', () => {
-                clearTimeout(searchTimer);
-                searchTimer = setTimeout(() => searchPatients($('#patientSearchInput').value.trim()), 300);
-            });
-            
-            $('#logoutBtn').addEventListener('click', logout);
-            
-            window.addEventListener('click', (e) => {
-                if (e.target === $('#dispenseModal')) $('#dispenseModal').style.display = 'none';
-                if (e.target === $('#searchModal')) $('#searchModal').style.display = 'none';
-            });
-            
-            document.addEventListener('click', (e) => {
-                if (!$('#patientSearchInput').contains(e.target) && !$('#searchResults').contains(e.target)) {
-                    $('#searchResults').style.display = 'none';
-                }
-            });
-            
-            document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape') {
-                    if ($('#dispenseModal').style.display === 'flex') $('#dispenseModal').style.display = 'none';
-                    if ($('#searchModal').style.display === 'flex') $('#searchModal').style.display = 'none';
-                }
-            });
-            
-            window.addEventListener('online', () => { setSyncStatus(true); showToast('📡 تم استعادة الاتصال'); });
-            window.addEventListener('offline', () => { setSyncStatus(false); showToast('⚠️ انقطع الاتصال', true); });
-            window.addEventListener('beforeunload', () => { if (state.unsubscribePrescriptions) state.unsubscribePrescriptions(); });
+            }
         };
 
-        onAuthStateChanged(auth, async (user) => {
-            if (!user) { clearLoginSessionOnly(); window.location.href = 'index.html'; return; }
+        // ============ مستمعي الأحداث ============
+        
+        dom.loginForm.addEventListener('submit', handleLogin);
+
+        dom.emailInput.addEventListener('input', hideError);
+        dom.passwordInput.addEventListener('input', hideError);
+
+        // إظهار كلمة المرور مؤقتاً بالضغط المطول
+        let longPressTimer;
+        
+        const startLongPress = () => {
+            longPressTimer = setTimeout(() => {
+                dom.passwordInput.type = 'text';
+                dom.eyeIcon.innerHTML = ICONS.eyeOff;
+            }, 400);
+        };
+        
+        const endLongPress = () => {
+            clearTimeout(longPressTimer);
+            dom.passwordInput.type = 'password';
+            dom.eyeIcon.innerHTML = ICONS.eyeOpen;
+        };
+        
+        dom.togglePasswordBtn.addEventListener('mousedown', startLongPress);
+        dom.togglePasswordBtn.addEventListener('mouseup', endLongPress);
+        dom.togglePasswordBtn.addEventListener('mouseleave', endLongPress);
+        dom.togglePasswordBtn.addEventListener('touchstart', startLongPress, { passive: true });
+        dom.togglePasswordBtn.addEventListener('touchend', endLongPress);
+        dom.togglePasswordBtn.addEventListener('touchcancel', endLongPress);
+
+        // اختصار Ctrl+Enter لتسجيل الدخول
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                e.preventDefault();
+                dom.loginForm.dispatchEvent(new Event('submit'));
+            }
+        });
+
+        // ============ تحسينات إضافية ============
+        
+        document.addEventListener('gesturestart', (e) => {
+            if (document.activeElement.tagName === 'INPUT') {
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        // ============ التوجيه التلقائي عند فتح الصفحة ============
+        const checkSessionAndRedirect = async () => {
+            // 1️⃣ التحقق من وجود جلسة محلية مشفرة
+            const localSession = getEncryptedSession();
             
-            const urlParams = new URLSearchParams(window.location.search);
-            const tenantFromUrl = urlParams.get('tenant');
-            
-            if (tenantFromUrl) {
-                currentTenantId = tenantFromUrl;
-            } else {
+            if (localSession) {
+                console.log('✅ تم العثور على جلسة محلية، جاري التحقق...');
+                
                 try {
-                    const encrypted = localStorage.getItem('shifa_secure_session');
-                    if (encrypted) {
-                        const decoded = atob(encrypted);
-                        const match = decoded.match(/"tenantId":"([^"]+)"/);
-                        if (match) currentTenantId = match[1];
+                    const user = auth.currentUser;
+                    
+                    if (user && user.uid === localSession.uid) {
+                        console.log('✅ الجلسة صالحة، جاري التوجيه...');
+                        redirectUser(localSession.role, localSession.name, localSession.tenantId);
+                        return;
                     }
-                } catch (e) {}
-                if (!currentTenantId) {
-                    const oldSession = localStorage.getItem('shifa_session');
-                    currentTenantId = oldSession ? (JSON.parse(oldSession).tenantId || user.uid) : user.uid;
+                    
+                    if (user && user.uid !== localSession.uid) {
+                        console.log('⚠️ تغير المستخدم، جلب بيانات جديدة...');
+                        const userData = await fetchUserData(user.uid);
+                        if (userData && userData.role) {
+                            const displayName = userData.name || user.email.split('@')[0];
+                            const tenantId = userData.tenantId || null;
+                            
+                            saveEncryptedSession({
+                                uid: user.uid,
+                                email: user.email,
+                                role: userData.role,
+                                name: displayName,
+                                tenantId: tenantId
+                            });
+                            
+                            redirectUser(userData.role, displayName, tenantId);
+                            return;
+                        }
+                    }
+                } catch (error) {
+                    console.warn('⚠️ خطأ في التحقق من الجلسة:', error);
                 }
             }
             
-            sessionStorage.setItem('userUid', user.uid);
-            sessionStorage.setItem('userRole', 'pharmacist');
+            console.log('🔍 في انتظار حالة المصادقة من Firebase...');
+            showLoginForm();
+        };
+
+        // ============ إظهار نموذج تسجيل الدخول ============
+        const showLoginForm = () => {
+            dom.splashScreen.classList.add('hidden');
+            dom.mainCard.style.display = '';
             
-            if (!state.currentUser) {
-                state.currentUser = { uid: user.uid };
-                const success = await loadPharmacistData(user.uid);
-                if (!success) { showToast('⚠️ تعذر تحميل بيانات الصيدلي', true); return; }
-                
-                const savedDoctor = localStorage.getItem(getTenantStorageKey('selected_doctor'));
-                if (savedDoctor) state.selectedDoctorId = savedDoctor;
-                
-                initEvents();
-                loadDoctors();
-                loadPrescriptions();
+            try {
+                const oldSession = getEncryptedSession();
+                if (oldSession && oldSession.email) {
+                    dom.emailInput.value = oldSession.email;
+                }
+            } catch (e) {
+                // تجاهل
             }
+        };
+
+        // ============ بدء التشغيل ============
+        const initApp = async () => {
+            console.log('🚀 نظام شفاء — جاري التحقق من الجلسة...');
+            
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    console.log('✅ مستخدم مسجل دخول في Firebase');
+                    
+                    const localSession = getEncryptedSession();
+                    
+                    if (!localSession || localSession.uid !== user.uid) {
+                        try {
+                            const userData = await fetchUserData(user.uid);
+                            if (userData && userData.role) {
+                                const displayName = userData.name || user.email.split('@')[0];
+                                const tenantId = userData.tenantId || null;
+                                
+                                saveEncryptedSession({
+                                    uid: user.uid,
+                                    email: user.email,
+                                    role: userData.role,
+                                    name: displayName,
+                                    tenantId: tenantId
+                                });
+                                
+                                redirectUser(userData.role, displayName, tenantId);
+                                return;
+                            }
+                        } catch (error) {
+                            console.error('خطأ في جلب بيانات المستخدم:', error);
+                        }
+                    } else if (localSession) {
+                        redirectUser(localSession.role, localSession.name, localSession.tenantId);
+                        return;
+                    }
+                }
+                
+                if (!dom.mainCard.style.display || dom.mainCard.style.display === 'none') {
+                    showLoginForm();
+                }
+            });
+            
+            await checkSessionAndRedirect();
+        };
+
+        // ============ تنظيف التايمرات عند مغادرة الصفحة ============
+        window.addEventListener('beforeunload', () => {
+            clearTimeout(dom._errorTimeout);
+            clearTimeout(dom._toastTimeout);
+            clearTimeout(longPressTimer);
         });
+
+        // تشغيل التطبيق
+        initApp();
     </script>
 </body>
-</html>
