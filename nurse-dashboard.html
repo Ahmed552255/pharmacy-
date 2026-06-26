@@ -754,47 +754,6 @@
             transition: all 0.3s ease; 
         }
 
-        /* أنماط التبويبين */
-        .tab-switcher {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 16px;
-            background: #f0f0f0;
-            border-radius: var(--radius-xl);
-            padding: 4px;
-        }
-
-        .tab-switch {
-            flex: 1;
-            padding: 8px 12px;
-            border-radius: var(--radius-xl);
-            border: none;
-            background: transparent;
-            color: var(--text-sec);
-            font-weight: 600;
-            cursor: pointer;
-            font-family: 'Cairo', sans-serif;
-            font-size: 0.8rem;
-            transition: all 0.2s;
-        }
-
-        .tab-switch.active {
-            background: white;
-            color: var(--primary-dark);
-            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-        }
-
-        .id-preview {
-            background: #E8F5E9;
-            padding: 8px 14px;
-            border-radius: var(--radius-sm);
-            font-weight: 700;
-            color: #1B5E20;
-            font-size: 1.1rem;
-            text-align: center;
-            letter-spacing: 2px;
-        }
-
         @media (max-width: 768px) {
             body { 
                 padding: 8px;
@@ -994,37 +953,18 @@
                 <button class="close-btn" id="closeModalBtn">&times;</button>
             </div>
             <div class="modal-body">
-                <!-- تبويبات: عادي / بدون هاتف -->
-                <div class="tab-switcher">
-                    <button class="tab-switch active" data-mode="normal">
-                        <i class="fas fa-phone"></i> عادي
-                    </button>
-                    <button class="tab-switch" data-mode="nophone">
-                        <i class="fas fa-user-shield"></i> بدون رقم هاتف
-                    </button>
-                </div>
-
                 <form id="bookingForm" autocomplete="off">
                     <input type="hidden" id="editId">
-                    <input type="hidden" id="activeMode" value="normal">
                     
                     <div class="form-group">
                         <label>الطبيب *</label>
                         <select id="doctorSelect" class="form-control" required></select>
                     </div>
                     
-                    <!-- قسم البحث عن مريض (الوضع العادي) -->
-                    <div id="normalSearchSection" class="form-group search-box">
+                    <div class="form-group search-box">
                         <label>البحث عن مريض</label>
                         <input type="text" id="patientSearch" class="form-control" placeholder="اسم أو رقم الهاتف..." autocomplete="off">
                         <div id="searchResults" class="search-results"></div>
-                    </div>
-
-                    <!-- قسم البحث البديل (بدون هاتف) -->
-                    <div id="nophoneSearchSection" class="form-group search-box" style="display:none;">
-                        <label>البحث عن مريض (بدون هاتف)</label>
-                        <input type="text" id="nophoneSearch" class="form-control" placeholder="اسم المريض أو المعرف البديل..." autocomplete="off">
-                        <div id="nophoneSearchResults" class="search-results"></div>
                     </div>
                     
                     <div class="form-group">
@@ -1037,46 +977,9 @@
                         <input type="number" id="patientAge" class="form-control" min="0" max="150">
                     </div>
                     
-                    <!-- حقل الهاتف في الوضع العادي -->
-                    <div id="normalPhoneSection" class="form-group">
+                    <div class="form-group">
                         <label>رقم الهاتف</label>
                         <input type="tel" id="patientPhone" class="form-control" dir="ltr">
-                    </div>
-
-                    <!-- حقول البديل في وضع بدون هاتف -->
-                    <div id="nophoneFields" style="display:none;">
-                        <div class="form-group">
-                            <label>الجنس *</label>
-                            <select id="patientGender" class="form-control">
-                                <option value="male">👨 رجل</option>
-                                <option value="female">👩 امرأة</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>اسم الوالد</label>
-                            <input type="text" id="fatherName" class="form-control nophone-field" placeholder="اسم الوالد...">
-                        </div>
-                        <div class="form-group">
-                            <label>اسم الولده (الأم)</label>
-                            <input type="text" id="motherName" class="form-control nophone-field" placeholder="اسم الأم...">
-                        </div>
-                        <div class="form-group">
-                            <label>اسم المريض</label>
-                            <input type="text" id="altPatientName" class="form-control nophone-field" placeholder="اسم المريض...">
-                        </div>
-                        <div class="form-group">
-                            <label>اسم القرية</label>
-                            <input type="text" id="villageName" class="form-control nophone-field" placeholder="اسم القرية...">
-                        </div>
-                        <div class="form-group">
-                            <label>اسم العيلة (العائلة)</label>
-                            <input type="text" id="familyName" class="form-control nophone-field" placeholder="اسم العائلة...">
-                        </div>
-                        <div class="form-group">
-                            <label>المعرف البديل المحسوب</label>
-                            <div class="id-preview" id="generatedId">---</div>
-                            <small style="color: var(--text-sec);">يتم حسابه تلقائياً من الحروف الأولى والأخيرة</small>
-                        </div>
                     </div>
 
                     <div class="form-group">
@@ -1282,8 +1185,7 @@
                         const isFresh = (now - p._cachedAt) < expiryMs;
                         return isFresh && (
                             (p.name && p.name.toLowerCase().includes(t)) ||
-                            (p.phone && p.phone.includes(t)) ||
-                            (p.alternateId && p.alternateId.toLowerCase().includes(t))
+                            (p.phone && p.phone.includes(t))
                         );
                     })
                     .map(([id, p]) => ({ id, ...p }));
@@ -1638,21 +1540,6 @@
             $('#apptDate').value = booking.date || state.currentDate;
             $('#apptTime').value = booking.time || '';
             state.selectedPatientId = booking.patient_id || null;
-            
-            // إذا كان هناك معرف بديل، نفعل وضع بدون هاتف
-            if (booking.alternateId && !booking.phone) {
-                switchToNophoneMode();
-                $('#generatedId').textContent = booking.alternateId || '---';
-                if (booking.gender) $('#patientGender').value = booking.gender;
-                if (booking.fatherName) $('#fatherName').value = booking.fatherName;
-                if (booking.motherName) $('#motherName').value = booking.motherName;
-                if (booking.altPatientName) $('#altPatientName').value = booking.altPatientName;
-                if (booking.villageName) $('#villageName').value = booking.villageName;
-                if (booking.familyName) $('#familyName').value = booking.familyName;
-            } else {
-                switchToNormalMode();
-            }
-            
             $('#bookingModal').style.display = 'flex';
         };
 
@@ -1668,148 +1555,13 @@
             state.selectedPatientId = null;
             $('#formAlert').textContent = '';
             $('#searchResults').style.display = 'none';
-            $('#nophoneSearchResults').style.display = 'none';
-            $('#generatedId').textContent = '---';
-            switchToNormalMode();
         };
 
-        // ============ تبديل التبويبات ============
-        const switchToNormalMode = () => {
-            $('#activeMode').value = 'normal';
-            $('#normalSearchSection').style.display = 'block';
-            $('#normalPhoneSection').style.display = 'block';
-            $('#nophoneSearchSection').style.display = 'none';
-            $('#nophoneFields').style.display = 'none';
-            $('#patientPhone').removeAttribute('disabled');
-            
-            $$('.tab-switch').forEach(btn => btn.classList.remove('active'));
-            $('.tab-switch[data-mode="normal"]').classList.add('active');
-            
-            // تعطيل required من حقول nophone
-            $$('.nophone-field').forEach(f => f.removeAttribute('required'));
-        };
-
-        const switchToNophoneMode = () => {
-            $('#activeMode').value = 'nophone';
-            $('#normalSearchSection').style.display = 'none';
-            $('#normalPhoneSection').style.display = 'none';
-            $('#nophoneSearchSection').style.display = 'block';
-            $('#nophoneFields').style.display = 'block';
-            $('#patientPhone').value = '';
-            $('#patientPhone').setAttribute('disabled', 'disabled');
-            
-            $$('.tab-switch').forEach(btn => btn.classList.remove('active'));
-            $('.tab-switch[data-mode="nophone"]').classList.add('active');
-        };
-
-        // أحداث التبويبين
-        $$('.tab-switch').forEach(btn => {
-            btn.addEventListener('click', () => {
-                if (btn.dataset.mode === 'normal') {
-                    switchToNormalMode();
-                } else {
-                    switchToNophoneMode();
-                }
-            });
-        });
-
-        // ============ نظام إنشاء المعرف البديل ============
-        
-        // خريطة القيم للحروف حسب الجنس
-        const maleCharValues = {
-            'ا': 2, 'أ': 2, 'إ': 2, 'آ': 2,
-            'ب': 4, 'ت': 6, 'ث': 8, 'ج': 1,
-            'ح': 3, 'خ': 5, 'د': 7, 'ذ': 9,
-            'ر': 2, 'ز': 4, 'س': 6, 'ش': 8,
-            'ص': 1, 'ض': 3, 'ط': 5, 'ظ': 7,
-            'ع': 9, 'غ': 2, 'ف': 4, 'ق': 6,
-            'ك': 8, 'ل': 1, 'م': 3, 'ن': 5,
-            'ه': 7, 'ة': 7, 'و': 9, 'ي': 2,
-            'ى': 2, 'ئ': 4
-        };
-
-        const femaleCharValues = {
-            'ا': 7, 'أ': 7, 'إ': 7, 'آ': 7,
-            'ب': 9, 'ت': 2, 'ث': 4, 'ج': 6,
-            'ح': 8, 'خ': 1, 'د': 3, 'ذ': 5,
-            'ر': 7, 'ز': 9, 'س': 2, 'ش': 4,
-            'ص': 6, 'ض': 8, 'ط': 1, 'ظ': 3,
-            'ع': 5, 'غ': 7, 'ف': 9, 'ق': 2,
-            'ك': 4, 'ل': 6, 'م': 8, 'ن': 1,
-            'ه': 3, 'ة': 3, 'و': 5, 'ي': 7,
-            'ى': 7, 'ئ': 9
-        };
-
-        const getCharValue = (char, gender) => {
-            const normalized = char.trim();
-            if (!normalized) return 0;
-            const firstChar = normalized[0].toLowerCase();
-            
-            const map = gender === 'female' ? femaleCharValues : maleCharValues;
-            
-            // البحث في الخريطة
-            for (const [key, val] of Object.entries(map)) {
-                if (key === firstChar || key === normalized[0]) return val;
-            }
-            
-            // قيمة افتراضية = طول الكود للحرف
-            return (firstChar.charCodeAt(0) % 9) + 1;
-        };
-
-        const generateAlternateId = () => {
-            const gender = $('#patientGender').value;
-            const fatherName = $('#fatherName').value.trim();
-            const motherName = $('#motherName').value.trim();
-            const altPatientName = $('#altPatientName').value.trim();
-            const villageName = $('#villageName').value.trim();
-            
-            if (!fatherName && !motherName && !altPatientName && !villageName) {
-                $('#generatedId').textContent = '---';
-                return '';
-            }
-
-            let idParts = [];
-            let totalSum = 0;
-
-            // معالجة كل اسم: نأخذ أول حرف وآخر حرف
-            const processName = (name) => {
-                if (!name || name.length === 0) return;
-                const firstChar = name[0];
-                const lastChar = name[name.length - 1];
-                
-                const firstVal = getCharValue(firstChar, gender);
-                const lastVal = getCharValue(lastChar, gender);
-                
-                idParts.push(firstVal);
-                idParts.push(lastVal);
-                totalSum += firstVal + lastVal;
-            };
-
-            processName(fatherName);
-            processName(motherName);
-            processName(altPatientName);
-            processName(villageName);
-
-            // إضافة المجموع النهائي كرقم تحقق
-            const checkDigit = totalSum % 10;
-            idParts.push(checkDigit);
-
-            const finalId = idParts.join('');
-            $('#generatedId').textContent = finalId || '---';
-            return finalId;
-        };
-
-        // مراقبة تغيير حقول nophone لتحديث المعرف
-        ['#patientGender', '#fatherName', '#motherName', '#altPatientName', '#villageName'].forEach(sel => {
-            $(sel).addEventListener('change', generateAlternateId);
-            $(sel).addEventListener('input', generateAlternateId);
-        });
-
-        // ============ البحث عن المرضى ============
+        // ============ ✅ ذكاء البحث عن المرضى (تحسين جديد) ============
         let searchTimer;
         $('#patientSearch').addEventListener('input', (e) => {
             const term = e.target.value.trim().toLowerCase();
-            if (term.length < 2) {
+            if (term.length < 1) {
                 $('#searchResults').style.display = 'none';
                 return;
             }
@@ -1817,18 +1569,20 @@
             searchTimer = setTimeout(async () => {
                 let results = [];
                 
+                // 1. البحث المحلي أولاً
                 const localResults = searchPatientsLocal(term);
                 if (localResults.length > 0) {
                     results = localResults;
                 }
                 
+                // 2. البحث في السحابة
                 try {
                     const snap = await get(ref(db, `tenants/${currentTenantId}/patients`));
                     snap.forEach(child => {
                         const p = child.val();
                         if ((p.name && p.name.toLowerCase().includes(term)) ||
-                            (p.phone && p.phone.includes(term)) ||
-                            (p.alternateId && p.alternateId.toLowerCase().includes(term))) {
+                            (p.phone && p.phone.includes(term))) {
+                            // تجنب التكرار
                             if (!results.find(r => r.id === child.key)) {
                                 results.push({ id: child.key, ...p });
                             }
@@ -1840,66 +1594,12 @@
 
                 const container = $('#searchResults');
                 if (results.length === 0) {
-                    container.innerHTML = '<div class="search-item" style="color:var(--text-sec);">لا توجد نتائج</div>';
+                    container.innerHTML = '<div class="search-item" style="color:var(--text-sec);">لا توجد نتائج - يمكنك إضافة مريض جديد</div>';
                 } else {
                     container.innerHTML = results.map(p => `
                         <div class="search-item" data-id="${p.id}">
                             <b>${escapeHtml(p.name)}</b>
-                            <small style="color:var(--text-sec);">${escapeHtml(p.phone || p.alternateId || '')}</small>
-                        </div>
-                    `).join('');
-
-                    container.querySelectorAll('.search-item[data-id]').forEach(item => {
-                        item.addEventListener('click', () => {
-                            const patient = results.find(p => p.id === item.dataset.id);
-                            if (patient) selectPatient(patient);
-                        });
-                    });
-                }
-                container.style.display = 'block';
-            }, 250);
-        });
-
-        // البحث في وضع بدون هاتف
-        let nophoneSearchTimer;
-        $('#nophoneSearch').addEventListener('input', (e) => {
-            const term = e.target.value.trim().toLowerCase();
-            if (term.length < 2) {
-                $('#nophoneSearchResults').style.display = 'none';
-                return;
-            }
-            clearTimeout(nophoneSearchTimer);
-            nophoneSearchTimer = setTimeout(async () => {
-                let results = [];
-                
-                const localResults = searchPatientsLocal(term);
-                if (localResults.length > 0) {
-                    results = localResults.filter(p => p.alternateId || !p.phone);
-                }
-                
-                try {
-                    const snap = await get(ref(db, `tenants/${currentTenantId}/patients`));
-                    snap.forEach(child => {
-                        const p = child.val();
-                        if ((p.name && p.name.toLowerCase().includes(term)) ||
-                            (p.alternateId && p.alternateId.toLowerCase().includes(term))) {
-                            if (!results.find(r => r.id === child.key)) {
-                                results.push({ id: child.key, ...p });
-                            }
-                        }
-                    });
-                } catch (err) {
-                    console.warn('تعذر البحث في السحابة:', err.message);
-                }
-
-                const container = $('#nophoneSearchResults');
-                if (results.length === 0) {
-                    container.innerHTML = '<div class="search-item" style="color:var(--text-sec);">لا توجد نتائج</div>';
-                } else {
-                    container.innerHTML = results.map(p => `
-                        <div class="search-item" data-id="${p.id}">
-                            <b>${escapeHtml(p.name)}</b>
-                            <small style="color:var(--text-sec);">${escapeHtml(p.alternateId || 'بدون معرف')}</small>
+                            <small style="color:var(--text-sec);">${escapeHtml(p.phone || '')}</small>
                         </div>
                     `).join('');
 
@@ -1921,32 +1621,39 @@
             state.selectedPatientId = patient.id;
             $('#patientSearch').value = '';
             $('#searchResults').style.display = 'none';
-            $('#nophoneSearch').value = '';
-            $('#nophoneSearchResults').style.display = 'none';
-            
-            // إذا كان المريض لديه معرف بديل، نعرضه
-            if (patient.alternateId && !patient.phone) {
-                switchToNophoneMode();
-                $('#generatedId').textContent = patient.alternateId || '---';
-                if (patient.gender) $('#patientGender').value = patient.gender;
-                if (patient.fatherName) $('#fatherName').value = patient.fatherName;
-                if (patient.motherName) $('#motherName').value = patient.motherName;
-                if (patient.altPatientName) $('#altPatientName').value = patient.altPatientName;
-                if (patient.villageName) $('#villageName').value = patient.villageName;
-                if (patient.familyName) $('#familyName').value = patient.familyName;
-            }
         };
 
         document.addEventListener('click', (e) => {
             if (!$('#patientSearch').contains(e.target) && !$('#searchResults').contains(e.target)) {
                 $('#searchResults').style.display = 'none';
             }
-            if (!$('#nophoneSearch').contains(e.target) && !$('#nophoneSearchResults').contains(e.target)) {
-                $('#nophoneSearchResults').style.display = 'none';
-            }
         });
 
-        // ============ ✅ حفظ الكشف في مسار المجمع ============
+        // ============ ✅ التحقق من الاسم قبل الحفظ (آلية منع التكرار) ============
+        const checkPatientNameUniqueness = async (name, excludeId = null) => {
+            // البحث المحلي
+            const localResults = searchPatientsLocal(name);
+            const localDuplicate = localResults.find(p => p.name === name && p.id !== excludeId);
+            if (localDuplicate) return localDuplicate;
+
+            // البحث السحابي
+            try {
+                const snap = await get(ref(db, `tenants/${currentTenantId}/patients`));
+                let duplicate = null;
+                snap.forEach(child => {
+                    const p = child.val();
+                    if (p.name === name && child.key !== excludeId && !duplicate) {
+                        duplicate = { id: child.key, ...p };
+                    }
+                });
+                return duplicate;
+            } catch (err) {
+                console.warn('تعذر التحقق من uniqueness الاسم:', err.message);
+                return null;
+            }
+        };
+
+        // ============ ✅ حفظ الكشف في مسار المجمع مع منع التكرار ============
         $('#bookingForm').addEventListener('submit', async (e) => {
             e.preventDefault();
 
@@ -1958,40 +1665,17 @@
             const visitType = $('#visitType').value;
             const date = $('#apptDate').value;
             const time = $('#apptTime').value;
-            const activeMode = $('#activeMode').value;
 
             if (!doctorId || !name || !visitType || !date || !time) {
                 $('#formAlert').textContent = 'جميع الحقول المطلوبة (*) يجب ملؤها';
                 return;
             }
 
-            // في وضع بدون هاتف، نتأكد من وجود معرف بديل
-            let alternateId = null;
-            let nophoneData = {};
-            
-            if (activeMode === 'nophone') {
-                const gender = $('#patientGender').value;
-                alternateId = $('#generatedId').textContent;
-                
-                if (alternateId === '---' || !alternateId) {
-                    $('#formAlert').textContent = 'يجب ملء الحقول لحساب المعرف البديل';
-                    return;
-                }
-                
-                nophoneData = {
-                    alternateId,
-                    gender,
-                    fatherName: $('#fatherName').value.trim(),
-                    motherName: $('#motherName').value.trim(),
-                    altPatientName: $('#altPatientName').value.trim(),
-                    villageName: $('#villageName').value.trim(),
-                    familyName: $('#familyName').value.trim()
-                };
-            } else {
-                if (!phone) {
-                    $('#formAlert').textContent = 'رقم الهاتف مطلوب في الوضع العادي';
-                    return;
-                }
+            // ✅ التحقق من uniqueness الاسم
+            const existingPatient = await checkPatientNameUniqueness(name, state.selectedPatientId);
+            if (existingPatient && !state.selectedPatientId) {
+                $('#formAlert').textContent = `⚠️ يوجد مريض بنفس الاسم "${name}". الرجاء إضافة اسم الأب أو تفاصيل مميزة (مثال: "${name} بن محمد").`;
+                return;
             }
 
             const submitBtn = $('#submitBtn');
@@ -2008,53 +1692,20 @@
                     const patientData = {
                         name,
                         age: age || null,
-                        phone: activeMode === 'nophone' ? null : (phone || null),
+                        phone: phone || null,
                         tenantId: currentTenantId,
                         createdBy: state.currentUser.uid,
                         created_at: new Date().toISOString()
                     };
-                    
-                    // إضافة بيانات nophone إذا كان الوضع بدون هاتف
-                    if (activeMode === 'nophone') {
-                        Object.assign(patientData, nophoneData);
-                    }
-                    
                     await set(newRef, patientData);
                     savePatientToLocal(patientId, patientData);
-                } else {
-                    // تحديث بيانات المريض الموجود
-                    const patientRef = ref(db, `tenants/${currentTenantId}/patients/${patientId}`);
-                    const updateData = {
-                        name,
-                        age: age || null
-                    };
-                    
-                    if (activeMode === 'nophone') {
-                        updateData.phone = null;
-                        Object.assign(updateData, nophoneData);
-                    } else {
-                        updateData.phone = phone || null;
-                    }
-                    
-                    await update(patientRef, updateData);
-                    
-                    // تحديث التخزين المحلي
-                    const cached = JSON.parse(localStorage.getItem(getLocalPatientsKey()) || '{}');
-                    if (cached.patients && cached.patients[patientId]) {
-                        cached.patients[patientId] = {
-                            ...cached.patients[patientId],
-                            ...updateData,
-                            _cachedAt: Date.now()
-                        };
-                        localStorage.setItem(getLocalPatientsKey(), JSON.stringify(cached));
-                    }
                 }
 
                 const bookingData = {
                     patient_name: name,
                     patient_id: patientId,
                     age: age || null,
-                    phone: activeMode === 'nophone' ? null : (phone || null),
+                    phone: phone || null,
                     doctor_id: doctorId,
                     nurse_id: state.currentUser.uid,
                     visit_type: visitType,
@@ -2063,12 +1714,6 @@
                     status: 'انتظار',
                     tenantId: currentTenantId
                 };
-
-                // إضافة المعرف البديل للكشف إذا كان موجوداً
-                if (activeMode === 'nophone') {
-                    bookingData.alternateId = alternateId;
-                    bookingData.gender = nophoneData.gender;
-                }
 
                 if (editId) {
                     await update(ref(db, `tenants/${currentTenantId}/appointments/${editId}`), bookingData);
@@ -2169,7 +1814,6 @@
                 return;
             }
 
-            // ✅ 1. نجيب tenantId من الرابط (صفحة تسجيل الدخول بتبعته)
             const urlParams = new URLSearchParams(window.location.search);
             const tenantFromUrl = urlParams.get('tenant');
             
@@ -2177,7 +1821,6 @@
                 currentTenantId = tenantFromUrl;
                 console.log(`✅ تم استلام معرف المجمع من الرابط: ${currentTenantId}`);
             } else {
-                // ✅ 2. لو مش موجود في الرابط، نجيب من الجلسة المشفرة
                 try {
                     const encrypted = localStorage.getItem('shifa_secure_session');
                     if (encrypted) {
@@ -2192,7 +1835,6 @@
                     console.warn('تعذر فك تشفير الجلسة:', e.message);
                 }
                 
-                // ✅ 3. لو لسه مش موجود، نجرب الجلسة القديمة
                 if (!currentTenantId) {
                     const oldSession = localStorage.getItem('shifa_session');
                     if (oldSession) {
@@ -2209,7 +1851,6 @@
                 }
             }
 
-            // ✅ تهيئة الجلسة
             sessionStorage.setItem('userUid', user.uid);
             sessionStorage.setItem('userRole', 'nurse');
 
@@ -2218,7 +1859,6 @@
                 state.currentDate = getToday();
                 $('#filterDate').value = state.currentDate;
 
-                // ✅ محاولة تحميل الكشوفات المحلية فوراً للعرض السريع
                 const localBookings = loadBookingsFromLocal(state.selectedDoctorId || '', state.currentDate);
                 if (localBookings && localBookings.length > 0) {
                     state.allBookings = localBookings;
@@ -2227,7 +1867,6 @@
                     renderTable();
                 }
 
-                // ✅ إخفاء شاشة التحميل وبدء التشغيل
                 $('#authLoader').style.display = 'none';
                 $('#mainContainer').style.display = 'block';
 
@@ -2242,7 +1881,6 @@
         console.log('🔒 كل ممرض يشوف فقط كشوفات الدكتور المرتبط بيه في مجمعه');
         console.log('💾 وضع الحفظ: يمسح جلسة الدخول فقط - يحتفظ ببيانات المجمع');
         console.log('⚙️ زر الإعدادات: ينقل إلى صفحة nurse-settings.html');
-        console.log('🆕 وضع بدون رقم هاتف مع نظام المعرف البديل');
     </script>
 </body>
 </html>
