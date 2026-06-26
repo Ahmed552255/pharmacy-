@@ -249,7 +249,136 @@ const doseManager = {
 };
 
 // ============================================================
-// ✅✅✅ التعديل الجديد: قراءة الملف كنص عادي بدل import ✅✅✅
+// ✅✅✅ نظام المراقبة الذكي - تتبع وصفات الدكتور ✅✅✅
+// ============================================================
+const prescriptionTracker = {
+    // رفع الدواء للسحابة مع تاريخ اليوم وعداد الـ 15 يوم
+    async trackDrugPrescription(drugName, doctorId, doctorName) {
+        if (!currentTenantId || !doctorId) return;
+        
+        try {
+            const todayDate = today();
+            const drugKey = drugName.replace(/[.#$/[\]]/g, '_'); // تنظيف الاسم للاستخدام كمفتاح
+            
+            // مسار قاعدة البيانات: tenants/{tenantId}/doctor_prescriptions/{doctorId}/{drugKey}
+            const drugRef = ref(db, `tenants/${currentTenantId}/doctor_prescriptions/${doctorId}/${drugKey}`);
+            const snap = await get(drugRef);
+            
+            const now = new Date().toISOString();
+            
+            if (snap.exists()) {
+                const data = snap.val();
+                let history = data.history || [];
+                
+                // إضافة وصفة جديدة للتاريخ
+                history.push({
+                    date: todayDate,
+                    timestamp: now,
+                    count: 1
+                });
+                
+                // تنظيف التاريخ: نحتفظ بس بآخر 15 يوم
+                const fifteenDaysAgo = new Date();
+                fifteenDaysAgo.setDate(fifteenDaysAgo.getDate() - 15);
+                const cutoffDate = `${fifteenDaysAgo.getFullYear()}-${String(fifteenDaysAgo.getMonth()+1).padStart(2,'0')}-${String(fifteenDaysAgo.getDate()).padStart(2,'0')}`;
+                
+                history = history.filter(h => h.date >= cutoffDate);
+                
+                // حساب عدد مرات الوصف في آخر 15 يوم
+                const totalCount15Days = history.reduce((sum, h) => sum + (h.count || 1), 0);
+                
+                // تجميع التواريخ المتشابهة
+                const aggregatedHistory = [];
+                const dateMap = new Map();
+                history.forEach(h => {
+                    if (dateMap.has(h.date)) {
+                        dateMap.get(h.date).count += (h.count || 1);
+                    } else {
+                        const entry = { date: h.date, count: (h.count || 1) };
+                        dateMap.set(h.date, entry);
+                        aggregatedHistory.push(entry);
+                    }
+                });
+                
+                await set(drugRef, {
+                    drug_name: drugName,
+                    doctor_id: doctorId,
+                    doctor_name: doctorName || 'طبيب',
+                    first_prescribed: data.first_prescribed || todayDate,
+                    last_prescribed: todayDate,
+                    total_count_15days: totalCount15Days,
+                    history: aggregatedHistory,
+                    updated_at: now
+                });
+                
+                console.log(`📊 ${drugName}: تم وصفه ${totalCount15Days} مرة في آخر 15 يوم`);
+                
+            } else {
+                // أول مرة يتوصف الدواء ده
+                await set(drugRef, {
+                    drug_name: drugName,
+                    doctor_id: doctorId,
+                    doctor_name: doctorName || 'طبيب',
+                    first_prescribed: todayDate,
+                    last_prescribed: todayDate,
+                    total_count_15days: 1,
+                    history: [{ date: todayDate, count: 1 }],
+                    updated_at: now
+                });
+                
+                console.log(`🆕 ${drugName}: أول وصفة للدواء`);
+            }
+            
+        } catch (err) {
+            console.warn('⚠️ تعذر تتبع وصفة الدواء:', err.message);
+        }
+    },
+    
+    // جلب إحصائيات دواء معين لكل الدكاترة (للصيدلي)
+    async getDrugStatsForAllDoctors(drugName) {
+        if (!currentTenantId) return [];
+        
+        try {
+            const drugKey = drugName.replace(/[.#$/[\]]/g, '_');
+            const allDoctorsSnap = await get(ref(db, `tenants/${currentTenantId}/doctor_prescriptions`));
+            
+            if (!allDoctorsSnap.exists()) return [];
+            
+            const results = [];
+            
+            allDoctorsSnap.forEach(doctorSnap => {
+                const doctorId = doctorSnap.key;
+                const doctorData = doctorSnap.val();
+                
+                // البحث عن الدواء عند كل دكتور
+                Object.entries(doctorData).forEach(([key, data]) => {
+                    if (key === drugKey || (data.drug_name || '').toLowerCase() === drugName.toLowerCase()) {
+                        results.push({
+                            doctor_id: doctorId,
+                            doctor_name: data.doctor_name || 'طبيب',
+                            drug_name: data.drug_name || drugName,
+                            total_count_15days: data.total_count_15days || 0,
+                            last_prescribed: data.last_prescribed || '',
+                            history: data.history || []
+                        });
+                    }
+                });
+            });
+            
+            // ترتيب النتائج: الأكثر وصفاً أولاً
+            results.sort((a, b) => b.total_count_15days - a.total_count_15days);
+            
+            return results;
+            
+        } catch (err) {
+            console.warn('⚠️ تعذر جلب إحصائيات الدواء:', err.message);
+            return [];
+        }
+    }
+};
+
+// ============================================================
+// ✅✅✅ drugManager مع ترتيب ذكي للاقتراحات ✅✅✅
 // ============================================================
 const drugManager = {
     _cachePromise: null,
@@ -271,9 +400,38 @@ const drugManager = {
                 state.globalDrugsCache = []; 
             }
             
-            // 2. ✅ تحميل الأدوية من الملف المحلي - قراءة مباشرة كنص
+            // 2. ✅ تحميل الأدوية من window (الملف المحلي)
             try {
-                const localDrugs = await loadDrugsFromTextFile('./drugs-database.js');
+                let localDrugs = [];
+                
+                if (window.__drugsDatabase && Array.isArray(window.__drugsDatabase)) {
+                    localDrugs = window.__drugsDatabase;
+                } else if (window.drugsDatabase && Array.isArray(window.drugsDatabase)) {
+                    localDrugs = window.drugsDatabase;
+                } else {
+                    try {
+                        const response = await fetch('./drugs-database.js');
+                        if (response.ok) {
+                            const text = await response.text();
+                            const regex = /"([^"]+)"/g;
+                            let match;
+                            while ((match = regex.exec(text)) !== null) {
+                                const name = match[1].trim();
+                                if (name.length >= 3 && 
+                                    !name.startsWith('//') && 
+                                    !name.startsWith('const') && 
+                                    !name.startsWith('export') &&
+                                    !name.startsWith('window') &&
+                                    !name.startsWith('&') &&
+                                    name !== 'drugsDatabase') {
+                                    localDrugs.push(name);
+                                }
+                            }
+                        }
+                    } catch(fetchErr) {
+                        console.warn('⚠️ تعذر تحميل ملف drugs-database.js:', fetchErr.message);
+                    }
+                }
                 
                 if (localDrugs.length > 0) {
                     const seen = new Set(state.globalDrugsCache.map(d => (d.name || '').toLowerCase()));
@@ -293,11 +451,11 @@ const drugManager = {
                         }
                     });
                     
-                    console.log(`✅ تم تحميل ${localDrugs.length} دواء من الملف المحلي (قراءة نصية مباشرة)`);
+                    console.log(`✅ تم تحميل ${localDrugs.length} دواء من الملف المحلي`);
                     console.log(`📦 إجمالي الأدوية في الذاكرة: ${state.globalDrugsCache.length}`);
                 }
             } catch(err) {
-                console.warn('⚠️ تعذر تحميل ملف drugs-database.js:', err.message);
+                console.warn('⚠️ خطأ في تحميل الأدوية المحلية:', err.message);
             }
             
             state.drugCache = [...state.globalDrugsCache];
@@ -306,13 +464,16 @@ const drugManager = {
         return this._cachePromise;
     },
     
+    // ============================================================
+    // ✅✅✅ الترتيب الذكي: اللي بيبدأ بنفس الحروف يظهر الأول ✅✅✅
+    // ============================================================
     async getSuggestions(term, form = null) {
         const termLower = term.toLowerCase().trim();
         const suggestions = []; 
         const seenNames = new Set();
         
         // 1. البحث في المفضلات المحلية أولاً
-        const localFavs = await favoritesDB.search(termLower, null, 3);
+        const localFavs = await favoritesDB.search(termLower, null, 8);
         localFavs.forEach(d => { 
             const key = `${(d.name || '').toLowerCase()}_${(d.form || '').toLowerCase()}_${(d.strength || '').toLowerCase()}`; 
             if (!seenNames.has(key)) { 
@@ -329,7 +490,7 @@ const drugManager = {
         });
         
         // 2. البحث في قاعدة الأدوية العامة
-        const remainingSlots = 5 - suggestions.length;
+        const remainingSlots = 10 - suggestions.length;
         if (remainingSlots > 0) { 
             let globalResults = state.globalDrugsCache.filter(d => { 
                 const name = (d.name || '').toLowerCase(); 
@@ -338,11 +499,41 @@ const drugManager = {
                 return name.includes(termLower) || 
                        fullName.includes(termLower) ||
                        strength.includes(termLower);
-            }); 
-            globalResults.sort((a, b) => (b.freq || 0) - (a.freq || 0)); 
-            for (const d of globalResults) { 
+            });
+            
+            // ============================================================
+            // ✅ الترتيب السحري:
+            // 1. اللي بيبدأ بنفس النص بالضبط
+            // 2. اللي بيبدأ بنفس النص (بغض النظر عن حالة الأحرف)
+            // 3. اللي بيحتوي على النص في أي مكان
+            // ============================================================
+            globalResults.sort((a, b) => {
+                const aName = (a.name || a.fullName || '').toLowerCase();
+                const bName = (b.name || b.fullName || '').toLowerCase();
+                
+                // priority 0: يبدأ بنفس النص بالضبط
+                const aStartsExact = aName.startsWith(termLower) ? 0 : 1;
+                const bStartsExact = bName.startsWith(termLower) ? 0 : 1;
+                
+                if (aStartsExact !== bStartsExact) {
+                    return aStartsExact - bStartsExact;
+                }
+                
+                // priority 1: أقصر اسم أولاً (غالباً الأكثر تطابقاً)
+                if (aName.length !== bName.length) {
+                    return aName.length - bName.length;
+                }
+                
+                // priority 2: الترتيب الأبجدي
+                return aName.localeCompare(bName);
+            });
+            
+            // ناخد أول 10 بس
+            const topResults = globalResults.slice(0, remainingSlots);
+            
+            for (const d of topResults) { 
                 const key = `${(d.name || '').toLowerCase()}_${(d.form || '').toLowerCase()}`; 
-                if (!seenNames.has(key) && suggestions.length < 5) { 
+                if (!seenNames.has(key)) { 
                     seenNames.add(key); 
                     suggestions.push({ 
                         name: d.fullName || d.name || '', 
@@ -353,8 +544,28 @@ const drugManager = {
                         originalName: d.name || '' 
                     }); 
                 } 
-            } 
+            }
         }
+        
+        // إعادة ترتيب النتائج النهائية
+        suggestions.sort((a, b) => {
+            const aName = (a.name || '').toLowerCase();
+            const bName = (b.name || '').toLowerCase();
+            
+            // اللي بيبدأ بنفس النص أولاً
+            const aStarts = aName.startsWith(termLower) ? 0 : 1;
+            const bStarts = bName.startsWith(termLower) ? 0 : 1;
+            
+            if (aStarts !== bStarts) return aStarts - bStarts;
+            
+            // المفضلات قبل العامة
+            if (a.source === 'favorite' && b.source !== 'favorite') return -1;
+            if (b.source === 'favorite' && a.source !== 'favorite') return 1;
+            
+            // الأقصر أولاً
+            return aName.length - bName.length;
+        });
+        
         return suggestions;
     },
     
@@ -367,45 +578,6 @@ const drugManager = {
         toast(`تم تقليل ظهور "${fullDrugName}"`); 
     }
 };
-
-// ============================================================
-// ✅ دالة قراءة الملف كنص واستخراج أسماء الأدوية
-// ============================================================
-async function loadDrugsFromTextFile(filePath) {
-    try {
-        const response = await fetch(filePath);
-        if (!response.ok) {
-            throw new Error(`فشل تحميل الملف: ${response.status}`);
-        }
-        
-        const text = await response.text();
-        
-        // استخراج كل النصوص الموجودة بين علامتي تنصيص "..." في الملف
-        const drugNames = [];
-        const regex = /"([^"]+)"/g;
-        let match;
-        
-        while ((match = regex.exec(text)) !== null) {
-            const name = match[1].trim();
-            // فلترة: نتأكد إنه مش تعليق أو سطر فاضي
-            if (name.length >= 3 && 
-                !name.startsWith('//') && 
-                !name.startsWith('const') && 
-                !name.startsWith('export') &&
-                !name.startsWith('=') &&
-                name !== 'drugsDatabase') {
-                drugNames.push(name);
-            }
-        }
-        
-        console.log(`📄 تم استخراج ${drugNames.length} اسم دواء من الملف النصي`);
-        return drugNames;
-        
-    } catch (err) {
-        console.warn('⚠️ تعذر قراءة الملف:', err.message);
-        return [];
-    }
-}
 
 async function saveSessionToDB() { 
     if (!state.currentAppointment) return; 
@@ -1055,6 +1227,23 @@ async function finalizeSession(saveTemplate, templateName, templateAction) {
         await update(ref(db), finalUpdates);
         await deleteSession(apt.id);
         
+        // ============================================================
+        // ✅✅✅ تتبع الأدوية الموصوفة للسحابة ✅✅✅
+        // ============================================================
+        if (state.user && state.user.uid) {
+            const doctorName = state.user.name || 'طبيب';
+            const uniqueDrugs = [...new Set(state.prescription.map(p => p.drug))];
+            
+            for (const drugName of uniqueDrugs) {
+                await prescriptionTracker.trackDrugPrescription(
+                    drugName,
+                    state.user.uid,
+                    doctorName
+                );
+            }
+            console.log(`📊 تم تتبع ${uniqueDrugs.length} دواء في نظام المراقبة`);
+        }
+        
         state.currentAppointment = null; 
         state.prescription = []; 
         state.diagnosis = ''; 
@@ -1260,6 +1449,14 @@ const setupEventListeners = () => {
     });
 };
 
+// ============================================================
+// ✅ تصدير الدوال للاستخدام من ملفات تانية (للصيدلي مثلاً)
+// ============================================================
+window.shifaDoctorTools = {
+    getDrugStatsForAllDoctors: prescriptionTracker.getDrugStatsForAllDoctors.bind(prescriptionTracker),
+    getCurrentTenantId: () => currentTenantId
+};
+
 onAuthStateChanged(auth, async (user) => {
     if (!user) { 
         clearLoginSessionOnly();
@@ -1365,9 +1562,9 @@ onAuthStateChanged(auth, async (user) => {
 });
 
 console.log('🚀 لوحة الطبيب - نظام المجمعات الطبية المتعددة');
-console.log('🔍 البحث الذكي: غير حساس لحالة الأحرف (Case-Insensitive)');
-console.log('💊 الشكل الصيدلي: يُحفظ في الروشتة فقط للصيدلي - لا يؤثر على البحث');
+console.log('🔍 البحث الذكي: ترتيب حسب بداية النص أولاً');
+console.log('💊 الشكل الصيدلي: يُحفظ في الروشتة فقط للصيدلي');
 console.log('⭐ المفضلات: تبحث بشكل ذكي مع كل حرف يُكتب');
 console.log('🔒 كل طبيب يشوف كشوفاته هو فقط في مجمعه');
+console.log('📊 نظام مراقبة: تتبع الأدوية الموصوفة لكل دكتور في آخر 15 يوم');
 console.log('💾 وضع الحفظ: يمسح جلسة الدخول فقط - يحتفظ ببيانات المجمع');
-console.log('📁 تحميل الأدوية من الملف المحلي drugs-database.js (قراءة نصية مباشرة)');
