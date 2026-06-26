@@ -252,15 +252,13 @@ const doseManager = {
 // ✅✅✅ نظام المراقبة الذكي - تتبع وصفات الدكتور ✅✅✅
 // ============================================================
 const prescriptionTracker = {
-    // رفع الدواء للسحابة مع تاريخ اليوم وعداد الـ 15 يوم
     async trackDrugPrescription(drugName, doctorId, doctorName) {
         if (!currentTenantId || !doctorId) return;
         
         try {
             const todayDate = today();
-            const drugKey = drugName.replace(/[.#$/[\]]/g, '_'); // تنظيف الاسم للاستخدام كمفتاح
+            const drugKey = drugName.replace(/[.#$/[\]]/g, '_');
             
-            // مسار قاعدة البيانات: tenants/{tenantId}/doctor_prescriptions/{doctorId}/{drugKey}
             const drugRef = ref(db, `tenants/${currentTenantId}/doctor_prescriptions/${doctorId}/${drugKey}`);
             const snap = await get(drugRef);
             
@@ -270,24 +268,20 @@ const prescriptionTracker = {
                 const data = snap.val();
                 let history = data.history || [];
                 
-                // إضافة وصفة جديدة للتاريخ
                 history.push({
                     date: todayDate,
                     timestamp: now,
                     count: 1
                 });
                 
-                // تنظيف التاريخ: نحتفظ بس بآخر 15 يوم
                 const fifteenDaysAgo = new Date();
                 fifteenDaysAgo.setDate(fifteenDaysAgo.getDate() - 15);
                 const cutoffDate = `${fifteenDaysAgo.getFullYear()}-${String(fifteenDaysAgo.getMonth()+1).padStart(2,'0')}-${String(fifteenDaysAgo.getDate()).padStart(2,'0')}`;
                 
                 history = history.filter(h => h.date >= cutoffDate);
                 
-                // حساب عدد مرات الوصف في آخر 15 يوم
                 const totalCount15Days = history.reduce((sum, h) => sum + (h.count || 1), 0);
                 
-                // تجميع التواريخ المتشابهة
                 const aggregatedHistory = [];
                 const dateMap = new Map();
                 history.forEach(h => {
@@ -314,7 +308,6 @@ const prescriptionTracker = {
                 console.log(`📊 ${drugName}: تم وصفه ${totalCount15Days} مرة في آخر 15 يوم`);
                 
             } else {
-                // أول مرة يتوصف الدواء ده
                 await set(drugRef, {
                     drug_name: drugName,
                     doctor_id: doctorId,
@@ -334,7 +327,6 @@ const prescriptionTracker = {
         }
     },
     
-    // جلب إحصائيات دواء معين لكل الدكاترة (للصيدلي)
     async getDrugStatsForAllDoctors(drugName) {
         if (!currentTenantId) return [];
         
@@ -350,7 +342,6 @@ const prescriptionTracker = {
                 const doctorId = doctorSnap.key;
                 const doctorData = doctorSnap.val();
                 
-                // البحث عن الدواء عند كل دكتور
                 Object.entries(doctorData).forEach(([key, data]) => {
                     if (key === drugKey || (data.drug_name || '').toLowerCase() === drugName.toLowerCase()) {
                         results.push({
@@ -365,7 +356,6 @@ const prescriptionTracker = {
                 });
             });
             
-            // ترتيب النتائج: الأكثر وصفاً أولاً
             results.sort((a, b) => b.total_count_15days - a.total_count_15days);
             
             return results;
@@ -387,7 +377,6 @@ const drugManager = {
         if (this._cachePromise) return this._cachePromise;
         
         this._cachePromise = (async () => {
-            // 1. محاولة تحميل الأدوية من Firebase أولاً
             try { 
                 const snap = await get(ref(db, `tenants/${currentTenantId}/drugs`));
                 if (snap.exists()) {
@@ -400,7 +389,6 @@ const drugManager = {
                 state.globalDrugsCache = []; 
             }
             
-            // 2. ✅ تحميل الأدوية من window (الملف المحلي)
             try {
                 let localDrugs = [];
                 
@@ -464,15 +452,11 @@ const drugManager = {
         return this._cachePromise;
     },
     
-    // ============================================================
-    // ✅✅✅ الترتيب الذكي: اللي بيبدأ بنفس الحروف يظهر الأول ✅✅✅
-    // ============================================================
     async getSuggestions(term, form = null) {
         const termLower = term.toLowerCase().trim();
         const suggestions = []; 
         const seenNames = new Set();
         
-        // 1. البحث في المفضلات المحلية أولاً
         const localFavs = await favoritesDB.search(termLower, null, 8);
         localFavs.forEach(d => { 
             const key = `${(d.name || '').toLowerCase()}_${(d.form || '').toLowerCase()}_${(d.strength || '').toLowerCase()}`; 
@@ -489,7 +473,6 @@ const drugManager = {
             } 
         });
         
-        // 2. البحث في قاعدة الأدوية العامة
         const remainingSlots = 10 - suggestions.length;
         if (remainingSlots > 0) { 
             let globalResults = state.globalDrugsCache.filter(d => { 
@@ -501,17 +484,10 @@ const drugManager = {
                        strength.includes(termLower);
             });
             
-            // ============================================================
-            // ✅ الترتيب السحري:
-            // 1. اللي بيبدأ بنفس النص بالضبط
-            // 2. اللي بيبدأ بنفس النص (بغض النظر عن حالة الأحرف)
-            // 3. اللي بيحتوي على النص في أي مكان
-            // ============================================================
             globalResults.sort((a, b) => {
                 const aName = (a.name || a.fullName || '').toLowerCase();
                 const bName = (b.name || b.fullName || '').toLowerCase();
                 
-                // priority 0: يبدأ بنفس النص بالضبط
                 const aStartsExact = aName.startsWith(termLower) ? 0 : 1;
                 const bStartsExact = bName.startsWith(termLower) ? 0 : 1;
                 
@@ -519,16 +495,13 @@ const drugManager = {
                     return aStartsExact - bStartsExact;
                 }
                 
-                // priority 1: أقصر اسم أولاً (غالباً الأكثر تطابقاً)
                 if (aName.length !== bName.length) {
                     return aName.length - bName.length;
                 }
                 
-                // priority 2: الترتيب الأبجدي
                 return aName.localeCompare(bName);
             });
             
-            // ناخد أول 10 بس
             const topResults = globalResults.slice(0, remainingSlots);
             
             for (const d of topResults) { 
@@ -547,22 +520,18 @@ const drugManager = {
             }
         }
         
-        // إعادة ترتيب النتائج النهائية
         suggestions.sort((a, b) => {
             const aName = (a.name || '').toLowerCase();
             const bName = (b.name || '').toLowerCase();
             
-            // اللي بيبدأ بنفس النص أولاً
             const aStarts = aName.startsWith(termLower) ? 0 : 1;
             const bStarts = bName.startsWith(termLower) ? 0 : 1;
             
             if (aStarts !== bStarts) return aStarts - bStarts;
             
-            // المفضلات قبل العامة
             if (a.source === 'favorite' && b.source !== 'favorite') return -1;
             if (b.source === 'favorite' && a.source !== 'favorite') return 1;
             
-            // الأقصر أولاً
             return aName.length - bName.length;
         });
         
@@ -960,58 +929,135 @@ function openSaveNewTemplateModal() {
     setTimeout(() => $('#newTemplateNameInput').focus(), 100);
 }
 
+// ============================================================
+// ✅✅✅ دالة فتح سجل المريض - عام لكل المجمعات ✅✅✅
+// ============================================================
 async function openPatientFile() {
     const pid = state.currentAppointment?.patient_id || state.currentAppointment?.patientId;
     if (!pid) { toast('لا يوجد ملف للمريض', true); return; }
-    const modal = $('#patientFileModal'); const content = $('#patientFileContent');
-    modal.style.display = 'flex'; content.innerHTML = '<div style="text-align:center;padding:30px;"><div class="loader-circle"></div></div>';
+    
+    const modal = $('#patientFileModal'); 
+    const content = $('#patientFileContent');
+    modal.style.display = 'flex'; 
+    content.innerHTML = '<div style="text-align:center;padding:30px;"><div class="loader-circle"></div></div>';
+    
     try {
-        const [patientSnap, prescriptionsSnap] = await Promise.all([
-            get(ref(db, `tenants/${currentTenantId}/patients/${pid}`)), 
-            get(ref(db, `tenants/${currentTenantId}/prescriptions`))
-        ]);
-        
+        // ✅ 1. نجيب بيانات المريض من المجمع الحالي
+        const patientSnap = await get(ref(db, `tenants/${currentTenantId}/patients/${pid}`));
         const patient = patientSnap.exists() ? patientSnap.val() : {}; 
         const patientName = patient.name || 'غير معروف';
-        const patientRx = [];
         
-        if (prescriptionsSnap.exists()) { 
-            const promises = [];
-            prescriptionsSnap.forEach(child => { 
-                const rx = child.val(); 
-                if (String(rx.patient_id) === String(pid)) {
-                    promises.push((async () => {
-                        const itemsSnap = await get(ref(db, `tenants/${currentTenantId}/prescription_items/${child.key}`));
-                        let items = [];
-                        if (itemsSnap.exists()) {
-                            items = Object.values(itemsSnap.val()).map(it => ({
-                                drug: it.drug_name || it.drug_id || '',
-                                form: it.form || 'tablet',
-                                dose: it.dose || ''
-                            }));
-                        }
-                        patientRx.push({ id: child.key, data: rx, items });
-                    })());
-                }
-            });
-            await Promise.all(promises);
+        // ✅ 2. نجيب كل المجمعات اللي موجودة في tenants
+        const tenantsSnap = await get(ref(db, 'tenants'));
+        const tenants = tenantsSnap.exists() ? Object.keys(tenantsSnap.val()) : [];
+        
+        // ✅ 3. نبحث عن وصفات المريض في كل المجمعات
+        const patientRx = [];
+        const doctorsCache = {}; // caching doctor names
+        
+        for (const tenantId of tenants) {
+            try {
+                const prescriptionsSnap = await get(ref(db, `tenants/${tenantId}/prescriptions`));
+                if (!prescriptionsSnap.exists()) continue;
+                
+                const rxPromises = [];
+                
+                prescriptionsSnap.forEach(child => {
+                    const rx = child.val();
+                    if (String(rx.patient_id) === String(pid)) {
+                        const isSameTenant = (tenantId === currentTenantId);
+                        
+                        rxPromises.push((async () => {
+                            // نجيب الأدوية
+                            const itemsSnap = await get(ref(db, `tenants/${tenantId}/prescription_items/${child.key}`));
+                            let items = [];
+                            if (itemsSnap.exists()) {
+                                items = Object.values(itemsSnap.val()).map(it => ({
+                                    drug: it.drug_name || it.drug_id || '',
+                                    form: it.form || 'tablet',
+                                    dose: it.dose || ''
+                                }));
+                            }
+                            
+                            // ✅ تحديد اسم الدكتور حسب المجمع:
+                            let doctorDisplayName;
+                            if (isSameTenant) {
+                                // نفس المجمع: نعرض اسم الدكتور
+                                doctorDisplayName = rx.doctor_name || 'طبيب';
+                                
+                                // لو عايزين نجيب الاسم من users لو مش موجود
+                                if (rx.doctor_id && (!rx.doctor_name || rx.doctor_name === 'طبيب')) {
+                                    if (!doctorsCache[rx.doctor_id]) {
+                                        try {
+                                            const docSnap = await get(ref(db, `tenants/${tenantId}/users/${rx.doctor_id}`));
+                                            doctorsCache[rx.doctor_id] = docSnap.exists() ? (docSnap.val().name || 'طبيب') : 'طبيب';
+                                        } catch(e) { doctorsCache[rx.doctor_id] = 'طبيب'; }
+                                    }
+                                    doctorDisplayName = doctorsCache[rx.doctor_id];
+                                }
+                            } else {
+                                // مجمع تاني: نخفي اسم الدكتور
+                                doctorDisplayName = null; // null معناه إننا هنخفي الاسم
+                            }
+                            
+                            patientRx.push({
+                                id: child.key,
+                                tenantId: tenantId,
+                                data: rx,
+                                items,
+                                isSameTenant,
+                                doctorDisplayName
+                            });
+                        })());
+                    }
+                });
+                
+                await Promise.all(rxPromises);
+                
+            } catch(e) {
+                console.warn(`تعذر قراءة وصفات من المجمع ${tenantId}:`, e.message);
+            }
         }
         
+        // ✅ 4. ترتيب الوصفات من الأحدث للأقدم
         patientRx.sort((a, b) => (b.data.created_at || '').localeCompare(a.data.created_at || ''));
         const totalRx = patientRx.length;
         
-        let html = `<div style="margin-bottom:20px;"><h4>${esc(patientName)} - ${totalRx} وصفات</h4></div>`;
+        // ✅ 5. بناء HTML العرض
+        let html = `<div style="margin-bottom:20px;">
+            <h4>📁 ${esc(patientName)} - ${totalRx} وصفات (كل المجمعات)</h4>
+            <div style="font-size:0.75rem;color:var(--text-sec);">
+                🏥 السجل موحد من كل الفروع | 👨‍⚕️ اسم الدكتور يظهر فقط من نفس المجمع
+            </div>
+        </div>`;
         
         if (patientRx.length === 0) { 
-            html += '<div style="text-align:center;padding:20px;color:var(--text-sec);">لا توجد وصفات مسجلة</div>'; 
+            html += '<div style="text-align:center;padding:20px;color:var(--text-sec);">لا توجد وصفات مسجلة لهذا المريض</div>'; 
         } else {
-            for (const r of patientRx.slice(0, 15)) {
-                const rx = r.data; 
-                const dateStr = rx.created_at ? new Date(rx.created_at).toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' }) : '—';
-                const statusBadge = rx.status === 'تم الصرف' ? '<span class="prescription-status-badge status-dispensed">✅ تم الصرف</span>' : 
-                                   rx.status === 'صرفت جزئياً' ? '<span class="prescription-status-badge status-partial">📦 جزئي</span>' : 
-                                   '<span class="prescription-status-badge status-pending">⏳ لم تصرف</span>';
+            for (const r of patientRx) {
+                const rx = r.data;
                 
+                // ✅ صياغة التاريخ
+                const dateStr = rx.created_at 
+                    ? new Date(rx.created_at).toLocaleDateString('ar-EG', { 
+                        year: 'numeric', month: 'long', day: 'numeric',
+                        hour: '2-digit', minute: '2-digit'
+                      }) 
+                    : '—';
+                
+                // ✅ حالة الصرف
+                const statusBadge = rx.status === 'تم الصرف' 
+                    ? '<span class="prescription-status-badge status-dispensed">✅ تم الصرف</span>' 
+                    : rx.status === 'صرفت جزئياً' 
+                        ? '<span class="prescription-status-badge status-partial">📦 جزئي</span>' 
+                        : '<span class="prescription-status-badge status-pending">⏳ لم تصرف</span>';
+                
+                // ✅ اسم الدكتور: يظهر بس لو من نفس المجمع
+                const doctorInfo = r.isSameTenant && r.doctorDisplayName
+                    ? `<span style="color:var(--accent);font-weight:600;">👨‍⚕️ د. ${esc(r.doctorDisplayName)}</span>`
+                    : `<span style="color:var(--text-sec);font-style:italic;">👨‍⚕️ مجمع آخر</span>`;
+                
+                // ✅ الأدوية
                 let drugsHtml = '';
                 if (r.items && r.items.length > 0) {
                     drugsHtml = '<div class="prescription-history-drugs">' + 
@@ -1022,37 +1068,62 @@ async function openPatientFile() {
                         '</div>';
                 }
                 
+                // ✅ التشخيص (أول 80 حرف)
+                const diagnosisPreview = rx.diagnosis 
+                    ? esc(rx.diagnosis).substring(0, 80) + (rx.diagnosis.length > 80 ? '...' : '') 
+                    : 'بدون تشخيص';
+                
                 html += `
-                    <div class="prescription-history-item" data-rx-id="${r.id}">
+                    <div class="prescription-history-item" data-rx-id="${r.id}" data-tenant="${r.tenantId}">
                         <div class="prescription-history-header">
                             <div style="flex:1;min-width:200px;">
-                                ${statusBadge}
-                                <b>${dateStr}</b>
-                                <div style="color:var(--text-sec);font-size:0.8rem;margin-top:2px;">
-                                    ${rx.diagnosis ? esc(rx.diagnosis).substring(0, 80) + (rx.diagnosis.length > 80 ? '...' : '') : 'بدون تشخيص'}
+                                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                                    ${statusBadge}
+                                    ${doctorInfo}
+                                </div>
+                                <div style="margin-top:6px;">
+                                    <b>📅 ${dateStr}</b>
+                                </div>
+                                <div style="color:var(--text-sec);font-size:0.8rem;margin-top:4px;">
+                                    ${diagnosisPreview}
                                 </div>
                             </div>
-                            <button class="btn btn-info btn-sm restore-prescription-btn" data-rx-id="${r.id}" style="white-space:nowrap;">
+                            ${r.isSameTenant ? `
+                            <button class="btn btn-info btn-sm restore-prescription-btn" data-rx-id="${r.id}" data-tenant="${r.tenantId}" style="white-space:nowrap;">
                                 <i class="fas fa-undo"></i> استرداد
                             </button>
+                            ` : `
+                            <span style="font-size:0.7rem;color:var(--text-sec);">🔒 للعرض فقط</span>
+                            `}
                         </div>
                         ${drugsHtml}
                     </div>
                 `;
             }
         }
+        
         content.innerHTML = html;
         
+        // ✅ 6. ربط زرار الاسترداد (للوصفات من نفس المجمع فقط)
         content.querySelectorAll('.restore-prescription-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
+            btn.addEventListener('click', async (e) => {
                 e.stopPropagation();
                 const rxId = btn.dataset.rxId;
-                restorePrescription(rxId);
+                const rxTenant = btn.dataset.tenant;
+                
+                // نتأكد إن الوصفة من نفس المجمع
+                if (rxTenant !== currentTenantId) {
+                    toast('لا يمكن استرداد وصفة من مجمع آخر', true);
+                    return;
+                }
+                
+                await restorePrescription(rxId);
             });
         });
         
     } catch (err) { 
-        content.innerHTML = '<div style="color:var(--danger);">خطأ في تحميل الملف</div>'; 
+        console.error('خطأ في تحميل سجل المريض:', err);
+        content.innerHTML = '<div style="color:var(--danger);text-align:center;padding:20px;">❌ خطأ في تحميل الملف الطبي</div>'; 
     }
 }
 
@@ -1227,9 +1298,7 @@ async function finalizeSession(saveTemplate, templateName, templateAction) {
         await update(ref(db), finalUpdates);
         await deleteSession(apt.id);
         
-        // ============================================================
-        // ✅✅✅ تتبع الأدوية الموصوفة للسحابة ✅✅✅
-        // ============================================================
+        // ✅ تتبع الأدوية الموصوفة للسحابة
         if (state.user && state.user.uid) {
             const doctorName = state.user.name || 'طبيب';
             const uniqueDrugs = [...new Set(state.prescription.map(p => p.drug))];
@@ -1567,4 +1636,5 @@ console.log('💊 الشكل الصيدلي: يُحفظ في الروشتة فق
 console.log('⭐ المفضلات: تبحث بشكل ذكي مع كل حرف يُكتب');
 console.log('🔒 كل طبيب يشوف كشوفاته هو فقط في مجمعه');
 console.log('📊 نظام مراقبة: تتبع الأدوية الموصوفة لكل دكتور في آخر 15 يوم');
+console.log('🏥 سجل موحد: يظهر وصفات المريض من كل المجمعات مع إخفاء اسم الدكتور من المجمعات الأخرى');
 console.log('💾 وضع الحفظ: يمسح جلسة الدخول فقط - يحتفظ ببيانات المجمع');
