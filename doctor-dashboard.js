@@ -248,11 +248,15 @@ const doseManager = {
     async recordUsage(drugName, form, dose, freqLabel) { await favoriteDosesDB.recordDose(drugName, form, dose, freqLabel); }
 };
 
-// ============ ✅ التعديل الأساسي: drugManager مع تحميل مباشر من الملف المحلي ============
+// ============================================================
+// ✅✅✅ التعديل الجديد: قراءة الملف كنص عادي بدل import ✅✅✅
+// ============================================================
 const drugManager = {
     _cachePromise: null,
+    
     async loadCache() {
         if (this._cachePromise) return this._cachePromise;
+        
         this._cachePromise = (async () => {
             // 1. محاولة تحميل الأدوية من Firebase أولاً
             try { 
@@ -267,60 +271,38 @@ const drugManager = {
                 state.globalDrugsCache = []; 
             }
             
-            // 2. تحميل الأدوية من الملف المحلي (أولوية على Firebase إذا كانت Firebase فارغة)
-            // هذا هو التعديل الرئيسي - نتعامل مع الملف المحلي مباشرة
+            // 2. ✅ تحميل الأدوية من الملف المحلي - قراءة مباشرة كنص
             try {
-                // استيراد الملف المحلي
-                const module = await import('./drugs-database.js');
+                const localDrugs = await loadDrugsFromTextFile('./drugs-database.js');
                 
-                // الملف بيصدر المصفوفة باسم drugsDatabase
-                const localDrugs = module.drugsDatabase || module.default || [];
-                
-                // نتأكد إنها مصفوفة
-                if (Array.isArray(localDrugs) && localDrugs.length > 0) {
-                    // نخلي Set علشان نمنع التكرار
+                if (localDrugs.length > 0) {
                     const seen = new Set(state.globalDrugsCache.map(d => (d.name || '').toLowerCase()));
                     
-                    // نضيف الأدوية المحلية
-                    localDrugs.forEach(drugEntry => {
-                        // لو كان مجرد نص (string) نحوله لكائن
-                        let drugName, drugForm = 'tablet', drugStrength = '';
-                        
-                        if (typeof drugEntry === 'string') {
-                            // ده نص زي "ACICLOVIR MYLAN 500MG 5 VIALS"
-                            drugName = drugEntry;
-                            drugStrength = extractStrength(drugName);
-                        } else if (typeof drugEntry === 'object' && drugEntry !== null) {
-                            // ده كائن { name: "..." } أو { fullName: "..." }
-                            drugName = drugEntry.fullName || drugEntry.name || '';
-                            drugForm = drugEntry.form || 'tablet';
-                            drugStrength = drugEntry.strength || extractStrength(drugName) || '';
-                        }
-                        
+                    localDrugs.forEach(drugName => {
                         if (drugName && !seen.has(drugName.toLowerCase())) {
                             seen.add(drugName.toLowerCase());
+                            const strength = extractStrength(drugName);
                             state.globalDrugsCache.push({
                                 id: `local_${state.globalDrugsCache.length}`,
                                 name: drugName,
                                 fullName: drugName,
-                                form: drugForm,
-                                strength: drugStrength,
+                                form: 'tablet',
+                                strength: strength,
                                 freq: 0
                             });
                         }
                     });
                     
-                    console.log(`✅ تم تحميل ${localDrugs.length} دواء من الملف المحلي`);
+                    console.log(`✅ تم تحميل ${localDrugs.length} دواء من الملف المحلي (قراءة نصية مباشرة)`);
                     console.log(`📦 إجمالي الأدوية في الذاكرة: ${state.globalDrugsCache.length}`);
                 }
-            } catch(importError) {
-                console.warn('⚠️ تعذر تحميل ملف drugs-database.js:', importError.message);
-                console.warn('💡 تأكد من وجود الملف في نفس المجلد واسمه drugs-database.js');
-                console.warn('💡 الملف يجب أن يصدر المصفوفة كـ export default drugsDatabase');
+            } catch(err) {
+                console.warn('⚠️ تعذر تحميل ملف drugs-database.js:', err.message);
             }
             
             state.drugCache = [...state.globalDrugsCache];
         })();
+        
         return this._cachePromise;
     },
     
@@ -346,7 +328,7 @@ const drugManager = {
             } 
         });
         
-        // 2. البحث في قاعدة الأدوية العامة (تشمل الأدوية المحملة من الملف المحلي)
+        // 2. البحث في قاعدة الأدوية العامة
         const remainingSlots = 5 - suggestions.length;
         if (remainingSlots > 0) { 
             let globalResults = state.globalDrugsCache.filter(d => { 
@@ -377,14 +359,53 @@ const drugManager = {
     },
     
     async recordUsage(fullDrugName, name, form, strength) { 
-        const now = new Date().toISOString(); 
         await favoritesDB.incrementAndSave(fullDrugName, name, form, strength); 
     },
+    
     async hideSuggestion(fullDrugName, name, form) { 
         await favoritesDB.hideDrug(fullDrugName); 
         toast(`تم تقليل ظهور "${fullDrugName}"`); 
     }
 };
+
+// ============================================================
+// ✅ دالة قراءة الملف كنص واستخراج أسماء الأدوية
+// ============================================================
+async function loadDrugsFromTextFile(filePath) {
+    try {
+        const response = await fetch(filePath);
+        if (!response.ok) {
+            throw new Error(`فشل تحميل الملف: ${response.status}`);
+        }
+        
+        const text = await response.text();
+        
+        // استخراج كل النصوص الموجودة بين علامتي تنصيص "..." في الملف
+        const drugNames = [];
+        const regex = /"([^"]+)"/g;
+        let match;
+        
+        while ((match = regex.exec(text)) !== null) {
+            const name = match[1].trim();
+            // فلترة: نتأكد إنه مش تعليق أو سطر فاضي
+            if (name.length >= 3 && 
+                !name.startsWith('//') && 
+                !name.startsWith('const') && 
+                !name.startsWith('export') &&
+                !name.startsWith('=') &&
+                name !== 'drugsDatabase') {
+                drugNames.push(name);
+            }
+        }
+        
+        console.log(`📄 تم استخراج ${drugNames.length} اسم دواء من الملف النصي`);
+        return drugNames;
+        
+    } catch (err) {
+        console.warn('⚠️ تعذر قراءة الملف:', err.message);
+        return [];
+    }
+}
 
 async function saveSessionToDB() { 
     if (!state.currentAppointment) return; 
@@ -1239,7 +1260,6 @@ const setupEventListeners = () => {
     });
 };
 
-// ============ ✅ بدء التشغيل المبسط - tenantId من الرابط ============
 onAuthStateChanged(auth, async (user) => {
     if (!user) { 
         clearLoginSessionOnly();
@@ -1247,7 +1267,6 @@ onAuthStateChanged(auth, async (user) => {
         return; 
     }
     
-    // ✅ 1. نجيب tenantId من الرابط (صفحة تسجيل الدخول بتبعته)
     const urlParams = new URLSearchParams(window.location.search);
     const tenantFromUrl = urlParams.get('tenant');
     
@@ -1255,7 +1274,6 @@ onAuthStateChanged(auth, async (user) => {
         currentTenantId = tenantFromUrl;
         console.log(`✅ تم استلام معرف المجمع من الرابط: ${currentTenantId}`);
     } else {
-        // ✅ 2. لو مش موجود في الرابط، نجيب من الجلسة المشفرة
         try {
             const encrypted = localStorage.getItem('shifa_secure_session');
             if (encrypted) {
@@ -1270,7 +1288,6 @@ onAuthStateChanged(auth, async (user) => {
             console.warn('تعذر فك تشفير الجلسة:', e.message);
         }
         
-        // ✅ 3. لو لسه مش موجود، نجرب الجلسة القديمة
         if (!currentTenantId) {
             const oldSession = localStorage.getItem('shifa_session');
             if (oldSession) {
@@ -1288,7 +1305,6 @@ onAuthStateChanged(auth, async (user) => {
     }
 
     try {
-        // ✅ تحميل بيانات المستخدم من مسار المجمع للعرض فقط
         const tenantUserSnap = await get(ref(db, `tenants/${currentTenantId}/users/${user.uid}`));
         if (tenantUserSnap.exists()) {
             state.user = { uid: user.uid, ...tenantUserSnap.val() };
@@ -1306,7 +1322,6 @@ onAuthStateChanged(auth, async (user) => {
         sessionStorage.setItem('userRole', 'doctor'); 
         sessionStorage.setItem('userName', state.user.name||'');
         
-        // تحميل قواعد البيانات المحلية والأدوية
         await Promise.all([sessionDB.open(), favoritesDB.open(), favoriteDosesDB.open(), drugManager.loadCache()]);
         setupEventListeners();
         
@@ -1355,4 +1370,4 @@ console.log('💊 الشكل الصيدلي: يُحفظ في الروشتة فق
 console.log('⭐ المفضلات: تبحث بشكل ذكي مع كل حرف يُكتب');
 console.log('🔒 كل طبيب يشوف كشوفاته هو فقط في مجمعه');
 console.log('💾 وضع الحفظ: يمسح جلسة الدخول فقط - يحتفظ ببيانات المجمع');
-console.log('📁 تحميل الأدوية من الملف المحلي drugs-database.js');
+console.log('📁 تحميل الأدوية من الملف المحلي drugs-database.js (قراءة نصية مباشرة)');
