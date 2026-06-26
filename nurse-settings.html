@@ -35,7 +35,7 @@
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        input, textarea { -webkit-user-select: text; user-select: text; }
+        input, textarea, select { -webkit-user-select: text; user-select: text; }
 
         html {
             font-size: clamp(13px, 2.8vw, 15px);
@@ -318,11 +318,46 @@
             min-height: clamp(70px, 18vw, 90px);
             line-height: 1.6;
         }
+        select.form-control {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath fill='%238FA4AD' d='M5 7L1 3h8z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: left 12px center;
+            padding-left: 30px;
+            cursor: pointer;
+        }
         .field-hint {
             font-size: clamp(0.68rem, 1.6vw, 0.73rem);
             color: var(--text-sec);
             margin-top: 4px;
             padding-right: 26px;
+        }
+
+        /* ============ قسم الأسعار والدفع ============ */
+        .section-divider {
+            margin: clamp(14px, 3vw, 20px) 0 clamp(10px, 2.5vw, 14px);
+            padding-top: clamp(14px, 3vw, 20px);
+            border-top: 2px dashed var(--border);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 800;
+            font-size: clamp(0.85rem, 2vw, 0.95rem);
+            color: var(--primary-dark);
+        }
+        .section-divider i {
+            color: var(--warning);
+        }
+
+        .row-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        
+        .row-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
         }
 
         .saved-indicator {
@@ -395,6 +430,7 @@
             .settings-card { padding: 12px 14px; border-radius: var(--radius-md); }
             .action-row { flex-direction: column; }
             .action-row .btn { width: 100%; justify-content: center; }
+            .row-2, .row-3 { grid-template-columns: 1fr; }
         }
 
         @media (max-width: 400px) {
@@ -454,7 +490,7 @@
             <div class="settings-card empty">
                 <i class="fas fa-hand-point-up"></i>
                 <h3>اختر طبيباً من القائمة أعلاه</h3>
-                <p style="color:var(--text-sec);font-size:0.85rem;">لتعديل بياناته (مواعيد العمل، اللمحة السريعة، التخصص)</p>
+                <p style="color:var(--text-sec);font-size:0.85rem;">لتعديل بياناته (مواعيد العمل، اللمحة السريعة، التخصص، الأسعار، والدفع)</p>
             </div>
         </div>
 
@@ -483,7 +519,7 @@
             nurseData: null,
             assignedDoctors: [],
             selectedDoctorId: null,
-            doctorInfoCache: {}, // نخزن بيانات الأطباء اللي جبناها
+            doctorInfoCache: {},
         };
 
         const $ = (s) => document.querySelector(s);
@@ -521,7 +557,6 @@
                 }
             } catch (e) {}
             
-            // بديل: نجيب من الرابط
             const urlParams = new URLSearchParams(window.location.search);
             const tenantFromUrl = urlParams.get('tenant');
             if (tenantFromUrl) currentTenantId = tenantFromUrl;
@@ -532,7 +567,6 @@
         // ============ تحميل بيانات الممرض والأطباء ============
         const loadNurseAndDoctors = async (uid) => {
             try {
-                // جلب بيانات الممرض
                 let nurseSnap = null;
                 if (currentTenantId) {
                     nurseSnap = await get(ref(db, `tenants/${currentTenantId}/users/${uid}`));
@@ -550,7 +584,6 @@
                 const tenantName = state.nurseData.tenantName || 'المجمع الطبي';
                 $('#tenantName').textContent = tenantName;
 
-                // جلب روابط الأطباء
                 let linksSnap = null;
                 if (currentTenantId) {
                     linksSnap = await get(ref(db, `tenants/${currentTenantId}/links/${uid}`));
@@ -562,7 +595,6 @@
                     return true;
                 }
 
-                // جلب بيانات الأطباء
                 const doctorPromises = doctorIds.map(async (docId) => {
                     let snap = null;
                     if (currentTenantId) {
@@ -577,7 +609,6 @@
 
                 renderDoctorsStrip();
 
-                // استعادة الدكتور المحدد (لو كان محفوظ)
                 const savedDoctorId = sessionStorage.getItem('nurse_settings_selected_doctor');
                 if (savedDoctorId && state.assignedDoctors.find(d => d.id === savedDoctorId)) {
                     selectDoctor(savedDoctorId);
@@ -619,7 +650,6 @@
             sessionStorage.setItem('nurse_settings_selected_doctor', doctorId);
             renderDoctorsStrip();
 
-            // جلب بيانات الدكتور الإضافية من doctors_info
             let doctorInfo = state.doctorInfoCache[doctorId] || null;
             
             if (!doctorInfo) {
@@ -655,6 +685,13 @@
             const workHours = doctorInfo?.work_hours || '';
             const quickBlurb = doctorInfo?.quick_blurb || '';
             const specialty = doctorInfo?.specialty || '';
+            
+            // ✅ الخانات الجديدة
+            const examPrice = doctorInfo?.exam_price || '';
+            const followUpPrice = doctorInfo?.follow_up_price || '';
+            const renewalDays = doctorInfo?.renewal_days || '';
+            const paymentNumber = doctorInfo?.payment_number || '';
+            const paymentMethod = doctorInfo?.payment_method || 'cash';
 
             container.innerHTML = `
                 <div class="settings-card">
@@ -668,6 +705,7 @@
                         </div>
                     </div>
 
+                    <!-- ========== معلومات الدكتور الأساسية ========== -->
                     <div class="form-group">
                         <label><i class="fas fa-clock"></i> مواعيد العمل</label>
                         <textarea id="workHoursInput" class="form-control" placeholder="مثال: السبت - الخميس: 9 صباحاً - 5 مساءً&#10;الجمعة: إجازة">${esc(workHours)}</textarea>
@@ -686,9 +724,53 @@
                         <div class="field-hint">نبذة مختصرة تظهر للمرضى عند البحث عن الدكتور</div>
                     </div>
 
+                    <!-- ========== ✅ قسم الأسعار والدفع ========== -->
+                    <div class="section-divider">
+                        <i class="fas fa-money-bill-wave"></i> الأسعار وتفاصيل الدفع
+                    </div>
+
+                    <div class="row-2">
+                        <div class="form-group">
+                            <label><i class="fas fa-tag"></i> سعر الكشف (ج.م)</label>
+                            <input type="number" id="examPriceInput" class="form-control" placeholder="مثال: 300" min="0" step="0.01" value="${esc(examPrice)}">
+                            <div class="field-hint">سعر كشف المريض الجديد</div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label><i class="fas fa-redo"></i> سعر الإعادة (ج.م)</label>
+                            <input type="number" id="followUpPriceInput" class="form-control" placeholder="مثال: 200" min="0" step="0.01" value="${esc(followUpPrice)}">
+                            <div class="field-hint">سعر كشف إعادة المتابعة</div>
+                        </div>
+                    </div>
+
+                    <div class="row-2">
+                        <div class="form-group">
+                            <label><i class="fas fa-calendar-alt"></i> مدة صلاحية الكشف (أيام)</label>
+                            <input type="number" id="renewalDaysInput" class="form-control" placeholder="مثال: 7" min="0" max="365" value="${esc(renewalDays)}">
+                            <div class="field-hint">عدد الأيام التي يظل فيها الكشف صالحاً قبل الحاجة للتجديد</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label><i class="fas fa-wallet"></i> طريقة الدفع</label>
+                            <select id="paymentMethodSelect" class="form-control">
+                                <option value="cash" ${paymentMethod === 'cash' ? 'selected' : ''}>💵 كاش</option>
+                                <option value="instapay" ${paymentMethod === 'instapay' ? 'selected' : ''}>🟣 إنستا باي</option>
+                                <option value="vodafone_cash" ${paymentMethod === 'vodafone_cash' ? 'selected' : ''}>🔴 فودافون كاش</option>
+                                <option value="bank_transfer" ${paymentMethod === 'bank_transfer' ? 'selected' : ''}>🏦 تحويل بنكي</option>
+                            </select>
+                            <div class="field-hint">طريقة الدفع المتاحة للمرضى</div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fas fa-phone-alt"></i> رقم استلام الفلوس</label>
+                        <input type="text" id="paymentNumberInput" class="form-control" placeholder="مثال: 01xxxxxxxxx أو رقم الحساب" dir="ltr" value="${esc(paymentNumber)}">
+                        <div class="field-hint">رقم الهاتف أو الحساب الذي يستلم عليه المريض قيمة الكشف (حسب طريقة الدفع المختارة)</div>
+                    </div>
+
                     <div class="action-row">
                         <button class="btn btn-primary" id="saveDoctorInfoBtn">
-                            <i class="fas fa-save"></i> حفظ البيانات
+                            <i class="fas fa-save"></i> حفظ جميع البيانات
                         </button>
                         <button class="btn btn-outline" id="clearDoctorInfoBtn">
                             <i class="fas fa-undo"></i> مسح الحقول
@@ -704,6 +786,11 @@
                 $('#workHoursInput').value = '';
                 $('#specialtyInput').value = '';
                 $('#quickBlurbInput').value = '';
+                $('#examPriceInput').value = '';
+                $('#followUpPriceInput').value = '';
+                $('#renewalDaysInput').value = '';
+                $('#paymentNumberInput').value = '';
+                $('#paymentMethodSelect').value = 'cash';
             });
         };
 
@@ -712,12 +799,27 @@
             const workHours = $('#workHoursInput').value.trim();
             const specialty = $('#specialtyInput').value.trim();
             const quickBlurb = $('#quickBlurbInput').value.trim();
+            
+            // ✅ الخانات الجديدة
+            const examPrice = $('#examPriceInput').value.trim();
+            const followUpPrice = $('#followUpPriceInput').value.trim();
+            const renewalDays = $('#renewalDaysInput').value.trim();
+            const paymentNumber = $('#paymentNumberInput').value.trim();
+            const paymentMethod = $('#paymentMethodSelect').value;
 
             try {
                 const doctorInfoData = {
                     work_hours: workHours,
                     specialty: specialty,
                     quick_blurb: quickBlurb,
+                    
+                    // ✅ الأسعار والدفع
+                    exam_price: examPrice || null,
+                    follow_up_price: followUpPrice || null,
+                    renewal_days: renewalDays || null,
+                    payment_number: paymentNumber || null,
+                    payment_method: paymentMethod || 'cash',
+                    
                     updated_by: currentNurseId || state.currentUser?.uid,
                     updated_by_name: state.nurseData?.name || 'ممرض',
                     updated_at: new Date().toISOString(),
@@ -733,7 +835,7 @@
 
                 // إظهار مؤشر النجاح
                 const indicator = $('#saveIndicator');
-                indicator.innerHTML = '<span class="saved-indicator"><i class="fas fa-check-circle"></i> تم الحفظ بنجاح ✓</span>';
+                indicator.innerHTML = '<span class="saved-indicator"><i class="fas fa-check-circle"></i> تم حفظ جميع البيانات بنجاح ✓</span>';
                 setTimeout(() => { indicator.innerHTML = ''; }, 2500);
 
                 toast('✅ تم حفظ بيانات الدكتور بنجاح');
@@ -766,10 +868,6 @@
             });
 
             $('#logoutBtn').addEventListener('click', logout);
-
-            window.addEventListener('beforeunload', () => {
-                // تنظيف
-            });
         };
 
         // ============ بدء التشغيل ============
@@ -782,10 +880,8 @@
 
             state.currentUser = { uid: user.uid };
             
-            // استعادة الجلسة
             restoreSession();
             
-            // لو مش لقينا tenantId، نستخدم uid بتاع المستخدم
             if (!currentTenantId) {
                 currentTenantId = user.uid;
             }
@@ -811,6 +907,7 @@
 
         console.log('⚙️ صفحة إعدادات الممرض - إدارة بيانات الأطباء');
         console.log('📋 البيانات: مواعيد العمل، التخصص، اللمحة السريعة');
+        console.log('💰 الخانات الجديدة: سعر الكشف، سعر الإعادة، مدة التجديد، رقم الدفع، طريقة الدفع');
         console.log('💾 الحفظ في: tenants/{tenantId}/doctors_info/{doctorId}');
     </script>
 </body>
