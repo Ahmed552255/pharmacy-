@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#00AEEF">
+    <title>شفاء · إعدادات الممرض</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
+    
+    <style>
+        :root {
+            --primary: #00AEEF;
+            --primary-light: #E0F7FA;
+            --primary-dark: #008080;
+            --bg: #FAFAFA;
+            --white: #FFFFFF;
+            --ink: #1A3C4A;
+            --text-sec: #5A7D8A;
+            --danger: #E57373;
+            --success: #26A69A;
+            --warning: #FFA726;
+            --border: #E0E0E0;
+            --shadow-xs: 0 1px 4px rgba(0,0,0,0.04);
+            --shadow-sm: 0 4px 12px rgba(0,0,0,0.06);
+            --shadow-md: 0 8px 24px rgba(0,0,0,0.1);
+            --radius-xs: 8px;
+            --radius-sm: 14px;
+            --radius-md: 20px;
+            --radius-lg: 28px;
+            --radius-xl: 50px;
+            --safe-bottom: env(safe-area-inset-bottom, 16px);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        input, textarea { -webkit-user-select: text; user-select: text; }
+
+        html {
+            font-size: clamp(13px, 2.8vw, 15px);
+            -webkit-font-smoothing: antialiased;
+            -webkit-text-size-adjust: 100%;
+        }
+
+        body {
+            font-family: 'Cairo', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--ink);
+            min-height: 100vh;
+            min-height: 100dvh;
+            padding: clamp(8px, 2vw, 14px);
+            padding-bottom: calc(clamp(8px, 2vw, 14px) + var(--safe-bottom) + 40vh);
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .container { max-width: min(900px, 98vw); margin: 0 auto; }
+
+        /* ============ شاشة التحميل ============ */
+        #pageLoader {
+            position: fixed;
+            inset: 0;
+            background: rgba(250,250,250,0.95);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            flex-direction: column;
+            gap: 14px;
+        }
+        .loader-circle {
+            width: 38px; height: 38px;
+            border: 3px solid var(--primary-light);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ============ الهيدر ============ */
+        .app-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            padding: clamp(8px, 2vw, 12px) clamp(12px, 3vw, 18px);
+            margin-bottom: clamp(10px, 2.5vw, 16px);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+            flex-wrap: wrap;
+            gap: 8px;
+            position: sticky;
+            top: 6px;
+            z-index: 100;
+        }
+        .logo h2 {
+            font-size: clamp(1.1rem, 3vw, 1.3rem);
+            font-weight: 800;
+            color: var(--primary-dark);
+            white-space: nowrap;
+        }
+        .logo i { color: var(--primary); }
+        .header-actions { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+
+        .tenant-badge {
+            background: var(--primary-light);
+            padding: 4px 10px;
+            border-radius: var(--radius-xl);
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: var(--primary-dark);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            white-space: nowrap;
+        }
+
+        .btn {
+            padding: clamp(7px, 1.5vw, 9px) clamp(12px, 2.5vw, 16px);
+            border-radius: var(--radius-xl);
+            border: none;
+            font-weight: 700;
+            font-family: 'Cairo', system-ui, sans-serif;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: clamp(0.78rem, 2vw, 0.85rem);
+            white-space: nowrap;
+            touch-action: manipulation;
+            user-select: none;
+            transition: all 0.15s ease;
+            min-height: clamp(32px, 8vw, 38px);
+        }
+        .btn:active { transform: scale(0.96); opacity: 0.85; }
+        .btn-primary { background: var(--primary); color: white; box-shadow: 0 3px 10px rgba(0,174,239,0.2); }
+        .btn-outline { background: var(--white); color: var(--ink); border: 1.5px solid var(--border); }
+        .btn-success { background: var(--success); color: white; }
+        .btn-back {
+            background: rgba(255,255,255,0.9);
+            color: var(--primary-dark);
+            border: 1.5px solid var(--primary);
+            font-weight: 700;
+        }
+        .btn-back i { color: var(--primary); }
+
+        /* ============ شريط الأطباء ============ */
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: clamp(8px, 2vw, 12px);
+            font-size: clamp(0.9rem, 2.2vw, 1rem);
+            font-weight: 800;
+            color: var(--ink);
+        }
+        .section-title i { color: var(--primary); }
+
+        .doctors-strip {
+            background: var(--white);
+            border-radius: var(--radius-xl);
+            padding: 5px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+            margin-bottom: clamp(12px, 3vw, 18px);
+            overflow: hidden;
+        }
+        .doctors-strip .strip-scroll {
+            display: flex;
+            gap: 6px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scroll-behavior: smooth;
+            scroll-snap-type: x proximity;
+            padding: 4px;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        .doctors-strip .strip-scroll::-webkit-scrollbar { display: none; }
+
+        .doctor-pill {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 14px;
+            background: var(--white);
+            border-radius: var(--radius-xl);
+            border: 1.5px solid var(--border);
+            cursor: pointer;
+            white-space: nowrap;
+            flex-shrink: 0;
+            scroll-snap-align: start;
+            transition: all 0.2s ease;
+            font-weight: 600;
+            font-size: clamp(0.78rem, 2vw, 0.85rem);
+            touch-action: manipulation;
+            min-height: clamp(34px, 8vw, 40px);
+        }
+        .doctor-pill:active { transform: scale(0.95); }
+        .doctor-pill.active {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border-color: var(--primary);
+            box-shadow: 0 4px 14px rgba(0,174,239,0.3);
+            font-weight: 700;
+        }
+        .doctor-pill .pill-avatar {
+            width: 28px; height: 28px; min-width: 28px;
+            background: var(--primary-light);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.75rem; color: var(--primary-dark);
+        }
+        .doctor-pill.active .pill-avatar { background: rgba(255,255,255,0.3); color: white; }
+
+        /* ============ بطاقة الإعدادات ============ */
+        .settings-card {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            padding: clamp(14px, 3vw, 20px) clamp(16px, 3.5vw, 22px);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-md);
+            margin-bottom: 14px;
+            transition: all 0.3s ease;
+        }
+        .settings-card.empty {
+            text-align: center;
+            padding: clamp(30px, 8vw, 50px) 20px;
+            color: var(--text-sec);
+        }
+        .settings-card.empty i {
+            font-size: clamp(2.5rem, 7vw, 3.5rem);
+            opacity: 0.15;
+            margin-bottom: 12px;
+            display: block;
+        }
+        .settings-card.empty h3 {
+            font-size: clamp(1rem, 2.5vw, 1.15rem);
+            margin-bottom: 6px;
+            color: var(--ink);
+        }
+
+        .doctor-info-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid var(--border);
+        }
+        .doctor-avatar-lg {
+            width: clamp(44px, 10vw, 56px);
+            height: clamp(44px, 10vw, 56px);
+            min-width: clamp(44px, 10vw, 56px);
+            background: linear-gradient(135deg, var(--primary-light), var(--primary));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: clamp(1.1rem, 2.5vw, 1.3rem);
+            color: white;
+            font-weight: 800;
+            aspect-ratio: 1;
+        }
+        .doctor-info-text h3 {
+            font-size: clamp(1rem, 2.5vw, 1.15rem);
+            font-weight: 800;
+            color: var(--ink);
+        }
+        .doctor-info-text span {
+            font-size: clamp(0.75rem, 1.8vw, 0.82rem);
+            color: var(--text-sec);
+        }
+
+        .form-group {
+            margin-bottom: clamp(10px, 2.5vw, 14px);
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 700;
+            font-size: clamp(0.82rem, 2vw, 0.9rem);
+            color: var(--ink);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .form-group label i {
+            color: var(--primary);
+            width: 18px;
+            text-align: center;
+        }
+        .form-control {
+            width: 100%;
+            padding: clamp(9px, 2vw, 11px) clamp(12px, 2.5vw, 14px);
+            border-radius: var(--radius-sm);
+            border: 1.5px solid var(--border);
+            background: #F5FAFC;
+            font-family: 'Cairo', system-ui, sans-serif;
+            font-size: clamp(0.82rem, 2vw, 0.9rem);
+            color: var(--ink);
+            -webkit-appearance: none;
+            appearance: none;
+            transition: all 0.15s ease;
+            resize: vertical;
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: white;
+            box-shadow: 0 0 0 3px rgba(0,174,239,0.08);
+        }
+        textarea.form-control {
+            min-height: clamp(70px, 18vw, 90px);
+            line-height: 1.6;
+        }
+        .field-hint {
+            font-size: clamp(0.68rem, 1.6vw, 0.73rem);
+            color: var(--text-sec);
+            margin-top: 4px;
+            padding-right: 26px;
+        }
+
+        .saved-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: #E8F5E9;
+            color: #2E7D32;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            animation: fadeInOut 2s ease forwards;
+        }
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: scale(0.8); }
+            30% { opacity: 1; transform: scale(1); }
+            80% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        .action-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 16px;
+        }
+
+        /* ============ توست ============ */
+        .toast-container {
+            position: fixed;
+            bottom: max(16px, 3vw);
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 3000;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            pointer-events: none;
+            padding-bottom: var(--safe-bottom);
+            max-width: 90vw;
+        }
+        .toast {
+            background: #1A3C4A;
+            color: white;
+            padding: 10px 18px;
+            border-radius: var(--radius-xl);
+            font-weight: 700;
+            font-size: 0.82rem;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.18);
+            animation: toastIn 0.3s ease, toastOut 0.3s ease 2.2s forwards;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .toast.err { background: #C62828; }
+        @keyframes toastIn { from { transform: translateY(16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes toastOut { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-16px); opacity: 0; } }
+
+        .keyboard-scroll-spacer { height: 1px; width: 100%; pointer-events: none; opacity: 0; }
+
+        /* ============ ميديا ============ */
+        @media (max-width: 768px) {
+            body { padding: 6px; padding-bottom: calc(6px + var(--safe-bottom) + 50vh); }
+            .app-header { padding: 8px 10px; top: 3px; border-radius: var(--radius-md); gap: 6px; }
+            .logo h2 { font-size: 1.05rem; }
+            .btn { padding: 6px 10px; font-size: 0.75rem; min-height: 30px; }
+            .doctor-pill { padding: 7px 10px; font-size: 0.75rem; }
+            .settings-card { padding: 12px 14px; border-radius: var(--radius-md); }
+            .action-row { flex-direction: column; }
+            .action-row .btn { width: 100%; justify-content: center; }
+        }
+
+        @media (max-width: 400px) {
+            html { font-size: 13px; }
+            body { padding: 3px; padding-bottom: calc(3px + var(--safe-bottom) + 60vh); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="pageLoader">
+        <div class="loader-circle"></div>
+        <span style="font-weight:700;color:var(--primary-dark);">جارٍ تحميل الإعدادات...</span>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <div class="container" id="mainContent" style="display:none;">
+        <!-- الهيدر -->
+        <header class="app-header">
+            <div class="logo">
+                <h2><i class="fas fa-cog"></i> إعدادات الممرض</h2>
+            </div>
+            <div class="header-actions">
+                <span class="tenant-badge" id="tenantBadge">
+                    <i class="fas fa-hospital"></i> <span id="tenantName">المجمع الطبي</span>
+                </span>
+                <button class="btn btn-back" id="backBtn">
+                    <i class="fas fa-arrow-right"></i> العودة للوحة التحكم
+                </button>
+                <button class="btn btn-outline" id="logoutBtn">
+                    <i class="fas fa-sign-out-alt"></i> خروج
+                </button>
+            </div>
+        </header>
+
+        <!-- عنوان القسم -->
+        <div class="section-title">
+            <i class="fas fa-user-md"></i> الأطباء المرتبطون بك
+        </div>
+
+        <!-- شريط الأطباء -->
+        <div class="doctors-strip" id="doctorsStrip">
+            <div class="strip-scroll" id="doctorStripContainer">
+                <div style="padding:10px;color:var(--text-sec);text-align:center;width:100%;">
+                    <i class="fas fa-spinner fa-spin"></i> جاري التحميل...
+                </div>
+            </div>
+        </div>
+
+        <!-- بطاقة الإعدادات -->
+        <div id="settingsCardContainer">
+            <div class="settings-card empty">
+                <i class="fas fa-hand-point-up"></i>
+                <h3>اختر طبيباً من القائمة أعلاه</h3>
+                <p style="color:var(--text-sec);font-size:0.85rem;">لتعديل بياناته (مواعيد العمل، اللمحة السريعة، التخصص)</p>
+            </div>
+        </div>
+
+        <div class="keyboard-scroll-spacer"></div>
+    </div>
+
+    <script type="module">
+        import { firebaseConfig } from './firebase-config.js';
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getDatabase, ref, onValue, get, set, update } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+
+        const STORAGE_PREFIX = 'shifa_tenant_';
+        const LOGIN_STORAGE_KEYS = ['shifa_session', 'shifa_remember', 'shifa_last_login', 'shifa_secure_session'];
+
+        let currentTenantId = null;
+        let currentNurseId = null;
+        const getTenantStorageKey = (k) => currentTenantId ? `${STORAGE_PREFIX}${currentTenantId}_${k}` : k;
+
+        const state = {
+            currentUser: null,
+            nurseData: null,
+            assignedDoctors: [],
+            selectedDoctorId: null,
+            doctorInfoCache: {}, // نخزن بيانات الأطباء اللي جبناها
+        };
+
+        const $ = (s) => document.querySelector(s);
+        const $$ = (s) => document.querySelectorAll(s);
+        const esc = (s) => { if (!s) return ''; const d = document.createElement('div'); d.textContent = String(s); return d.innerHTML; };
+        const toast = (msg, err = false) => {
+            const c = $('#toastContainer');
+            const t = document.createElement('div');
+            t.className = `toast ${err ? 'err' : ''}`;
+            t.innerHTML = `<i class="fas ${err ? 'fa-exclamation-circle' : 'fa-check-circle'}"></i> ${msg}`;
+            c.appendChild(t);
+            setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateY(-10px)'; setTimeout(() => t.remove(), 300); }, 2500);
+        };
+
+        const clearLoginSessionOnly = () => {
+            try {
+                LOGIN_STORAGE_KEYS.forEach(k => localStorage.removeItem(k));
+                for (let i = 0; i < localStorage.length; i++) {
+                    const k = localStorage.key(i);
+                    if (k && (k.startsWith('shifa_session') || k.startsWith('shifa_secure'))) localStorage.removeItem(k);
+                }
+                sessionStorage.clear();
+            } catch (e) {}
+        };
+
+        // ============ استعادة الجلسة من nurse-dashboard ============
+        const restoreSession = () => {
+            try {
+                const saved = sessionStorage.getItem('nurse_settings_session');
+                if (saved) {
+                    const data = JSON.parse(saved);
+                    if (data.tenantId) currentTenantId = data.tenantId;
+                    if (data.uid) currentNurseId = data.uid;
+                    return data;
+                }
+            } catch (e) {}
+            
+            // بديل: نجيب من الرابط
+            const urlParams = new URLSearchParams(window.location.search);
+            const tenantFromUrl = urlParams.get('tenant');
+            if (tenantFromUrl) currentTenantId = tenantFromUrl;
+            
+            return null;
+        };
+
+        // ============ تحميل بيانات الممرض والأطباء ============
+        const loadNurseAndDoctors = async (uid) => {
+            try {
+                // جلب بيانات الممرض
+                let nurseSnap = null;
+                if (currentTenantId) {
+                    nurseSnap = await get(ref(db, `tenants/${currentTenantId}/users/${uid}`));
+                }
+                if (!nurseSnap || !nurseSnap.exists()) {
+                    nurseSnap = await get(ref(db, `users/${uid}`));
+                }
+
+                if (!nurseSnap.exists() || nurseSnap.val().role !== 'nurse') {
+                    toast('هذا الحساب ليس ممرضاً', true);
+                    return false;
+                }
+
+                state.nurseData = { id: uid, ...nurseSnap.val() };
+                const tenantName = state.nurseData.tenantName || 'المجمع الطبي';
+                $('#tenantName').textContent = tenantName;
+
+                // جلب روابط الأطباء
+                let linksSnap = null;
+                if (currentTenantId) {
+                    linksSnap = await get(ref(db, `tenants/${currentTenantId}/links/${uid}`));
+                }
+                const doctorIds = linksSnap?.exists() ? Object.keys(linksSnap.val()) : [];
+
+                if (doctorIds.length === 0) {
+                    $('#doctorStripContainer').innerHTML = '<div style="padding:10px;color:var(--text-sec);text-align:center;">لا يوجد أطباء مرتبطين بك</div>';
+                    return true;
+                }
+
+                // جلب بيانات الأطباء
+                const doctorPromises = doctorIds.map(async (docId) => {
+                    let snap = null;
+                    if (currentTenantId) {
+                        snap = await get(ref(db, `tenants/${currentTenantId}/users/${docId}`));
+                    }
+                    if (!snap || !snap.exists()) {
+                        snap = await get(ref(db, `users/${docId}`));
+                    }
+                    return { id: docId, name: snap.exists() ? snap.val().name : 'دكتور', email: snap.exists() ? snap.val().email : '' };
+                });
+                state.assignedDoctors = await Promise.all(doctorPromises);
+
+                renderDoctorsStrip();
+
+                // استعادة الدكتور المحدد (لو كان محفوظ)
+                const savedDoctorId = sessionStorage.getItem('nurse_settings_selected_doctor');
+                if (savedDoctorId && state.assignedDoctors.find(d => d.id === savedDoctorId)) {
+                    selectDoctor(savedDoctorId);
+                }
+
+                return true;
+            } catch (err) {
+                console.error('خطأ في التحميل:', err);
+                toast('خطأ في تحميل البيانات', true);
+                return false;
+            }
+        };
+
+        // ============ عرض شريط الأطباء ============
+        const renderDoctorsStrip = () => {
+            const container = $('#doctorStripContainer');
+            if (state.assignedDoctors.length === 0) {
+                container.innerHTML = '<div style="padding:10px;color:var(--text-sec);text-align:center;">لا يوجد أطباء</div>';
+                return;
+            }
+            container.innerHTML = state.assignedDoctors.map(doc => `
+                <div class="doctor-pill ${state.selectedDoctorId === doc.id ? 'active' : ''}" data-id="${doc.id}">
+                    <div class="pill-avatar"><i class="fas fa-user-md"></i></div>
+                    <span>د. ${esc(doc.name)}</span>
+                </div>
+            `).join('');
+
+            container.querySelectorAll('.doctor-pill').forEach(pill => {
+                pill.addEventListener('click', () => {
+                    selectDoctor(pill.dataset.id);
+                    pill.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                });
+            });
+        };
+
+        // ============ اختيار دكتور وعرض/تحميل بياناته ============
+        const selectDoctor = async (doctorId) => {
+            state.selectedDoctorId = doctorId;
+            sessionStorage.setItem('nurse_settings_selected_doctor', doctorId);
+            renderDoctorsStrip();
+
+            // جلب بيانات الدكتور الإضافية من doctors_info
+            let doctorInfo = state.doctorInfoCache[doctorId] || null;
+            
+            if (!doctorInfo) {
+                try {
+                    const infoSnap = await get(ref(db, `tenants/${currentTenantId}/doctors_info/${doctorId}`));
+                    if (infoSnap.exists()) {
+                        doctorInfo = infoSnap.val();
+                        state.doctorInfoCache[doctorId] = doctorInfo;
+                    }
+                } catch (e) {
+                    console.warn('تعذر تحميل بيانات الدكتور:', e.message);
+                }
+            }
+
+            const doctor = state.assignedDoctors.find(d => d.id === doctorId);
+            renderSettingsCard(doctor, doctorInfo);
+        };
+
+        // ============ عرض بطاقة الإعدادات ============
+        const renderSettingsCard = (doctor, doctorInfo) => {
+            const container = $('#settingsCardContainer');
+            
+            if (!doctor) {
+                container.innerHTML = `
+                    <div class="settings-card empty">
+                        <i class="fas fa-hand-point-up"></i>
+                        <h3>اختر طبيباً من القائمة أعلاه</h3>
+                        <p>لتعديل بياناته</p>
+                    </div>`;
+                return;
+            }
+
+            const workHours = doctorInfo?.work_hours || '';
+            const quickBlurb = doctorInfo?.quick_blurb || '';
+            const specialty = doctorInfo?.specialty || '';
+
+            container.innerHTML = `
+                <div class="settings-card">
+                    <div class="doctor-info-header">
+                        <div class="doctor-avatar-lg">
+                            ${esc((doctor.name || 'د').charAt(0))}
+                        </div>
+                        <div class="doctor-info-text">
+                            <h3>د. ${esc(doctor.name)}</h3>
+                            <span><i class="fas fa-envelope"></i> ${esc(doctor.email || '')}</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fas fa-clock"></i> مواعيد العمل</label>
+                        <textarea id="workHoursInput" class="form-control" placeholder="مثال: السبت - الخميس: 9 صباحاً - 5 مساءً&#10;الجمعة: إجازة">${esc(workHours)}</textarea>
+                        <div class="field-hint">أدخل مواعيد العمل بشكل واضح للمرضى</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fas fa-stethoscope"></i> التخصص</label>
+                        <input type="text" id="specialtyInput" class="form-control" placeholder="مثال: قلب وأوعية دموية، أطفال، جلدية..." value="${esc(specialty)}">
+                        <div class="field-hint">التخصص الطبي للدكتور</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fas fa-pen"></i> لمحة سريعة عن الدكتور</label>
+                        <textarea id="quickBlurbInput" class="form-control" placeholder="مثال: استشاري أمراض القلب، خبرة 15 عاماً، حاصل على الزمالة المصرية...">${esc(quickBlurb)}</textarea>
+                        <div class="field-hint">نبذة مختصرة تظهر للمرضى عند البحث عن الدكتور</div>
+                    </div>
+
+                    <div class="action-row">
+                        <button class="btn btn-primary" id="saveDoctorInfoBtn">
+                            <i class="fas fa-save"></i> حفظ البيانات
+                        </button>
+                        <button class="btn btn-outline" id="clearDoctorInfoBtn">
+                            <i class="fas fa-undo"></i> مسح الحقول
+                        </button>
+                    </div>
+                    <div id="saveIndicator" style="margin-top:8px;min-height:24px;"></div>
+                </div>
+            `;
+
+            // ربط زر الحفظ
+            $('#saveDoctorInfoBtn').addEventListener('click', () => saveDoctorInfo(doctor.id));
+            $('#clearDoctorInfoBtn').addEventListener('click', () => {
+                $('#workHoursInput').value = '';
+                $('#specialtyInput').value = '';
+                $('#quickBlurbInput').value = '';
+            });
+        };
+
+        // ============ حفظ بيانات الدكتور ============
+        const saveDoctorInfo = async (doctorId) => {
+            const workHours = $('#workHoursInput').value.trim();
+            const specialty = $('#specialtyInput').value.trim();
+            const quickBlurb = $('#quickBlurbInput').value.trim();
+
+            try {
+                const doctorInfoData = {
+                    work_hours: workHours,
+                    specialty: specialty,
+                    quick_blurb: quickBlurb,
+                    updated_by: currentNurseId || state.currentUser?.uid,
+                    updated_by_name: state.nurseData?.name || 'ممرض',
+                    updated_at: new Date().toISOString(),
+                    doctor_id: doctorId,
+                    doctor_name: state.assignedDoctors.find(d => d.id === doctorId)?.name || '',
+                    tenantId: currentTenantId,
+                };
+
+                await set(ref(db, `tenants/${currentTenantId}/doctors_info/${doctorId}`), doctorInfoData);
+
+                // تحديث الكاش
+                state.doctorInfoCache[doctorId] = doctorInfoData;
+
+                // إظهار مؤشر النجاح
+                const indicator = $('#saveIndicator');
+                indicator.innerHTML = '<span class="saved-indicator"><i class="fas fa-check-circle"></i> تم الحفظ بنجاح ✓</span>';
+                setTimeout(() => { indicator.innerHTML = ''; }, 2500);
+
+                toast('✅ تم حفظ بيانات الدكتور بنجاح');
+            } catch (err) {
+                console.error('خطأ في الحفظ:', err);
+                toast('❌ فشل حفظ البيانات: ' + err.message, true);
+            }
+        };
+
+        // ============ تسجيل الخروج ============
+        const logout = async () => {
+            try {
+                toast('👋 جاري تسجيل الخروج...');
+                clearLoginSessionOnly();
+                state.currentUser = null;
+                state.nurseData = null;
+                state.assignedDoctors = [];
+                await signOut(auth);
+                window.location.href = 'index.html';
+            } catch (e) {
+                clearLoginSessionOnly();
+                window.location.href = 'index.html';
+            }
+        };
+
+        // ============ ربط الأحداث ============
+        const initEvents = () => {
+            $('#backBtn').addEventListener('click', () => {
+                window.location.href = `nurse-dashboard.html?tenant=${currentTenantId || ''}`;
+            });
+
+            $('#logoutBtn').addEventListener('click', logout);
+
+            window.addEventListener('beforeunload', () => {
+                // تنظيف
+            });
+        };
+
+        // ============ بدء التشغيل ============
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                clearLoginSessionOnly();
+                window.location.href = 'index.html';
+                return;
+            }
+
+            state.currentUser = { uid: user.uid };
+            
+            // استعادة الجلسة
+            restoreSession();
+            
+            // لو مش لقينا tenantId، نستخدم uid بتاع المستخدم
+            if (!currentTenantId) {
+                currentTenantId = user.uid;
+            }
+            
+            if (!currentNurseId) {
+                currentNurseId = user.uid;
+            }
+
+            sessionStorage.setItem('userUid', user.uid);
+            sessionStorage.setItem('userRole', 'nurse');
+
+            initEvents();
+
+            const success = await loadNurseAndDoctors(user.uid);
+            
+            $('#pageLoader').style.display = 'none';
+            $('#mainContent').style.display = 'block';
+
+            if (!success) {
+                toast('⚠️ تعذر تحميل بعض البيانات', true);
+            }
+        });
+
+        console.log('⚙️ صفحة إعدادات الممرض - إدارة بيانات الأطباء');
+        console.log('📋 البيانات: مواعيد العمل، التخصص، اللمحة السريعة');
+        console.log('💾 الحفظ في: tenants/{tenantId}/doctors_info/{doctorId}');
+    </script>
+</body>
+</html>
