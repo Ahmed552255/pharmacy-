@@ -25,6 +25,7 @@
             --border: #E0E0E0;
             --shadow-sm: 0 4px 12px rgba(0,0,0,0.05);
             --shadow-md: 0 8px 24px rgba(0,0,0,0.08);
+            --shadow-lg: 0 15px 40px rgba(0,0,0,0.12);
             --radius-sm: 14px;
             --radius-md: 20px;
             --radius-lg: 28px;
@@ -536,6 +537,23 @@
             align-items: center;
             gap: 6px;
         }
+
+        /* ============ أنماط إعدادات المجمع ============ */
+        .settings-note {
+            background: #FFF8E1;
+            border-right: 4px solid #FFB74D;
+            padding: 14px 16px;
+            border-radius: var(--radius-sm);
+            margin-bottom: 16px;
+            font-size: 0.85rem;
+            color: #5D4037;
+            line-height: 1.6;
+        }
+        
+        .settings-note i {
+            color: #F57C00;
+            margin-left: 6px;
+        }
         
         @media (max-width: 768px) {
             body { padding: 8px; }
@@ -594,6 +612,9 @@
                     <i class="fas fa-hospital"></i>
                     <span id="tenantIdDisplay">مجمع طبي</span>
                 </div>
+                <button class="btn btn-outline btn-sm" id="settingsBtn" title="إعدادات المجمع">
+                    <i class="fas fa-cog"></i> <span class="hide-mobile">الإعدادات</span>
+                </button>
                 <div class="search-wrapper">
                     <i class="fas fa-search"></i>
                     <input type="text" id="searchInput" placeholder="ابحث عن مستخدم...">
@@ -716,7 +737,7 @@
         </div>
     </div>
 
-    <!-- مودال إضافة / تعديل -->
+    <!-- مودال إضافة / تعديل مستخدم -->
     <div id="formModal" class="modal">
         <div class="modal-card">
             <div class="modal-header">
@@ -782,6 +803,56 @@
         </div>
     </div>
 
+    <!-- ============ ✅ مودال إعدادات المجمع (جديد) ============ -->
+    <div id="settingsModal" class="modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3><i class="fas fa-cog"></i> إعدادات المجمع الطبي</h3>
+                <button class="close-btn" id="closeSettingsBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="settings-note">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>مطلوب:</strong> يجب تحديد اسم المجمع وعنوانه قبل متابعة استخدام النظام. هذه المعلومات ستظهر للمرضى والأطباء.
+                </div>
+                
+                <div class="form-group">
+                    <label>اسم المجمع الطبي *</label>
+                    <input type="text" id="tenantNameInput" placeholder="مثال: مجمع الشفاء الطبي" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>المحافظة *</label>
+                    <select id="governorateSelect" required>
+                        <option value="">-- اختر المحافظة --</option>
+                        <option value="المنيا">المنيا</option>
+                        <option value="أسيوط">أسيوط</option>
+                        <option value="القاهرة">القاهرة</option>
+                        <option value="الجيزة">الجيزة</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>المركز *</label>
+                    <select id="citySelect" required disabled>
+                        <option value="">-- اختر المركز --</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>العنوان التفصيلي *</label>
+                    <input type="text" id="addressInput" placeholder="مثال: شارع المستشفى، برج الأطباء، الدور الثاني" required>
+                </div>
+                
+                <div class="row-buttons">
+                    <button id="saveSettingsBtn" class="btn btn-primary"><i class="fas fa-save"></i> حفظ الإعدادات</button>
+                </div>
+                
+                <div class="keyboard-scroll-spacer"></div>
+            </div>
+        </div>
+    </div>
+
     <script type="module">
         import { firebaseConfig } from './firebase-config.js';
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
@@ -796,23 +867,42 @@
         const SIGN_UP_URL = `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${API_KEY}`;
         const DELETE_URL = `https://identitytoolkit.googleapis.com/v1/accounts:delete?key=${API_KEY}`;
 
+        // ============ ✅ مراكز المحافظات ============
+        const GOVERNORATE_CITIES = {
+            'المنيا': [
+                'المنيا', 'أبو قرقاص', 'العدوة', 'بني مزار', 'دير مواس', 
+                'سمالوط', 'مطاي', 'ملوي', 'مغاغة', 'المنيا الجديدة'
+            ],
+            'أسيوط': [
+                'أسيوط', 'أبنوب', 'أبو تيج', 'البداري', 'الفتح', 
+                'القوصية', 'ديروط', 'ساحل سليم', 'صدفا', 'منفلوط', 'أسيوط الجديدة'
+            ],
+            'القاهرة': [
+                'وسط البلد', 'مدينة نصر', 'مصر الجديدة', 'المعادي', 'حلوان',
+                'الزمالك', 'المهندسين', 'الدقي', 'العباسية', 'شبرا', 'المقطم'
+            ],
+            'الجيزة': [
+                'الجيزة', 'الدقي', 'الهرم', 'فيصل', 'العجوزة', 
+                'المهندسين', 'أكتوبر', 'الشيخ زايد', 'الحوامدية', 'البدرشين'
+            ]
+        };
+
         // ============ متغير المجمع الطبي (Tenant ID) ============
         let currentAdminId = null;
         let currentTenantId = null;
         
-        // ============ مراجع Firebase مع ربط بالمجمع ============
+        // ============ مراجع Firebase ============
         let tenantUsersRef = null;
         let tenantLinksRef = null;
 
         // ============ ثوابت التخزين المحلي ============
         const STORAGE_PREFIX = 'shifa_tenant_';
         
-        // ✅ مفاتيح تسجيل الدخول فقط (اللي هتمسح عند الخروج)
         const LOGIN_STORAGE_KEYS = [
-            'shifa_session',           // الجلسة القديمة
-            'shifa_remember',          // تذكرني
-            'shifa_last_login',        // آخر تسجيل دخول
-            'shifa_secure_session'     // الجلسة المشفرة الجديدة
+            'shifa_session',
+            'shifa_remember',
+            'shifa_last_login',
+            'shifa_secure_session'
         ];
 
         // ============ المتغيرات العامة ============
@@ -826,6 +916,7 @@
         let unsubscribeLinks = null;
         let searchTimer = null;
         let isOnline = navigator.onLine;
+        let tenantSettings = null; // ✅ بيانات إعدادات المجمع
 
         // ============ دوال مساعدة ============
         const $ = (sel) => document.querySelector(sel);
@@ -850,8 +941,6 @@
             }, 2500);
         };
 
-        // ============ دوال التخزين المحلي لكل مجمع ============
-        
         const getTenantStorageKey = (baseKey) => {
             return currentTenantId ? `${STORAGE_PREFIX}${currentTenantId}_${baseKey}` : baseKey;
         };
@@ -864,6 +953,143 @@
             }
         };
 
+        // ============ ✅ دوال إعدادات المجمع ============
+        
+        const loadTenantSettings = async () => {
+            if (!currentTenantId) return null;
+            try {
+                const snap = await get(ref(db, `tenants/${currentTenantId}/settings`));
+                if (snap.exists()) {
+                    tenantSettings = snap.val();
+                    return tenantSettings;
+                }
+                return null;
+            } catch (e) {
+                console.warn('تعذر تحميل إعدادات المجمع:', e.message);
+                return null;
+            }
+        };
+
+        const hasCompleteSettings = () => {
+            return tenantSettings && 
+                   tenantSettings.name && 
+                   tenantSettings.governorate && 
+                   tenantSettings.city && 
+                   tenantSettings.address;
+        };
+
+        const openSettingsModal = (isRequired = false) => {
+            // ملء البيانات الحالية لو موجودة
+            if (tenantSettings) {
+                $('#tenantNameInput').value = tenantSettings.name || '';
+                if (tenantSettings.governorate) {
+                    $('#governorateSelect').value = tenantSettings.governorate;
+                    populateCities(tenantSettings.governorate);
+                    if (tenantSettings.city) {
+                        $('#citySelect').value = tenantSettings.city;
+                    }
+                }
+                $('#addressInput').value = tenantSettings.address || '';
+            }
+            
+            // لو الإعدادات مطلوبة (أول مرة)، منخليش الزر يقفل
+            if (isRequired) {
+                $('#settingsModal').querySelector('.close-btn').style.display = 'none';
+                $('#settingsModal').dataset.required = 'true';
+            } else {
+                $('#settingsModal').querySelector('.close-btn').style.display = 'flex';
+                $('#settingsModal').dataset.required = 'false';
+            }
+            
+            $('#settingsModal').style.display = 'flex';
+        };
+
+        const closeSettingsModal = () => {
+            if ($('#settingsModal').dataset.required === 'true') {
+                showToast('يجب إكمال إعدادات المجمع أولاً', true);
+                return;
+            }
+            $('#settingsModal').style.display = 'none';
+        };
+
+        const populateCities = (governorate) => {
+            const citySelect = $('#citySelect');
+            citySelect.innerHTML = '<option value="">-- اختر المركز --</option>';
+            citySelect.disabled = !governorate;
+            
+            if (governorate && GOVERNORATE_CITIES[governorate]) {
+                GOVERNORATE_CITIES[governorate].forEach(city => {
+                    const option = document.createElement('option');
+                    option.value = city;
+                    option.textContent = city;
+                    citySelect.appendChild(option);
+                });
+            }
+        };
+
+        const saveTenantSettings = async () => {
+            const name = $('#tenantNameInput').value.trim();
+            const governorate = $('#governorateSelect').value;
+            const city = $('#citySelect').value;
+            const address = $('#addressInput').value.trim();
+            
+            if (!name) {
+                showToast('اسم المجمع مطلوب', true);
+                $('#tenantNameInput').focus();
+                return;
+            }
+            
+            if (!governorate) {
+                showToast('المحافظة مطلوبة', true);
+                $('#governorateSelect').focus();
+                return;
+            }
+            
+            if (!city) {
+                showToast('المركز مطلوب', true);
+                $('#citySelect').focus();
+                return;
+            }
+            
+            if (!address) {
+                showToast('العنوان التفصيلي مطلوب', true);
+                $('#addressInput').focus();
+                return;
+            }
+            
+            try {
+                const settingsData = {
+                    name,
+                    governorate,
+                    city,
+                    address,
+                    fullAddress: `${address}، ${city}، ${governorate}`,
+                    updatedAt: new Date().toISOString(),
+                    updatedBy: currentAdminId
+                };
+                
+                await set(ref(db, `tenants/${currentTenantId}/settings`), settingsData);
+                
+                // تحديث اسم المجمع في واجهة المستخدم
+                tenantSettings = settingsData;
+                $('#tenantIdDisplay').textContent = name;
+                
+                // تحديث اسم المجمع في بيانات المستخدم الحالي
+                await update(ref(db, `tenants/${currentTenantId}/users/${currentAdminId}`), {
+                    tenantName: name
+                });
+                
+                showToast('✅ تم حفظ إعدادات المجمع بنجاح');
+                $('#settingsModal').style.display = 'none';
+                
+            } catch (err) {
+                console.error('خطأ في حفظ الإعدادات:', err);
+                showToast('❌ فشل حفظ الإعدادات: ' + err.message, true);
+            }
+        };
+
+        // ============ دوال التخزين المحلي ============
+        
         const saveToLocalDB = () => {
             if (!currentTenantId) return;
             try {
@@ -934,9 +1160,7 @@
                 const passwords = JSON.parse(localStorage.getItem(storageKey) || '{}');
                 delete passwords[uid];
                 localStorage.setItem(storageKey, JSON.stringify(passwords));
-            } catch (e) {
-                // تجاهل
-            }
+            } catch (e) {}
         };
 
         // ============ مزامنة البيانات ============
@@ -971,8 +1195,6 @@
             updateStats();
             renderGrid();
             populateDoctorsCheckboxes();
-            
-            // حفظ في التخزين المحلي
             saveToLocalDB();
         };
 
@@ -982,7 +1204,6 @@
             if (unsubscribeUsers) unsubscribeUsers();
             if (unsubscribeLinks) unsubscribeLinks();
 
-            // مستمع Firebase للبيانات - مربوط بالمجمع الحالي
             unsubscribeUsers = onValue(tenantUsersRef, (snap) => {
                 const usersArray = [];
                 snap.forEach(child => {
@@ -1000,7 +1221,6 @@
                 }
             });
 
-            // مستمع الروابط - مربوط بالمجمع الحالي
             unsubscribeLinks = onValue(tenantLinksRef, (snap) => {
                 linksMap = snap.val() || {};
                 if (allUsers.length) combineAndRender();
@@ -1270,6 +1490,13 @@
             $('#specialtyGroup').style.display = role === 'doctor' ? 'block' : 'none';
         });
 
+        // ✅ حدث تغيير المحافظة
+        $('#governorateSelect').addEventListener('change', (e) => {
+            const governorate = e.target.value;
+            populateCities(governorate);
+            $('#citySelect').value = '';
+        });
+
         $('#togglePassword').addEventListener('click', function() {
             const pwdField = $('#userPassword');
             const icon = this.querySelector('i');
@@ -1309,7 +1536,6 @@
                 return;
             }
 
-            // إضافة معرف المجمع الطبي للبيانات
             const userData = {
                 name,
                 email,
@@ -1334,7 +1560,6 @@
 
             try {
                 if (currentEditId) {
-                    // تعديل مستخدم موجود (بدون تغيير كلمة المرور)
                     await update(ref(db, `tenants/${currentTenantId}/users/${currentEditId}`), userData);
                     
                     if (role === 'nurse') {
@@ -1344,7 +1569,6 @@
                     showToast('✅ تم التعديل بنجاح');
                     closeFormModal();
                 } else {
-                    // إضافة مستخدم جديد
                     if (!password) {
                         showToast('كلمة المرور مطلوبة', true);
                         return;
@@ -1373,10 +1597,8 @@
                     const uid = signUpData.localId;
                     userData.created_at = new Date().toISOString();
                     
-                    // حفظ المستخدم في مسار المجمع الخاص
                     await set(ref(db, `tenants/${currentTenantId}/users/${uid}`), userData);
                     
-                    // حفظ كلمة المرور في التخزين المحلي
                     savePasswordLocally(uid, password);
                     
                     if (role === 'nurse') {
@@ -1431,7 +1653,6 @@
 
                 await remove(ref(db, `tenants/${currentTenantId}/users/${id}`));
 
-                // حذف كلمة المرور المخزنة محلياً
                 removePasswordLocally(id);
 
                 try {
@@ -1459,21 +1680,14 @@
             }
         };
 
-        // ============ ✅ تسجيل الخروج - يمسح بيانات الجلسة فقط ويحتفظ ببيانات المجمع ============
+        // ============ تسجيل الخروج ============
         
-        /**
-         * مسح مفاتيح تسجيل الدخول فقط (الجلسة المشفرة)
-         * مع الحفاظ على بيانات المجمع المحلية (المستخدمين، الروابط، كلمات المرور)
-         */
         const clearLoginSessionOnly = () => {
             try {
-                // 1️⃣ مسح مفاتيح تسجيل الدخول المعروفة
                 LOGIN_STORAGE_KEYS.forEach(key => {
                     localStorage.removeItem(key);
                 });
                 
-                // 2️⃣ مسح أي مفاتيح تبدأ بـ shifa_session أو shifa_secure (الجلسات فقط)
-                // لكن نحتفظ بـ shifa_tenant_ (بيانات المجمع)
                 const sessionKeysToRemove = [];
                 for (let i = 0; i < localStorage.length; i++) {
                     const key = localStorage.key(i);
@@ -1483,24 +1697,16 @@
                 }
                 sessionKeysToRemove.forEach(key => localStorage.removeItem(key));
                 
-                // 3️⃣ مسح sessionStorage بالكامل (بيانات الجلسة المؤقتة)
                 sessionStorage.clear();
-                
-                console.log(`✅ تم مسح ${LOGIN_STORAGE_KEYS.length + sessionKeysToRemove.length} مفتاح جلسة`);
-                console.log('💾 تم الإبقاء على بيانات المجمع المحلية (المستخدمين، الروابط، كلمات المرور)');
             } catch (e) {
                 console.warn('تعذر مسح بيانات الجلسة:', e.message);
             }
         };
 
-        /**
-         * تسجيل الخروج الآمن - يمسح الجلسة فقط ويحتفظ ببيانات المجمع
-         */
         const logout = async () => {
             try {
                 showToast('👋 جاري تسجيل الخروج...');
                 
-                // 1. إلغاء مستمعي Firebase
                 if (unsubscribeUsers) {
                     unsubscribeUsers();
                     unsubscribeUsers = null;
@@ -1510,26 +1716,21 @@
                     unsubscribeLinks = null;
                 }
                 
-                // 2. ✅ مسح بيانات الجلسة فقط (وليس بيانات المجمع)
                 clearLoginSessionOnly();
                 
-                // 3. مسح المتغيرات العامة في الذاكرة فقط
                 allUsers = [];
                 doctorsList = [];
                 linksMap = {};
                 currentAdminId = null;
                 currentTenantId = null;
+                tenantSettings = null;
                 
-                // 4. تسجيل الخروج من Firebase Auth
                 await signOut(auth);
                 
-                // 5. إعادة التوجيه لصفحة تسجيل الدخول
                 window.location.href = 'index.html';
                 
             } catch (error) {
                 console.error('خطأ أثناء تسجيل الخروج:', error);
-                
-                // حتى في حالة الخطأ، نمسح الجلسة فقط ونتوجه لصفحة الدخول
                 clearLoginSessionOnly();
                 window.location.href = 'index.html';
             }
@@ -1540,14 +1741,12 @@
         const checkAdminAuth = () => {
             onAuthStateChanged(auth, async (user) => {
                 if (!user) {
-                    // مسح بيانات الجلسة فقط
                     clearLoginSessionOnly();
                     window.location.href = 'index.html';
                     return;
                 }
                 
                 try {
-                    // البحث عن بيانات الأدمن في مسار المجمع
                     const adminRef = ref(db, `tenants/${user.uid}/users/${user.uid}`);
                     const adminSnap = await get(adminRef);
                     
@@ -1555,7 +1754,6 @@
                     if (adminSnap.exists()) {
                         adminData = adminSnap.val();
                     } else {
-                        // توافق مع المسار القديم
                         const oldRef = ref(db, `users/${user.uid}`);
                         const oldSnap = await get(oldRef);
                         if (oldSnap.exists()) {
@@ -1571,19 +1769,26 @@
                         return;
                     }
                     
-                    // تعيين معرفات المجمع الحالي
                     currentAdminId = user.uid;
                     currentTenantId = user.uid;
                     
-                    // إعداد مراجع Firebase للمجمع الحالي
                     tenantUsersRef = ref(db, `tenants/${currentTenantId}/users`);
                     tenantLinksRef = ref(db, `tenants/${currentTenantId}/links`);
                     
-                    // عرض معرف المجمع
-                    const tenantDisplay = adminData.tenantName || adminData.name || 'المجمع الطبي';
+                    // ✅ تحميل إعدادات المجمع
+                    await loadTenantSettings();
+                    
+                    // ✅ عرض اسم المجمع
+                    const tenantDisplay = tenantSettings?.name || adminData.tenantName || adminData.name || 'مجمع طبي';
                     $('#tenantIdDisplay').textContent = tenantDisplay;
                     
-                    // تحميل البيانات المحلية فوراً للعرض السريع
+                    // ✅ لو الإعدادات مش كاملة، افتح مودال الإعدادات إجباري
+                    if (!hasCompleteSettings()) {
+                        $('#authCheckLoader').style.display = 'none';
+                        $('#mainContainer').style.display = 'block';
+                        openSettingsModal(true);
+                    }
+                    
                     loadFromLocalDB();
                     if (allUsers.length > 0) {
                         combineAndRender();
@@ -1596,7 +1801,6 @@
                 } catch (err) {
                     console.error('خطأ في التحقق من الصلاحية:', err);
                     
-                    // استخدام البيانات المحلية في حالة فشل الاتصال
                     const localSession = localStorage.getItem('shifa_secure_session') || 
                                         localStorage.getItem('shifa_session');
                     if (localSession) {
@@ -1617,12 +1821,9 @@
                                 if (!unsubscribeUsers) startListeners();
                                 return;
                             }
-                        } catch (parseError) {
-                            // تجاهل
-                        }
+                        } catch (parseError) {}
                     }
                     
-                    // فشل تام
                     clearLoginSessionOnly();
                     window.location.href = 'index.html';
                 }
@@ -1640,6 +1841,18 @@
             $('#usersGrid').addEventListener('click', (e) => {
                 const card = e.target.closest('.user-card');
                 if (card) openDetailModal(card.dataset.id);
+            });
+
+            // ✅ أزرار الإعدادات
+            $('#settingsBtn').onclick = () => openSettingsModal(false);
+            $('#saveSettingsBtn').onclick = saveTenantSettings;
+            $('#closeSettingsBtn').onclick = closeSettingsModal;
+            
+            // ✅ إغلاق مودال الإعدادات بالنقر خارجها (بس لو مش إجباري)
+            window.addEventListener('click', (e) => {
+                if (e.target === $('#settingsModal') && $('#settingsModal').dataset.required !== 'true') {
+                    $('#settingsModal').style.display = 'none';
+                }
             });
 
             $('#addUserBtn').onclick = openAddModal;
@@ -1673,6 +1886,10 @@
                 if (e.key === 'Escape') {
                     if ($('#detailModal').style.display === 'flex') closeDetailModal();
                     if ($('#formModal').style.display === 'flex') closeFormModal();
+                    // إغلاق مودال الإعدادات بس لو مش إجباري
+                    if ($('#settingsModal').style.display === 'flex' && $('#settingsModal').dataset.required !== 'true') {
+                        $('#settingsModal').style.display = 'none';
+                    }
                 }
             });
             
@@ -1709,6 +1926,7 @@
         
         console.log('🚀 لوحة إدارة شفاء - نظام المجمعات الطبية المتعددة');
         console.log('💾 وضع الحفظ: يمسح جلسة الدخول فقط - يحتفظ ببيانات المجمع');
+        console.log('⚙️ إعدادات المجمع: اسم، محافظة، مركز، عنوان تفصيلي');
     </script>
 </body>
 </html>
