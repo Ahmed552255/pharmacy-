@@ -222,6 +222,7 @@
             75% { transform: rotate(-15deg); }
         }
 
+        /* زر التنبيهات */
         .btn-notifications {
             background: linear-gradient(135deg, #FF6B6B, #FF8E53);
             color: white;
@@ -1083,24 +1084,24 @@
                     </div>
                     
                     <div class="form-group search-box">
-                        <label>البحث عن مريض</label>
-                        <input type="text" id="patientSearch" class="form-control" placeholder="اسم المريض..." autocomplete="off">
+                        <label>البحث عن مريض (بالاسم أو رقم الهاتف)</label>
+                        <input type="text" id="patientSearch" class="form-control" placeholder="اكتب اسم المريض أو رقم هاتفه للبحث..." autocomplete="off">
                         <div id="searchResults" class="search-results"></div>
                     </div>
                     
                     <div class="form-group">
                         <label>اسم المريض *</label>
-                        <input type="text" id="patientName" class="form-control" required>
+                        <input type="text" id="patientName" class="form-control" required placeholder="اسم المريض الكامل">
                     </div>
                     
                     <div class="form-group">
                         <label>العمر</label>
-                        <input type="number" id="patientAge" class="form-control" min="0" max="150">
+                        <input type="number" id="patientAge" class="form-control" min="0" max="150" placeholder="العمر">
                     </div>
                     
                     <div class="form-group">
                         <label>رقم الهاتف</label>
-                        <input type="tel" id="patientPhone" class="form-control" dir="ltr">
+                        <input type="tel" id="patientPhone" class="form-control" dir="ltr" placeholder="01xxxxxxxxx">
                     </div>
 
                     <div class="form-group">
@@ -1147,10 +1148,12 @@
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         import { getDatabase, ref, onValue, set, push, update, get, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
+        // ============ تهيئة Firebase ============
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getDatabase(app);
 
+        // ============ ثوابت التخزين المحلي ============
         const STORAGE_PREFIX = 'shifa_tenant_';
         
         const LOGIN_STORAGE_KEYS = [
@@ -1166,6 +1169,7 @@
             return currentTenantId ? `${STORAGE_PREFIX}${currentTenantId}_${baseKey}` : baseKey;
         };
 
+        // ============ حالة التطبيق ============
         const state = {
             currentUser: null,
             nurseData: null,
@@ -1180,6 +1184,7 @@
             notificationCount: 0
         };
 
+        // ============ دوال مساعدة ============
         const $ = (sel) => document.querySelector(sel);
         const $$ = (sel) => document.querySelectorAll(sel);
 
@@ -1207,6 +1212,7 @@
             }, 2500);
         };
 
+        // ============ مسح بيانات الجلسة فقط ============
         const clearLoginSessionOnly = () => {
             try {
                 LOGIN_STORAGE_KEYS.forEach(key => {
@@ -1223,11 +1229,15 @@
                 sessionKeysToRemove.forEach(key => localStorage.removeItem(key));
                 
                 sessionStorage.clear();
+                
+                console.log(`✅ تم مسح ${LOGIN_STORAGE_KEYS.length + sessionKeysToRemove.length} مفتاح جلسة`);
+                console.log('💾 تم الإبقاء على بيانات المجمع المحلية');
             } catch (e) {
                 console.warn('تعذر مسح بيانات الجلسة:', e.message);
             }
         };
 
+        // ============ إدارة التخزين المحلي لكل مجمع ============
         const getLocalBookingsKey = () => getTenantStorageKey('nurse_bookings');
         const getLocalDoctorsKey = () => getTenantStorageKey('nurse_doctors');
         const getLocalPatientsKey = () => getTenantStorageKey('nurse_patients');
@@ -1349,6 +1359,7 @@
             }
         };
 
+        // ============ تحديث مؤشر المزامنة ============
         const setSyncStatus = (online) => {
             const dot = $('#syncDot');
             if (dot) {
@@ -1357,7 +1368,7 @@
             }
         };
 
-        // ============ نظام التنبيهات ============
+        // ============ تحميل التنبيهات ============
         const loadNotifications = () => {
             if (!currentTenantId) return;
             
@@ -1392,6 +1403,7 @@
             }
         };
 
+        // ============ فتح/إغلاق مودال التنبيهات ============
         const openNotificationsModal = () => {
             renderNotificationsList();
             $('#notificationsModal').style.display = 'flex';
@@ -1443,6 +1455,7 @@
             });
         };
 
+        // ============ معالجة الدفع وإضافة المريض للجدول ============
         const processPaymentAndAddToTable = async (notificationId) => {
             const notification = state.pendingNotifications.find(n => n.id === notificationId);
             if (!notification) {
@@ -1453,16 +1466,14 @@
             try {
                 const today = getToday();
                 
-                // ✅ تحديد رقم الدور تلقائياً
+                // حساب رقم الدور تلقائياً
                 const existingBookings = state.allBookings.filter(b => 
                     b.date === today && 
                     b.doctor_id === notification.doctor_id &&
                     b.status !== 'ملغي'
                 );
-                
                 const nextTurnNumber = existingBookings.length + 1;
 
-                // ✅ إنشاء الكشف في مسار المجمع
                 const appointmentData = {
                     patient_name: notification.patient_name,
                     patient_phone: notification.patient_phone,
@@ -1485,7 +1496,6 @@
                     appointmentData
                 );
 
-                // ✅ تحديث حالة الحجز الأصلي إلى "مقبول"
                 await update(ref(db, `bookings/${notificationId}`), {
                     status: 'مقبول',
                     processed_by: state.currentUser.uid,
@@ -1493,7 +1503,6 @@
                     turn_number: nextTurnNumber
                 });
 
-                // ✅ إزالة التنبيه من القائمة
                 state.pendingNotifications = state.pendingNotifications.filter(n => n.id !== notificationId);
                 state.notificationCount = state.pendingNotifications.length;
                 updateNotificationBadge();
@@ -1501,7 +1510,6 @@
 
                 showToast(`✅ تمت إضافة ${notification.patient_name} للجدول - الدور رقم ${nextTurnNumber}`);
                 
-                // ✅ إعادة تحميل الجدول
                 if (state.selectedDoctorId === notification.doctor_id && state.currentDate === (notification.date || today)) {
                     loadBookings();
                 }
@@ -1675,6 +1683,7 @@
                         bookings.push({ id: child.key, ...apt });
                     }
                 });
+                // ترتيب حسب رقم الدور
                 bookings.sort((a, b) => (a.turn_number || 0) - (b.turn_number || 0));
                 state.allBookings = bookings;
                 
@@ -1826,9 +1835,10 @@
             state.selectedPatientId = null;
             $('#formAlert').textContent = '';
             $('#searchResults').style.display = 'none';
+            $('#patientSearch').value = '';
         };
 
-        // ============ البحث عن المريض بالاسم ============
+        // ============ البحث عن المرضى ============
         let searchTimer;
         $('#patientSearch').addEventListener('input', (e) => {
             const term = e.target.value.trim().toLowerCase();
@@ -1840,18 +1850,19 @@
             searchTimer = setTimeout(async () => {
                 let results = [];
                 
-                // 1. البحث المحلي
+                // البحث المحلي أولاً
                 const localResults = searchPatientsLocal(term);
                 if (localResults.length > 0) {
                     results = localResults;
                 }
                 
-                // 2. البحث في السحابة
+                // البحث في السحابة
                 try {
                     const snap = await get(ref(db, `tenants/${currentTenantId}/patients`));
                     snap.forEach(child => {
                         const p = child.val();
-                        if (p.name && p.name.toLowerCase().includes(term)) {
+                        if ((p.name && p.name.toLowerCase().includes(term)) ||
+                            (p.phone && p.phone.includes(term))) {
                             if (!results.find(r => r.id === child.key)) {
                                 results.push({ id: child.key, ...p });
                             }
@@ -1863,7 +1874,7 @@
 
                 const container = $('#searchResults');
                 if (results.length === 0) {
-                    container.innerHTML = '<div class="search-item" style="color:var(--text-sec);">لا توجد نتائج</div>';
+                    container.innerHTML = '<div class="search-item" style="color:var(--text-sec);">لا توجد نتائج - يمكنك إضافة مريض جديد</div>';
                 } else {
                     container.innerHTML = results.map(p => `
                         <div class="search-item" data-id="${p.id}">
@@ -1898,7 +1909,7 @@
             }
         });
 
-        // ============ ✅ التحقق من تشابه الأسماء ============
+        // ============ التحقق من تشابه الأسماء ============
         const checkPatientNameUniqueness = async (name, excludeId = null) => {
             // البحث المحلي
             const localResults = searchPatientsLocal(name);
@@ -1922,7 +1933,7 @@
             }
         };
 
-        // ============ ✅ حساب رقم الدور تلقائياً ============
+        // ============ حساب رقم الدور تلقائياً ============
         const getNextTurnNumber = (doctorId, date) => {
             const existingBookings = state.allBookings.filter(b => 
                 b.doctor_id === doctorId && 
@@ -1932,7 +1943,7 @@
             return existingBookings.length + 1;
         };
 
-        // ============ ✅ حفظ الكشف مع رقم الدور التلقائي ============
+        // ============ حفظ الكشف مع رقم الدور التلقائي ============
         $('#bookingForm').addEventListener('submit', async (e) => {
             e.preventDefault();
 
@@ -1942,17 +1953,17 @@
             const age = $('#patientAge').value.trim();
             const phone = $('#patientPhone').value.trim();
             const visitType = $('#visitType').value;
-            const date = state.currentDate;
+            const date = state.currentDate; // دائماً تاريخ اليوم
 
             if (!doctorId || !name || !visitType) {
                 $('#formAlert').textContent = 'جميع الحقول المطلوبة (*) يجب ملؤها';
                 return;
             }
 
-            // ✅ التحقق من تشابه الأسماء
+            // التحقق من تشابه الأسماء
             const existingPatient = await checkPatientNameUniqueness(name, state.selectedPatientId);
             if (existingPatient && !state.selectedPatientId) {
-                $('#formAlert').textContent = `⚠️ يوجد مريض بنفس الاسم "${name}". الرجاء إضافة اسم الأب أو تفاصيل مميزة.`;
+                $('#formAlert').textContent = `⚠️ يوجد مريض بنفس الاسم "${name}". الرجاء إضافة اسم الأب أو تفاصيل مميزة (مثال: "${name} بن محمد").`;
                 return;
             }
 
@@ -1979,7 +1990,7 @@
                     savePatientToLocal(patientId, patientData);
                 }
 
-                // ✅ رقم الدور التلقائي
+                // رقم الدور التلقائي
                 const turnNumber = editId ? 
                     (state.allBookings.find(b => b.id === editId)?.turn_number || getNextTurnNumber(doctorId, date)) :
                     getNextTurnNumber(doctorId, date);
@@ -2008,7 +2019,7 @@
                         push(ref(db, `tenants/${currentTenantId}/appointments`)), 
                         bookingData
                     );
-                    showToast('تم حجز الكشف بنجاح');
+                    showToast(`تم حجز الكشف بنجاح - الدور رقم ${turnNumber}`);
                 }
 
                 closeModal();
@@ -2116,6 +2127,7 @@
             
             if (tenantFromUrl) {
                 currentTenantId = tenantFromUrl;
+                console.log(`✅ تم استلام معرف المجمع من الرابط: ${currentTenantId}`);
             } else {
                 try {
                     const encrypted = localStorage.getItem('shifa_secure_session');
@@ -2124,6 +2136,7 @@
                         const match = decoded.match(/"tenantId":"([^"]+)"/);
                         if (match) {
                             currentTenantId = match[1];
+                            console.log(`📦 تم استخراج معرف المجمع من الجلسة: ${currentTenantId}`);
                         }
                     }
                 } catch (e) {
@@ -2142,6 +2155,7 @@
                     } else {
                         currentTenantId = user.uid;
                     }
+                    console.log(`📦 تم تحديد المجمع من الجلسة القديمة: ${currentTenantId}`);
                 }
             }
 
@@ -2172,10 +2186,10 @@
         });
 
         console.log('🚀 لوحة الممرض - نظام متكامل');
-        console.log('🔔 نظام التنبيهات: نشط');
-        console.log('🔢 الأرقام التسلسلية: تلقائية');
-        console.log('🔍 البحث عن المرضى: بالاسم');
-        console.log('⚠️ منع تشابه الأسماء: نشط');
+        console.log('🔔 نظام التنبيهات: حجوزات من واجهة المريض');
+        console.log('🔢 الأرقام التسلسلية: تحديد تلقائي للدور');
+        console.log('🔍 البحث عن المرضى: بالاسم أو رقم الهاتف');
+        console.log('⚠️ منع تشابه الأسماء: تدقيق تلقائي');
     </script>
 </body>
 </html>
