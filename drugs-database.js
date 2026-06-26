@@ -10730,3 +10730,4 @@ const drugsDatabase = [
 ];
 
 export default drugsDatabase;
+window.__drugsDatabase = drugsDatabase;
