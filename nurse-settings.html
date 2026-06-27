@@ -4,11 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#00AEEF">
-    <title>شفاء · لوحة الممرض</title>
+    <title>شفاء · إعدادات الممرض</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap&subset=arabic" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
+    
     <style>
         :root {
             --primary: #00AEEF;
@@ -22,70 +23,61 @@
             --success: #26A69A;
             --warning: #FFA726;
             --border: #E0E0E0;
-            --shadow-xs: 0 2px 6px rgba(0,0,0,0.03);
-            --shadow-sm: 0 4px 12px rgba(0,0,0,0.05);
-            --shadow-md: 0 8px 24px rgba(0,0,0,0.08);
+            --shadow-xs: 0 1px 4px rgba(0,0,0,0.04);
+            --shadow-sm: 0 4px 12px rgba(0,0,0,0.06);
+            --shadow-md: 0 8px 24px rgba(0,0,0,0.1);
             --radius-xs: 8px;
             --radius-sm: 14px;
             --radius-md: 20px;
-            --radius-lg: 26px;
+            --radius-lg: 28px;
             --radius-xl: 50px;
+            --safe-bottom: env(safe-area-inset-bottom, 16px);
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        input, textarea, select { -webkit-user-select: text; user-select: text; }
 
         html {
-            font-size: 15px;
-            -webkit-tap-highlight-color: transparent;
+            font-size: clamp(13px, 2.8vw, 15px);
             -webkit-font-smoothing: antialiased;
             -webkit-text-size-adjust: 100%;
-            text-rendering: optimizeSpeed;
         }
 
         body {
-            font-family: 'Cairo', sans-serif;
+            font-family: 'Cairo', system-ui, sans-serif;
             background: var(--bg);
             color: var(--ink);
             min-height: 100vh;
             min-height: 100dvh;
-            padding: 12px;
-            padding-bottom: 45vh;
+            padding: clamp(8px, 2vw, 14px);
+            padding-bottom: calc(clamp(8px, 2vw, 14px) + var(--safe-bottom) + 40vh);
             overflow-x: hidden;
-            -webkit-backface-visibility: hidden;
-            backface-visibility: hidden;
             -webkit-overflow-scrolling: touch;
         }
 
-        .container { max-width: 1100px; margin: 0 auto; }
+        .container { max-width: min(900px, 98vw); margin: 0 auto; }
 
-        #authLoader {
+        #pageLoader {
             position: fixed;
             inset: 0;
-            background: rgba(250,250,250,0.9);
+            background: rgba(250,250,250,0.95);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
             display: flex;
             align-items: center;
             justify-content: center;
             z-index: 2000;
             flex-direction: column;
-            gap: 16px;
+            gap: 14px;
         }
-
-        .loader-spin {
-            width: 40px;
-            height: 40px;
-            border: 3px solid #E0E0E0;
+        .loader-circle {
+            width: 38px; height: 38px;
+            border: 3px solid var(--primary-light);
             border-top-color: var(--primary);
             border-radius: 50%;
             animation: spin 0.7s linear infinite;
         }
-
         @keyframes spin { to { transform: rotate(360deg); } }
-
-        .loader-text {
-            font-size: 0.95rem;
-            font-weight: 600;
-            color: var(--primary-dark);
-        }
 
         .app-header {
             display: flex;
@@ -93,38 +85,24 @@
             justify-content: space-between;
             background: var(--white);
             border-radius: var(--radius-lg);
-            padding: 10px 18px;
-            margin-bottom: 16px;
+            padding: clamp(8px, 2vw, 12px) clamp(12px, 3vw, 18px);
+            margin-bottom: clamp(10px, 2.5vw, 16px);
             border: 1px solid var(--border);
             box-shadow: var(--shadow-sm);
             flex-wrap: wrap;
-            gap: 10px;
+            gap: 8px;
             position: sticky;
             top: 6px;
             z-index: 100;
         }
-
         .logo h2 {
-            font-size: 1.3rem;
+            font-size: clamp(1.1rem, 3vw, 1.3rem);
             font-weight: 800;
             color: var(--primary-dark);
             white-space: nowrap;
         }
-
         .logo i { color: var(--primary); }
-
-        .header-actions {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        #welcomeMsg {
-            font-weight: 600;
-            font-size: 0.85rem;
-            color: var(--text-sec);
-        }
+        .header-actions { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
 
         .tenant-badge {
             background: var(--primary-light);
@@ -136,570 +114,475 @@
             display: flex;
             align-items: center;
             gap: 5px;
+            white-space: nowrap;
         }
 
         .btn {
-            padding: 9px 16px;
+            padding: clamp(7px, 1.5vw, 9px) clamp(12px, 2.5vw, 16px);
             border-radius: var(--radius-xl);
             border: none;
             font-weight: 700;
-            font-family: 'Cairo', sans-serif;
+            font-family: 'Cairo', system-ui, sans-serif;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
-            gap: 6px;
-            font-size: 0.83rem;
+            gap: 5px;
+            font-size: clamp(0.78rem, 2vw, 0.85rem);
             white-space: nowrap;
             touch-action: manipulation;
             user-select: none;
-            -webkit-user-select: none;
-            transition: all 0.2s ease;
+            transition: all 0.15s ease;
+            min-height: clamp(32px, 8vw, 38px);
         }
-
-        .btn:active { 
-            opacity: 0.8; 
-            transform: scale(0.97);
+        .btn:active { transform: scale(0.96); opacity: 0.85; }
+        .btn-primary { background: var(--primary); color: white; box-shadow: 0 3px 10px rgba(0,174,239,0.2); }
+        .btn-outline { background: var(--white); color: var(--ink); border: 1.5px solid var(--border); }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-back {
+            background: rgba(255,255,255,0.9);
+            color: var(--primary-dark);
+            border: 1.5px solid var(--primary);
+            font-weight: 700;
         }
+        .btn-back i { color: var(--primary); }
 
-        .btn-primary {
-            background: var(--primary);
-            color: white;
-            box-shadow: 0 3px 10px rgba(0,174,239,0.2);
-        }
-
-        .btn-primary:hover {
-            background: #0099D6;
-            box-shadow: 0 4px 14px rgba(0,174,239,0.3);
-        }
-
-        .btn-outline {
-            background: var(--white);
-            color: var(--ink);
-            border: 1.5px solid var(--border);
-        }
-
-        .btn-outline:hover {
-            background: #F5FAFC;
-            border-color: var(--primary);
-        }
-
-        .btn-settings {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            box-shadow: 0 3px 10px rgba(102, 126, 234, 0.3);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .btn-settings::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-            transition: left 0.5s;
-        }
-
-        .btn-settings:hover::before {
-            left: 100%;
-        }
-
-        .btn-settings:hover {
-            background: linear-gradient(135deg, #5a6fd6 0%, #6a3f8f 100%);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-        }
-
-        .btn-settings i {
-            font-size: 0.9rem;
-            animation: gearPulse 2s infinite;
-        }
-
-        @keyframes gearPulse {
-            0%, 100% { transform: rotate(0deg); }
-            25% { transform: rotate(15deg); }
-            75% { transform: rotate(-15deg); }
-        }
-
-        /* ✅ زر الإشعارات */
-        .btn-notifications {
-            background: linear-gradient(135deg, #FF6B6B, #FF8E53);
-            color: white;
-            box-shadow: 0 3px 10px rgba(255,107,107,0.3);
-            position: relative;
-        }
-
-        .btn-notifications:hover {
-            background: linear-gradient(135deg, #FF5252, #FF7B3D);
-            box-shadow: 0 5px 15px rgba(255,107,107,0.4);
-        }
-
-        .notification-badge {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            background: #FF1744;
-            color: white;
-            border-radius: 50%;
-            width: 22px;
-            height: 22px;
-            font-size: 0.7rem;
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: clamp(8px, 2vw, 12px);
+            font-size: clamp(0.9rem, 2.2vw, 1rem);
             font-weight: 800;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 2px solid white;
-            animation: pulse 1.5s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-        }
-
-        .controls-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-bottom: 14px;
-        }
-
-        .doctors-tabs {
-            display: flex;
-            gap: 6px;
-            flex-wrap: wrap;
-            flex: 1;
-        }
-
-        .doctor-tab {
-            background: var(--white);
-            border: 1.5px solid var(--border);
-            border-radius: var(--radius-xl);
-            padding: 7px 14px;
-            font-weight: 600;
             color: var(--ink);
-            cursor: pointer;
-            font-size: 0.82rem;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            box-shadow: var(--shadow-xs);
-            touch-action: manipulation;
-            transition: all 0.2s ease;
         }
+        .section-title i { color: var(--primary); }
 
-        .doctor-tab i { color: var(--primary); }
-
-        .doctor-tab.active {
-            background: var(--primary);
-            color: white;
-            border-color: transparent;
-            box-shadow: 0 4px 12px rgba(0,174,239,0.3);
-        }
-        .doctor-tab.active i { color: white; }
-
-        .doctor-tab:active:not(.active) {
-            background: var(--primary-light);
-        }
-
-        .doctor-tab:hover:not(.active) {
-            border-color: var(--primary);
-            transform: translateY(-1px);
-        }
-
-        .date-picker {
-            display: flex;
-            align-items: center;
-            background: var(--white);
-            border-radius: var(--radius-xl);
-            padding: 3px;
-            border: 1.5px solid var(--border);
-            box-shadow: var(--shadow-xs);
-            gap: 3px;
-        }
-
-        .btn-today {
-            background: transparent;
-            border: none;
-            padding: 7px 12px;
-            border-radius: var(--radius-xl);
-            font-family: 'Cairo', sans-serif;
-            font-weight: 600;
-            color: var(--primary);
-            cursor: pointer;
-            font-size: 0.8rem;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            touch-action: manipulation;
-            transition: background 0.2s;
-        }
-
-        .btn-today:active { background: var(--primary-light); }
-        .btn-today:hover { background: #F0F8FF; }
-
-        .date-input {
-            border: none;
-            padding: 7px 10px;
-            font-family: 'Cairo', sans-serif;
-            font-size: 0.8rem;
-            border-right: 1px solid var(--border);
-            background: transparent;
-            color: var(--ink);
-            outline: none;
-        }
-
-        .status-tabs {
-            display: flex;
-            gap: 6px;
-            margin-bottom: 14px;
-            flex-wrap: wrap;
+        .doctors-strip {
             background: var(--white);
             border-radius: var(--radius-xl);
             padding: 5px;
             border: 1px solid var(--border);
             box-shadow: var(--shadow-sm);
-        }
-
-        .status-tab {
-            background: transparent;
-            border: none;
-            padding: 9px 16px;
-            border-radius: var(--radius-xl);
-            font-weight: 600;
-            font-family: 'Cairo', sans-serif;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 0.82rem;
-            color: var(--text-sec);
-            flex: 1;
-            justify-content: center;
-            min-width: 80px;
-            touch-action: manipulation;
-            transition: all 0.2s ease;
-        }
-
-        .status-tab .badge {
-            background: rgba(0,0,0,0.04);
-            border-radius: 30px;
-            padding: 2px 9px;
-            font-size: 0.75rem;
-            font-weight: 700;
-        }
-
-        .status-tab.active {
-            background: white;
-            color: var(--primary);
-            box-shadow: 0 2px 6px rgba(0,0,0,0.06);
-        }
-
-        .status-tab.active .badge {
-            background: var(--primary-light);
-            color: var(--primary);
-        }
-
-        .status-tab:active:not(.active) {
-            background: rgba(255,255,255,0.6);
-        }
-
-        .status-tab:hover:not(.active) {
-            background: rgba(255,255,255,0.8);
-        }
-
-        .table-container {
-            background: var(--white);
-            border-radius: var(--radius-lg);
-            box-shadow: var(--shadow-sm);
-            border: 1px solid var(--border);
+            margin-bottom: clamp(12px, 3vw, 18px);
             overflow: hidden;
         }
-
-        .table-scroll {
+        .doctors-strip .strip-scroll {
+            display: flex;
+            gap: 6px;
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
+            scroll-behavior: smooth;
+            scroll-snap-type: x proximity;
+            padding: 4px;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
         }
+        .doctors-strip .strip-scroll::-webkit-scrollbar { display: none; }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            text-align: center;
-            min-width: 650px;
-            font-size: 0.85rem;
-        }
-
-        th, td { padding: 12px 8px; }
-
-        thead th {
-            background: #F5FAFC;
-            font-weight: 700;
-            color: var(--ink);
-            font-size: 0.78rem;
-            white-space: nowrap;
-            position: sticky;
-            top: 0;
-            z-index: 1;
-        }
-
-        tbody tr {
-            border-bottom: 1px solid var(--border);
-            transition: background 0.2s;
-        }
-
-        tbody tr:hover {
-            background: #F8FDFF;
-        }
-
-        tbody tr:last-child { border-bottom: none; }
-
-        .status-badge {
-            padding: 4px 12px;
-            border-radius: 30px;
-            font-size: 0.72rem;
-            font-weight: 700;
-            white-space: nowrap;
-            display: inline-flex;
-            align-items: center;
-            gap: 3px;
-        }
-
-        .s-waiting { background: #FFF8E1; color: #F57F17; }
-        .s-inprogress { background: #E0F7FA; color: #006064; }
-        .s-done { background: #E8F5E9; color: #1B5E20; }
-        .s-cancelled { background: #FFEBEE; color: #B71C1C; }
-
-        .visit-type-badge {
-            padding: 3px 9px;
-            border-radius: 30px;
-            font-size: 0.68rem;
-            font-weight: 700;
-        }
-        .vt-new { background: #E3F2FD; color: #0D47A1; }
-        .vt-follow { background: #F3E5F5; color: #6A1B9A; }
-
-        .action-btns {
+        .doctor-pill {
             display: flex;
-            gap: 4px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        .icon-btn {
-            width: 30px;
-            height: 30px;
-            border-radius: var(--radius-xs);
-            border: none;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 14px;
             background: var(--white);
-            color: var(--text-sec);
+            border-radius: var(--radius-xl);
+            border: 1.5px solid var(--border);
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 1px solid var(--border);
-            font-size: 0.78rem;
-            touch-action: manipulation;
+            white-space: nowrap;
+            flex-shrink: 0;
+            scroll-snap-align: start;
             transition: all 0.2s ease;
+            font-weight: 600;
+            font-size: clamp(0.78rem, 2vw, 0.85rem);
+            touch-action: manipulation;
+            min-height: clamp(34px, 8vw, 40px);
         }
-
-        .icon-btn:hover {
-            background: var(--primary);
+        .doctor-pill:active { transform: scale(0.95); }
+        .doctor-pill.active {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
             color: white;
             border-color: var(--primary);
-            transform: scale(1.1);
+            box-shadow: 0 4px 14px rgba(0,174,239,0.3);
+            font-weight: 700;
         }
-
-        .icon-btn:active { 
-            background: var(--primary); 
-            color: white; 
-            border-color: var(--primary); 
-        }
-        .icon-btn.danger:active { 
-            background: var(--danger); 
-            color: white; 
-            border-color: var(--danger); 
-        }
-        .icon-btn.danger:hover {
-            background: #FF5252;
-            color: white;
-            border-color: #FF5252;
-        }
-
-        .empty-row td {
-            text-align: center;
-            padding: 35px;
-            color: var(--text-sec);
-        }
-
-        .sync-dot {
-            display: inline-block;
-            width: 7px;
-            height: 7px;
+        .doctor-pill .pill-avatar {
+            width: 28px; height: 28px; min-width: 28px;
+            background: var(--primary-light);
             border-radius: 50%;
-            margin-left: 5px;
-            vertical-align: middle;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.75rem; color: var(--primary-dark);
         }
-        .sync-dot.on { background: var(--success); }
-        .sync-dot.off { background: #FFB74D; }
+        .doctor-pill.active .pill-avatar { background: rgba(255,255,255,0.3); color: white; }
 
-        .keyboard-scroll-spacer {
-            height: 1px;
-            width: 100%;
-            pointer-events: none;
-            opacity: 0;
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.25);
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            padding: 16px;
-            backdrop-filter: blur(4px);
-        }
-
-        .modal-card {
+        .settings-card {
             background: var(--white);
             border-radius: var(--radius-lg);
-            width: 100%;
-            max-width: 480px;
-            max-height: 85vh;
-            overflow-y: auto;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.12);
+            padding: clamp(14px, 3vw, 20px) clamp(16px, 3.5vw, 22px);
             border: 1px solid var(--border);
-            -webkit-overflow-scrolling: touch;
-            overscroll-behavior: contain;
-            animation: slideUp 0.3s ease;
+            box-shadow: var(--shadow-md);
+            margin-bottom: 14px;
+            transition: all 0.3s ease;
         }
-
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .modal-header {
-            padding: 14px 18px;
-            background: #F5FAFC;
-            border-bottom: 1px solid var(--border);
-            border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
-
-        .modal-header h3 { font-size: 1.05rem; font-weight: 700; }
-
-        .close-btn {
-            background: none;
-            border: none;
-            width: 34px;
-            height: 34px;
-            border-radius: 50%;
-            font-size: 22px;
+        .settings-card.empty {
+            text-align: center;
+            padding: clamp(30px, 8vw, 50px) 20px;
             color: var(--text-sec);
-            cursor: pointer;
+        }
+        .settings-card.empty i {
+            font-size: clamp(2.5rem, 7vw, 3.5rem);
+            opacity: 0.15;
+            margin-bottom: 12px;
+            display: block;
+        }
+        .settings-card.empty h3 {
+            font-size: clamp(1rem, 2.5vw, 1.15rem);
+            margin-bottom: 6px;
+            color: var(--ink);
+        }
+
+        .doctor-info-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid var(--border);
+        }
+        .doctor-avatar-lg {
+            width: clamp(44px, 10vw, 56px);
+            height: clamp(44px, 10vw, 56px);
+            min-width: clamp(44px, 10vw, 56px);
+            background: linear-gradient(135deg, var(--primary-light), var(--primary));
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: background 0.2s;
+            font-size: clamp(1.1rem, 2.5vw, 1.3rem);
+            color: white;
+            font-weight: 800;
+            aspect-ratio: 1;
+            overflow: hidden;
+        }
+        .doctor-avatar-lg img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .doctor-info-text h3 {
+            font-size: clamp(1rem, 2.5vw, 1.15rem);
+            font-weight: 800;
+            color: var(--ink);
+        }
+        .doctor-info-text span {
+            font-size: clamp(0.75rem, 1.8vw, 0.82rem);
+            color: var(--text-sec);
         }
 
-        .close-btn:active { background: rgba(0,0,0,0.05); }
-        .close-btn:hover { background: rgba(0,0,0,0.05); }
-
-        .modal-body { 
-            padding: 18px;
-            padding-bottom: 45vh;
+        .form-group {
+            margin-bottom: clamp(10px, 2.5vw, 14px);
         }
-
-        .form-group { margin-bottom: 14px; }
-
         .form-group label {
             display: block;
             margin-bottom: 5px;
-            font-weight: 600;
-            font-size: 0.83rem;
+            font-weight: 700;
+            font-size: clamp(0.82rem, 2vw, 0.9rem);
             color: var(--ink);
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
-
+        .form-group label i {
+            color: var(--primary);
+            width: 18px;
+            text-align: center;
+        }
         .form-control {
             width: 100%;
-            padding: 10px 14px;
+            padding: clamp(9px, 2vw, 11px) clamp(12px, 2.5vw, 14px);
             border-radius: var(--radius-sm);
             border: 1.5px solid var(--border);
             background: #F5FAFC;
-            font-family: 'Cairo', sans-serif;
-            font-size: 0.85rem;
+            font-family: 'Cairo', system-ui, sans-serif;
+            font-size: clamp(0.82rem, 2vw, 0.9rem);
             color: var(--ink);
             -webkit-appearance: none;
             appearance: none;
-            transition: border-color 0.2s, box-shadow 0.2s;
+            transition: all 0.15s ease;
+            resize: vertical;
         }
-
         .form-control:focus {
             outline: none;
             border-color: var(--primary);
             background: white;
-            box-shadow: 0 0 0 3px rgba(0,174,239,0.1);
+            box-shadow: 0 0 0 3px rgba(0,174,239,0.08);
         }
-
-        .search-box { position: relative; }
-
-        .search-results {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: white;
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            margin-top: 3px;
-            max-height: 160px;
-            overflow-y: auto;
-            display: none;
-            z-index: 20;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
-            -webkit-overflow-scrolling: touch;
+        textarea.form-control {
+            min-height: clamp(70px, 18vw, 90px);
+            line-height: 1.6;
         }
-
-        .search-item {
-            padding: 9px 12px;
+        select.form-control {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath fill='%238FA4AD' d='M5 7L1 3h8z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: left 12px center;
+            padding-left: 30px;
             cursor: pointer;
-            border-bottom: 1px solid var(--border);
-            font-size: 0.83rem;
-            transition: background 0.2s;
+        }
+        .field-hint {
+            font-size: clamp(0.68rem, 1.6vw, 0.73rem);
+            color: var(--text-sec);
+            margin-top: 4px;
+            padding-right: 26px;
         }
 
-        .search-item:active { background: #E0F7FA; }
-        .search-item:hover { background: #F0F8FF; }
-        .search-item:last-child { border-bottom: none; }
-
-        .alert-msg {
-            color: var(--danger);
+        /* ============ ✅ رفع الصور ============ */
+        .upload-area {
+            border: 2px dashed var(--border);
+            border-radius: var(--radius-md);
+            padding: 20px 16px;
             text-align: center;
-            margin-top: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #FAFBFC;
+            position: relative;
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .upload-area:hover {
+            border-color: var(--primary);
+            background: var(--primary-light);
+        }
+        .upload-area i {
+            font-size: 1.8rem;
+            color: var(--primary);
+            opacity: 0.6;
+        }
+        .upload-area span {
             font-size: 0.8rem;
-            font-weight: 500;
+            color: var(--text-sec);
+            font-weight: 600;
+        }
+        .upload-area small {
+            font-size: 0.68rem;
+            color: var(--text-light);
+        }
+        .file-input-hidden { display: none; }
+
+        .preview-container {
+            display: none;
+            position: relative;
+            margin-top: 10px;
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+        .preview-container.active { display: block; }
+        .preview-container img {
+            width: 100%;
+            max-height: 200px;
+            object-fit: contain;
+            background: #F5F5F5;
+        }
+        .preview-overlay {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            display: flex;
+            gap: 4px;
+        }
+        .preview-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(0,0,0,0.6);
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            transition: background 0.15s;
+        }
+        .preview-btn:hover { background: rgba(0,0,0,0.8); }
+        .preview-btn.remove { background: var(--danger); }
+
+        .compress-info {
+            display: none;
+            background: #E8F5E9;
+            border-radius: var(--radius-xs);
+            padding: 6px 10px;
+            font-size: 0.7rem;
+            color: #2E7D32;
+            font-weight: 600;
+            margin-top: 6px;
+            align-items: center;
+            gap: 4px;
+        }
+        .compress-info.active { display: flex; }
+
+        /* ============ ✅ معرض صور الحالات ============ */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .gallery-item {
+            position: relative;
+            border-radius: var(--radius-xs);
+            overflow: hidden;
+            aspect-ratio: 1;
+            border: 1px solid var(--border);
+        }
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .gallery-item .remove-gallery-btn {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            border: none;
+            background: var(--danger);
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.6rem;
+        }
+        .gallery-add {
+            border: 2px dashed var(--border);
+            border-radius: var(--radius-xs);
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text-light);
+            font-size: 0.7rem;
+            text-align: center;
+            flex-direction: column;
+            gap: 3px;
+        }
+        .gallery-add:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: var(--primary-light);
+        }
+        .gallery-add i { font-size: 1.2rem; }
+
+        /* ============ قسم الأسعار ============ */
+        .section-divider {
+            margin: clamp(14px, 3vw, 20px) 0 clamp(10px, 2.5vw, 14px);
+            padding-top: clamp(14px, 3vw, 20px);
+            border-top: 2px dashed var(--border);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 800;
+            font-size: clamp(0.85rem, 2vw, 0.95rem);
+            color: var(--primary-dark);
+        }
+        .section-divider i { color: var(--warning); }
+
+        .row-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        /* ============ شارات الحالة ============ */
+        .tag-input-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            padding: 8px;
+            background: #F8FAFB;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm);
+            min-height: 44px;
+            align-items: center;
+            cursor: text;
+        }
+        .tag-input-container:focus-within {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(0,174,239,0.08);
+            background: white;
+        }
+        .tag {
+            background: var(--primary-light);
+            color: var(--primary-dark);
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .tag .remove-tag {
+            cursor: pointer;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.6rem;
+            transition: background 0.15s;
+        }
+        .tag .remove-tag:hover { background: var(--danger); color: white; }
+        .tag-input {
+            border: none;
+            outline: none;
+            background: transparent;
+            font-family: 'Cairo', system-ui, sans-serif;
+            font-size: 0.82rem;
+            flex: 1;
+            min-width: 100px;
+            padding: 4px;
+        }
+
+        .saved-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: #E8F5E9;
+            color: #2E7D32;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            animation: fadeInOut 2s ease forwards;
+        }
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: scale(0.8); }
+            30% { opacity: 1; transform: scale(1); }
+            80% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        .action-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 16px;
         }
 
         .toast-container {
             position: fixed;
-            bottom: 20px;
+            bottom: max(16px, 3vw);
             left: 50%;
             transform: translateX(-50%);
             z-index: 3000;
@@ -707,253 +590,72 @@
             flex-direction: column;
             gap: 6px;
             pointer-events: none;
+            padding-bottom: var(--safe-bottom);
+            max-width: 90vw;
         }
-
         .toast {
             background: #1A3C4A;
             color: white;
-            padding: 11px 20px;
+            padding: 10px 18px;
             border-radius: var(--radius-xl);
-            font-weight: 600;
+            font-weight: 700;
             font-size: 0.82rem;
             box-shadow: 0 8px 20px rgba(0,0,0,0.18);
+            animation: toastIn 0.3s ease, toastOut 0.3s ease 2.2s forwards;
             white-space: nowrap;
             display: flex;
             align-items: center;
-            gap: 8px;
-            animation: toastIn 0.3s ease;
-        }
-
-        @keyframes toastIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .toast.err { background: #C62828; }
-        .toast.removing { 
-            opacity: 0; 
-            transform: translateY(-10px); 
-            transition: all 0.3s ease; 
-        }
-
-        /* ✅ مودال الإشعارات */
-        .notification-item {
-            padding: 12px;
-            border-bottom: 1px solid var(--border);
-            transition: background 0.2s;
-        }
-
-        .notification-item:hover {
-            background: #F8FDFF;
-        }
-
-        .notification-item:last-child {
-            border-bottom: none;
-        }
-
-        .notification-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 6px;
-        }
-
-        .notification-patient {
-            font-weight: 700;
-            color: var(--ink);
-        }
-
-        .notification-time {
-            font-size: 0.7rem;
-            color: var(--text-sec);
-        }
-
-        .notification-details {
-            font-size: 0.8rem;
-            color: var(--text-sec);
-            margin-bottom: 6px;
-        }
-
-        .notification-actions {
-            display: flex;
             gap: 6px;
         }
+        .toast.err { background: #C62828; }
+        @keyframes toastIn { from { transform: translateY(16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes toastOut { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-16px); opacity: 0; } }
 
-        .btn-confirm {
-            background: var(--success);
-            color: white;
-            border: none;
-            padding: 5px 12px;
-            border-radius: var(--radius-xl);
-            font-family: 'Cairo', sans-serif;
-            font-size: 0.75rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .btn-confirm:hover {
-            background: #1B8E7A;
-        }
-
-        .btn-dismiss {
-            background: #E0E0E0;
-            color: var(--ink);
-            border: none;
-            padding: 5px 12px;
-            border-radius: var(--radius-xl);
-            font-family: 'Cairo', sans-serif;
-            font-size: 0.75rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .btn-dismiss:hover {
-            background: #BDBDBD;
-        }
-
-        /* ✅ زر تبديل وضع الهوية (رقم الهاتف / بيانات القرية) */
-        .btn-toggle-id {
-            background: linear-gradient(135deg, #8D6E63, #A1887F);
-            color: white;
-            border: none;
-            border-radius: var(--radius-xl);
-            padding: 5px 12px;
-            font-family: 'Cairo', sans-serif;
-            font-size: 0.72rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            white-space: nowrap;
-            touch-action: manipulation;
-        }
-
-        .btn-toggle-id:hover {
-            background: linear-gradient(135deg, #6D4C41, #8D6E63);
-            box-shadow: 0 3px 8px rgba(109, 76, 65, 0.3);
-        }
-
-        .btn-toggle-id:active {
-            transform: scale(0.96);
-        }
-
-        .toggle-id-container {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 5px;
-        }
+        .keyboard-scroll-spacer { height: 1px; width: 100%; pointer-events: none; opacity: 0; }
 
         @media (max-width: 768px) {
-            body { 
-                padding: 8px;
-                padding-bottom: 55vh;
-            }
-
-            .app-header {
-                padding: 8px 12px;
-                top: 4px;
-                border-radius: var(--radius-md);
-            }
-
-            .logo h2 { font-size: 1.15rem; }
-
-            .btn { padding: 7px 12px; font-size: 0.78rem; }
-
-            .btn-settings { padding: 7px 12px; }
-
-            .doctor-tab { padding: 6px 10px; font-size: 0.76rem; }
-
-            .status-tab { padding: 7px 10px; font-size: 0.76rem; }
-
-            .status-tab .badge { font-size: 0.7rem; }
-
-            table { min-width: 550px; font-size: 0.78rem; }
-
-            th, td { padding: 8px 5px; }
-
-            .icon-btn { width: 28px; height: 28px; font-size: 0.7rem; }
-
-            .controls-row { flex-direction: column; align-items: stretch; }
-
-            .date-picker { width: 100%; justify-content: space-between; }
-
-            .modal-card { max-width: 100%; border-radius: var(--radius-md); }
-
-            .mini-stat { min-width: 70px; padding: 8px 10px; }
-            .mini-stat-info h4 { font-size: 1.1rem; }
-            
-            .modal-body {
-                padding-bottom: 55vh;
-            }
-
-            .header-actions {
-                justify-content: center;
-                width: 100%;
-            }
+            body { padding: 6px; padding-bottom: calc(6px + var(--safe-bottom) + 50vh); }
+            .app-header { padding: 8px 10px; top: 3px; border-radius: var(--radius-md); gap: 6px; }
+            .logo h2 { font-size: 1.05rem; }
+            .btn { padding: 6px 10px; font-size: 0.75rem; min-height: 30px; }
+            .doctor-pill { padding: 7px 10px; font-size: 0.75rem; }
+            .settings-card { padding: 12px 14px; border-radius: var(--radius-md); }
+            .action-row { flex-direction: column; }
+            .action-row .btn { width: 100%; justify-content: center; }
+            .row-2 { grid-template-columns: 1fr; }
+            .gallery-grid { grid-template-columns: repeat(auto-fill, minmax(65px, 1fr)); }
         }
 
         @media (max-width: 400px) {
-            .status-tabs { flex-direction: column; gap: 3px; }
-            .status-tab { justify-content: space-between; }
-            .doctors-tabs { flex-direction: column; }
-            
-            body {
-                padding-bottom: 65vh;
-            }
-            
-            .modal-body {
-                padding-bottom: 65vh;
-            }
+            html { font-size: 13px; }
+            body { padding: 3px; padding-bottom: calc(3px + var(--safe-bottom) + 60vh); }
         }
 
         @media (prefers-reduced-motion: reduce) {
-            *, *::before, *::after {
-                animation-duration: 0.001ms !important;
-                transition-duration: 0.001ms !important;
-            }
+            *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
         }
     </style>
 </head>
 <body>
 
-    <div id="authLoader">
-        <div class="loader-spin"></div>
-        <span class="loader-text">جارٍ تحميل البيانات...</span>
+    <div id="pageLoader">
+        <div class="loader-circle"></div>
+        <span style="font-weight:700;color:var(--primary-dark);">جارٍ تحميل الإعدادات...</span>
     </div>
 
     <div class="toast-container" id="toastContainer"></div>
 
-    <div class="container" id="mainContainer" style="display:none;">
+    <div class="container" id="mainContent" style="display:none;">
         <header class="app-header">
             <div class="logo">
-                <h2><i class="fas fa-heartbeat"></i> شفاء · الممرض <span class="sync-dot on" id="syncDot" title="حالة المزامنة"></span></h2>
+                <h2><i class="fas fa-cog"></i> إعدادات الممرض</h2>
             </div>
             <div class="header-actions">
                 <span class="tenant-badge" id="tenantBadge">
-                    <i class="fas fa-hospital"></i> <span id="tenantName"></span>
+                    <i class="fas fa-hospital"></i> <span id="tenantName">المجمع الطبي</span>
                 </span>
-                <span id="welcomeMsg"></span>
-                <!-- ✅ زر الإشعارات -->
-                <button class="btn btn-notifications" id="notificationsBtn" title="الإشعارات">
-                    <i class="fas fa-bell"></i>
-                    <span class="notification-badge" id="notificationBadge" style="display:none;">0</span>
-                </button>
-                <button class="btn btn-primary" id="addBookingBtn">
-                    <i class="fas fa-plus"></i> كشف جديد
-                </button>
-                <button class="btn btn-settings" id="settingsBtn" title="الإعدادات">
-                    <i class="fas fa-cog"></i> إعدادات
+                <button class="btn btn-back" id="backBtn">
+                    <i class="fas fa-arrow-right"></i> العودة للوحة التحكم
                 </button>
                 <button class="btn btn-outline" id="logoutBtn">
                     <i class="fas fa-sign-out-alt"></i> خروج
@@ -961,1389 +663,607 @@
             </div>
         </header>
 
-        <div class="controls-row">
-            <div class="doctors-tabs" id="doctorsTabs"></div>
-            <div class="date-picker">
-                <button class="btn-today" id="todayBtn">
-                    <i class="fas fa-calendar-alt"></i> اليوم
-                </button>
-                <input type="date" id="filterDate" class="date-input">
-            </div>
+        <div class="section-title">
+            <i class="fas fa-user-md"></i> الأطباء المرتبطون بك
         </div>
 
-        <div class="status-tabs">
-            <button class="status-tab active" data-tab="waiting">
-                <i class="fas fa-hourglass-half"></i> قيد الانتظار
-                <span class="badge" id="countWaiting">0</span>
-            </button>
-            <button class="status-tab" data-tab="inprogress">
-                <i class="fas fa-stethoscope"></i> قيد الكشف
-                <span class="badge" id="countInProgress">0</span>
-            </button>
-            <button class="status-tab" data-tab="done">
-                <i class="fas fa-check-circle"></i> منتهي
-                <span class="badge" id="countDone">0</span>
-            </button>
-        </div>
-
-        <div class="table-container">
-            <div class="table-scroll">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>المريض</th>
-                            <th>الطبيب</th>
-                            <th>التاريخ</th>
-                            <th>نوع الكشف</th>
-                            <th>الحالة</th>
-                            <th>إجراءات</th>
-                        </tr>
-                    </thead>
-                    <tbody id="bookingsBody">
-                        <tr class="empty-row"><td colspan="7"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        
-        <div class="keyboard-scroll-spacer"></div>
-    </div>
-
-    <!-- مودال الكشف -->
-    <div id="bookingModal" class="modal">
-        <div class="modal-card">
-            <div class="modal-header">
-                <h3 id="modalTitle"><i class="fas fa-calendar-plus"></i> كشف جديد</h3>
-                <button class="close-btn" id="closeModalBtn">&times;</button>
-            </div>
-            <div class="modal-body">
-                <form id="bookingForm" autocomplete="off">
-                    <input type="hidden" id="editId">
-                    
-                    <div class="form-group">
-                        <label>الطبيب *</label>
-                        <select id="doctorSelect" class="form-control" required></select>
-                    </div>
-                    
-                    <!-- ✅ قسم البحث برقم الهاتف (يُخفى عند استخدام وضع القرية) -->
-                    <div id="phoneSearchSection">
-                        <div class="form-group search-box">
-                            <label>البحث عن مريض (برقم الهاتف)</label>
-                            <input type="text" id="patientSearch" class="form-control" placeholder="أدخل رقم الهاتف للبحث..." autocomplete="off" dir="ltr">
-                            <div id="searchResults" class="search-results"></div>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>اسم المريض *</label>
-                        <input type="text" id="patientName" class="form-control" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>العمر</label>
-                        <input type="number" id="patientAge" class="form-control" min="0" max="150">
-                    </div>
-                    
-                    <!-- ✅ قسم الهاتف (يُخفى عند استخدام وضع القرية) -->
-                    <div id="phoneSection">
-                        <div class="form-group">
-                            <div class="toggle-id-container">
-                                <label>رقم الهاتف</label>
-                                <button type="button" class="btn-toggle-id" id="toggleIdModeBtn">
-                                    <i class="fas fa-tree"></i> استخدام بيانات القرية
-                                </button>
-                            </div>
-                            <input type="tel" id="patientPhone" class="form-control" dir="ltr">
-                        </div>
-                    </div>
-
-                    <!-- ✅ قسم بيانات القرية (يظهر بدل الهاتف عند التبديل) -->
-                    <div id="villageSection" style="display:none;">
-                        <div class="form-group">
-                            <div class="toggle-id-container">
-                                <label>بيانات القرية</label>
-                                <button type="button" class="btn-toggle-id" id="togglePhoneModeBtn">
-                                    <i class="fas fa-mobile-alt"></i> استخدام رقم الهاتف
-                                </button>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label>اسم الأب</label>
-                            <input type="text" id="fatherName" class="form-control" placeholder="اسم الأب">
-                        </div>
-                        <div class="form-group">
-                            <label>اسم العائلة</label>
-                            <input type="text" id="familyName" class="form-control" placeholder="اسم العائلة">
-                        </div>
-                        <div class="form-group">
-                            <label>اسم القرية</label>
-                            <input type="text" id="villageName" class="form-control" placeholder="اسم القرية">
-                        </div>
-                        <div id="villageSearchResults" class="search-results" style="position:relative;margin-top:8px;"></div>
-                    </div>
-
-                    <div class="form-group">
-                        <label>نوع الكشف *</label>
-                        <select id="visitType" class="form-control" required>
-                            <option value="new">🆕 كشف جديد</option>
-                            <option value="follow">🔄 إعادة (متابعة)</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>التاريخ *</label>
-                        <input type="date" id="apptDate" class="form-control" required>
-                    </div>
-                    
-                    <button type="submit" class="btn btn-primary" style="width:100%;" id="submitBtn">
-                        <i class="fas fa-save"></i> تأكيد الكشف
-                    </button>
-                    
-                    <div id="formAlert" class="alert-msg"></div>
-                </form>
-                
-                <div class="keyboard-scroll-spacer"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ✅ مودال الإشعارات -->
-    <div id="notificationsModal" class="modal">
-        <div class="modal-card">
-            <div class="modal-header">
-                <h3><i class="fas fa-bell"></i> إشعارات الحجوزات الجديدة</h3>
-                <button class="close-btn" id="closeNotificationsBtn">&times;</button>
-            </div>
-            <div class="modal-body" id="notificationsBody">
-                <div style="text-align:center;padding:20px;color:var(--text-sec);">
-                    <i class="fas fa-spinner fa-spin"></i> جاري تحميل الإشعارات...
+        <div class="doctors-strip" id="doctorsStrip">
+            <div class="strip-scroll" id="doctorStripContainer">
+                <div style="padding:10px;color:var(--text-sec);text-align:center;width:100%;">
+                    <i class="fas fa-spinner fa-spin"></i> جاري التحميل...
                 </div>
             </div>
         </div>
+
+        <div id="settingsCardContainer">
+            <div class="settings-card empty">
+                <i class="fas fa-hand-point-up"></i>
+                <h3>اختر طبيباً من القائمة أعلاه</h3>
+                <p style="color:var(--text-sec);font-size:0.85rem;">لتعديل بياناته التسويقية كاملة</p>
+            </div>
+        </div>
+
+        <div class="keyboard-scroll-spacer"></div>
     </div>
 
     <script type="module">
         import { firebaseConfig } from './firebase-config.js';
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-        import { getDatabase, ref, onValue, set, push, update, get, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+        import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
-        // ============ تهيئة Firebase ============
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getDatabase(app);
 
-        // ============ ✅ ثوابت التخزين المحلي ============
         const STORAGE_PREFIX = 'shifa_tenant_';
-        
-        const LOGIN_STORAGE_KEYS = [
-            'shifa_session',
-            'shifa_remember',
-            'shifa_last_login',
-            'shifa_secure_session'
-        ];
-        
-        let currentTenantId = null;
-        
-        const getTenantStorageKey = (baseKey) => {
-            return currentTenantId ? `${STORAGE_PREFIX}${currentTenantId}_${baseKey}` : baseKey;
-        };
+        const LOGIN_STORAGE_KEYS = ['shifa_session', 'shifa_remember', 'shifa_last_login', 'shifa_secure_session'];
 
-        // ============ حالة التطبيق ============
+        let currentTenantId = null;
+        let currentNurseId = null;
+        const getTenantStorageKey = (k) => currentTenantId ? `${STORAGE_PREFIX}${currentTenantId}_${k}` : k;
+
         const state = {
             currentUser: null,
             nurseData: null,
             assignedDoctors: [],
             selectedDoctorId: null,
-            allBookings: [],
-            currentTab: 'waiting',
-            currentDate: '',
-            selectedPatientId: null,
-            unsubscribeBookings: null,
-            unsubscribeNotifications: null,
-            idMode: 'phone', // ✅ 'phone' أو 'village'
+            doctorInfoCache: {},
+            // ✅ متغيرات الصور المؤقتة
+            tempProfileImage: null,
+            tempGalleryImages: [],
         };
 
-        // ============ دوال مساعدة ============
-        const $ = (sel) => document.querySelector(sel);
-        const $$ = (sel) => document.querySelectorAll(sel);
-
-        const getToday = () => {
-            const d = new Date();
-            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        const $ = (s) => document.querySelector(s);
+        const $$ = (s) => document.querySelectorAll(s);
+        const esc = (s) => { if (!s) return ''; const d = document.createElement('div'); d.textContent = String(s); return d.innerHTML; };
+        const toast = (msg, err = false) => {
+            const c = $('#toastContainer');
+            const t = document.createElement('div');
+            t.className = `toast ${err ? 'err' : ''}`;
+            t.innerHTML = `<i class="fas ${err ? 'fa-exclamation-circle' : 'fa-check-circle'}"></i> ${msg}`;
+            c.appendChild(t);
+            setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateY(-10px)'; setTimeout(() => t.remove(), 300); }, 2500);
         };
 
-        const escapeHtml = (str) => {
-            if (!str) return '';
-            const div = document.createElement('div');
-            div.textContent = str;
-            return div.innerHTML;
-        };
-
-        const showToast = (msg, isError = false) => {
-            const container = $('#toastContainer');
-            const toast = document.createElement('div');
-            toast.className = `toast ${isError ? 'err' : ''}`;
-            toast.innerHTML = `<i class="fas ${isError ? 'fa-exclamation-circle' : 'fa-check-circle'}"></i> ${msg}`;
-            container.appendChild(toast);
-            setTimeout(() => {
-                toast.classList.add('removing');
-                setTimeout(() => toast.remove(), 300);
-            }, 2500);
-        };
-
-        // ============ ✅ مسح بيانات الجلسة فقط ============
         const clearLoginSessionOnly = () => {
             try {
-                LOGIN_STORAGE_KEYS.forEach(key => {
-                    localStorage.removeItem(key);
-                });
-                
-                const sessionKeysToRemove = [];
+                LOGIN_STORAGE_KEYS.forEach(k => localStorage.removeItem(k));
                 for (let i = 0; i < localStorage.length; i++) {
-                    const key = localStorage.key(i);
-                    if (key && (key.startsWith('shifa_session') || key.startsWith('shifa_secure'))) {
-                        sessionKeysToRemove.push(key);
-                    }
+                    const k = localStorage.key(i);
+                    if (k && (k.startsWith('shifa_session') || k.startsWith('shifa_secure'))) localStorage.removeItem(k);
                 }
-                sessionKeysToRemove.forEach(key => localStorage.removeItem(key));
-                
                 sessionStorage.clear();
-                
-                console.log(`✅ تم مسح ${LOGIN_STORAGE_KEYS.length + sessionKeysToRemove.length} مفتاح جلسة`);
-                console.log('💾 تم الإبقاء على بيانات المجمع المحلية');
-            } catch (e) {
-                console.warn('تعذر مسح بيانات الجلسة:', e.message);
-            }
+            } catch (e) {}
         };
 
-        // ============ إدارة التخزين المحلي لكل مجمع ============
-        
-        const getLocalBookingsKey = () => getTenantStorageKey('nurse_bookings');
-        const getLocalDoctorsKey = () => getTenantStorageKey('nurse_doctors');
-        const getLocalPatientsKey = () => getTenantStorageKey('nurse_patients');
-        
-        const saveBookingsToLocal = (bookings) => {
-            if (!currentTenantId) return;
-            try {
-                const key = getLocalBookingsKey();
-                const data = {
-                    bookings: bookings.map(b => ({ ...b, _cachedAt: Date.now() })),
-                    lastUpdated: Date.now()
+        // ============ ✅ ضغط الصور ============
+        const compressImage = (file, maxWidth = 600, maxHeight = 600, quality = 0.7) => {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        let width = img.width, height = img.height;
+                        if (width > maxWidth) { height = (height * maxWidth) / width; width = maxWidth; }
+                        if (height > maxHeight) { width = (width * maxHeight) / height; height = maxHeight; }
+                        const canvas = document.createElement('canvas');
+                        canvas.width = width; canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        const base64 = canvas.toDataURL('image/jpeg', quality);
+                        resolve({ base64, width, height, originalSize: file.size, compressedSize: Math.round(base64.length * 0.75) });
+                    };
+                    img.onerror = reject;
+                    img.src = e.target.result;
                 };
-                localStorage.setItem(key, JSON.stringify(data));
-            } catch (e) {
-                console.warn('تعذر حفظ الكشوفات محلياً:', e.message);
-            }
-        };
-
-        const savePatientToLocal = (patientId, patientData) => {
-            if (!currentTenantId) return;
-            try {
-                const key = getLocalPatientsKey();
-                const cached = JSON.parse(localStorage.getItem(key) || '{}');
-                if (!cached.patients) cached.patients = {};
-                cached.patients[patientId] = {
-                    ...patientData,
-                    _cachedAt: Date.now()
-                };
-                localStorage.setItem(key, JSON.stringify(cached));
-            } catch (e) {
-                console.warn('تعذر حفظ المريض محلياً:', e.message);
-            }
-        };
-
-        const loadBookingsFromLocal = (doctorId, date) => {
-            if (!currentTenantId) return null;
-            try {
-                const key = getLocalBookingsKey();
-                const cached = localStorage.getItem(key);
-                if (!cached) return null;
-                
-                const data = JSON.parse(cached);
-                if (!data.bookings) return null;
-                
-                const now = Date.now();
-                const expiryMs = 50 * 24 * 60 * 60 * 1000;
-                
-                const filtered = data.bookings.filter(b => {
-                    const isFresh = (now - b._cachedAt) < expiryMs;
-                    return b.doctor_id === doctorId && b.date === date && isFresh;
-                });
-                
-                return filtered.length > 0 ? filtered : null;
-            } catch (e) {
-                console.warn('تعذر تحميل الكشوفات المحلية:', e.message);
-                return null;
-            }
-        };
-
-        const searchPatientsLocal = (phone) => {
-            if (!currentTenantId) return [];
-            try {
-                const key = getLocalPatientsKey();
-                const cached = localStorage.getItem(key);
-                if (!cached) return [];
-                
-                const data = JSON.parse(cached);
-                if (!data.patients) return [];
-                
-                const now = Date.now();
-                const expiryMs = 50 * 24 * 60 * 60 * 1000;
-                const t = phone.trim();
-                
-                return Object.entries(data.patients)
-                    .filter(([id, p]) => {
-                        const isFresh = (now - p._cachedAt) < expiryMs;
-                        return isFresh && p.phone && p.phone.includes(t);
-                    })
-                    .map(([id, p]) => ({ id, ...p }));
-            } catch (e) {
-                return [];
-            }
-        };
-
-        // ✅ البحث المحلي ببيانات القرية
-        const searchPatientsLocalByVillage = (fatherName, familyName, villageName) => {
-            if (!currentTenantId) return [];
-            try {
-                const key = getLocalPatientsKey();
-                const cached = localStorage.getItem(key);
-                if (!cached) return [];
-                
-                const data = JSON.parse(cached);
-                if (!data.patients) return [];
-                
-                const now = Date.now();
-                const expiryMs = 50 * 24 * 60 * 60 * 1000;
-                
-                return Object.entries(data.patients)
-                    .filter(([id, p]) => {
-                        const isFresh = (now - p._cachedAt) < expiryMs;
-                        const matchFather = !fatherName || (p.father_name && p.father_name.includes(fatherName));
-                        const matchFamily = !familyName || (p.family_name && p.family_name.includes(familyName));
-                        const matchVillage = !villageName || (p.village_name && p.village_name.includes(villageName));
-                        return isFresh && matchFather && matchFamily && matchVillage;
-                    })
-                    .map(([id, p]) => ({ id, ...p }));
-            } catch (e) {
-                return [];
-            }
-        };
-
-        const saveDoctorsToLocal = (doctors) => {
-            if (!currentTenantId) return;
-            try {
-                const key = getLocalDoctorsKey();
-                const data = {
-                    doctors,
-                    cachedAt: Date.now()
-                };
-                localStorage.setItem(key, JSON.stringify(data));
-            } catch (e) {
-                console.warn('تعذر حفظ الأطباء محلياً:', e.message);
-            }
-        };
-
-        const loadDoctorsFromLocal = () => {
-            if (!currentTenantId) return null;
-            try {
-                const key = getLocalDoctorsKey();
-                const data = localStorage.getItem(key);
-                if (!data) return null;
-                
-                const parsed = JSON.parse(data);
-                const now = Date.now();
-                const expiryMs = 50 * 24 * 60 * 60 * 1000;
-                
-                if ((now - parsed.cachedAt) < expiryMs) {
-                    return parsed.doctors;
-                }
-                return null;
-            } catch (e) {
-                return null;
-            }
-        };
-
-        // ============ تحديث مؤشر المزامنة ============
-        const setSyncStatus = (online) => {
-            const dot = $('#syncDot');
-            if (dot) {
-                dot.className = `sync-dot ${online ? 'on' : 'off'}`;
-                dot.title = online ? 'متصل بالسحابة' : 'غير متصل - استخدام البيانات المحلية';
-            }
-        };
-
-        // ============ ✅ تبديل وضع الهوية (رقم الهاتف / بيانات القرية) ============
-        const toggleIdMode = (mode) => {
-            state.idMode = mode;
-            const phoneSection = $('#phoneSection');
-            const phoneSearchSection = $('#phoneSearchSection');
-            const villageSection = $('#villageSection');
-            
-            if (mode === 'village') {
-                phoneSection.style.display = 'none';
-                phoneSearchSection.style.display = 'none';
-                villageSection.style.display = 'block';
-                // مسح قيم الهاتف والبحث
-                $('#patientPhone').value = '';
-                $('#patientSearch').value = '';
-                $('#searchResults').style.display = 'none';
-            } else {
-                phoneSection.style.display = 'block';
-                phoneSearchSection.style.display = 'block';
-                villageSection.style.display = 'none';
-                // مسح قيم القرية
-                $('#fatherName').value = '';
-                $('#familyName').value = '';
-                $('#villageName').value = '';
-                $('#villageSearchResults').style.display = 'none';
-                $('#villageSearchResults').innerHTML = '';
-            }
-        };
-
-        // ============ ✅ البحث بقاعدة البيانات باستخدام بيانات القرية ============
-        let villageSearchTimer;
-        const setupVillageSearch = () => {
-            const fatherInput = $('#fatherName');
-            const familyInput = $('#familyName');
-            const villageInput = $('#villageName');
-            
-            const performVillageSearch = () => {
-                const father = fatherInput.value.trim();
-                const family = familyInput.value.trim();
-                const village = villageInput.value.trim();
-                
-                // لا نبحث إلا إذا امتلأت الخانات
-                if (!father && !family && !village) {
-                    $('#villageSearchResults').style.display = 'none';
-                    return;
-                }
-                
-                clearTimeout(villageSearchTimer);
-                villageSearchTimer = setTimeout(async () => {
-                    let results = [];
-                    
-                    // 1. البحث المحلي أولاً
-                    const localResults = searchPatientsLocalByVillage(father, family, village);
-                    if (localResults.length > 0) {
-                        results = localResults;
-                    }
-                    
-                    // 2. البحث في السحابة
-                    try {
-                        const snap = await get(ref(db, 'patients'));
-                        snap.forEach(child => {
-                            const p = child.val();
-                            const matchFather = !father || (p.father_name && p.father_name.includes(father));
-                            const matchFamily = !family || (p.family_name && p.family_name.includes(family));
-                            const matchVillage = !village || (p.village_name && p.village_name.includes(village));
-                            
-                            if (matchFather && matchFamily && matchVillage && (father || family || village)) {
-                                if (!results.find(r => r.id === child.key)) {
-                                    results.push({ id: child.key, ...p });
-                                }
-                            }
-                        });
-                    } catch (err) {
-                        console.warn('تعذر البحث في السحابة:', err.message);
-                    }
-
-                    const container = $('#villageSearchResults');
-                    if (results.length === 0) {
-                        container.innerHTML = '<div class="search-item" style="color:var(--text-sec);">لا توجد نتائج - يمكنك إضافة مريض جديد</div>';
-                    } else {
-                        container.innerHTML = results.map(p => `
-                            <div class="search-item" data-id="${p.id}">
-                                <b>${escapeHtml(p.name)}</b>
-                                <small style="color:var(--text-sec);">${escapeHtml(p.father_name || '')} - ${escapeHtml(p.family_name || '')} - ${escapeHtml(p.village_name || '')}</small>
-                            </div>
-                        `).join('');
-
-                        container.querySelectorAll('.search-item[data-id]').forEach(item => {
-                            item.addEventListener('click', () => {
-                                const patient = results.find(p => p.id === item.dataset.id);
-                                if (patient) selectVillagePatient(patient);
-                            });
-                        });
-                    }
-                    container.style.display = 'block';
-                }, 400);
-            };
-            
-            fatherInput.addEventListener('input', performVillageSearch);
-            familyInput.addEventListener('input', performVillageSearch);
-            villageInput.addEventListener('input', performVillageSearch);
-            
-            // إخفاء النتائج عند النقر خارج المنطقة
-            document.addEventListener('click', (e) => {
-                const villageSection = $('#villageSection');
-                const searchResults = $('#villageSearchResults');
-                if (villageSection && searchResults && !villageSection.contains(e.target)) {
-                    searchResults.style.display = 'none';
-                }
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
             });
         };
 
-        const selectVillagePatient = (patient) => {
-            $('#patientName').value = patient.name || '';
-            $('#patientAge').value = patient.age || '';
-            $('#patientPhone').value = patient.phone || '';
-            $('#fatherName').value = patient.father_name || '';
-            $('#familyName').value = patient.family_name || '';
-            $('#villageName').value = patient.village_name || '';
-            state.selectedPatientId = patient.id;
-            $('#villageSearchResults').style.display = 'none';
+        const formatSize = (bytes) => {
+            if (bytes < 1024) return `${bytes} بايت`;
+            if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} ك.ب`;
+            return `${(bytes / (1024 * 1024)).toFixed(2)} م.ب`;
         };
 
-        // ============ ✅ زر الإعدادات ============
-        $('#settingsBtn').addEventListener('click', () => {
+        // ============ استعادة الجلسة ============
+        const restoreSession = () => {
             try {
-                const sessionData = {
-                    uid: state.currentUser?.uid,
-                    tenantId: currentTenantId,
-                    nurseName: state.nurseData?.name,
-                    timestamp: Date.now()
-                };
-                sessionStorage.setItem('nurse_settings_session', JSON.stringify(sessionData));
-            } catch (e) {
-                console.warn('تعذر حفظ جلسة الإعدادات:', e.message);
-            }
-            
-            window.location.href = 'nurse-settings.html';
-        });
-
-        // ============ ✅ تحميل الإشعارات ============
-        const loadNotifications = () => {
-            if (!currentTenantId) return;
-
-            const bookingsRef = ref(db, `tenants/${currentTenantId}/appointments`);
-            
-            state.unsubscribeNotifications = onValue(bookingsRef, (snap) => {
-                const notifications = [];
-                snap.forEach(child => {
-                    const booking = child.val();
-                    if (booking.created_by !== state.currentUser?.uid) {
-                        notifications.push({
-                            id: child.key,
-                            ...booking
-                        });
-                    }
-                });
-
-                const badge = $('#notificationBadge');
-                if (notifications.length > 0) {
-                    badge.style.display = 'flex';
-                    badge.textContent = notifications.length;
-                } else {
-                    badge.style.display = 'none';
+                const saved = sessionStorage.getItem('nurse_settings_session');
+                if (saved) {
+                    const data = JSON.parse(saved);
+                    if (data.tenantId) currentTenantId = data.tenantId;
+                    if (data.uid) currentNurseId = data.uid;
+                    return data;
                 }
-
-                state.notifications = notifications;
-            });
+            } catch (e) {}
+            const urlParams = new URLSearchParams(window.location.search);
+            const tenantFromUrl = urlParams.get('tenant');
+            if (tenantFromUrl) currentTenantId = tenantFromUrl;
+            return null;
         };
 
-        // ============ ✅ فتح مودال الإشعارات ============
-        const openNotificationsModal = () => {
-            const modal = $('#notificationsModal');
-            const body = $('#notificationsBody');
-
-            if (!state.notifications || state.notifications.length === 0) {
-                body.innerHTML = `
-                    <div style="text-align:center;padding:40px;color:var(--text-sec);">
-                        <i class="fas fa-bell-slash" style="font-size:3rem;opacity:0.2;margin-bottom:12px;"></i>
-                        <h4>لا توجد إشعارات جديدة</h4>
-                    </div>
-                `;
-            } else {
-                body.innerHTML = state.notifications.map(notif => {
-                    const doctorName = state.assignedDoctors.find(d => d.id === notif.doctor_id)?.name || 'غير معروف';
-                    const visitType = notif.visit_type === 'new' ? 'كشف جديد' : 'إعادة (متابعة)';
-                    
-                    return `
-                        <div class="notification-item">
-                            <div class="notification-header">
-                                <span class="notification-patient">
-                                    <i class="fas fa-user"></i> ${escapeHtml(notif.patient_name || 'مريض')}
-                                </span>
-                                <span class="notification-time">
-                                    ${notif.date || ''}
-                                </span>
-                            </div>
-                            <div class="notification-details">
-                                <i class="fas fa-stethoscope"></i> ${visitType} عند د. ${escapeHtml(doctorName)}
-                            </div>
-                            <div class="notification-actions">
-                                <button class="btn-confirm" data-notification-id="${notif.id}">
-                                    <i class="fas fa-check"></i> تأكيد وإضافة للطبيب
-                                </button>
-                                <button class="btn-dismiss" data-notification-id="${notif.id}">
-                                    <i class="fas fa-times"></i> تجاهل
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-
-                // ✅ أحداث أزرار التأكيد والتجاهل
-                body.querySelectorAll('.btn-confirm').forEach(btn => {
-                    btn.addEventListener('click', () => confirmBooking(btn.dataset.notificationId));
-                });
-
-                body.querySelectorAll('.btn-dismiss').forEach(btn => {
-                    btn.addEventListener('click', () => dismissNotification(btn.dataset.notificationId));
-                });
-            }
-
-            modal.style.display = 'flex';
-            document.body.style.overflow = 'hidden';
-        };
-
-        const closeNotificationsModal = () => {
-            $('#notificationsModal').style.display = 'none';
-            document.body.style.overflow = '';
-        };
-
-        // ============ ✅ تأكيد الحجز وإضافته للطبيب ============
-        const confirmBooking = async (bookingId) => {
+        // ============ تحميل بيانات الممرض والأطباء ============
+        const loadNurseAndDoctors = async (uid) => {
             try {
-                const booking = state.notifications?.find(n => n.id === bookingId);
-                if (!booking) {
-                    showToast('الإشعار غير موجود', true);
-                    return;
-                }
+                let nurseSnap = null;
+                if (currentTenantId) nurseSnap = await get(ref(db, `tenants/${currentTenantId}/users/${uid}`));
+                if (!nurseSnap || !nurseSnap.exists()) nurseSnap = await get(ref(db, `users/${uid}`));
+                if (!nurseSnap.exists() || nurseSnap.val().role !== 'nurse') { toast('هذا الحساب ليس ممرضاً', true); return false; }
 
-                // فتح مودال الكشف مع بيانات المريض
-                $('#editId').value = '';
-                $('#modalTitle').innerHTML = '<i class="fas fa-calendar-plus"></i> كشف جديد';
-                $('#doctorSelect').value = booking.doctor_id || state.selectedDoctorId;
-                $('#patientName').value = booking.patient_name || '';
-                $('#patientAge').value = booking.age || '';
-                $('#patientPhone').value = booking.phone || '';
-                $('#visitType').value = booking.visit_type || 'new';
-                $('#apptDate').value = booking.date || state.currentDate;
-                state.selectedPatientId = booking.patient_id || null;
-                
-                // ✅ استعادة وضع الهوية إن كان محفوظاً
-                if (booking.father_name || booking.family_name || booking.village_name) {
-                    toggleIdMode('village');
-                    $('#fatherName').value = booking.father_name || '';
-                    $('#familyName').value = booking.family_name || '';
-                    $('#villageName').value = booking.village_name || '';
-                } else {
-                    toggleIdMode('phone');
-                }
+                state.nurseData = { id: uid, ...nurseSnap.val() };
+                $('#tenantName').textContent = state.nurseData.tenantName || 'المجمع الطبي';
 
-                // إغلاق مودال الإشعارات وفتح مودال الكشف
-                closeNotificationsModal();
-                $('#bookingModal').style.display = 'flex';
-                
-                // حذف الإشعار من القائمة
-                await set(ref(db, `tenants/${currentTenantId}/appointments/${bookingId}`), null);
-                
-                showToast('✅ تم نقل بيانات المريض لنموذج الكشف');
-            } catch (err) {
-                showToast('خطأ في التأكيد: ' + err.message, true);
-            }
-        };
-
-        const dismissNotification = async (bookingId) => {
-            try {
-                await set(ref(db, `tenants/${currentTenantId}/appointments/${bookingId}`), null);
-                showToast('تم تجاهل الإشعار');
-            } catch (err) {
-                showToast('خطأ في التجاهل: ' + err.message, true);
-            }
-        };
-
-        // ============ ✅ تحميل بيانات الممرض من مسار المجمع ============
-        const loadNurseData = async (uid) => {
-            try {
-                const nurseSnap = await get(ref(db, `tenants/${currentTenantId}/users/${uid}`));
-                
-                let nurseData = null;
-                if (nurseSnap.exists()) {
-                    nurseData = { id: uid, ...nurseSnap.val() };
-                } else {
-                    const oldSnap = await get(ref(db, `users/${uid}`));
-                    if (oldSnap.exists() && oldSnap.val().role === 'nurse') {
-                        nurseData = { id: uid, ...oldSnap.val() };
-                    }
-                }
-                
-                if (!nurseData || nurseData.role !== 'nurse') {
-                    showToast('هذا الحساب ليس ممرضاً', true);
-                    return false;
-                }
-
-                state.nurseData = nurseData;
-                $('#welcomeMsg').textContent = `أهلاً، ${state.nurseData.name || 'ممرض'}`;
-                
-                const tenantName = nurseData.tenantName || 'المجمع الطبي';
-                $('#tenantName').textContent = tenantName;
-
-                const linksSnap = await get(ref(db, `tenants/${currentTenantId}/links/${uid}`));
-                const doctorIds = linksSnap.exists() ? Object.keys(linksSnap.val()) : [];
+                let linksSnap = null;
+                if (currentTenantId) linksSnap = await get(ref(db, `tenants/${currentTenantId}/links/${uid}`));
+                const doctorIds = linksSnap?.exists() ? Object.keys(linksSnap.val()) : [];
 
                 if (doctorIds.length === 0) {
-                    const localDoctors = loadDoctorsFromLocal();
-                    if (localDoctors && localDoctors.length > 0) {
-                        state.assignedDoctors = localDoctors;
-                        renderDoctorsTabs();
-                        populateDoctorSelect();
-                        state.selectedDoctorId = state.assignedDoctors[0].id;
-                        highlightDoctorTab(state.selectedDoctorId);
-                        
-                        const localBookings = loadBookingsFromLocal(state.selectedDoctorId, state.currentDate);
-                        if (localBookings) {
-                            state.allBookings = localBookings;
-                            updateCounts();
-                            renderTable();
-                        }
-                        
-                        setSyncStatus(false);
-                        showToast('⚠️ استخدام البيانات المحلية - لا يوجد اتصال', true);
-                        return true;
-                    }
-                    
-                    $('#doctorsTabs').innerHTML = '<div style="padding:10px;color:var(--text-sec);">لا يوجد أطباء مرتبطين بك</div>';
-                    return false;
+                    $('#doctorStripContainer').innerHTML = '<div style="padding:10px;color:var(--text-sec);text-align:center;">لا يوجد أطباء مرتبطين بك</div>';
+                    return true;
                 }
 
                 const doctorPromises = doctorIds.map(async (docId) => {
-                    const snap = await get(ref(db, `tenants/${currentTenantId}/users/${docId}`));
-                    if (snap.exists()) {
-                        return { id: docId, name: snap.val().name || 'دكتور' };
-                    }
-                    const oldSnap = await get(ref(db, `users/${docId}`));
-                    return { id: docId, name: oldSnap.exists() ? oldSnap.val().name : 'دكتور' };
+                    let snap = null;
+                    if (currentTenantId) snap = await get(ref(db, `tenants/${currentTenantId}/users/${docId}`));
+                    if (!snap || !snap.exists()) snap = await get(ref(db, `users/${docId}`));
+                    return { id: docId, name: snap.exists() ? snap.val().name : 'دكتور', email: snap.exists() ? snap.val().email : '' };
                 });
                 state.assignedDoctors = await Promise.all(doctorPromises);
-                
-                saveDoctorsToLocal(state.assignedDoctors);
+                renderDoctorsStrip();
 
-                renderDoctorsTabs();
-                populateDoctorSelect();
-                state.selectedDoctorId = state.assignedDoctors[0].id;
-                highlightDoctorTab(state.selectedDoctorId);
-                loadBookings();
-                loadNotifications();
-                setSyncStatus(true);
+                const savedDoctorId = sessionStorage.getItem('nurse_settings_selected_doctor');
+                if (savedDoctorId && state.assignedDoctors.find(d => d.id === savedDoctorId)) selectDoctor(savedDoctorId);
+
                 return true;
-
-            } catch (err) {
-                const localDoctors = loadDoctorsFromLocal();
-                if (localDoctors && localDoctors.length > 0) {
-                    state.assignedDoctors = localDoctors;
-                    renderDoctorsTabs();
-                    populateDoctorSelect();
-                    state.selectedDoctorId = state.assignedDoctors[0].id;
-                    highlightDoctorTab(state.selectedDoctorId);
-                    
-                    const localBookings = loadBookingsFromLocal(state.selectedDoctorId, state.currentDate);
-                    if (localBookings) {
-                        state.allBookings = localBookings;
-                        updateCounts();
-                        renderTable();
-                    }
-                    
-                    setSyncStatus(false);
-                    showToast('⚠️ استخدام البيانات المحلية - لا يوجد اتصال', true);
-                    return true;
-                }
-                
-                showToast('خطأ في تحميل البيانات: ' + err.message, true);
-                return false;
-            }
+            } catch (err) { toast('خطأ في تحميل البيانات', true); return false; }
         };
 
-        const renderDoctorsTabs = () => {
-            $('#doctorsTabs').innerHTML = state.assignedDoctors.map(doc => `
-                <button class="doctor-tab" data-id="${doc.id}">
-                    <i class="fas fa-user-md"></i> د. ${escapeHtml(doc.name)}
-                </button>
+        const renderDoctorsStrip = () => {
+            const container = $('#doctorStripContainer');
+            if (state.assignedDoctors.length === 0) { container.innerHTML = '<div style="padding:10px;color:var(--text-sec);text-align:center;">لا يوجد أطباء</div>'; return; }
+            container.innerHTML = state.assignedDoctors.map(doc => `
+                <div class="doctor-pill ${state.selectedDoctorId === doc.id ? 'active' : ''}" data-id="${doc.id}">
+                    <div class="pill-avatar"><i class="fas fa-user-md"></i></div>
+                    <span>د. ${esc(doc.name)}</span>
+                </div>
             `).join('');
-
-            $$('.doctor-tab').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    state.selectedDoctorId = btn.dataset.id;
-                    highlightDoctorTab(state.selectedDoctorId);
-                    loadBookings();
-                });
+            container.querySelectorAll('.doctor-pill').forEach(pill => {
+                pill.addEventListener('click', () => { selectDoctor(pill.dataset.id); pill.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }); });
             });
         };
 
-        const highlightDoctorTab = (docId) => {
-            $$('.doctor-tab').forEach(btn => {
-                btn.classList.toggle('active', btn.dataset.id === docId);
-            });
-        };
+        const selectDoctor = async (doctorId) => {
+            state.selectedDoctorId = doctorId;
+            sessionStorage.setItem('nurse_settings_selected_doctor', doctorId);
+            renderDoctorsStrip();
+            // إعادة تعيين الصور المؤقتة
+            state.tempProfileImage = null;
+            state.tempGalleryImages = [];
 
-        const populateDoctorSelect = () => {
-            $('#doctorSelect').innerHTML = state.assignedDoctors.map(doc =>
-                `<option value="${doc.id}">د. ${escapeHtml(doc.name)}</option>`
-            ).join('');
-        };
-
-        // ============ ✅ تحميل الكشوفات من مسار المجمع ============
-        const loadBookings = () => {
-            if (state.unsubscribeBookings) state.unsubscribeBookings();
-            if (!state.selectedDoctorId || !currentTenantId) return;
-
-            const bookingsRef = ref(db, `tenants/${currentTenantId}/appointments`);
-            
-            state.unsubscribeBookings = onValue(bookingsRef, (snap) => {
-                const bookings = [];
-                snap.forEach(child => {
-                    const apt = child.val();
-                    if (apt.doctor_id === state.selectedDoctorId && apt.date === state.currentDate) {
-                        bookings.push({ id: child.key, ...apt });
-                    }
-                });
-                // ✅ ترتيب حسب اسم المريض بدلاً من الوقت (لعدم وجود وقت)
-                bookings.sort((a, b) => (a.patient_name || '').localeCompare(b.patient_name || ''));
-                state.allBookings = bookings;
-                
-                saveBookingsToLocal(bookings);
-                setSyncStatus(true);
-                
-                updateCounts();
-                renderTable();
-            }, (error) => {
-                console.warn('خطأ في تحميل الكشوفات، استخدام المحلي:', error.message);
-                const localBookings = loadBookingsFromLocal(state.selectedDoctorId, state.currentDate);
-                if (localBookings) {
-                    state.allBookings = localBookings;
-                    updateCounts();
-                    renderTable();
-                }
-                setSyncStatus(false);
-            });
-        };
-
-        const updateCounts = () => {
-            const counts = { waiting: 0, inprogress: 0, done: 0 };
-            state.allBookings.forEach(b => {
-                if (b.status === 'انتظار') counts.waiting++;
-                else if (b.status === 'قيد الكشف') counts.inprogress++;
-                else if (b.status === 'منتهي') counts.done++;
-            });
-            $('#countWaiting').textContent = counts.waiting;
-            $('#countInProgress').textContent = counts.inprogress;
-            $('#countDone').textContent = counts.done;
-        };
-
-        const renderTable = () => {
-            let filtered = [];
-            if (state.currentTab === 'waiting') filtered = state.allBookings.filter(b => b.status === 'انتظار');
-            else if (state.currentTab === 'inprogress') filtered = state.allBookings.filter(b => b.status === 'قيد الكشف');
-            else if (state.currentTab === 'done') filtered = state.allBookings.filter(b => b.status === 'منتهي');
-
-            const tbody = $('#bookingsBody');
-
-            if (filtered.length === 0) {
-                tbody.innerHTML = '<tr class="empty-row"><td colspan="7">لا توجد كشوفات في هذا القسم</td></tr>';
-                return;
-            }
-
-            tbody.innerHTML = filtered.map((b, i) => {
-                const statusMap = {
-                    'انتظار': 's-waiting',
-                    'قيد الكشف': 's-inprogress',
-                    'منتهي': 's-done',
-                    'ملغي': 's-cancelled'
-                };
-                const statusClass = statusMap[b.status] || 's-waiting';
-                const visitTypeClass = b.visit_type === 'new' ? 'vt-new' : 'vt-follow';
-                const visitTypeText = b.visit_type === 'new' ? 'جديد' : 'إعادة';
-
-                const doctorName = state.assignedDoctors.find(d => d.id === b.doctor_id)?.name || 'دكتور';
-
-                const actions = state.currentTab === 'waiting' ? `
-                    <button class="icon-btn" data-action="edit" data-id="${b.id}" title="تعديل">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="icon-btn danger" data-action="cancel" data-id="${b.id}" title="إلغاء">
-                        <i class="fas fa-times"></i>
-                    </button>
-                ` : '<span style="opacity:0.4;">—</span>';
-
-                return `
-                <tr>
-                    <td>${i + 1}</td>
-                    <td><b>${escapeHtml(b.patient_name || '-')}</b></td>
-                    <td>د. ${escapeHtml(doctorName)}</td>
-                    <td>${b.date || '-'}</td>
-                    <td><span class="visit-type-badge ${visitTypeClass}">${visitTypeText}</span></td>
-                    <td><span class="status-badge ${statusClass}">${b.status || 'انتظار'}</span></td>
-                    <td><div class="action-btns">${actions}</div></td>
-                </tr>`;
-            }).join('');
-        };
-
-        // ============ أحداث الجدول ============
-        $('#bookingsBody').addEventListener('click', (e) => {
-            const btn = e.target.closest('[data-action]');
-            if (!btn) return;
-            const id = btn.dataset.id;
-            const booking = state.allBookings.find(b => b.id === id);
-            if (!booking) return;
-
-            if (btn.dataset.action === 'cancel') cancelBooking(id);
-            else if (btn.dataset.action === 'edit') openEditModal(booking);
-        });
-
-        const cancelBooking = async (id) => {
-            try {
-                await update(ref(db, `tenants/${currentTenantId}/appointments/${id}`), { status: 'ملغي' });
-                showToast('تم إلغاء الكشف');
-            } catch (err) {
-                showToast('خطأ في الإلغاء: ' + err.message, true);
-            }
-        };
-
-        // ============ المودال ============
-        const openAddModal = () => {
-            if (state.assignedDoctors.length === 0) {
-                showToast('لا يوجد أطباء مرتبطين بك', true);
-                return;
-            }
-            $('#editId').value = '';
-            $('#modalTitle').innerHTML = '<i class="fas fa-calendar-plus"></i> كشف جديد';
-            resetForm();
-            toggleIdMode('phone'); // ✅ الوضع الافتراضي: رقم الهاتف
-            $('#bookingModal').style.display = 'flex';
-        };
-
-        const openEditModal = (booking) => {
-            $('#editId').value = booking.id;
-            $('#modalTitle').innerHTML = '<i class="fas fa-edit"></i> تعديل الكشف';
-            $('#doctorSelect').value = booking.doctor_id || state.selectedDoctorId;
-            $('#patientName').value = booking.patient_name || '';
-            $('#patientAge').value = booking.age || '';
-            $('#patientPhone').value = booking.phone || '';
-            $('#visitType').value = booking.visit_type || 'new';
-            $('#apptDate').value = booking.date || state.currentDate;
-            state.selectedPatientId = booking.patient_id || null;
-            
-            // ✅ استعادة وضع الهوية
-            if (booking.father_name || booking.family_name || booking.village_name) {
-                toggleIdMode('village');
-                $('#fatherName').value = booking.father_name || '';
-                $('#familyName').value = booking.family_name || '';
-                $('#villageName').value = booking.village_name || '';
-            } else {
-                toggleIdMode('phone');
-            }
-            
-            $('#bookingModal').style.display = 'flex';
-        };
-
-        const closeModal = () => {
-            $('#bookingModal').style.display = 'none';
-            resetForm();
-        };
-
-        const resetForm = () => {
-            $('#bookingForm').reset();
-            $('#apptDate').value = state.currentDate;
-            $('#visitType').value = 'new';
-            state.selectedPatientId = null;
-            $('#formAlert').textContent = '';
-            $('#searchResults').style.display = 'none';
-            $('#villageSearchResults').style.display = 'none';
-            $('#villageSearchResults').innerHTML = '';
-            toggleIdMode('phone');
-        };
-
-        // ============ ✅ البحث عن المرضى برقم الهاتف فقط ============
-        let searchTimer;
-        $('#patientSearch').addEventListener('input', (e) => {
-            const phone = e.target.value.trim();
-            if (phone.length < 1) {
-                $('#searchResults').style.display = 'none';
-                return;
-            }
-            clearTimeout(searchTimer);
-            searchTimer = setTimeout(async () => {
-                let results = [];
-                
-                // 1. البحث المحلي أولاً برقم الهاتف
-                const localResults = searchPatientsLocal(phone);
-                if (localResults.length > 0) {
-                    results = localResults;
-                }
-                
-                // 2. البحث في السحابة في المسار العام patients برقم الهاتف
+            let doctorInfo = state.doctorInfoCache[doctorId] || null;
+            if (!doctorInfo) {
                 try {
-                    const snap = await get(ref(db, 'patients'));
-                    snap.forEach(child => {
-                        const p = child.val();
-                        if (p.phone && p.phone.includes(phone)) {
-                            if (!results.find(r => r.id === child.key)) {
-                                results.push({ id: child.key, ...p });
-                            }
-                        }
-                    });
-                } catch (err) {
-                    console.warn('تعذر البحث في السحابة:', err.message);
-                }
+                    const infoSnap = await get(ref(db, `tenants/${currentTenantId}/doctors_info/${doctorId}`));
+                    if (infoSnap.exists()) { doctorInfo = infoSnap.val(); state.doctorInfoCache[doctorId] = doctorInfo; }
+                } catch (e) {}
+            }
+            const doctor = state.assignedDoctors.find(d => d.id === doctorId);
+            renderSettingsCard(doctor, doctorInfo);
+        };
 
-                const container = $('#searchResults');
-                if (results.length === 0) {
-                    container.innerHTML = '<div class="search-item" style="color:var(--text-sec);">لا توجد نتائج - يمكنك إضافة مريض جديد</div>';
-                } else {
-                    container.innerHTML = results.map(p => `
-                        <div class="search-item" data-id="${p.id}">
-                            <b>${escapeHtml(p.name)}</b>
-                            <small style="color:var(--text-sec);">${escapeHtml(p.phone || '')}</small>
+        // ============ عرض بطاقة الإعدادات ============
+        const renderSettingsCard = (doctor, doctorInfo) => {
+            const container = $('#settingsCardContainer');
+            if (!doctor) {
+                container.innerHTML = `<div class="settings-card empty"><i class="fas fa-hand-point-up"></i><h3>اختر طبيباً</h3></div>`;
+                return;
+            }
+
+            const workHours = doctorInfo?.work_hours || '';
+            const welcomeMessage = doctorInfo?.welcome_message || '';
+            const specialty = doctorInfo?.specialty || '';
+            const hook = doctorInfo?.hook || '';
+            const yearsExperience = doctorInfo?.years_experience || '';
+            const conditionsTreated = doctorInfo?.conditions_treated || [];
+            const examPrice = doctorInfo?.exam_price || '';
+            const followUpPrice = doctorInfo?.follow_up_price || '';
+            const renewalDays = doctorInfo?.renewal_days || '';
+            const profileImage = doctorInfo?.profile_image || '';
+            const galleryImages = doctorInfo?.gallery_images || [];
+            
+            // تحميل الصور المؤقتة من البيانات الموجودة
+            state.tempProfileImage = profileImage || null;
+            state.tempGalleryImages = [...galleryImages];
+
+            const conditionsTags = conditionsTreated.map(c => `<span class="tag">${esc(c)} <span class="remove-tag" data-tag="${esc(c)}">×</span></span>`).join('');
+
+            container.innerHTML = `
+                <div class="settings-card">
+                    <div class="doctor-info-header">
+                        <div class="doctor-avatar-lg" id="profileAvatarPreview">
+                            ${profileImage ? `<img src="${profileImage}" alt="صورة الدكتور">` : esc((doctor.name || 'د').charAt(0))}
                         </div>
-                    `).join('');
+                        <div class="doctor-info-text">
+                            <h3>د. ${esc(doctor.name)}</h3>
+                            <span><i class="fas fa-envelope"></i> ${esc(doctor.email || '')}</span>
+                        </div>
+                    </div>
 
-                    container.querySelectorAll('.search-item[data-id]').forEach(item => {
-                        item.addEventListener('click', () => {
-                            const patient = results.find(p => p.id === item.dataset.id);
-                            if (patient) selectPatient(patient);
-                        });
-                    });
-                }
-                container.style.display = 'block';
-            }, 250);
-        });
+                    <!-- ✅ الصورة الشخصية -->
+                    <div class="form-group">
+                        <label><i class="fas fa-camera"></i> الصورة الشخصية للدكتور</label>
+                        <div class="upload-area" id="profileUploadArea">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <span>اضغط لرفع صورة الدكتور</span>
+                            <small>JPG, PNG, WebP - يتم ضغطها تلقائياً</small>
+                        </div>
+                        <input type="file" id="profileFileInput" class="file-input-hidden" accept="image/*">
+                        <div class="preview-container" id="profilePreviewContainer">
+                            <img id="profilePreviewImage" src="" alt="معاينة">
+                            <div class="preview-overlay">
+                                <button type="button" class="preview-btn remove" id="removeProfileImageBtn" title="إزالة">×</button>
+                            </div>
+                        </div>
+                        <div class="compress-info" id="profileCompressInfo">
+                            <i class="fas fa-compress-arrows-alt"></i>
+                            <span id="profileCompressText"></span>
+                        </div>
+                    </div>
 
-        const selectPatient = (patient) => {
-            $('#patientName').value = patient.name || '';
-            $('#patientAge').value = patient.age || '';
-            $('#patientPhone').value = patient.phone || '';
-            state.selectedPatientId = patient.id;
-            $('#patientSearch').value = '';
-            $('#searchResults').style.display = 'none';
-            
-            // ✅ إذا كان المريض لديه بيانات قرية، نبدل الوضع تلقائياً
-            if (patient.father_name || patient.family_name || patient.village_name) {
-                toggleIdMode('village');
-                $('#fatherName').value = patient.father_name || '';
-                $('#familyName').value = patient.family_name || '';
-                $('#villageName').value = patient.village_name || '';
-            }
+                    <!-- ✅ الجملة الجاذبة -->
+                    <div class="form-group">
+                        <label><i class="fas fa-star"></i> الجملة الجاذبة (Hook)</label>
+                        <input type="text" id="hookInput" class="form-control" placeholder="مثال: منقذ ٢٣٤١ مريض قلب في آخر ٥ سنين" value="${esc(hook)}" maxlength="100">
+                        <div class="field-hint">جملة تسويقية قصيرة تظهر أسفل اسم الدكتور مباشرة</div>
+                    </div>
+
+                    <!-- ✅ رسالة الترحيب -->
+                    <div class="form-group">
+                        <label><i class="fas fa-comment-dots"></i> رسالة الترحيب</label>
+                        <textarea id="welcomeMessageInput" class="form-control" placeholder="مرحباً، أنا د. ${esc(doctor.name)}. بقالي ١٥ سنة بعالج أمراض القلب. هدفي أرجعك لبيتك مطمئن. احجز كشفك النهاردة وخليني أطمن عليك.">${esc(welcomeMessage)}</textarea>
+                        <div class="field-hint">رسالة شخصية دافئة تظهر للمريض في بطاقة الدكتور</div>
+                    </div>
+
+                    <!-- ✅ مواعيد العمل -->
+                    <div class="form-group">
+                        <label><i class="fas fa-clock"></i> مواعيد العمل</label>
+                        <textarea id="workHoursInput" class="form-control" placeholder="السبت - الخميس: 9 صباحاً - 5 مساءً&#10;الجمعة: إجازة">${esc(workHours)}</textarea>
+                    </div>
+
+                    <!-- ✅ التخصص -->
+                    <div class="form-group">
+                        <label><i class="fas fa-stethoscope"></i> التخصص</label>
+                        <input type="text" id="specialtyInput" class="form-control" placeholder="قلب وأوعية دموية" value="${esc(specialty)}">
+                    </div>
+
+                    <!-- ✅ سنوات الخبرة (اختياري) -->
+                    <div class="form-group">
+                        <label><i class="fas fa-briefcase"></i> سنوات الخبرة <small style="color:var(--text-light);font-weight:400;">(اختياري)</small></label>
+                        <input type="number" id="yearsExperienceInput" class="form-control" placeholder="15" min="0" max="60" value="${esc(yearsExperience)}">
+                    </div>
+
+                    <!-- ✅ الأمراض المعالجة -->
+                    <div class="form-group">
+                        <label><i class="fas fa-tags"></i> الأمراض اللي بيعالجها</label>
+                        <div class="tag-input-container" id="conditionsContainer">
+                            ${conditionsTags}
+                            <input type="text" class="tag-input" id="conditionsInput" placeholder="اكتب اسم المرض واضغط Enter..." maxlength="40">
+                        </div>
+                        <div class="field-hint">اضغط Enter بعد كل مرض لإضافته</div>
+                    </div>
+
+                    <!-- ✅ معرض صور الحالات (اختياري - حتى ٥ صور) -->
+                    <div class="form-group">
+                        <label><i class="fas fa-images"></i> معرض صور الحالات <small style="color:var(--text-light);font-weight:400;">(اختياري - أقصى حد ٥ صور)</small></label>
+                        <div class="gallery-grid" id="galleryGrid">
+                            ${renderGalleryItems()}
+                            ${state.tempGalleryImages.length < 5 ? `
+                            <div class="gallery-add" id="galleryAddBtn">
+                                <i class="fas fa-plus"></i>
+                                <span>إضافة</span>
+                            </div>` : ''}
+                        </div>
+                        <input type="file" id="galleryFileInput" class="file-input-hidden" accept="image/*">
+                    </div>
+
+                    <!-- ✅ قسم الأسعار -->
+                    <div class="section-divider">
+                        <i class="fas fa-money-bill-wave"></i> الأسعار والدفع
+                    </div>
+
+                    <div class="row-2">
+                        <div class="form-group">
+                            <label><i class="fas fa-tag"></i> سعر الكشف (ج.م)</label>
+                            <input type="number" id="examPriceInput" class="form-control" placeholder="300" min="0" step="0.01" value="${esc(examPrice)}">
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-redo"></i> سعر الإعادة (ج.م)</label>
+                            <input type="number" id="followUpPriceInput" class="form-control" placeholder="200" min="0" step="0.01" value="${esc(followUpPrice)}">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fas fa-calendar-alt"></i> مدة صلاحية الكشف (أيام)</label>
+                        <input type="number" id="renewalDaysInput" class="form-control" placeholder="7" min="0" max="365" value="${esc(renewalDays)}">
+                        <div class="field-hint">عدد الأيام قبل الحاجة لتجديد الكشف</div>
+                    </div>
+
+                    <div class="action-row">
+                        <button class="btn btn-primary" id="saveDoctorInfoBtn">
+                            <i class="fas fa-save"></i> حفظ جميع البيانات
+                        </button>
+                        <button class="btn btn-outline" id="clearDoctorInfoBtn">
+                            <i class="fas fa-undo"></i> مسح الحقول
+                        </button>
+                    </div>
+                    <div id="saveIndicator" style="margin-top:8px;min-height:24px;"></div>
+                </div>
+            `;
+
+            // تهيئة الأحداث بعد رسم الـ DOM
+            setTimeout(() => initSettingsEvents(doctor.id), 50);
         };
 
-        document.addEventListener('click', (e) => {
-            if (!$('#patientSearch').contains(e.target) && !$('#searchResults').contains(e.target)) {
-                $('#searchResults').style.display = 'none';
+        // ============ عرض المعرض ============
+        const renderGalleryItems = () => {
+            return state.tempGalleryImages.map((img, i) => `
+                <div class="gallery-item">
+                    <img src="${img}" alt="حالة ${i + 1}">
+                    <button class="remove-gallery-btn" data-index="${i}" title="إزالة">×</button>
+                </div>
+            `).join('');
+        };
+
+        // ============ تهيئة أحداث البطاقة ============
+        const initSettingsEvents = (doctorId) => {
+            // ✅ الصورة الشخصية
+            const profileUploadArea = $('#profileUploadArea');
+            const profileFileInput = $('#profileFileInput');
+            const profilePreviewContainer = $('#profilePreviewContainer');
+            const profilePreviewImage = $('#profilePreviewImage');
+            const profileCompressInfo = $('#profileCompressInfo');
+            const profileCompressText = $('#profileCompressText');
+            const removeProfileImageBtn = $('#removeProfileImageBtn');
+            const profileAvatarPreview = $('#profileAvatarPreview');
+
+            if (state.tempProfileImage) {
+                profilePreviewImage.src = state.tempProfileImage;
+                profilePreviewContainer.classList.add('active');
+                profileUploadArea.style.display = 'none';
             }
-        });
 
-        // ============ ✅ التحقق من تكرار رقم الهاتف في المسار العام ============
-        const checkPhoneUniqueness = async (phone, excludeId = null) => {
-            if (!phone || phone.trim() === '') return null;
-            
-            // البحث المحلي أولاً
-            const localResults = searchPatientsLocal(phone);
-            const localDuplicate = localResults.find(p => p.phone === phone && p.id !== excludeId);
-            if (localDuplicate) return localDuplicate;
+            profileUploadArea?.addEventListener('click', () => profileFileInput.click());
+            profileFileInput?.addEventListener('change', async (e) => {
+                if (e.target.files[0]) {
+                    const compressed = await compressImage(e.target.files[0], 500, 500, 0.65);
+                    state.tempProfileImage = compressed.base64;
+                    profilePreviewImage.src = compressed.base64;
+                    profilePreviewContainer.classList.add('active');
+                    profileUploadArea.style.display = 'none';
+                    profileCompressText.textContent = `تم ضغط الصورة: ${formatSize(compressed.originalSize)} → ${formatSize(compressed.compressedSize)}`;
+                    profileCompressInfo.classList.add('active');
+                    profileAvatarPreview.innerHTML = `<img src="${compressed.base64}" alt="صورة الدكتور">`;
+                }
+            });
 
-            try {
-                const snap = await get(ref(db, 'patients'));
-                let duplicate = null;
-                snap.forEach(child => {
-                    const p = child.val();
-                    if (p.phone === phone && child.key !== excludeId && !duplicate) {
-                        duplicate = { id: child.key, ...p };
-                    }
+            removeProfileImageBtn?.addEventListener('click', () => {
+                state.tempProfileImage = null;
+                profilePreviewContainer.classList.remove('active');
+                profileCompressInfo.classList.remove('active');
+                profileUploadArea.style.display = 'flex';
+                profileFileInput.value = '';
+                const doctor = state.assignedDoctors.find(d => d.id === doctorId);
+                profileAvatarPreview.innerHTML = esc((doctor?.name || 'د').charAt(0));
+            });
+
+            // ✅ معرض الصور
+            const galleryAddBtn = $('#galleryAddBtn');
+            const galleryFileInput = $('#galleryFileInput');
+
+            galleryAddBtn?.addEventListener('click', () => galleryFileInput.click());
+            galleryFileInput?.addEventListener('change', async (e) => {
+                if (e.target.files[0] && state.tempGalleryImages.length < 5) {
+                    const compressed = await compressImage(e.target.files[0], 800, 800, 0.7);
+                    state.tempGalleryImages.push(compressed.base64);
+                    refreshGallery(doctorId);
+                    toast('✅ تمت إضافة الصورة');
+                }
+            });
+
+            // أزرار حذف صور المعرض
+            $$('.remove-gallery-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const index = parseInt(btn.dataset.index);
+                    state.tempGalleryImages.splice(index, 1);
+                    refreshGallery(doctorId);
                 });
-                return duplicate;
-            } catch (err) {
-                console.warn('تعذر التحقق من uniqueness الهاتف:', err.message);
-                return null;
-            }
+            });
+
+            // ✅ الأمراض المعالجة (Tags)
+            const conditionsInput = $('#conditionsInput');
+            const conditionsContainer = $('#conditionsContainer');
+
+            conditionsInput?.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const value = conditionsInput.value.trim();
+                    if (value && !state.doctorInfoCache[doctorId]?.conditions_treated?.includes(value)) {
+                        const tag = document.createElement('span');
+                        tag.className = 'tag';
+                        tag.innerHTML = `${esc(value)} <span class="remove-tag">×</span>`;
+                        tag.querySelector('.remove-tag').addEventListener('click', () => tag.remove());
+                        conditionsContainer.insertBefore(tag, conditionsInput);
+                    }
+                    conditionsInput.value = '';
+                }
+            });
+
+            // أزرار حذف التاجات الموجودة
+            $$('.remove-tag').forEach(btn => {
+                btn.addEventListener('click', () => btn.closest('.tag').remove());
+            });
+
+            // ✅ أزرار الحفظ والمسح
+            $('#saveDoctorInfoBtn')?.addEventListener('click', () => saveDoctorInfo(doctorId));
+            $('#clearDoctorInfoBtn')?.addEventListener('click', () => {
+                $('#workHoursInput').value = '';
+                $('#specialtyInput').value = '';
+                $('#welcomeMessageInput').value = '';
+                $('#hookInput').value = '';
+                $('#yearsExperienceInput').value = '';
+                $('#examPriceInput').value = '';
+                $('#followUpPriceInput').value = '';
+                $('#renewalDaysInput').value = '';
+                $$('.tag').forEach(t => t.remove());
+                state.tempProfileImage = null;
+                state.tempGalleryImages = [];
+                refreshGallery(doctorId);
+                profilePreviewContainer?.classList.remove('active');
+                profileCompressInfo?.classList.remove('active');
+                if (profileUploadArea) profileUploadArea.style.display = 'flex';
+                const doctor = state.assignedDoctors.find(d => d.id === doctorId);
+                if (profileAvatarPreview) profileAvatarPreview.innerHTML = esc((doctor?.name || 'د').charAt(0));
+            });
         };
 
-        // ============ ✅ حفظ الكشف مع إضافة المريض في المسار العام ============
-        $('#bookingForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-
-            const editId = $('#editId').value;
-            const doctorId = $('#doctorSelect').value;
-            const name = $('#patientName').value.trim();
-            const age = $('#patientAge').value.trim();
-            const phone = state.idMode === 'phone' ? $('#patientPhone').value.trim() : '';
-            const visitType = $('#visitType').value;
-            const date = $('#apptDate').value;
-
-            // ✅ بيانات القرية
-            const fatherName = state.idMode === 'village' ? $('#fatherName').value.trim() : '';
-            const familyName = state.idMode === 'village' ? $('#familyName').value.trim() : '';
-            const villageName = state.idMode === 'village' ? $('#villageName').value.trim() : '';
-
-            if (!doctorId || !name || !visitType || !date) {
-                $('#formAlert').textContent = 'جميع الحقول المطلوبة (*) يجب ملؤها';
-                return;
-            }
-
-            // ✅ التحقق من تكرار رقم الهاتف (إذا كان في وضع الهاتف وتم إدخاله)
-            if (state.idMode === 'phone' && phone) {
-                const existingPhone = await checkPhoneUniqueness(phone, state.selectedPatientId);
-                if (existingPhone && !state.selectedPatientId) {
-                    $('#formAlert').textContent = `⚠️ رقم الهاتف "${phone}" مسجل مسبقاً للمريض "${existingPhone.name}". الرجاء البحث عن المريض أولاً أو استخدام رقم هاتف مختلف.`;
-                    return;
+        // ============ تحديث المعرض ============
+        const refreshGallery = (doctorId) => {
+            const galleryGrid = $('#galleryGrid');
+            if (!galleryGrid) return;
+            galleryGrid.innerHTML = `
+                ${renderGalleryItems()}
+                ${state.tempGalleryImages.length < 5 ? `
+                <div class="gallery-add" id="galleryAddBtn">
+                    <i class="fas fa-plus"></i>
+                    <span>إضافة</span>
+                </div>` : ''}
+            `;
+            // إعادة ربط الأحداث
+            const newGalleryAddBtn = $('#galleryAddBtn');
+            const galleryFileInput = $('#galleryFileInput');
+            newGalleryAddBtn?.addEventListener('click', () => galleryFileInput.click());
+            galleryFileInput?.addEventListener('change', async (e) => {
+                if (e.target.files[0] && state.tempGalleryImages.length < 5) {
+                    const compressed = await compressImage(e.target.files[0], 800, 800, 0.7);
+                    state.tempGalleryImages.push(compressed.base64);
+                    refreshGallery(doctorId);
+                    toast('✅ تمت إضافة الصورة');
                 }
-            }
+            });
+            $$('.remove-gallery-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    state.tempGalleryImages.splice(parseInt(btn.dataset.index), 1);
+                    refreshGallery(doctorId);
+                });
+            });
+        };
 
-            const submitBtn = $('#submitBtn');
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
-            $('#formAlert').textContent = '';
+        // ============ حفظ بيانات الدكتور ============
+        const saveDoctorInfo = async (doctorId) => {
+            const workHours = $('#workHoursInput')?.value.trim() || '';
+            const specialty = $('#specialtyInput')?.value.trim() || '';
+            const welcomeMessage = $('#welcomeMessageInput')?.value.trim() || '';
+            const hook = $('#hookInput')?.value.trim() || '';
+            const yearsExperience = $('#yearsExperienceInput')?.value.trim() || '';
+            const examPrice = $('#examPriceInput')?.value.trim() || '';
+            const followUpPrice = $('#followUpPriceInput')?.value.trim() || '';
+            const renewalDays = $('#renewalDaysInput')?.value.trim() || '';
+
+            // جمع التاجات
+            const conditionsTreated = [];
+            $$('.tag').forEach(tag => {
+                const text = tag.textContent.replace('×', '').trim();
+                if (text) conditionsTreated.push(text);
+            });
 
             try {
-                let patientId = state.selectedPatientId;
-
-                if (!patientId) {
-                    // ✅ إضافة المريض في المسار العام patients مع بيانات القرية إن وجدت
-                    const newRef = push(ref(db, 'patients'));
-                    patientId = newRef.key;
-                    const patientData = {
-                        name,
-                        age: age || null,
-                        phone: phone || null,
-                        father_name: fatherName || null,
-                        family_name: familyName || null,
-                        village_name: villageName || null,
-                        created_at: new Date().toISOString()
-                    };
-                    await set(newRef, patientData);
-                    savePatientToLocal(patientId, patientData);
-                } else {
-                    // تحديث بيانات المريض في المسار العام
-                    try {
-                        const updateData = {
-                            name,
-                            age: age || null,
-                            updated_at: new Date().toISOString()
-                        };
-                        
-                        if (state.idMode === 'phone') {
-                            updateData.phone = phone || null;
-                        } else {
-                            updateData.father_name = fatherName || null;
-                            updateData.family_name = familyName || null;
-                            updateData.village_name = villageName || null;
-                        }
-                        
-                        await update(ref(db, `patients/${patientId}`), updateData);
-                    } catch (updateErr) {
-                        console.warn('تعذر تحديث المريض في المسار العام:', updateErr.message);
-                    }
-                }
-
-                const bookingData = {
-                    patient_name: name,
-                    patient_id: patientId,
-                    age: age || null,
-                    phone: phone || null,
-                    father_name: fatherName || null,
-                    family_name: familyName || null,
-                    village_name: villageName || null,
+                const doctorInfoData = {
+                    work_hours: workHours,
+                    specialty: specialty,
+                    welcome_message: welcomeMessage,
+                    hook: hook,
+                    years_experience: yearsExperience || null,
+                    conditions_treated: conditionsTreated,
+                    profile_image: state.tempProfileImage || null,
+                    gallery_images: state.tempGalleryImages,
+                    exam_price: examPrice || null,
+                    follow_up_price: followUpPrice || null,
+                    renewal_days: renewalDays || null,
+                    payment_method: 'cash', // ✅ كاش فقط
+                    updated_by: currentNurseId || state.currentUser?.uid,
+                    updated_by_name: state.nurseData?.name || 'ممرض',
+                    updated_at: new Date().toISOString(),
                     doctor_id: doctorId,
-                    nurse_id: state.currentUser.uid,
-                    visit_type: visitType,
-                    date,
-                    status: 'انتظار',
-                    tenantId: currentTenantId
+                    doctor_name: state.assignedDoctors.find(d => d.id === doctorId)?.name || '',
+                    tenantId: currentTenantId,
                 };
 
-                if (editId) {
-                    await update(ref(db, `tenants/${currentTenantId}/appointments/${editId}`), bookingData);
-                    showToast('تم تعديل الكشف بنجاح');
-                } else {
-                    bookingData.created_at = new Date().toISOString();
-                    bookingData.created_by = state.currentUser.uid;
-                    await set(ref(db, `tenants/${currentTenantId}/appointments/${push(ref(db, `tenants/${currentTenantId}/appointments`)).key}`), bookingData);
-                    showToast('تم حجز الكشف بنجاح');
+                await set(ref(db, `tenants/${currentTenantId}/doctors_info/${doctorId}`), doctorInfoData);
+
+                state.doctorInfoCache[doctorId] = doctorInfoData;
+
+                const indicator = $('#saveIndicator');
+                if (indicator) {
+                    indicator.innerHTML = '<span class="saved-indicator"><i class="fas fa-check-circle"></i> تم حفظ جميع البيانات بنجاح ✓</span>';
+                    setTimeout(() => { indicator.innerHTML = ''; }, 2500);
                 }
 
-                closeModal();
+                toast('✅ تم حفظ بيانات الدكتور بنجاح');
             } catch (err) {
-                $('#formAlert').textContent = 'خطأ: ' + err.message;
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = '<i class="fas fa-save"></i> تأكيد الكشف';
+                console.error('خطأ في الحفظ:', err);
+                toast('❌ فشل حفظ البيانات: ' + err.message, true);
             }
-        });
+        };
 
-        // ============ تبويبات الحالة ============
-        $$('.status-tab').forEach(btn => {
-            btn.addEventListener('click', () => {
-                $$('.status-tab').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                state.currentTab = btn.dataset.tab;
-                renderTable();
-            });
-        });
-
-        // ============ تغيير التاريخ ============
-        $('#filterDate').addEventListener('change', () => {
-            state.currentDate = $('#filterDate').value;
-            if (state.selectedDoctorId) loadBookings();
-        });
-
-        $('#todayBtn').addEventListener('click', () => {
-            state.currentDate = getToday();
-            $('#filterDate').value = state.currentDate;
-            if (state.selectedDoctorId) loadBookings();
-        });
-
-        // ============ ✅ أحداث الإشعارات ============
-        $('#notificationsBtn').addEventListener('click', openNotificationsModal);
-        $('#closeNotificationsBtn').addEventListener('click', closeNotificationsModal);
-        window.addEventListener('click', (e) => {
-            if (e.target === $('#notificationsModal')) closeNotificationsModal();
-        });
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && $('#notificationsModal').style.display === 'flex') closeNotificationsModal();
-        });
-
-        // ============ ✅ تسجيل الخروج ============
-        $('#logoutBtn').addEventListener('click', async () => {
+        // ============ تسجيل الخروج ============
+        const logout = async () => {
             try {
-                showToast('👋 جاري تسجيل الخروج...');
-                
-                if (state.unsubscribeBookings) {
-                    state.unsubscribeBookings();
-                    state.unsubscribeBookings = null;
-                }
-                if (state.unsubscribeNotifications) {
-                    state.unsubscribeNotifications();
-                    state.unsubscribeNotifications = null;
-                }
-                
+                toast('👋 جاري تسجيل الخروج...');
                 clearLoginSessionOnly();
-                
-                state.currentUser = null;
-                state.nurseData = null;
-                state.assignedDoctors = [];
-                state.allBookings = [];
-                
+                state.currentUser = null; state.nurseData = null; state.assignedDoctors = [];
                 await signOut(auth);
-                
                 window.location.href = 'index.html';
-                
-            } catch (error) {
-                console.error('خطأ أثناء تسجيل الخروج:', error);
+            } catch (e) {
                 clearLoginSessionOnly();
                 window.location.href = 'index.html';
             }
-        });
+        };
 
-        // ============ أحداث أخرى ============
-        $('#addBookingBtn').addEventListener('click', openAddModal);
-        $('#closeModalBtn').addEventListener('click', closeModal);
-        window.addEventListener('click', (e) => {
-            if (e.target === $('#bookingModal')) closeModal();
-        });
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && $('#bookingModal').style.display === 'flex') closeModal();
-        });
+        // ============ ربط الأحداث ============
+        const initEvents = () => {
+            $('#backBtn').addEventListener('click', () => {
+                window.location.href = `nurse-dashboard.html?tenant=${currentTenantId || ''}`;
+            });
+            $('#logoutBtn').addEventListener('click', logout);
+        };
 
-        // ============ ✅ أحداث تبديل وضع الهوية ============
-        $('#toggleIdModeBtn').addEventListener('click', () => toggleIdMode('village'));
-        $('#togglePhoneModeBtn').addEventListener('click', () => toggleIdMode('phone'));
-
-        // ============ مستمعي الاتصال بالإنترنت ============
-        window.addEventListener('online', () => {
-            setSyncStatus(true);
-            showToast('📡 تم استعادة الاتصال - جاري المزامنة');
-            if (state.selectedDoctorId) loadBookings();
-        });
-        
-        window.addEventListener('offline', () => {
-            setSyncStatus(false);
-            showToast('⚠️ انقطع الاتصال - استخدام البيانات المحلية', true);
-        });
-
-        // ============ ✅ بدء التشغيل المبسط - بدون طرد للمستخدم ============
+        // ============ بدء التشغيل ============
         onAuthStateChanged(auth, async (user) => {
-            if (!user) {
-                clearLoginSessionOnly();
-                window.location.href = 'index.html';
-                return;
-            }
+            if (!user) { clearLoginSessionOnly(); window.location.href = 'index.html'; return; }
 
-            const urlParams = new URLSearchParams(window.location.search);
-            const tenantFromUrl = urlParams.get('tenant');
-            
-            if (tenantFromUrl) {
-                currentTenantId = tenantFromUrl;
-                console.log(`✅ تم استلام معرف المجمع من الرابط: ${currentTenantId}`);
-            } else {
-                try {
-                    const encrypted = localStorage.getItem('shifa_secure_session');
-                    if (encrypted) {
-                        const decoded = atob(encrypted);
-                        const match = decoded.match(/"tenantId":"([^"]+)"/);
-                        if (match) {
-                            currentTenantId = match[1];
-                            console.log(`📦 تم استخراج معرف المجمع من الجلسة: ${currentTenantId}`);
-                        }
-                    }
-                } catch (e) {
-                    console.warn('تعذر فك تشفير الجلسة:', e.message);
-                }
-                
-                if (!currentTenantId) {
-                    const oldSession = localStorage.getItem('shifa_session');
-                    if (oldSession) {
-                        try {
-                            const parsed = JSON.parse(oldSession);
-                            currentTenantId = parsed.tenantId || user.uid;
-                        } catch (e) {
-                            currentTenantId = user.uid;
-                        }
-                    } else {
-                        currentTenantId = user.uid;
-                    }
-                    console.log(`📦 تم تحديد المجمع من الجلسة القديمة: ${currentTenantId}`);
-                }
-            }
+            state.currentUser = { uid: user.uid };
+            restoreSession();
+            if (!currentTenantId) currentTenantId = user.uid;
+            if (!currentNurseId) currentNurseId = user.uid;
 
             sessionStorage.setItem('userUid', user.uid);
             sessionStorage.setItem('userRole', 'nurse');
 
-            if (!state.currentUser) {
-                state.currentUser = { uid: user.uid };
-                state.currentDate = getToday();
-                $('#filterDate').value = state.currentDate;
+            initEvents();
 
-                // ✅ تهيئة البحث بالقرية
-                setupVillageSearch();
+            const success = await loadNurseAndDoctors(user.uid);
+            $('#pageLoader').style.display = 'none';
+            $('#mainContent').style.display = 'block';
 
-                const localBookings = loadBookingsFromLocal(state.selectedDoctorId || '', state.currentDate);
-                if (localBookings && localBookings.length > 0) {
-                    state.allBookings = localBookings;
-                    updateCounts();
-                    renderTable();
-                }
-
-                $('#authLoader').style.display = 'none';
-                $('#mainContainer').style.display = 'block';
-
-                const success = await loadNurseData(user.uid);
-                if (!success) {
-                    showToast('⚠️ تعذر تحميل بعض البيانات', true);
-                }
-            }
+            if (!success) toast('⚠️ تعذر تحميل بعض البيانات', true);
         });
 
-        console.log('🚀 لوحة الممرض - نظام المجمعات الطبية المتعددة');
-        console.log('🔒 كل ممرض يشوف فقط كشوفات الدكتور المرتبط بيه في مجمعه');
-        console.log('💾 وضع الحفظ: يمسح جلسة الدخول فقط - يحتفظ ببيانات المجمع');
-        console.log('⚙️ زر الإعدادات: ينقل إلى صفحة nurse-settings.html');
-        console.log('🔔 زر الإشعارات: يعرض الحجوزات الجديدة من صفحة المرضى');
-        console.log('📂 المرضى يضافون في المسار العام patients بدون ربط بدكتور أو مجمع');
-        console.log('🔍 البحث برقم الهاتف أو بيانات القرية (اسم الأب - العائلة - القرية)');
-        console.log('🛡️ منع تكرار رقم الهاتف في الوقت الفعلي');
-        console.log('🌳 وضع القرية: يخفي الهاتف والبحث ويظهر 3 خانات للبحث بالهوية البديلة');
+        console.log('⚙️ صفحة إعدادات الممرض - إدارة بيانات الأطباء المتطورة');
+        console.log('📸 صورة شخصية + معرض صور الحالات + أمراض معالجة + Hook + رسالة ترحيب');
+        console.log('💾 الحفظ في: tenants/{tenantId}/doctors_info/{doctorId}');
     </script>
 </body>
 </html>
