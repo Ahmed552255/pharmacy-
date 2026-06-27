@@ -819,6 +819,41 @@
             background: #BDBDBD;
         }
 
+        /* ✅ زر تبديل وضع الهوية (رقم الهاتف / بيانات القرية) */
+        .btn-toggle-id {
+            background: linear-gradient(135deg, #8D6E63, #A1887F);
+            color: white;
+            border: none;
+            border-radius: var(--radius-xl);
+            padding: 5px 12px;
+            font-family: 'Cairo', sans-serif;
+            font-size: 0.72rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            white-space: nowrap;
+            touch-action: manipulation;
+        }
+
+        .btn-toggle-id:hover {
+            background: linear-gradient(135deg, #6D4C41, #8D6E63);
+            box-shadow: 0 3px 8px rgba(109, 76, 65, 0.3);
+        }
+
+        .btn-toggle-id:active {
+            transform: scale(0.96);
+        }
+
+        .toggle-id-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+
         @media (max-width: 768px) {
             body { 
                 padding: 8px;
@@ -992,10 +1027,13 @@
                         <select id="doctorSelect" class="form-control" required></select>
                     </div>
                     
-                    <div class="form-group search-box">
-                        <label>البحث عن مريض (برقم الهاتف)</label>
-                        <input type="text" id="patientSearch" class="form-control" placeholder="أدخل رقم الهاتف للبحث..." autocomplete="off" dir="ltr">
-                        <div id="searchResults" class="search-results"></div>
+                    <!-- ✅ قسم البحث برقم الهاتف (يُخفى عند استخدام وضع القرية) -->
+                    <div id="phoneSearchSection">
+                        <div class="form-group search-box">
+                            <label>البحث عن مريض (برقم الهاتف)</label>
+                            <input type="text" id="patientSearch" class="form-control" placeholder="أدخل رقم الهاتف للبحث..." autocomplete="off" dir="ltr">
+                            <div id="searchResults" class="search-results"></div>
+                        </div>
                     </div>
                     
                     <div class="form-group">
@@ -1008,9 +1046,42 @@
                         <input type="number" id="patientAge" class="form-control" min="0" max="150">
                     </div>
                     
-                    <div class="form-group">
-                        <label>رقم الهاتف</label>
-                        <input type="tel" id="patientPhone" class="form-control" dir="ltr">
+                    <!-- ✅ قسم الهاتف (يُخفى عند استخدام وضع القرية) -->
+                    <div id="phoneSection">
+                        <div class="form-group">
+                            <div class="toggle-id-container">
+                                <label>رقم الهاتف</label>
+                                <button type="button" class="btn-toggle-id" id="toggleIdModeBtn">
+                                    <i class="fas fa-tree"></i> استخدام بيانات القرية
+                                </button>
+                            </div>
+                            <input type="tel" id="patientPhone" class="form-control" dir="ltr">
+                        </div>
+                    </div>
+
+                    <!-- ✅ قسم بيانات القرية (يظهر بدل الهاتف عند التبديل) -->
+                    <div id="villageSection" style="display:none;">
+                        <div class="form-group">
+                            <div class="toggle-id-container">
+                                <label>بيانات القرية</label>
+                                <button type="button" class="btn-toggle-id" id="togglePhoneModeBtn">
+                                    <i class="fas fa-mobile-alt"></i> استخدام رقم الهاتف
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>اسم الأم</label>
+                            <input type="text" id="motherName" class="form-control" placeholder="اسم الأم">
+                        </div>
+                        <div class="form-group">
+                            <label>اسم العائلة</label>
+                            <input type="text" id="familyName" class="form-control" placeholder="اسم العائلة">
+                        </div>
+                        <div class="form-group">
+                            <label>اسم القرية</label>
+                            <input type="text" id="villageName" class="form-control" placeholder="اسم القرية">
+                        </div>
+                        <div id="villageSearchResults" class="search-results" style="position:relative;margin-top:8px;"></div>
                     </div>
 
                     <div class="form-group">
@@ -1097,6 +1168,7 @@
             selectedPatientId: null,
             unsubscribeBookings: null,
             unsubscribeNotifications: null,
+            idMode: 'phone', // ✅ 'phone' أو 'village'
         };
 
         // ============ دوال مساعدة ============
@@ -1238,6 +1310,34 @@
             }
         };
 
+        // ✅ البحث المحلي ببيانات القرية
+        const searchPatientsLocalByVillage = (motherName, familyName, villageName) => {
+            if (!currentTenantId) return [];
+            try {
+                const key = getLocalPatientsKey();
+                const cached = localStorage.getItem(key);
+                if (!cached) return [];
+                
+                const data = JSON.parse(cached);
+                if (!data.patients) return [];
+                
+                const now = Date.now();
+                const expiryMs = 50 * 24 * 60 * 60 * 1000;
+                
+                return Object.entries(data.patients)
+                    .filter(([id, p]) => {
+                        const isFresh = (now - p._cachedAt) < expiryMs;
+                        const matchMother = !motherName || (p.mother_name && p.mother_name.includes(motherName));
+                        const matchFamily = !familyName || (p.family_name && p.family_name.includes(familyName));
+                        const matchVillage = !villageName || (p.village_name && p.village_name.includes(villageName));
+                        return isFresh && matchMother && matchFamily && matchVillage;
+                    })
+                    .map(([id, p]) => ({ id, ...p }));
+            } catch (e) {
+                return [];
+            }
+        };
+
         const saveDoctorsToLocal = (doctors) => {
             if (!currentTenantId) return;
             try {
@@ -1279,6 +1379,128 @@
                 dot.className = `sync-dot ${online ? 'on' : 'off'}`;
                 dot.title = online ? 'متصل بالسحابة' : 'غير متصل - استخدام البيانات المحلية';
             }
+        };
+
+        // ============ ✅ تبديل وضع الهوية (رقم الهاتف / بيانات القرية) ============
+        const toggleIdMode = (mode) => {
+            state.idMode = mode;
+            const phoneSection = $('#phoneSection');
+            const phoneSearchSection = $('#phoneSearchSection');
+            const villageSection = $('#villageSection');
+            
+            if (mode === 'village') {
+                phoneSection.style.display = 'none';
+                phoneSearchSection.style.display = 'none';
+                villageSection.style.display = 'block';
+                // مسح قيم الهاتف والبحث
+                $('#patientPhone').value = '';
+                $('#patientSearch').value = '';
+                $('#searchResults').style.display = 'none';
+            } else {
+                phoneSection.style.display = 'block';
+                phoneSearchSection.style.display = 'block';
+                villageSection.style.display = 'none';
+                // مسح قيم القرية
+                $('#motherName').value = '';
+                $('#familyName').value = '';
+                $('#villageName').value = '';
+                $('#villageSearchResults').style.display = 'none';
+                $('#villageSearchResults').innerHTML = '';
+            }
+        };
+
+        // ============ ✅ البحث بقاعدة البيانات باستخدام بيانات القرية ============
+        let villageSearchTimer;
+        const setupVillageSearch = () => {
+            const motherInput = $('#motherName');
+            const familyInput = $('#familyName');
+            const villageInput = $('#villageName');
+            
+            const performVillageSearch = () => {
+                const mother = motherInput.value.trim();
+                const family = familyInput.value.trim();
+                const village = villageInput.value.trim();
+                
+                // لا نبحث إلا إذا امتلأت الخانات الثلاثة
+                if (!mother && !family && !village) {
+                    $('#villageSearchResults').style.display = 'none';
+                    return;
+                }
+                
+                clearTimeout(villageSearchTimer);
+                villageSearchTimer = setTimeout(async () => {
+                    let results = [];
+                    
+                    // 1. البحث المحلي أولاً
+                    const localResults = searchPatientsLocalByVillage(mother, family, village);
+                    if (localResults.length > 0) {
+                        results = localResults;
+                    }
+                    
+                    // 2. البحث في السحابة
+                    try {
+                        const snap = await get(ref(db, 'patients'));
+                        snap.forEach(child => {
+                            const p = child.val();
+                            const matchMother = !mother || (p.mother_name && p.mother_name.includes(mother));
+                            const matchFamily = !family || (p.family_name && p.family_name.includes(family));
+                            const matchVillage = !village || (p.village_name && p.village_name.includes(village));
+                            
+                            if (matchMother && matchFamily && matchVillage && (mother || family || village)) {
+                                if (!results.find(r => r.id === child.key)) {
+                                    results.push({ id: child.key, ...p });
+                                }
+                            }
+                        });
+                    } catch (err) {
+                        console.warn('تعذر البحث في السحابة:', err.message);
+                    }
+
+                    const container = $('#villageSearchResults');
+                    if (results.length === 0) {
+                        container.innerHTML = '<div class="search-item" style="color:var(--text-sec);">لا توجد نتائج - يمكنك إضافة مريض جديد</div>';
+                    } else {
+                        container.innerHTML = results.map(p => `
+                            <div class="search-item" data-id="${p.id}">
+                                <b>${escapeHtml(p.name)}</b>
+                                <small style="color:var(--text-sec);">${escapeHtml(p.mother_name || '')} - ${escapeHtml(p.family_name || '')} - ${escapeHtml(p.village_name || '')}</small>
+                            </div>
+                        `).join('');
+
+                        container.querySelectorAll('.search-item[data-id]').forEach(item => {
+                            item.addEventListener('click', () => {
+                                const patient = results.find(p => p.id === item.dataset.id);
+                                if (patient) selectVillagePatient(patient);
+                            });
+                        });
+                    }
+                    container.style.display = 'block';
+                }, 400);
+            };
+            
+            motherInput.addEventListener('input', performVillageSearch);
+            familyInput.addEventListener('input', performVillageSearch);
+            villageInput.addEventListener('input', performVillageSearch);
+            
+            // إخفاء النتائج عند النقر خارج المنطقة
+            document.addEventListener('click', (e) => {
+                const villageSection = $('#villageSection');
+                const searchResults = $('#villageSearchResults');
+                if (villageSection && searchResults && !villageSection.contains(e.target)) {
+                    searchResults.style.display = 'none';
+                }
+            });
+        };
+
+        const selectVillagePatient = (patient) => {
+            $('#patientName').value = patient.name || '';
+            $('#patientAge').value = patient.age || '';
+            $('#patientPhone').value = patient.phone || '';
+            $('#motherName').value = patient.mother_name || '';
+            $('#familyName').value = patient.family_name || '';
+            $('#villageName').value = patient.village_name || '';
+            state.selectedPatientId = patient.id;
+            $('#villageSearchResults').style.display = 'none';
         };
 
         // ============ ✅ زر الإعدادات ============
@@ -1409,6 +1631,16 @@
                 $('#apptDate').value = booking.date || state.currentDate;
                 $('#apptTime').value = booking.time || '';
                 state.selectedPatientId = booking.patient_id || null;
+                
+                // ✅ استعادة وضع الهوية إن كان محفوظاً
+                if (booking.mother_name || booking.family_name || booking.village_name) {
+                    toggleIdMode('village');
+                    $('#motherName').value = booking.mother_name || '';
+                    $('#familyName').value = booking.family_name || '';
+                    $('#villageName').value = booking.village_name || '';
+                } else {
+                    toggleIdMode('phone');
+                }
 
                 // إغلاق مودال الإشعارات وفتح مودال الكشف
                 closeNotificationsModal();
@@ -1687,6 +1919,7 @@
             $('#editId').value = '';
             $('#modalTitle').innerHTML = '<i class="fas fa-calendar-plus"></i> كشف جديد';
             resetForm();
+            toggleIdMode('phone'); // ✅ الوضع الافتراضي: رقم الهاتف
             $('#bookingModal').style.display = 'flex';
         };
 
@@ -1701,6 +1934,17 @@
             $('#apptDate').value = booking.date || state.currentDate;
             $('#apptTime').value = booking.time || '';
             state.selectedPatientId = booking.patient_id || null;
+            
+            // ✅ استعادة وضع الهوية
+            if (booking.mother_name || booking.family_name || booking.village_name) {
+                toggleIdMode('village');
+                $('#motherName').value = booking.mother_name || '';
+                $('#familyName').value = booking.family_name || '';
+                $('#villageName').value = booking.village_name || '';
+            } else {
+                toggleIdMode('phone');
+            }
+            
             $('#bookingModal').style.display = 'flex';
         };
 
@@ -1716,6 +1960,9 @@
             state.selectedPatientId = null;
             $('#formAlert').textContent = '';
             $('#searchResults').style.display = 'none';
+            $('#villageSearchResults').style.display = 'none';
+            $('#villageSearchResults').innerHTML = '';
+            toggleIdMode('phone');
         };
 
         // ============ ✅ البحث عن المرضى برقم الهاتف فقط ============
@@ -1780,6 +2027,14 @@
             state.selectedPatientId = patient.id;
             $('#patientSearch').value = '';
             $('#searchResults').style.display = 'none';
+            
+            // ✅ إذا كان المريض لديه بيانات قرية، نبدل الوضع تلقائياً
+            if (patient.mother_name || patient.family_name || patient.village_name) {
+                toggleIdMode('village');
+                $('#motherName').value = patient.mother_name || '';
+                $('#familyName').value = patient.family_name || '';
+                $('#villageName').value = patient.village_name || '';
+            }
         };
 
         document.addEventListener('click', (e) => {
@@ -1821,18 +2076,23 @@
             const doctorId = $('#doctorSelect').value;
             const name = $('#patientName').value.trim();
             const age = $('#patientAge').value.trim();
-            const phone = $('#patientPhone').value.trim();
+            const phone = state.idMode === 'phone' ? $('#patientPhone').value.trim() : '';
             const visitType = $('#visitType').value;
             const date = $('#apptDate').value;
             const time = $('#apptTime').value;
+
+            // ✅ بيانات القرية
+            const motherName = state.idMode === 'village' ? $('#motherName').value.trim() : '';
+            const familyName = state.idMode === 'village' ? $('#familyName').value.trim() : '';
+            const villageName = state.idMode === 'village' ? $('#villageName').value.trim() : '';
 
             if (!doctorId || !name || !visitType || !date || !time) {
                 $('#formAlert').textContent = 'جميع الحقول المطلوبة (*) يجب ملؤها';
                 return;
             }
 
-            // ✅ التحقق من تكرار رقم الهاتف (إذا تم إدخاله)
-            if (phone) {
+            // ✅ التحقق من تكرار رقم الهاتف (إذا كان في وضع الهاتف وتم إدخاله)
+            if (state.idMode === 'phone' && phone) {
                 const existingPhone = await checkPhoneUniqueness(phone, state.selectedPatientId);
                 if (existingPhone && !state.selectedPatientId) {
                     $('#formAlert').textContent = `⚠️ رقم الهاتف "${phone}" مسجل مسبقاً للمريض "${existingPhone.name}". الرجاء البحث عن المريض أولاً أو استخدام رقم هاتف مختلف.`;
@@ -1849,26 +2109,38 @@
                 let patientId = state.selectedPatientId;
 
                 if (!patientId) {
-                    // ✅ إضافة المريض في المسار العام patients (بدون ربط بدكتور أو مجمع)
+                    // ✅ إضافة المريض في المسار العام patients مع بيانات القرية إن وجدت
                     const newRef = push(ref(db, 'patients'));
                     patientId = newRef.key;
                     const patientData = {
                         name,
                         age: age || null,
                         phone: phone || null,
+                        mother_name: motherName || null,
+                        family_name: familyName || null,
+                        village_name: villageName || null,
                         created_at: new Date().toISOString()
                     };
                     await set(newRef, patientData);
                     savePatientToLocal(patientId, patientData);
                 } else {
-                    // تحديث بيانات المريض في المسار العام إذا كان موجود
+                    // تحديث بيانات المريض في المسار العام
                     try {
-                        await update(ref(db, `patients/${patientId}`), {
+                        const updateData = {
                             name,
                             age: age || null,
-                            phone: phone || null,
                             updated_at: new Date().toISOString()
-                        });
+                        };
+                        
+                        if (state.idMode === 'phone') {
+                            updateData.phone = phone || null;
+                        } else {
+                            updateData.mother_name = motherName || null;
+                            updateData.family_name = familyName || null;
+                            updateData.village_name = villageName || null;
+                        }
+                        
+                        await update(ref(db, `patients/${patientId}`), updateData);
                     } catch (updateErr) {
                         console.warn('تعذر تحديث المريض في المسار العام:', updateErr.message);
                     }
@@ -1879,6 +2151,9 @@
                     patient_id: patientId,
                     age: age || null,
                     phone: phone || null,
+                    mother_name: motherName || null,
+                    family_name: familyName || null,
+                    village_name: villageName || null,
                     doctor_id: doctorId,
                     nurse_id: state.currentUser.uid,
                     visit_type: visitType,
@@ -1981,6 +2256,10 @@
             if (e.key === 'Escape' && $('#bookingModal').style.display === 'flex') closeModal();
         });
 
+        // ============ ✅ أحداث تبديل وضع الهوية ============
+        $('#toggleIdModeBtn').addEventListener('click', () => toggleIdMode('village'));
+        $('#togglePhoneModeBtn').addEventListener('click', () => toggleIdMode('phone'));
+
         // ============ مستمعي الاتصال بالإنترنت ============
         window.addEventListener('online', () => {
             setSyncStatus(true);
@@ -2046,6 +2325,9 @@
                 state.currentDate = getToday();
                 $('#filterDate').value = state.currentDate;
 
+                // ✅ تهيئة البحث بالقرية
+                setupVillageSearch();
+
                 const localBookings = loadBookingsFromLocal(state.selectedDoctorId || '', state.currentDate);
                 if (localBookings && localBookings.length > 0) {
                     state.allBookings = localBookings;
@@ -2069,8 +2351,9 @@
         console.log('⚙️ زر الإعدادات: ينقل إلى صفحة nurse-settings.html');
         console.log('🔔 زر الإشعارات: يعرض الحجوزات الجديدة من صفحة المرضى');
         console.log('📂 المرضى يضافون في المسار العام patients بدون ربط بدكتور أو مجمع');
-        console.log('🔍 البحث برقم الهاتف فقط');
+        console.log('🔍 البحث برقم الهاتف أو بيانات القرية (اسم الأم - العائلة - القرية)');
         console.log('🛡️ منع تكرار رقم الهاتف في الوقت الفعلي');
+        console.log('🌳 وضع القرية: يخفي الهاتف والبحث ويظهر 3 خانات للبحث بالهوية البديلة');
     </script>
 </body>
 </html>
