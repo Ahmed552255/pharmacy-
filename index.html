@@ -268,32 +268,10 @@
     <div class="version-text">شفاء v1.0</div>
 
     <script>
-        // ============ التوجيه بعد اكتمال التحميل ============
-        (function() {
-            // ✅ التحقق من وجود جلسة محفوظة
-            const hasSession = localStorage.getItem('shifa_session');
-            
-            // ✅ مدة التحميل: 2.5 ثانية لو فيه جلسة، 2 ثانية لو مفيش
-            const delay = hasSession ? 2500 : 2000;
-            
-            // ✅ بعد انتهاء التحميل، التوجيه لـ home.html
-            setTimeout(() => {
-                window.location.href = 'home.html';
-            }, delay);
-            
-            // ✅ لو المستخدم ضغط على الشاشة، توجيه فوري
-            document.addEventListener('click', () => {
-                window.location.href = 'home.html';
-            });
-            
-            // ✅ لو تم تحميل الصفحة بالكامل بسرعة، توجيه فوري
-            window.addEventListener('load', () => {
-                // لو الصفحة حملت في أقل من 1.5 ثانية، نستنى شوية بردو
-                // عشان الحركات تظهر حلوة
-            });
-            
-            console.log('🚀 شفاء - صفحة البداية');
-        })();
+        // ============ توجيه بسيط ============
+        setTimeout(() => {
+            window.location.href = 'home.html';
+        }, 2000);
     </script>
 </body>
 </html>
