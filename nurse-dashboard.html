@@ -993,8 +993,8 @@
                     </div>
                     
                     <div class="form-group search-box">
-                        <label>البحث عن مريض</label>
-                        <input type="text" id="patientSearch" class="form-control" placeholder="اسم أو رقم الهاتف..." autocomplete="off">
+                        <label>البحث عن مريض (برقم الهاتف)</label>
+                        <input type="text" id="patientSearch" class="form-control" placeholder="أدخل رقم الهاتف للبحث..." autocomplete="off" dir="ltr">
                         <div id="searchResults" class="search-results"></div>
                     </div>
                     
@@ -1213,7 +1213,7 @@
             }
         };
 
-        const searchPatientsLocal = (term) => {
+        const searchPatientsLocal = (phone) => {
             if (!currentTenantId) return [];
             try {
                 const key = getLocalPatientsKey();
@@ -1225,15 +1225,12 @@
                 
                 const now = Date.now();
                 const expiryMs = 50 * 24 * 60 * 60 * 1000;
-                const t = term.toLowerCase();
+                const t = phone.trim();
                 
                 return Object.entries(data.patients)
                     .filter(([id, p]) => {
                         const isFresh = (now - p._cachedAt) < expiryMs;
-                        return isFresh && (
-                            (p.name && p.name.toLowerCase().includes(t)) ||
-                            (p.phone && p.phone.includes(t))
-                        );
+                        return isFresh && p.phone && p.phone.includes(t);
                     })
                     .map(([id, p]) => ({ id, ...p }));
             } catch (e) {
@@ -1721,11 +1718,11 @@
             $('#searchResults').style.display = 'none';
         };
 
-        // ============ ✅ ذكاء البحث عن المرضى (تحسين جديد) ============
+        // ============ ✅ البحث عن المرضى برقم الهاتف فقط ============
         let searchTimer;
         $('#patientSearch').addEventListener('input', (e) => {
-            const term = e.target.value.trim().toLowerCase();
-            if (term.length < 1) {
+            const phone = e.target.value.trim();
+            if (phone.length < 1) {
                 $('#searchResults').style.display = 'none';
                 return;
             }
@@ -1733,19 +1730,18 @@
             searchTimer = setTimeout(async () => {
                 let results = [];
                 
-                // 1. البحث المحلي أولاً
-                const localResults = searchPatientsLocal(term);
+                // 1. البحث المحلي أولاً برقم الهاتف
+                const localResults = searchPatientsLocal(phone);
                 if (localResults.length > 0) {
                     results = localResults;
                 }
                 
-                // 2. البحث في السحابة
+                // 2. البحث في السحابة في المسار العام patients برقم الهاتف
                 try {
-                    const snap = await get(ref(db, `tenants/${currentTenantId}/patients`));
+                    const snap = await get(ref(db, 'patients'));
                     snap.forEach(child => {
                         const p = child.val();
-                        if ((p.name && p.name.toLowerCase().includes(term)) ||
-                            (p.phone && p.phone.includes(term))) {
+                        if (p.phone && p.phone.includes(phone)) {
                             if (!results.find(r => r.id === child.key)) {
                                 results.push({ id: child.key, ...p });
                             }
@@ -1792,29 +1788,32 @@
             }
         });
 
-        // ============ ✅ التحقق من الاسم قبل الحفظ (آلية منع التكرار) ============
-        const checkPatientNameUniqueness = async (name, excludeId = null) => {
-            const localResults = searchPatientsLocal(name);
-            const localDuplicate = localResults.find(p => p.name === name && p.id !== excludeId);
+        // ============ ✅ التحقق من تكرار رقم الهاتف في المسار العام ============
+        const checkPhoneUniqueness = async (phone, excludeId = null) => {
+            if (!phone || phone.trim() === '') return null;
+            
+            // البحث المحلي أولاً
+            const localResults = searchPatientsLocal(phone);
+            const localDuplicate = localResults.find(p => p.phone === phone && p.id !== excludeId);
             if (localDuplicate) return localDuplicate;
 
             try {
-                const snap = await get(ref(db, `tenants/${currentTenantId}/patients`));
+                const snap = await get(ref(db, 'patients'));
                 let duplicate = null;
                 snap.forEach(child => {
                     const p = child.val();
-                    if (p.name === name && child.key !== excludeId && !duplicate) {
+                    if (p.phone === phone && child.key !== excludeId && !duplicate) {
                         duplicate = { id: child.key, ...p };
                     }
                 });
                 return duplicate;
             } catch (err) {
-                console.warn('تعذر التحقق من uniqueness الاسم:', err.message);
+                console.warn('تعذر التحقق من uniqueness الهاتف:', err.message);
                 return null;
             }
         };
 
-        // ============ ✅ حفظ الكشف في مسار المجمع مع منع التكرار ============
+        // ============ ✅ حفظ الكشف مع إضافة المريض في المسار العام ============
         $('#bookingForm').addEventListener('submit', async (e) => {
             e.preventDefault();
 
@@ -1832,10 +1831,13 @@
                 return;
             }
 
-            const existingPatient = await checkPatientNameUniqueness(name, state.selectedPatientId);
-            if (existingPatient && !state.selectedPatientId) {
-                $('#formAlert').textContent = `⚠️ يوجد مريض بنفس الاسم "${name}". الرجاء إضافة اسم الأب أو تفاصيل مميزة (مثال: "${name} بن محمد").`;
-                return;
+            // ✅ التحقق من تكرار رقم الهاتف (إذا تم إدخاله)
+            if (phone) {
+                const existingPhone = await checkPhoneUniqueness(phone, state.selectedPatientId);
+                if (existingPhone && !state.selectedPatientId) {
+                    $('#formAlert').textContent = `⚠️ رقم الهاتف "${phone}" مسجل مسبقاً للمريض "${existingPhone.name}". الرجاء البحث عن المريض أولاً أو استخدام رقم هاتف مختلف.`;
+                    return;
+                }
             }
 
             const submitBtn = $('#submitBtn');
@@ -1847,18 +1849,29 @@
                 let patientId = state.selectedPatientId;
 
                 if (!patientId) {
-                    const newRef = push(ref(db, `tenants/${currentTenantId}/patients`));
+                    // ✅ إضافة المريض في المسار العام patients (بدون ربط بدكتور أو مجمع)
+                    const newRef = push(ref(db, 'patients'));
                     patientId = newRef.key;
                     const patientData = {
                         name,
                         age: age || null,
                         phone: phone || null,
-                        tenantId: currentTenantId,
-                        createdBy: state.currentUser.uid,
                         created_at: new Date().toISOString()
                     };
                     await set(newRef, patientData);
                     savePatientToLocal(patientId, patientData);
+                } else {
+                    // تحديث بيانات المريض في المسار العام إذا كان موجود
+                    try {
+                        await update(ref(db, `patients/${patientId}`), {
+                            name,
+                            age: age || null,
+                            phone: phone || null,
+                            updated_at: new Date().toISOString()
+                        });
+                    } catch (updateErr) {
+                        console.warn('تعذر تحديث المريض في المسار العام:', updateErr.message);
+                    }
                 }
 
                 const bookingData = {
@@ -2055,6 +2068,9 @@
         console.log('💾 وضع الحفظ: يمسح جلسة الدخول فقط - يحتفظ ببيانات المجمع');
         console.log('⚙️ زر الإعدادات: ينقل إلى صفحة nurse-settings.html');
         console.log('🔔 زر الإشعارات: يعرض الحجوزات الجديدة من صفحة المرضى');
+        console.log('📂 المرضى يضافون في المسار العام patients بدون ربط بدكتور أو مجمع');
+        console.log('🔍 البحث برقم الهاتف فقط');
+        console.log('🛡️ منع تكرار رقم الهاتف في الوقت الفعلي');
     </script>
 </body>
 </html>
