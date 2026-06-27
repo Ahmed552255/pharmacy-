@@ -222,52 +222,40 @@
             75% { transform: rotate(-15deg); }
         }
 
-        .stats-row {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 14px;
-            flex-wrap: wrap;
+        /* ✅ زر الإشعارات */
+        .btn-notifications {
+            background: linear-gradient(135deg, #FF6B6B, #FF8E53);
+            color: white;
+            box-shadow: 0 3px 10px rgba(255,107,107,0.3);
+            position: relative;
         }
 
-        .mini-stat {
-            background: var(--white);
-            border-radius: var(--radius-md);
-            padding: 10px 14px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            border: 1px solid var(--border);
-            box-shadow: var(--shadow-xs);
-            flex: 1;
-            min-width: 110px;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        .btn-notifications:hover {
+            background: linear-gradient(135deg, #FF5252, #FF7B3D);
+            box-shadow: 0 5px 15px rgba(255,107,107,0.4);
         }
 
-        .mini-stat:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-md);
-        }
-
-        .mini-stat-icon {
-            width: 38px;
-            height: 38px;
-            border-radius: var(--radius-xs);
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #FF1744;
+            color: white;
+            border-radius: 50%;
+            width: 22px;
+            height: 22px;
+            font-size: 0.7rem;
+            font-weight: 800;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1rem;
+            border: 2px solid white;
+            animation: pulse 1.5s infinite;
         }
 
-        .mini-stat-info h4 {
-            font-size: 1.3rem;
-            font-weight: 800;
-            line-height: 1;
-        }
-
-        .mini-stat-info span {
-            font-size: 0.7rem;
-            color: var(--text-sec);
-            font-weight: 500;
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
         }
 
         .controls-row {
@@ -754,6 +742,83 @@
             transition: all 0.3s ease; 
         }
 
+        /* ✅ مودال الإشعارات */
+        .notification-item {
+            padding: 12px;
+            border-bottom: 1px solid var(--border);
+            transition: background 0.2s;
+        }
+
+        .notification-item:hover {
+            background: #F8FDFF;
+        }
+
+        .notification-item:last-child {
+            border-bottom: none;
+        }
+
+        .notification-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .notification-patient {
+            font-weight: 700;
+            color: var(--ink);
+        }
+
+        .notification-time {
+            font-size: 0.7rem;
+            color: var(--text-sec);
+        }
+
+        .notification-details {
+            font-size: 0.8rem;
+            color: var(--text-sec);
+            margin-bottom: 6px;
+        }
+
+        .notification-actions {
+            display: flex;
+            gap: 6px;
+        }
+
+        .btn-confirm {
+            background: var(--success);
+            color: white;
+            border: none;
+            padding: 5px 12px;
+            border-radius: var(--radius-xl);
+            font-family: 'Cairo', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-confirm:hover {
+            background: #1B8E7A;
+        }
+
+        .btn-dismiss {
+            background: #E0E0E0;
+            color: var(--ink);
+            border: none;
+            padding: 5px 12px;
+            border-radius: var(--radius-xl);
+            font-family: 'Cairo', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-dismiss:hover {
+            background: #BDBDBD;
+        }
+
         @media (max-width: 768px) {
             body { 
                 padding: 8px;
@@ -844,6 +909,11 @@
                     <i class="fas fa-hospital"></i> <span id="tenantName"></span>
                 </span>
                 <span id="welcomeMsg"></span>
+                <!-- ✅ زر الإشعارات -->
+                <button class="btn btn-notifications" id="notificationsBtn" title="الإشعارات">
+                    <i class="fas fa-bell"></i>
+                    <span class="notification-badge" id="notificationBadge" style="display:none;">0</span>
+                </button>
                 <button class="btn btn-primary" id="addBookingBtn">
                     <i class="fas fa-plus"></i> كشف جديد
                 </button>
@@ -855,45 +925,6 @@
                 </button>
             </div>
         </header>
-
-        <div class="stats-row">
-            <div class="mini-stat">
-                <div class="mini-stat-icon" style="background:#E3F2FD;">
-                    <i class="fas fa-calendar-check" style="color:#1565C0;"></i>
-                </div>
-                <div class="mini-stat-info">
-                    <h4 id="statTotalToday">0</h4>
-                    <span>إجمالي كشوفات اليوم</span>
-                </div>
-            </div>
-            <div class="mini-stat">
-                <div class="mini-stat-icon" style="background:#E8F5E9;">
-                    <i class="fas fa-user-plus" style="color:#2E7D32;"></i>
-                </div>
-                <div class="mini-stat-info">
-                    <h4 id="statNewToday">0</h4>
-                    <span>كشوفات جديدة</span>
-                </div>
-            </div>
-            <div class="mini-stat">
-                <div class="mini-stat-icon" style="background:#F3E5F5;">
-                    <i class="fas fa-redo" style="color:#6A1B9A;"></i>
-                </div>
-                <div class="mini-stat-info">
-                    <h4 id="statFollowToday">0</h4>
-                    <span>كشوفات إعادة</span>
-                </div>
-            </div>
-            <div class="mini-stat">
-                <div class="mini-stat-icon" style="background:#FFF3E0;">
-                    <i class="fas fa-clock" style="color:#E65100;"></i>
-                </div>
-                <div class="mini-stat-info">
-                    <h4 id="statWaiting">0</h4>
-                    <span>قيد الانتظار</span>
-                </div>
-            </div>
-        </div>
 
         <div class="controls-row">
             <div class="doctors-tabs" id="doctorsTabs"></div>
@@ -1012,6 +1043,21 @@
         </div>
     </div>
 
+    <!-- ✅ مودال الإشعارات -->
+    <div id="notificationsModal" class="modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3><i class="fas fa-bell"></i> إشعارات الحجوزات الجديدة</h3>
+                <button class="close-btn" id="closeNotificationsBtn">&times;</button>
+            </div>
+            <div class="modal-body" id="notificationsBody">
+                <div style="text-align:center;padding:20px;color:var(--text-sec);">
+                    <i class="fas fa-spinner fa-spin"></i> جاري تحميل الإشعارات...
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script type="module">
         import { firebaseConfig } from './firebase-config.js';
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
@@ -1050,6 +1096,7 @@
             currentDate: '',
             selectedPatientId: null,
             unsubscribeBookings: null,
+            unsubscribeNotifications: null,
         };
 
         // ============ دوال مساعدة ============
@@ -1239,7 +1286,6 @@
 
         // ============ ✅ زر الإعدادات ============
         $('#settingsBtn').addEventListener('click', () => {
-            // حفظ حالة الجلسة الحالية قبل الانتقال
             try {
                 const sessionData = {
                     uid: state.currentUser?.uid,
@@ -1252,9 +1298,142 @@
                 console.warn('تعذر حفظ جلسة الإعدادات:', e.message);
             }
             
-            // الانتقال إلى صفحة الإعدادات
             window.location.href = 'nurse-settings.html';
         });
+
+        // ============ ✅ تحميل الإشعارات ============
+        const loadNotifications = () => {
+            if (!currentTenantId) return;
+
+            const bookingsRef = ref(db, `tenants/${currentTenantId}/appointments`);
+            
+            state.unsubscribeNotifications = onValue(bookingsRef, (snap) => {
+                const notifications = [];
+                snap.forEach(child => {
+                    const booking = child.val();
+                    if (booking.created_by !== state.currentUser?.uid) {
+                        notifications.push({
+                            id: child.key,
+                            ...booking
+                        });
+                    }
+                });
+
+                const badge = $('#notificationBadge');
+                if (notifications.length > 0) {
+                    badge.style.display = 'flex';
+                    badge.textContent = notifications.length;
+                } else {
+                    badge.style.display = 'none';
+                }
+
+                state.notifications = notifications;
+            });
+        };
+
+        // ============ ✅ فتح مودال الإشعارات ============
+        const openNotificationsModal = () => {
+            const modal = $('#notificationsModal');
+            const body = $('#notificationsBody');
+
+            if (!state.notifications || state.notifications.length === 0) {
+                body.innerHTML = `
+                    <div style="text-align:center;padding:40px;color:var(--text-sec);">
+                        <i class="fas fa-bell-slash" style="font-size:3rem;opacity:0.2;margin-bottom:12px;"></i>
+                        <h4>لا توجد إشعارات جديدة</h4>
+                    </div>
+                `;
+            } else {
+                body.innerHTML = state.notifications.map(notif => {
+                    const doctorName = state.assignedDoctors.find(d => d.id === notif.doctor_id)?.name || 'غير معروف';
+                    const visitType = notif.visit_type === 'new' ? 'كشف جديد' : 'إعادة (متابعة)';
+                    
+                    return `
+                        <div class="notification-item">
+                            <div class="notification-header">
+                                <span class="notification-patient">
+                                    <i class="fas fa-user"></i> ${escapeHtml(notif.patient_name || 'مريض')}
+                                </span>
+                                <span class="notification-time">
+                                    ${notif.date || ''} ${notif.time || ''}
+                                </span>
+                            </div>
+                            <div class="notification-details">
+                                <i class="fas fa-stethoscope"></i> ${visitType} عند د. ${escapeHtml(doctorName)}
+                            </div>
+                            <div class="notification-actions">
+                                <button class="btn-confirm" data-notification-id="${notif.id}">
+                                    <i class="fas fa-check"></i> تأكيد وإضافة للطبيب
+                                </button>
+                                <button class="btn-dismiss" data-notification-id="${notif.id}">
+                                    <i class="fas fa-times"></i> تجاهل
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                // ✅ أحداث أزرار التأكيد والتجاهل
+                body.querySelectorAll('.btn-confirm').forEach(btn => {
+                    btn.addEventListener('click', () => confirmBooking(btn.dataset.notificationId));
+                });
+
+                body.querySelectorAll('.btn-dismiss').forEach(btn => {
+                    btn.addEventListener('click', () => dismissNotification(btn.dataset.notificationId));
+                });
+            }
+
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        };
+
+        const closeNotificationsModal = () => {
+            $('#notificationsModal').style.display = 'none';
+            document.body.style.overflow = '';
+        };
+
+        // ============ ✅ تأكيد الحجز وإضافته للطبيب ============
+        const confirmBooking = async (bookingId) => {
+            try {
+                const booking = state.notifications?.find(n => n.id === bookingId);
+                if (!booking) {
+                    showToast('الإشعار غير موجود', true);
+                    return;
+                }
+
+                // فتح مودال الكشف مع بيانات المريض
+                $('#editId').value = '';
+                $('#modalTitle').innerHTML = '<i class="fas fa-calendar-plus"></i> كشف جديد';
+                $('#doctorSelect').value = booking.doctor_id || state.selectedDoctorId;
+                $('#patientName').value = booking.patient_name || '';
+                $('#patientAge').value = booking.age || '';
+                $('#patientPhone').value = booking.phone || '';
+                $('#visitType').value = booking.visit_type || 'new';
+                $('#apptDate').value = booking.date || state.currentDate;
+                $('#apptTime').value = booking.time || '';
+                state.selectedPatientId = booking.patient_id || null;
+
+                // إغلاق مودال الإشعارات وفتح مودال الكشف
+                closeNotificationsModal();
+                $('#bookingModal').style.display = 'flex';
+                
+                // حذف الإشعار من القائمة
+                await set(ref(db, `tenants/${currentTenantId}/appointments/${bookingId}`), null);
+                
+                showToast('✅ تم نقل بيانات المريض لنموذج الكشف');
+            } catch (err) {
+                showToast('خطأ في التأكيد: ' + err.message, true);
+            }
+        };
+
+        const dismissNotification = async (bookingId) => {
+            try {
+                await set(ref(db, `tenants/${currentTenantId}/appointments/${bookingId}`), null);
+                showToast('تم تجاهل الإشعار');
+            } catch (err) {
+                showToast('خطأ في التجاهل: ' + err.message, true);
+            }
+        };
 
         // ============ ✅ تحميل بيانات الممرض من مسار المجمع ============
         const loadNurseData = async (uid) => {
@@ -1298,7 +1477,6 @@
                         if (localBookings) {
                             state.allBookings = localBookings;
                             updateCounts();
-                            updateStats();
                             renderTable();
                         }
                         
@@ -1328,6 +1506,7 @@
                 state.selectedDoctorId = state.assignedDoctors[0].id;
                 highlightDoctorTab(state.selectedDoctorId);
                 loadBookings();
+                loadNotifications();
                 setSyncStatus(true);
                 return true;
 
@@ -1344,7 +1523,6 @@
                     if (localBookings) {
                         state.allBookings = localBookings;
                         updateCounts();
-                        updateStats();
                         renderTable();
                     }
                     
@@ -1408,7 +1586,6 @@
                 setSyncStatus(true);
                 
                 updateCounts();
-                updateStats();
                 renderTable();
             }, (error) => {
                 console.warn('خطأ في تحميل الكشوفات، استخدام المحلي:', error.message);
@@ -1416,7 +1593,6 @@
                 if (localBookings) {
                     state.allBookings = localBookings;
                     updateCounts();
-                    updateStats();
                     renderTable();
                 }
                 setSyncStatus(false);
@@ -1433,18 +1609,6 @@
             $('#countWaiting').textContent = counts.waiting;
             $('#countInProgress').textContent = counts.inprogress;
             $('#countDone').textContent = counts.done;
-        };
-
-        const updateStats = () => {
-            const total = state.allBookings.filter(b => b.status !== 'ملغي').length;
-            const newVisits = state.allBookings.filter(b => b.visit_type === 'new' && b.status !== 'ملغي').length;
-            const followVisits = state.allBookings.filter(b => b.visit_type === 'follow' && b.status !== 'ملغي').length;
-            const waiting = state.allBookings.filter(b => b.status === 'انتظار').length;
-
-            $('#statTotalToday').textContent = total;
-            $('#statNewToday').textContent = newVisits;
-            $('#statFollowToday').textContent = followVisits;
-            $('#statWaiting').textContent = waiting;
         };
 
         const renderTable = () => {
@@ -1582,7 +1746,6 @@
                         const p = child.val();
                         if ((p.name && p.name.toLowerCase().includes(term)) ||
                             (p.phone && p.phone.includes(term))) {
-                            // تجنب التكرار
                             if (!results.find(r => r.id === child.key)) {
                                 results.push({ id: child.key, ...p });
                             }
@@ -1631,12 +1794,10 @@
 
         // ============ ✅ التحقق من الاسم قبل الحفظ (آلية منع التكرار) ============
         const checkPatientNameUniqueness = async (name, excludeId = null) => {
-            // البحث المحلي
             const localResults = searchPatientsLocal(name);
             const localDuplicate = localResults.find(p => p.name === name && p.id !== excludeId);
             if (localDuplicate) return localDuplicate;
 
-            // البحث السحابي
             try {
                 const snap = await get(ref(db, `tenants/${currentTenantId}/patients`));
                 let duplicate = null;
@@ -1671,7 +1832,6 @@
                 return;
             }
 
-            // ✅ التحقق من uniqueness الاسم
             const existingPatient = await checkPatientNameUniqueness(name, state.selectedPatientId);
             if (existingPatient && !state.selectedPatientId) {
                 $('#formAlert').textContent = `⚠️ يوجد مريض بنفس الاسم "${name}". الرجاء إضافة اسم الأب أو تفاصيل مميزة (مثال: "${name} بن محمد").`;
@@ -1756,6 +1916,16 @@
             if (state.selectedDoctorId) loadBookings();
         });
 
+        // ============ ✅ أحداث الإشعارات ============
+        $('#notificationsBtn').addEventListener('click', openNotificationsModal);
+        $('#closeNotificationsBtn').addEventListener('click', closeNotificationsModal);
+        window.addEventListener('click', (e) => {
+            if (e.target === $('#notificationsModal')) closeNotificationsModal();
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && $('#notificationsModal').style.display === 'flex') closeNotificationsModal();
+        });
+
         // ============ ✅ تسجيل الخروج ============
         $('#logoutBtn').addEventListener('click', async () => {
             try {
@@ -1764,6 +1934,10 @@
                 if (state.unsubscribeBookings) {
                     state.unsubscribeBookings();
                     state.unsubscribeBookings = null;
+                }
+                if (state.unsubscribeNotifications) {
+                    state.unsubscribeNotifications();
+                    state.unsubscribeNotifications = null;
                 }
                 
                 clearLoginSessionOnly();
@@ -1863,7 +2037,6 @@
                 if (localBookings && localBookings.length > 0) {
                     state.allBookings = localBookings;
                     updateCounts();
-                    updateStats();
                     renderTable();
                 }
 
@@ -1881,6 +2054,7 @@
         console.log('🔒 كل ممرض يشوف فقط كشوفات الدكتور المرتبط بيه في مجمعه');
         console.log('💾 وضع الحفظ: يمسح جلسة الدخول فقط - يحتفظ ببيانات المجمع');
         console.log('⚙️ زر الإعدادات: ينقل إلى صفحة nurse-settings.html');
+        console.log('🔔 زر الإشعارات: يعرض الحجوزات الجديدة من صفحة المرضى');
     </script>
 </body>
 </html>
