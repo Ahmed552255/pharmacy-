@@ -995,14 +995,13 @@
                             <th>المريض</th>
                             <th>الطبيب</th>
                             <th>التاريخ</th>
-                            <th>الوقت</th>
                             <th>نوع الكشف</th>
                             <th>الحالة</th>
                             <th>إجراءات</th>
                         </tr>
                     </thead>
                     <tbody id="bookingsBody">
-                        <tr class="empty-row"><td colspan="8"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</td></tr>
+                        <tr class="empty-row"><td colspan="7"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -1070,8 +1069,8 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label>اسم الأم</label>
-                            <input type="text" id="motherName" class="form-control" placeholder="اسم الأم">
+                            <label>اسم الأب</label>
+                            <input type="text" id="fatherName" class="form-control" placeholder="اسم الأب">
                         </div>
                         <div class="form-group">
                             <label>اسم العائلة</label>
@@ -1095,11 +1094,6 @@
                     <div class="form-group">
                         <label>التاريخ *</label>
                         <input type="date" id="apptDate" class="form-control" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>الوقت *</label>
-                        <input type="time" id="apptTime" class="form-control" required>
                     </div>
                     
                     <button type="submit" class="btn btn-primary" style="width:100%;" id="submitBtn">
@@ -1311,7 +1305,7 @@
         };
 
         // ✅ البحث المحلي ببيانات القرية
-        const searchPatientsLocalByVillage = (motherName, familyName, villageName) => {
+        const searchPatientsLocalByVillage = (fatherName, familyName, villageName) => {
             if (!currentTenantId) return [];
             try {
                 const key = getLocalPatientsKey();
@@ -1327,10 +1321,10 @@
                 return Object.entries(data.patients)
                     .filter(([id, p]) => {
                         const isFresh = (now - p._cachedAt) < expiryMs;
-                        const matchMother = !motherName || (p.mother_name && p.mother_name.includes(motherName));
+                        const matchFather = !fatherName || (p.father_name && p.father_name.includes(fatherName));
                         const matchFamily = !familyName || (p.family_name && p.family_name.includes(familyName));
                         const matchVillage = !villageName || (p.village_name && p.village_name.includes(villageName));
-                        return isFresh && matchMother && matchFamily && matchVillage;
+                        return isFresh && matchFather && matchFamily && matchVillage;
                     })
                     .map(([id, p]) => ({ id, ...p }));
             } catch (e) {
@@ -1401,7 +1395,7 @@
                 phoneSearchSection.style.display = 'block';
                 villageSection.style.display = 'none';
                 // مسح قيم القرية
-                $('#motherName').value = '';
+                $('#fatherName').value = '';
                 $('#familyName').value = '';
                 $('#villageName').value = '';
                 $('#villageSearchResults').style.display = 'none';
@@ -1412,17 +1406,17 @@
         // ============ ✅ البحث بقاعدة البيانات باستخدام بيانات القرية ============
         let villageSearchTimer;
         const setupVillageSearch = () => {
-            const motherInput = $('#motherName');
+            const fatherInput = $('#fatherName');
             const familyInput = $('#familyName');
             const villageInput = $('#villageName');
             
             const performVillageSearch = () => {
-                const mother = motherInput.value.trim();
+                const father = fatherInput.value.trim();
                 const family = familyInput.value.trim();
                 const village = villageInput.value.trim();
                 
-                // لا نبحث إلا إذا امتلأت الخانات الثلاثة
-                if (!mother && !family && !village) {
+                // لا نبحث إلا إذا امتلأت الخانات
+                if (!father && !family && !village) {
                     $('#villageSearchResults').style.display = 'none';
                     return;
                 }
@@ -1432,7 +1426,7 @@
                     let results = [];
                     
                     // 1. البحث المحلي أولاً
-                    const localResults = searchPatientsLocalByVillage(mother, family, village);
+                    const localResults = searchPatientsLocalByVillage(father, family, village);
                     if (localResults.length > 0) {
                         results = localResults;
                     }
@@ -1442,11 +1436,11 @@
                         const snap = await get(ref(db, 'patients'));
                         snap.forEach(child => {
                             const p = child.val();
-                            const matchMother = !mother || (p.mother_name && p.mother_name.includes(mother));
+                            const matchFather = !father || (p.father_name && p.father_name.includes(father));
                             const matchFamily = !family || (p.family_name && p.family_name.includes(family));
                             const matchVillage = !village || (p.village_name && p.village_name.includes(village));
                             
-                            if (matchMother && matchFamily && matchVillage && (mother || family || village)) {
+                            if (matchFather && matchFamily && matchVillage && (father || family || village)) {
                                 if (!results.find(r => r.id === child.key)) {
                                     results.push({ id: child.key, ...p });
                                 }
@@ -1463,7 +1457,7 @@
                         container.innerHTML = results.map(p => `
                             <div class="search-item" data-id="${p.id}">
                                 <b>${escapeHtml(p.name)}</b>
-                                <small style="color:var(--text-sec);">${escapeHtml(p.mother_name || '')} - ${escapeHtml(p.family_name || '')} - ${escapeHtml(p.village_name || '')}</small>
+                                <small style="color:var(--text-sec);">${escapeHtml(p.father_name || '')} - ${escapeHtml(p.family_name || '')} - ${escapeHtml(p.village_name || '')}</small>
                             </div>
                         `).join('');
 
@@ -1478,7 +1472,7 @@
                 }, 400);
             };
             
-            motherInput.addEventListener('input', performVillageSearch);
+            fatherInput.addEventListener('input', performVillageSearch);
             familyInput.addEventListener('input', performVillageSearch);
             villageInput.addEventListener('input', performVillageSearch);
             
@@ -1496,7 +1490,7 @@
             $('#patientName').value = patient.name || '';
             $('#patientAge').value = patient.age || '';
             $('#patientPhone').value = patient.phone || '';
-            $('#motherName').value = patient.mother_name || '';
+            $('#fatherName').value = patient.father_name || '';
             $('#familyName').value = patient.family_name || '';
             $('#villageName').value = patient.village_name || '';
             state.selectedPatientId = patient.id;
@@ -1574,7 +1568,7 @@
                                     <i class="fas fa-user"></i> ${escapeHtml(notif.patient_name || 'مريض')}
                                 </span>
                                 <span class="notification-time">
-                                    ${notif.date || ''} ${notif.time || ''}
+                                    ${notif.date || ''}
                                 </span>
                             </div>
                             <div class="notification-details">
@@ -1629,13 +1623,12 @@
                 $('#patientPhone').value = booking.phone || '';
                 $('#visitType').value = booking.visit_type || 'new';
                 $('#apptDate').value = booking.date || state.currentDate;
-                $('#apptTime').value = booking.time || '';
                 state.selectedPatientId = booking.patient_id || null;
                 
                 // ✅ استعادة وضع الهوية إن كان محفوظاً
-                if (booking.mother_name || booking.family_name || booking.village_name) {
+                if (booking.father_name || booking.family_name || booking.village_name) {
                     toggleIdMode('village');
-                    $('#motherName').value = booking.mother_name || '';
+                    $('#fatherName').value = booking.father_name || '';
                     $('#familyName').value = booking.family_name || '';
                     $('#villageName').value = booking.village_name || '';
                 } else {
@@ -1808,7 +1801,8 @@
                         bookings.push({ id: child.key, ...apt });
                     }
                 });
-                bookings.sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+                // ✅ ترتيب حسب اسم المريض بدلاً من الوقت (لعدم وجود وقت)
+                bookings.sort((a, b) => (a.patient_name || '').localeCompare(b.patient_name || ''));
                 state.allBookings = bookings;
                 
                 saveBookingsToLocal(bookings);
@@ -1849,7 +1843,7 @@
             const tbody = $('#bookingsBody');
 
             if (filtered.length === 0) {
-                tbody.innerHTML = '<tr class="empty-row"><td colspan="8">لا توجد كشوفات في هذا القسم</td></tr>';
+                tbody.innerHTML = '<tr class="empty-row"><td colspan="7">لا توجد كشوفات في هذا القسم</td></tr>';
                 return;
             }
 
@@ -1881,7 +1875,6 @@
                     <td><b>${escapeHtml(b.patient_name || '-')}</b></td>
                     <td>د. ${escapeHtml(doctorName)}</td>
                     <td>${b.date || '-'}</td>
-                    <td>${b.time || '-'}</td>
                     <td><span class="visit-type-badge ${visitTypeClass}">${visitTypeText}</span></td>
                     <td><span class="status-badge ${statusClass}">${b.status || 'انتظار'}</span></td>
                     <td><div class="action-btns">${actions}</div></td>
@@ -1932,13 +1925,12 @@
             $('#patientPhone').value = booking.phone || '';
             $('#visitType').value = booking.visit_type || 'new';
             $('#apptDate').value = booking.date || state.currentDate;
-            $('#apptTime').value = booking.time || '';
             state.selectedPatientId = booking.patient_id || null;
             
             // ✅ استعادة وضع الهوية
-            if (booking.mother_name || booking.family_name || booking.village_name) {
+            if (booking.father_name || booking.family_name || booking.village_name) {
                 toggleIdMode('village');
-                $('#motherName').value = booking.mother_name || '';
+                $('#fatherName').value = booking.father_name || '';
                 $('#familyName').value = booking.family_name || '';
                 $('#villageName').value = booking.village_name || '';
             } else {
@@ -2029,9 +2021,9 @@
             $('#searchResults').style.display = 'none';
             
             // ✅ إذا كان المريض لديه بيانات قرية، نبدل الوضع تلقائياً
-            if (patient.mother_name || patient.family_name || patient.village_name) {
+            if (patient.father_name || patient.family_name || patient.village_name) {
                 toggleIdMode('village');
-                $('#motherName').value = patient.mother_name || '';
+                $('#fatherName').value = patient.father_name || '';
                 $('#familyName').value = patient.family_name || '';
                 $('#villageName').value = patient.village_name || '';
             }
@@ -2079,14 +2071,13 @@
             const phone = state.idMode === 'phone' ? $('#patientPhone').value.trim() : '';
             const visitType = $('#visitType').value;
             const date = $('#apptDate').value;
-            const time = $('#apptTime').value;
 
             // ✅ بيانات القرية
-            const motherName = state.idMode === 'village' ? $('#motherName').value.trim() : '';
+            const fatherName = state.idMode === 'village' ? $('#fatherName').value.trim() : '';
             const familyName = state.idMode === 'village' ? $('#familyName').value.trim() : '';
             const villageName = state.idMode === 'village' ? $('#villageName').value.trim() : '';
 
-            if (!doctorId || !name || !visitType || !date || !time) {
+            if (!doctorId || !name || !visitType || !date) {
                 $('#formAlert').textContent = 'جميع الحقول المطلوبة (*) يجب ملؤها';
                 return;
             }
@@ -2116,7 +2107,7 @@
                         name,
                         age: age || null,
                         phone: phone || null,
-                        mother_name: motherName || null,
+                        father_name: fatherName || null,
                         family_name: familyName || null,
                         village_name: villageName || null,
                         created_at: new Date().toISOString()
@@ -2135,7 +2126,7 @@
                         if (state.idMode === 'phone') {
                             updateData.phone = phone || null;
                         } else {
-                            updateData.mother_name = motherName || null;
+                            updateData.father_name = fatherName || null;
                             updateData.family_name = familyName || null;
                             updateData.village_name = villageName || null;
                         }
@@ -2151,14 +2142,13 @@
                     patient_id: patientId,
                     age: age || null,
                     phone: phone || null,
-                    mother_name: motherName || null,
+                    father_name: fatherName || null,
                     family_name: familyName || null,
                     village_name: villageName || null,
                     doctor_id: doctorId,
                     nurse_id: state.currentUser.uid,
                     visit_type: visitType,
                     date,
-                    time,
                     status: 'انتظار',
                     tenantId: currentTenantId
                 };
@@ -2351,7 +2341,7 @@
         console.log('⚙️ زر الإعدادات: ينقل إلى صفحة nurse-settings.html');
         console.log('🔔 زر الإشعارات: يعرض الحجوزات الجديدة من صفحة المرضى');
         console.log('📂 المرضى يضافون في المسار العام patients بدون ربط بدكتور أو مجمع');
-        console.log('🔍 البحث برقم الهاتف أو بيانات القرية (اسم الأم - العائلة - القرية)');
+        console.log('🔍 البحث برقم الهاتف أو بيانات القرية (اسم الأب - العائلة - القرية)');
         console.log('🛡️ منع تكرار رقم الهاتف في الوقت الفعلي');
         console.log('🌳 وضع القرية: يخفي الهاتف والبحث ويظهر 3 خانات للبحث بالهوية البديلة');
     </script>
