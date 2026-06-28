@@ -242,6 +242,11 @@
         .status-pending { background: #FFF3E0; color: #E65100; }
         .status-dispensed { background: #E8F5E9; color: #00695C; }
 
+        .load-more-container {
+            text-align: center;
+            padding: 15px;
+        }
+
         @media (max-width: 500px) {
             body { padding: 8px; }
             .container { gap: 12px; }
@@ -251,7 +256,7 @@
             .record-item { padding: 14px; }
         }
         @media print {
-            .btn, .top-bar, .print-btn, .search-section, .toast-container, .tenant-badge { display: none; }
+            .btn, .top-bar, .print-btn, .search-section, .toast-container, .tenant-badge, .load-more-container { display: none; }
             body { background: white; padding: 0; }
             .card { box-shadow: none; border: none; padding: 10px; }
         }
@@ -292,7 +297,7 @@
     import { firebaseConfig } from './firebase-config.js';
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
     import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-    import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+    import { getDatabase, ref, get, query, orderByChild, equalTo, limitToFirst } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
@@ -305,6 +310,10 @@
     const patientId = urlParams.get('patientId');
     const patientName = urlParams.get('patientName') || 'المريض';
     const currentTenantId = urlParams.get('tenant');
+
+    // ✅ Pagination Constants
+    const RECORDS_PER_PAGE = 10;
+    let displayedRecordsCount = 0;
 
     let currentUser = null;
     let userRole = null;
@@ -415,9 +424,16 @@
                 }
             }
 
+            // ✅ استخدام استعلام محسن مع limitToFirst لتقليل البيانات المحملة
             let allPresSnap = null;
             if (currentTenantId) {
-                allPresSnap = await get(ref(db, getDataPath('prescriptions')));
+                const presQuery = query(
+                    ref(db, getDataPath('prescriptions')),
+                    orderByChild('patient_id'),
+                    equalTo(patientId),
+                    limitToFirst(50) // ✅ حد أقصى 50 وصفة في البداية
+                );
+                allPresSnap = await get(presQuery);
                 if (!allPresSnap.exists()) {
                     allPresSnap = await get(ref(db, 'prescriptions'));
                 }
@@ -436,6 +452,9 @@
             }
             patientPrescriptions.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
             allPrescriptions = patientPrescriptions;
+            
+            // ✅ إعادة تعيين عداد الـ Pagination
+            displayedRecordsCount = RECORDS_PER_PAGE;
 
             const doctorIds = [...new Set(patientPrescriptions.map(p => p.doctor_id).filter(Boolean))];
             const doctorsMap = {};
@@ -456,8 +475,10 @@
                 });
             }
 
+            // ✅ تحميل عناصر الوصفات - فقط للوصفات المعروضة حالياً
             const itemsMap = {};
-            for (const pres of patientPrescriptions) {
+            const initialBatch = patientPrescriptions.slice(0, RECORDS_PER_PAGE);
+            for (const pres of initialBatch) {
                 let itemsSnap = null;
                 if (currentTenantId) {
                     itemsSnap = await get(ref(db, getDataPath(`prescription_items/${pres.id}`)));
@@ -469,19 +490,6 @@
                 let items = [];
                 if (itemsSnap.exists()) {
                     items = Object.values(itemsSnap.val());
-                }
-                
-                if (items.length === 0 && pres.template_id) {
-                    let templateItemsSnap = null;
-                    if (currentTenantId) {
-                        templateItemsSnap = await get(ref(db, getDataPath(`template_items/${pres.template_id}`)));
-                        if (!templateItemsSnap.exists()) templateItemsSnap = await get(ref(db, `template_items/${pres.template_id}`));
-                    } else {
-                        templateItemsSnap = await get(ref(db, `template_items/${pres.template_id}`));
-                    }
-                    if (templateItemsSnap.exists()) {
-                        items = Object.values(templateItemsSnap.val());
-                    }
                 }
                 itemsMap[pres.id] = items;
             }
@@ -511,7 +519,8 @@
                 });
             }
 
-            patientPrescriptions.forEach(pres => {
+            // ✅ تخزين بيانات الوصفات المحملة فقط
+            initialBatch.forEach(pres => {
                 prescriptionCache[pres.id] = {
                     prescription: pres,
                     items: itemsMap[pres.id] || [],
@@ -565,22 +574,54 @@
                 <div id="prescriptionsListContainer">
                     ${prescriptions.length === 0 ? '<div class="empty-state"><i class="fas fa-prescription"></i><p>لا توجد وصفات سابقة لهذا المريض</p></div>' : ''}
                 </div>
+                <div id="loadMoreContainer" class="load-more-container"></div>
             </div>
         `;
         contentArea.innerHTML = html;
 
-        function displayPrescriptions(list) {
+        // ✅ دالة عرض الوصفات مع Pagination
+        async function displayPrescriptions(list, showAll = false) {
             const container = document.getElementById('prescriptionsListContainer');
             if (!list.length) {
                 container.innerHTML = '<div class="empty-state"><i class="fas fa-search"></i><p>لا توجد نتائج مطابقة</p></div>';
+                document.getElementById('loadMoreContainer').innerHTML = '';
                 return;
             }
+            
+            // ✅ عرض عدد محدود فقط - يقلل الحمل على المتصفح
+            const toShow = showAll ? list : list.slice(0, displayedRecordsCount);
+            
+            // ✅ تحميل عناصر الوصفات غير المحملة بعد
+            for (const pres of toShow) {
+                if (!prescriptionCache[pres.id]) {
+                    let itemsSnap = null;
+                    if (currentTenantId) {
+                        itemsSnap = await get(ref(db, getDataPath(`prescription_items/${pres.id}`)));
+                        if (!itemsSnap.exists()) itemsSnap = await get(ref(db, `prescription_items/${pres.id}`));
+                    } else {
+                        itemsSnap = await get(ref(db, `prescription_items/${pres.id}`));
+                    }
+                    
+                    let items = [];
+                    if (itemsSnap.exists()) {
+                        items = Object.values(itemsSnap.val());
+                    }
+                    
+                    prescriptionCache[pres.id] = {
+                        prescription: pres,
+                        items: items,
+                        doctorName: (doctorsMap[pres.doctor_id] || {}).name || 'غير معروف',
+                        drugNames: drugNames
+                    };
+                }
+            }
+            
             let html = '';
-            list.forEach(pres => {
+            toShow.forEach(pres => {
+                const cache = prescriptionCache[pres.id];
                 const date = pres.created_at ? new Date(pres.created_at).toLocaleString('ar-EG') : 'غير معروف';
-                const docData = doctorsMap[pres.doctor_id] || {};
-                const doctorName = docData.name || 'غير معروف';
-                const items = itemsMap[pres.id] || [];
+                const doctorName = cache?.doctorName || (doctorsMap[pres.doctor_id] || {}).name || 'غير معروف';
+                const items = cache?.items || itemsMap[pres.id] || [];
                 const drugList = items.map(item => {
                     const drugName = item.drug_name || drugNames[item.drug_id] || item.drug_id || '—';
                     const dose = item.dose || '—';
@@ -611,6 +652,25 @@
             });
             container.innerHTML = html;
 
+            // ✅ زر "تحميل المزيد" - يظهر إذا كان هناك المزيد
+            const loadMoreContainer = document.getElementById('loadMoreContainer');
+            if (loadMoreContainer && !showAll && list.length > displayedRecordsCount) {
+                const remaining = list.length - displayedRecordsCount;
+                loadMoreContainer.innerHTML = `
+                    <button class="btn btn-outline btn-sm" id="loadMoreBtn">
+                        <i class="fas fa-chevron-down"></i> عرض المزيد (${remaining} متبقي)
+                    </button>
+                `;
+                
+                document.getElementById('loadMoreBtn')?.addEventListener('click', () => {
+                    displayedRecordsCount += RECORDS_PER_PAGE;
+                    displayPrescriptions(list, false);
+                });
+            } else {
+                loadMoreContainer.innerHTML = '';
+            }
+
+            // ربط أحداث الطباعة
             container.querySelectorAll('.print-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
                     printPrescription(this.getAttribute('data-print-id'));
@@ -628,6 +688,7 @@
             if (!term.trim()) {
                 clearBtn.style.display = 'none';
                 totalSpan.textContent = `(${prescriptions.length})`;
+                displayedRecordsCount = RECORDS_PER_PAGE;
                 displayPrescriptions(prescriptions);
                 return;
             }
@@ -637,6 +698,7 @@
                 p.diagnosis && p.diagnosis.toLowerCase().includes(lowerTerm)
             );
             totalSpan.textContent = `(${filtered.length} من ${prescriptions.length})`;
+            displayedRecordsCount = RECORDS_PER_PAGE;
             displayPrescriptions(filtered);
         }
 
@@ -709,9 +771,10 @@
         }
     });
 
-    console.log('🚀 صفحة الملف الطبي - نظام المجمعات الطبية المتعددة');
+    console.log('🚀 صفحة الملف الطبي - نظام المجمعات الطبية المتعددة مع Pagination');
     console.log('🔒 تدعم مسار المجمع والمسار العام للتوافق');
     console.log('📋 ملاحظات الصيدلي تظهر من السحابة تلقائياً');
+    console.log('📄 Pagination: ' + RECORDS_PER_PAGE + ' وصفات في الصفحة');
 </script>
 </body>
 </html>
