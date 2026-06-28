@@ -1,7 +1,7 @@
 import { firebaseConfig } from './firebase-config.js';
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-import { getDatabase, ref, onValue, get, set, remove } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+import { getDatabase, ref, onValue, get, set, remove, query, orderByChild, equalTo, limitToFirst, startAfter } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
 // ============ 🧠 نظام التشخيص العبقري ============
 const DIAGNOSTICS = {
@@ -137,6 +137,13 @@ const LOGIN_STORAGE_KEYS = ['shifa_session', 'shifa_remember', 'shifa_last_login
 let currentTenantId = null;
 
 const getTenantStorageKey = (baseKey) => currentTenantId ? `${STORAGE_PREFIX}${currentTenantId}_${baseKey}` : baseKey;
+
+// ============ ✅ Pagination Constants ============
+const PAGE_SIZE = 20;
+let currentPage = 0;
+let hasMorePrescriptions = true;
+let isLoadingMore = false;
+let lastLoadedKey = null;
 
 // ============ الحالة ============
 let currentUser = null;
@@ -334,29 +341,113 @@ async function selectDoctor(docId) {
     await saveSelectedDoctor();
     updateSelectedDoctorTitle();
     renderDoctorsList();
-    loadAllPrescriptions();
+    loadAllPrescriptions(true);
 }
 
-// ============ تحميل الوصفات ============
-function loadAllPrescriptions() {
+// ============ ✅ تحميل الوصفات مع Pagination ============
+function loadAllPrescriptions(reset = false) {
     if (!currentTenantId || !selectedDoctorId) return;
     if (unsubscribePrescriptions) unsubscribePrescriptions();
     
-    const prescriptionsRef = ref(db, `tenants/${currentTenantId}/prescriptions`);
-    unsubscribePrescriptions = onValue(prescriptionsRef, (snap) => {
-        const rxList = [];
-        snap.forEach(child => {
-            const rx = child.val();
-            if (rx.doctor_id === selectedDoctorId) rxList.push({ id: child.key, ...rx });
-        });
-        rxList.sort((a, b) => (b.created_at||'').localeCompare(a.created_at||''));
-        allPrescriptions = rxList;
-        setSyncStatus(true);
+    if (reset) {
+        currentPage = 0;
+        hasMorePrescriptions = true;
+        lastLoadedKey = null;
+        allPrescriptions = [];
+        if (UI.prescriptionsListContainer) {
+            UI.prescriptionsListContainer.innerHTML = '<div style="text-align:center;padding:20px;">جاري التحميل...</div>';
+        }
+    }
+    
+    if (!hasMorePrescriptions) return;
+    
+    // ✅ استخدام get() مرة واحدة بدلاً من onValue للمستمع اللحظي
+    loadPrescriptionsPage();
+}
+
+async function loadPrescriptionsPage() {
+    if (isLoadingMore || !hasMorePrescriptions) return;
+    isLoadingMore = true;
+    
+    try {
+        // ✅ استعلام مع Pagination - يقلل البيانات المنقولة بنسبة كبيرة
+        let prescriptionsQuery = query(
+            ref(db, `tenants/${currentTenantId}/prescriptions`),
+            orderByChild('doctor_id'),
+            equalTo(selectedDoctorId),
+            limitToFirst(PAGE_SIZE)
+        );
+        
+        const snap = await get(prescriptionsQuery);
+        
+        if (snap.exists()) {
+            const rxList = [];
+            let lastKey = null;
+            
+            snap.forEach(child => {
+                const rx = child.val();
+                if (rx.doctor_id === selectedDoctorId) {
+                    rxList.push({ id: child.key, ...rx });
+                    lastKey = child.key;
+                }
+            });
+            
+            // ترتيب حسب التاريخ (الأحدث أولاً)
+            rxList.sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''));
+            
+            // ✅ تجنب التكرار عند تحميل المزيد
+            if (currentPage === 0) {
+                allPrescriptions = rxList;
+            } else {
+                const existingIds = new Set(allPrescriptions.map(r => r.id));
+                const newRx = rxList.filter(r => !existingIds.has(r.id));
+                allPrescriptions = [...allPrescriptions, ...newRx];
+            }
+            
+            // ✅ إذا كان العدد أقل من PAGE_SIZE، خلاص ما فيش المزيد
+            if (rxList.length < PAGE_SIZE) {
+                hasMorePrescriptions = false;
+            } else {
+                lastLoadedKey = lastKey;
+            }
+            
+            currentPage++;
+            setSyncStatus(true);
+        } else {
+            hasMorePrescriptions = false;
+        }
+        
         renderPrescriptionsForDoctor();
-    }, (error) => {
-        DIAGNOSTICS.log(`خطأ: ${error.message}`, 'error');
+        
+    } catch (error) {
+        DIAGNOSTICS.log(`خطأ في تحميل الوصفات: ${error.message}`, 'error');
         setSyncStatus(false);
-    });
+    } finally {
+        isLoadingMore = false;
+    }
+}
+
+// ✅ تحميل المزيد عند الحاجة (Infinite Scroll)
+function setupInfiniteScroll() {
+    const container = UI.prescriptionsListContainer?.parentElement;
+    if (!container) return;
+    
+    // إزالة المستمع القديم إذا وجد
+    container.removeEventListener('scroll', handleScroll);
+    container.addEventListener('scroll', handleScroll);
+}
+
+function handleScroll() {
+    if (isLoadingMore || !hasMorePrescriptions) return;
+    
+    const container = UI.prescriptionsListContainer?.parentElement;
+    if (!container) return;
+    
+    const { scrollTop, scrollHeight, clientHeight } = container;
+    // ✅ تحميل المزيد عندما يتبقى 150px للوصول للأسفل
+    if (scrollHeight - scrollTop - clientHeight < 150) {
+        loadPrescriptionsPage();
+    }
 }
 
 function loadPatients() {
@@ -377,12 +468,12 @@ function renderPrescriptionsForDoctor() {
     let filteredRx = allPrescriptions;
     if (currentDoctorTab !== 'الكل') filteredRx = allPrescriptions.filter(rx => rx.status === currentDoctorTab);
     
-    if (filteredRx.length === 0) {
+    if (filteredRx.length === 0 && currentPage === 0) {
         UI.prescriptionsListContainer.innerHTML = `<div style="text-align:center;padding:30px;color:var(--text-sec);">لا توجد وصفات</div>`;
         return;
     }
     
-    UI.prescriptionsListContainer.innerHTML = filteredRx.map(rx => {
+    let html = filteredRx.map(rx => {
         const patientName = rx.patient_name || patientsMap[rx.patient_id]?.name || 'غير معروف';
         const dateStr = rx.created_at ? new Date(rx.created_at).toLocaleDateString('ar-EG', {year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
         const statusColors = {'لم تصرف بعد':'#FF9800','تم الصرف':'#4CAF50','صرفت جزئياً':'#2196F3'};
@@ -404,6 +495,25 @@ function renderPrescriptionsForDoctor() {
                 </div>
             </div>`;
     }).join('');
+    
+    // ✅ إضافة مؤشر "تحميل المزيد" إذا كان هناك المزيد
+    if (hasMorePrescriptions && filteredRx.length > 0) {
+        html += `
+            <div id="loadMoreIndicator" style="text-align:center;padding:15px;">
+                ${isLoadingMore 
+                    ? '<span style="color:var(--text-sec);"><i class="fas fa-spinner fa-spin"></i> جاري تحميل المزيد...</span>'
+                    : '<button class="btn btn-outline btn-sm" id="loadMoreBtn"><i class="fas fa-chevron-down"></i> عرض المزيد من الوصفات</button>'
+                }
+            </div>`;
+    }
+    
+    UI.prescriptionsListContainer.innerHTML = html;
+    
+    // ✅ ربط زر "تحميل المزيد"
+    const loadMoreBtn = document.getElementById('loadMoreBtn');
+    if (loadMoreBtn) {
+        loadMoreBtn.addEventListener('click', () => loadPrescriptionsPage());
+    }
     
     UI.prescriptionsListContainer.querySelectorAll('.view-rx-btn').forEach(btn => {
         btn.addEventListener('click', () => viewPrescriptionDetails(btn.dataset.rxId));
@@ -477,7 +587,7 @@ async function dispensePrescription(rxId) {
     try {
         await set(ref(db, `tenants/${currentTenantId}/prescriptions/${rxId}/status`), 'تم الصرف');
         showToast('✅ تم الصرف بنجاح');
-        loadAllPrescriptions();
+        loadAllPrescriptions(true);
     } catch(err) { showToast('خطأ في الصرف', true); }
 }
 
@@ -557,6 +667,9 @@ onAuthStateChanged(auth, async (user) => {
     currentUser = user;
     setupEventListeners();
     
+    // ✅ تهيئة Infinite Scroll
+    setupInfiniteScroll();
+    
     const valid = await loadPharmacistData(user);
     if (!valid) return;
     
@@ -566,9 +679,10 @@ onAuthStateChanged(auth, async (user) => {
     if (selectedDoctorId) DIAGNOSTICS.log(`طبيب مختار: ${selectedDoctorId}`, 'info');
     
     loadDoctors();
-    loadAllPrescriptions();
+    loadAllPrescriptions(true);
     loadPatients();
 });
 
-console.log('🚀 لوحة الصيدلي - تخزين سحابي بالكامل');
+console.log('🚀 لوحة الصيدلي - تخزين سحابي بالكامل مع Pagination');
 console.log('💡 للتحكم في التشخيص: DIAGNOSTICS.level = "off"');
+console.log('📄 Pagination: ' + PAGE_SIZE + ' وصفة في الصفحة');
