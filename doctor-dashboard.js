@@ -1,7 +1,7 @@
 import { firebaseConfig } from './firebase-config.js';
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-import { getDatabase, ref, onValue, set, push, update, get, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+import { getDatabase, ref, onValue, set, push, update, get, query, orderByChild, equalTo, remove } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -22,92 +22,287 @@ const getTenantStorageKey = (baseKey) => {
     return currentTenantId ? `${STORAGE_PREFIX}${currentTenantId}_${baseKey}` : baseKey;
 };
 
+// ============================================================
+// ✅ نظام إدارة الجلسات المعلقة - تخزين سحابي بدلاً من IndexedDB
+// ============================================================
 class SessionDB {
-    constructor() { 
-        this._dbName = null;
+    constructor() {
+        this._basePath = null;
     }
-    get dbName() {
-        if (!this._dbName) {
-            this._dbName = currentTenantId ? `ShifaDoctorDB_${currentTenantId}` : 'ShifaDoctorDB';
-        }
-        return this._dbName;
-    }
-    get storeName() { return 'pendingSessions'; }
-    get db() { return this._db; }
-    set db(val) { this._db = val; }
     
-    async open() { 
-        if (this.db) return; 
-        return new Promise((resolve, reject) => { 
-            const req = indexedDB.open(this.dbName, 1); 
-            req.onupgradeneeded = (e) => { 
-                const db = e.target.result; 
-                if (!db.objectStoreNames.contains(this.storeName)) db.createObjectStore(this.storeName, { keyPath: 'id' }); 
-            }; 
-            req.onsuccess = (e) => { this.db = e.target.result; resolve(); }; 
-            req.onerror = (e) => reject(e.target.error); 
-        }); 
+    get basePath() {
+        if (!this._basePath) {
+            this._basePath = currentTenantId 
+                ? `tenants/${currentTenantId}/doctor_sessions` 
+                : 'doctor_sessions';
+        }
+        return this._basePath;
     }
-    async save(session) { if (!this.db) await this.open(); return new Promise((resolve, reject) => { const tx = this.db.transaction(this.storeName, 'readwrite'); tx.objectStore(this.storeName).put(session); tx.oncomplete = resolve; tx.onerror = () => reject(tx.error); }); }
-    async getAll() { if (!this.db) await this.open(); return new Promise((resolve, reject) => { const tx = this.db.transaction(this.storeName, 'readonly'); const req = tx.objectStore(this.storeName).getAll(); req.onsuccess = () => resolve(req.result || []); req.onerror = () => reject(req.error); }); }
-    async delete(id) { if (!this.db) await this.open(); return new Promise((resolve, reject) => { const tx = this.db.transaction(this.storeName, 'readwrite'); tx.objectStore(this.storeName).delete(id); tx.oncomplete = resolve; tx.onerror = () => reject(tx.error); }); }
+    
+    async save(session) {
+        if (!currentTenantId) return;
+        try {
+            const sessionRef = ref(db, `${this.basePath}/${session.id}`);
+            await set(sessionRef, {
+                ...session,
+                updatedAt: new Date().toISOString(),
+                userId: auth.currentUser?.uid
+            });
+        } catch (err) {
+            console.warn('تعذر حفظ الجلسة سحابياً:', err.message);
+        }
+    }
+    
+    async getAll() {
+        if (!currentTenantId) return [];
+        try {
+            const userId = auth.currentUser?.uid;
+            if (!userId) return [];
+            
+            const sessionsRef = query(
+                ref(db, this.basePath),
+                orderByChild('userId'),
+                equalTo(userId)
+            );
+            
+            const snap = await get(sessionsRef);
+            if (!snap.exists()) return [];
+            
+            const sessions = [];
+            snap.forEach(child => {
+                sessions.push({ id: child.key, ...child.val() });
+            });
+            
+            // ترتيب حسب آخر تحديث
+            sessions.sort((a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || ''));
+            
+            return sessions;
+        } catch (err) {
+            console.warn('تعذر جلب الجلسات:', err.message);
+            return [];
+        }
+    }
+    
+    async delete(id) {
+        if (!currentTenantId) return;
+        try {
+            await remove(ref(db, `${this.basePath}/${id}`));
+        } catch (err) {
+            console.warn('تعذر حذف الجلسة:', err.message);
+        }
+    }
 }
 
+// ============================================================
+// ✅ نظام الأدوية المفضلة - تخزين سحابي مع حد أقصى للتكلفة
+// ============================================================
 class FavoriteDrugsDB {
-    constructor() { 
-        this._dbName = null;
+    constructor() {
+        this._basePath = null;
     }
-    get dbName() {
-        if (!this._dbName) {
-            this._dbName = currentTenantId ? `ShifaFavoritesDB_${currentTenantId}` : 'ShifaFavoritesDB';
+    
+    get basePath() {
+        if (!this._basePath) {
+            this._basePath = currentTenantId 
+                ? `tenants/${currentTenantId}/doctor_favorites` 
+                : 'doctor_favorites';
         }
-        return this._dbName;
+        return this._basePath;
     }
-    get storeName() { return 'favoriteDrugs'; }
-    get db() { return this._db; }
-    set db(val) { this._db = val; }
     
-    async open() { if (this.db) return; return new Promise((resolve, reject) => { const req = indexedDB.open(this.dbName, 1); req.onupgradeneeded = (e) => { const db = e.target.result; if (!db.objectStoreNames.contains(this.storeName)) { const store = db.createObjectStore(this.storeName, { keyPath: 'fullName' }); store.createIndex('usageCount', 'usageCount', { unique: false }); } }; req.onsuccess = (e) => { this.db = e.target.result; resolve(); }; req.onerror = (e) => reject(e.target.error); }); }
-    async getAll() { if (!this.db) await this.open(); return new Promise((resolve, reject) => { const tx = this.db.transaction(this.storeName, 'readonly'); const req = tx.objectStore(this.storeName).getAll(); req.onsuccess = () => resolve(req.result || []); req.onerror = () => reject(req.error); }); }
-    async incrementAndSave(fullName, name, form, strength) { if (!this.db) await this.open(); const tx = this.db.transaction(this.storeName, 'readwrite'); const store = tx.objectStore(this.storeName); const req = store.get(fullName); req.onsuccess = () => { let drug = req.result; if (drug) { drug.usageCount = (drug.usageCount || 0) + 1; drug.lastUsed = new Date().toISOString(); } else { drug = { fullName, name, form, strength, usageCount: 1, hidden: false, firstUsed: new Date().toISOString(), lastUsed: new Date().toISOString() }; } store.put(drug); }; }
-    async hideDrug(fullName) { if (!this.db) await this.open(); return new Promise((resolve) => { const tx = this.db.transaction(this.storeName, 'readwrite'); const store = tx.objectStore(this.storeName); const req = store.get(fullName); req.onsuccess = () => { let drug = req.result || { fullName, usageCount: 0 }; drug.hidden = true; store.put(drug); resolve(); }; req.onerror = () => resolve(); }); }
+    get maxFavorites() { return 50; } // حد أقصى للأدوية المفضلة لكل دكتور
     
-    async search(term, formFilter = null, limit = 5) { 
-        const all = await this.getAll(); 
-        const termLower = term.toLowerCase(); 
-        let results = all.filter(d => { 
-            if (d.hidden) return false; 
+    async getAll() {
+        if (!currentTenantId) return [];
+        try {
+            const userId = auth.currentUser?.uid;
+            if (!userId) return [];
+            
+            const favRef = ref(db, `${this.basePath}/${userId}`);
+            const snap = await get(favRef);
+            if (!snap.exists()) return [];
+            
+            return Object.values(snap.val());
+        } catch (err) {
+            console.warn('تعذر جلب المفضلات:', err.message);
+            return [];
+        }
+    }
+    
+    async incrementAndSave(fullName, name, form, strength) {
+        if (!currentTenantId) return;
+        try {
+            const userId = auth.currentUser?.uid;
+            if (!userId) return;
+            
+            const safeKey = fullName.replace(/[.#$/[\]]/g, '_');
+            const favRef = ref(db, `${this.basePath}/${userId}/${safeKey}`);
+            
+            const snap = await get(favRef);
+            let drug;
+            
+            if (snap.exists()) {
+                drug = snap.val();
+                drug.usageCount = (drug.usageCount || 0) + 1;
+                drug.lastUsed = new Date().toISOString();
+            } else {
+                // التحقق من الحد الأقصى قبل إضافة جديد
+                const allFavs = await this.getAll();
+                if (allFavs.length >= this.maxFavorites) {
+                    // حذف الأقل استخداماً
+                    const sorted = allFavs.sort((a, b) => (a.usageCount || 0) - (b.usageCount || 0));
+                    const toRemove = sorted[0];
+                    if (toRemove) {
+                        const removeKey = (toRemove.fullName || '').replace(/[.#$/[\]]/g, '_');
+                        await remove(ref(db, `${this.basePath}/${userId}/${removeKey}`));
+                    }
+                }
+                
+                drug = {
+                    fullName,
+                    name,
+                    form,
+                    strength,
+                    usageCount: 1,
+                    hidden: false,
+                    firstUsed: new Date().toISOString(),
+                    lastUsed: new Date().toISOString()
+                };
+            }
+            
+            await set(favRef, drug);
+        } catch (err) {
+            console.warn('تعذر حفظ المفضلة:', err.message);
+        }
+    }
+    
+    async hideDrug(fullName) {
+        if (!currentTenantId) return;
+        try {
+            const userId = auth.currentUser?.uid;
+            if (!userId) return;
+            
+            const safeKey = fullName.replace(/[.#$/[\]]/g, '_');
+            const favRef = ref(db, `${this.basePath}/${userId}/${safeKey}`);
+            
+            const snap = await get(favRef);
+            if (snap.exists()) {
+                const drug = snap.val();
+                drug.hidden = true;
+                await set(favRef, drug);
+            }
+        } catch (err) {
+            console.warn('تعذر إخفاء الدواء:', err.message);
+        }
+    }
+    
+    async search(term, formFilter = null, limit = 5) {
+        const all = await this.getAll();
+        const termLower = term.toLowerCase();
+        
+        let results = all.filter(d => {
+            if (d.hidden) return false;
             const nameLower = (d.name || '').toLowerCase();
             const fullNameLower = (d.fullName || '').toLowerCase();
             const strengthLower = (d.strength || '').toLowerCase();
             
-            return nameLower.includes(termLower) || 
-                   fullNameLower.includes(termLower) || 
+            return nameLower.includes(termLower) ||
+                   fullNameLower.includes(termLower) ||
                    strengthLower.includes(termLower);
-        }); 
-        results.sort((a, b) => (b.usageCount || 0) - (a.usageCount || 0)); 
-        return results.slice(0, limit); 
+        });
+        
+        results.sort((a, b) => (b.usageCount || 0) - (a.usageCount || 0));
+        return results.slice(0, limit);
     }
 }
 
+// ============================================================
+// ✅ نظام الجرعات المفضلة - تخزين سحابي
+// ============================================================
 class FavoriteDosesDB {
-    constructor() { 
-        this._dbName = null;
+    constructor() {
+        this._basePath = null;
     }
-    get dbName() {
-        if (!this._dbName) {
-            this._dbName = currentTenantId ? `ShifaDosesDB_${currentTenantId}` : 'ShifaDosesDB';
-        }
-        return this._dbName;
-    }
-    get storeName() { return 'favoriteDoses'; }
-    get db() { return this._db; }
-    set db(val) { this._db = val; }
     
-    async open() { if (this.db) return; return new Promise((resolve, reject) => { const req = indexedDB.open(this.dbName, 1); req.onupgradeneeded = (e) => { const db = e.target.result; if (!db.objectStoreNames.contains(this.storeName)) { const store = db.createObjectStore(this.storeName, { keyPath: 'id' }); store.createIndex('usageCount', 'usageCount', { unique: false }); } }; req.onsuccess = (e) => { this.db = e.target.result; resolve(); }; req.onerror = (e) => reject(e.target.error); }); }
-    async getAll() { if (!this.db) await this.open(); return new Promise((resolve, reject) => { const tx = this.db.transaction(this.storeName, 'readonly'); const req = tx.objectStore(this.storeName).getAll(); req.onsuccess = () => resolve(req.result || []); req.onerror = () => reject(req.error); }); }
-    async recordDose(drugName, form, dose, freqLabel) { if (!this.db) await this.open(); const id = `${drugName}_${form}_${dose}`; const tx = this.db.transaction(this.storeName, 'readwrite'); const store = tx.objectStore(this.storeName); const req = store.get(id); req.onsuccess = () => { let entry = req.result; if (entry) { entry.usageCount = (entry.usageCount || 0) + 1; entry.lastUsed = new Date().toISOString(); } else { entry = { id, drugName, form, dose, freqLabel, usageCount: 1, firstUsed: new Date().toISOString(), lastUsed: new Date().toISOString() }; } store.put(entry); }; }
-    async search(drugName, form, limit = 3) { const all = await this.getAll(); let results = all.filter(d => d.drugName === drugName && d.form === form); results.sort((a, b) => (b.usageCount || 0) - (a.usageCount || 0)); return results.slice(0, limit); }
+    get basePath() {
+        if (!this._basePath) {
+            this._basePath = currentTenantId 
+                ? `tenants/${currentTenantId}/doctor_doses` 
+                : 'doctor_doses';
+        }
+        return this._basePath;
+    }
+    
+    get maxDoses() { return 30; }
+    
+    async getAll() {
+        if (!currentTenantId) return [];
+        try {
+            const userId = auth.currentUser?.uid;
+            if (!userId) return [];
+            
+            const dosesRef = ref(db, `${this.basePath}/${userId}`);
+            const snap = await get(dosesRef);
+            if (!snap.exists()) return [];
+            
+            return Object.values(snap.val());
+        } catch (err) {
+            console.warn('تعذر جلب الجرعات:', err.message);
+            return [];
+        }
+    }
+    
+    async recordDose(drugName, form, dose, freqLabel) {
+        if (!currentTenantId) return;
+        try {
+            const userId = auth.currentUser?.uid;
+            if (!userId) return;
+            
+            const id = `${drugName}_${form}_${dose}`.replace(/[.#$/[\]]/g, '_');
+            const doseRef = ref(db, `${this.basePath}/${userId}/${id}`);
+            
+            const snap = await get(doseRef);
+            let entry;
+            
+            if (snap.exists()) {
+                entry = snap.val();
+                entry.usageCount = (entry.usageCount || 0) + 1;
+                entry.lastUsed = new Date().toISOString();
+            } else {
+                const allDoses = await this.getAll();
+                if (allDoses.length >= this.maxDoses) {
+                    const sorted = allDoses.sort((a, b) => (a.usageCount || 0) - (b.usageCount || 0));
+                    const toRemove = sorted[0];
+                    if (toRemove) {
+                        const removeKey = (toRemove.id || '').replace(/[.#$/[\]]/g, '_');
+                        await remove(ref(db, `${this.basePath}/${userId}/${removeKey}`));
+                    }
+                }
+                
+                entry = {
+                    id,
+                    drugName,
+                    form,
+                    dose,
+                    freqLabel,
+                    usageCount: 1,
+                    firstUsed: new Date().toISOString(),
+                    lastUsed: new Date().toISOString()
+                };
+            }
+            
+            await set(doseRef, entry);
+        } catch (err) {
+            console.warn('تعذر حفظ الجرعة:', err.message);
+        }
+    }
+    
+    async search(drugName, form, limit = 3) {
+        const all = await this.getAll();
+        let results = all.filter(d => d.drugName === drugName && d.form === form);
+        results.sort((a, b) => (b.usageCount || 0) - (a.usageCount || 0));
+        return results.slice(0, limit);
+    }
 }
 
 const sessionDB = new SessionDB();
@@ -138,9 +333,9 @@ const getDateDaysAgo = (days, fromDate = null) => {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 };
 
-// ✅ دالة مساعدة: ترجع تاريخ الأيام الـ 15 الأخيرة (من اليوم - 14 إلى اليوم)
+// ✅ دالة مساعدة: ترجع تاريخ الأيام الـ 15 الأخيرة
 const getLast15DaysRange = () => {
-    const startDate = getDateDaysAgo(14); // من 14 يوم فات (يعني 15 يوم شامل اليوم)
+    const startDate = getDateDaysAgo(14);
     const endDate = today();
     return { startDate, endDate };
 };
@@ -266,12 +461,6 @@ const doseManager = {
 // ✅✅✅ نظام المراقبة الذكي - نافذة منزلقة 15 يوم ✅✅✅
 // ============================================================
 const prescriptionTracker = {
-    /**
-     * تتبع وصفة دواء لدكتور معين
-     * - بيضيف وصفة جديدة لتاريخ اليوم
-     * - بيحافظ على آخر 15 يوم فقط (النافذة المنزلقة)
-     * - اليوم 16: يتمسح اليوم 1 تلقائياً
-     */
     async trackDrugPrescription(drugName, doctorId, doctorName) {
         if (!currentTenantId || !doctorId) return;
         
@@ -288,7 +477,6 @@ const prescriptionTracker = {
                 const data = snap.val();
                 let history = data.history || [];
                 
-                // ✅ 1. إضافة وصفة اليوم
                 const existingToday = history.find(h => h.date === todayDate);
                 if (existingToday) {
                     existingToday.count = (existingToday.count || 0) + 1;
@@ -299,17 +487,11 @@ const prescriptionTracker = {
                     });
                 }
                 
-                // ✅ 2. ترتيب التاريخ تصاعدياً
                 history.sort((a, b) => a.date.localeCompare(b.date));
                 
-                // ✅ 3. النافذة المنزلقة: نحتفظ بآخر 15 يوم فقط
-                // نحسب تاريخ البداية المسموح به (من 14 يوم فات لليوم = 15 يوم)
                 const cutoffDate = getDateDaysAgo(14);
-                
-                // ✅ نحتفظ فقط بالتواريخ الأحدث من cutoffDate
                 const filteredHistory = history.filter(h => h.date >= cutoffDate);
                 
-                // ✅ لو في تواريخ اتمسحت، نعرضها في اللوج
                 const removedCount = history.length - filteredHistory.length;
                 if (removedCount > 0) {
                     const removedDates = history
@@ -319,10 +501,8 @@ const prescriptionTracker = {
                     console.log(`🪟 نافذة منزلقة: تمت إزالة ${removedCount} أيام قديمة (${removedDates}) - ${drugName}`);
                 }
                 
-                // ✅ 4. حساب الإجمالي للنافذة الحالية
                 const totalCount15Days = filteredHistory.reduce((sum, h) => sum + (h.count || 0), 0);
                 
-                // ✅ 5. حفظ البيانات المحدثة
                 await set(drugRef, {
                     drug_name: drugName,
                     doctor_id: doctorId,
@@ -339,7 +519,6 @@ const prescriptionTracker = {
                 console.log(`📊 ${drugName}: ${totalCount15Days} وصفة في آخر 15 يوم (${cutoffDate} → ${todayDate})`);
                 
             } else {
-                // ✅ أول وصفة للدواء
                 const windowStart = getDateDaysAgo(14);
                 
                 await set(drugRef, {
@@ -363,10 +542,6 @@ const prescriptionTracker = {
         }
     },
     
-    /**
-     * جلب إحصائيات دواء معين لكل الدكاترة في المجمع
-     * مع إعادة حساب النافذة المنزلقة تلقائياً
-     */
     async getDrugStatsForAllDoctors(drugName) {
         if (!currentTenantId) return [];
         
@@ -385,7 +560,6 @@ const prescriptionTracker = {
                 
                 Object.entries(doctorData).forEach(([key, data]) => {
                     if (key === drugKey || (data.drug_name || '').toLowerCase() === drugName.toLowerCase()) {
-                        // ✅ إعادة حساب النافذة المنزلقة
                         const history = data.history || [];
                         const filteredHistory = history.filter(h => h.date >= cutoffDate);
                         const totalCount15Days = filteredHistory.reduce((sum, h) => sum + (h.count || 0), 0);
@@ -601,7 +775,15 @@ const drugManager = {
 async function saveSessionToDB() { 
     if (!state.currentAppointment) return; 
     if (state.isEditingCompleted) return;
-    const session = { id: state.currentAppointment.id, appointment: state.currentAppointment, prescription: state.prescription.slice(), diagnosis: $('#diagnosisInput')?.value || '', loadedTemplateId: state.loadedTemplateId, loadedTemplateName: state.loadedTemplateName, updatedAt: new Date().toISOString() }; 
+    const session = { 
+        id: state.currentAppointment.id, 
+        appointment: state.currentAppointment, 
+        prescription: state.prescription.slice(), 
+        diagnosis: $('#diagnosisInput')?.value || '', 
+        loadedTemplateId: state.loadedTemplateId, 
+        loadedTemplateName: state.loadedTemplateName, 
+        updatedAt: new Date().toISOString() 
+    }; 
     sessionDB.save(session).catch(() => {}); 
     state.activeSessionId = session.id; 
 }
@@ -1621,7 +1803,7 @@ onAuthStateChanged(auth, async (user) => {
         sessionStorage.setItem('userRole', 'doctor'); 
         sessionStorage.setItem('userName', state.user.name||'');
         
-        await Promise.all([sessionDB.open(), favoritesDB.open(), favoriteDosesDB.open(), drugManager.loadCache()]);
+        await drugManager.loadCache();
         setupEventListeners();
         
         const q = query(ref(db, `tenants/${currentTenantId}/appointments`), orderByChild('doctor_id'), equalTo(user.uid));
@@ -1664,10 +1846,12 @@ onAuthStateChanged(auth, async (user) => {
 });
 
 console.log('🚀 لوحة الطبيب - نظام المجمعات الطبية المتعددة');
+console.log('☁️ التخزين سحابي بالكامل (Firebase Realtime Database)');
+console.log('💰 تكلفة محسّنة مع حدود قصوى للبيانات');
 console.log('🔍 البحث الذكي: ترتيب حسب بداية النص أولاً');
 console.log('💊 الشكل الصيدلي: يُحفظ في الروشتة فقط للصيدلي');
-console.log('⭐ المفضلات: تبحث بشكل ذكي مع كل حرف يُكتب');
+console.log('⭐ المفضلات: تخزين سحابي مع حد أقصى 50 دواء و30 جرعة');
 console.log('🔒 كل طبيب يشوف كشوفاته هو فقط في مجمعه');
-console.log('🪟 نظام مراقبة: نافذة منزلقة 15 يوم (اليوم 16 يتمسح اليوم 1 فقط)');
-console.log('🏥 سجل موحد: يظهر وصفات المريض من كل المجمعات مع إخفاء اسم الدكتور من المجمعات الأخرى');
-console.log('💾 وضع الحفظ: يمسح جلسة الدخول فقط - يحتفظ ببيانات المجمع');
+console.log('🪟 نظام مراقبة: نافذة منزلقة 15 يوم');
+console.log('🏥 سجل موحد: يظهر وصفات المريض من كل المجمعات');
+console.log('💾 الجلسات المعلقة: تخزين سحابي بدلاً من IndexedDB');
