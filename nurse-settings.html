@@ -98,12 +98,7 @@
             top: 6px;
             z-index: 100;
         }
-        .logo h2 {
-            font-size: clamp(1.1rem, 3vw, 1.3rem);
-            font-weight: 800;
-            color: var(--primary-dark);
-            white-space: nowrap;
-        }
+        .logo h2 { font-size: clamp(1.1rem, 3vw, 1.3rem); font-weight: 800; color: var(--primary-dark); white-space: nowrap; }
         .logo i { color: var(--primary); }
         .header-actions { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
 
@@ -141,12 +136,7 @@
         .btn-primary { background: var(--primary); color: white; box-shadow: 0 3px 10px rgba(0,174,239,0.2); }
         .btn-outline { background: var(--white); color: var(--ink); border: 1.5px solid var(--border); }
         .btn-danger { background: var(--danger); color: white; }
-        .btn-back {
-            background: rgba(255,255,255,0.9);
-            color: var(--primary-dark);
-            border: 1.5px solid var(--primary);
-            font-weight: 700;
-        }
+        .btn-back { background: rgba(255,255,255,0.9); color: var(--primary-dark); border: 1.5px solid var(--primary); font-weight: 700; }
         .btn-back i { color: var(--primary); }
 
         .section-title {
@@ -231,17 +221,8 @@
             padding: clamp(30px, 8vw, 50px) 20px;
             color: var(--text-sec);
         }
-        .settings-card.empty i {
-            font-size: clamp(2.5rem, 7vw, 3.5rem);
-            opacity: 0.15;
-            margin-bottom: 12px;
-            display: block;
-        }
-        .settings-card.empty h3 {
-            font-size: clamp(1rem, 2.5vw, 1.15rem);
-            margin-bottom: 6px;
-            color: var(--ink);
-        }
+        .settings-card.empty i { font-size: clamp(2.5rem, 7vw, 3.5rem); opacity: 0.15; margin-bottom: 12px; display: block; }
+        .settings-card.empty h3 { font-size: clamp(1rem, 2.5vw, 1.15rem); margin-bottom: 6px; color: var(--ink); }
 
         .doctor-info-header {
             display: flex;
@@ -266,24 +247,11 @@
             aspect-ratio: 1;
             overflow: hidden;
         }
-        .doctor-avatar-lg img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        .doctor-info-text h3 {
-            font-size: clamp(1rem, 2.5vw, 1.15rem);
-            font-weight: 800;
-            color: var(--ink);
-        }
-        .doctor-info-text span {
-            font-size: clamp(0.75rem, 1.8vw, 0.82rem);
-            color: var(--text-sec);
-        }
+        .doctor-avatar-lg img { width: 100%; height: 100%; object-fit: cover; }
+        .doctor-info-text h3 { font-size: clamp(1rem, 2.5vw, 1.15rem); font-weight: 800; color: var(--ink); }
+        .doctor-info-text span { font-size: clamp(0.75rem, 1.8vw, 0.82rem); color: var(--text-sec); }
 
-        .form-group {
-            margin-bottom: clamp(10px, 2.5vw, 14px);
-        }
+        .form-group { margin-bottom: clamp(10px, 2.5vw, 14px); }
         .form-group label {
             display: block;
             margin-bottom: 5px;
@@ -294,11 +262,7 @@
             align-items: center;
             gap: 6px;
         }
-        .form-group label i {
-            color: var(--primary);
-            width: 18px;
-            text-align: center;
-        }
+        .form-group label i { color: var(--primary); width: 18px; text-align: center; }
         .form-control {
             width: 100%;
             padding: clamp(9px, 2vw, 11px) clamp(12px, 2.5vw, 14px);
@@ -313,16 +277,8 @@
             transition: all 0.15s ease;
             resize: vertical;
         }
-        .form-control:focus {
-            outline: none;
-            border-color: var(--primary);
-            background: white;
-            box-shadow: 0 0 0 3px rgba(0,174,239,0.08);
-        }
-        textarea.form-control {
-            min-height: clamp(70px, 18vw, 90px);
-            line-height: 1.6;
-        }
+        .form-control:focus { outline: none; border-color: var(--primary); background: white; box-shadow: 0 0 0 3px rgba(0,174,239,0.08); }
+        textarea.form-control { min-height: clamp(70px, 18vw, 90px); line-height: 1.6; }
         select.form-control {
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath fill='%238FA4AD' d='M5 7L1 3h8z'/%3E%3C/svg%3E");
             background-repeat: no-repeat;
@@ -330,27 +286,10 @@
             padding-left: 30px;
             cursor: pointer;
         }
-        
-        /* ✅ تنسيق خاص لحقل الواتساب */
-        .whatsapp-input-wrapper {
-            position: relative;
-            display: flex;
-            align-items: center;
-        }
-        .whatsapp-prefix {
-            position: absolute;
-            right: 12px;
-            font-weight: 700;
-            color: var(--text-sec);
-            font-size: 0.9rem;
-            z-index: 2;
-            pointer-events: none;
-        }
-        .whatsapp-input-wrapper .form-control {
-            padding-right: 60px;
-            direction: ltr;
-            text-align: right;
-        }
+
+        .whatsapp-input-wrapper { position: relative; display: flex; align-items: center; }
+        .whatsapp-prefix { position: absolute; right: 12px; font-weight: 700; color: var(--text-sec); font-size: 0.9rem; z-index: 2; pointer-events: none; }
+        .whatsapp-input-wrapper .form-control { padding-right: 60px; direction: ltr; text-align: right; }
         .whatsapp-badge {
             display: inline-flex;
             align-items: center;
@@ -363,22 +302,11 @@
             font-weight: 700;
             margin-top: 4px;
         }
-        .whatsapp-validation {
-            font-size: 0.72rem;
-            margin-top: 4px;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
+        .whatsapp-validation { font-size: 0.72rem; margin-top: 4px; display: flex; align-items: center; gap: 4px; }
         .whatsapp-validation.valid { color: var(--success); }
         .whatsapp-validation.invalid { color: var(--danger); }
         
-        .field-hint {
-            font-size: clamp(0.68rem, 1.6vw, 0.73rem);
-            color: var(--text-sec);
-            margin-top: 4px;
-            padding-right: 26px;
-        }
+        .field-hint { font-size: clamp(0.68rem, 1.6vw, 0.73rem); color: var(--text-sec); margin-top: 4px; padding-right: 26px; }
         .field-warning {
             font-size: clamp(0.68rem, 1.6vw, 0.73rem);
             color: var(--warning);
@@ -390,7 +318,6 @@
             font-weight: 600;
         }
 
-        /* ============ ✅ رفع الصور ============ */
         .upload-area {
             border: 2px dashed var(--border);
             border-radius: var(--radius-md);
@@ -407,220 +334,81 @@
             justify-content: center;
             gap: 8px;
         }
-        .upload-area:hover {
-            border-color: var(--primary);
-            background: var(--primary-light);
-        }
-        .upload-area i {
-            font-size: 1.8rem;
-            color: var(--primary);
-            opacity: 0.6;
-        }
-        .upload-area span {
-            font-size: 0.8rem;
-            color: var(--text-sec);
-            font-weight: 600;
-        }
-        .upload-area small {
-            font-size: 0.68rem;
-            color: var(--text-light);
-        }
+        .upload-area:hover { border-color: var(--primary); background: var(--primary-light); }
+        .upload-area i { font-size: 1.8rem; color: var(--primary); opacity: 0.6; }
+        .upload-area span { font-size: 0.8rem; color: var(--text-sec); font-weight: 600; }
+        .upload-area small { font-size: 0.68rem; color: var(--text-light); }
         .file-input-hidden { display: none; }
 
-        .preview-container {
-            display: none;
-            position: relative;
-            margin-top: 10px;
-            border-radius: var(--radius-sm);
-            overflow: hidden;
-            border: 1px solid var(--border);
-        }
+        .preview-container { display: none; position: relative; margin-top: 10px; border-radius: var(--radius-sm); overflow: hidden; border: 1px solid var(--border); }
         .preview-container.active { display: block; }
-        .preview-container img {
-            width: 100%;
-            max-height: 200px;
-            object-fit: contain;
-            background: #F5F5F5;
-        }
-        .preview-overlay {
-            position: absolute;
-            top: 6px;
-            right: 6px;
-            display: flex;
-            gap: 4px;
-        }
+        .preview-container img { width: 100%; max-height: 200px; object-fit: contain; background: #F5F5F5; }
+        .preview-overlay { position: absolute; top: 6px; right: 6px; display: flex; gap: 4px; }
         .preview-btn {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            border: none;
-            background: rgba(0,0,0,0.6);
-            color: white;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.75rem;
-            transition: background 0.15s;
+            width: 30px; height: 30px; border-radius: 50%; border: none;
+            background: rgba(0,0,0,0.6); color: white; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; font-size: 0.75rem; transition: background 0.15s;
         }
         .preview-btn:hover { background: rgba(0,0,0,0.8); }
         .preview-btn.remove { background: var(--danger); }
 
         .compress-info {
-            display: none;
-            background: #E8F5E9;
-            border-radius: var(--radius-xs);
-            padding: 6px 10px;
-            font-size: 0.7rem;
-            color: #2E7D32;
-            font-weight: 600;
-            margin-top: 6px;
-            align-items: center;
-            gap: 4px;
+            display: none; background: #E8F5E9; border-radius: var(--radius-xs); padding: 6px 10px;
+            font-size: 0.7rem; color: #2E7D32; font-weight: 600; margin-top: 6px; align-items: center; gap: 4px;
         }
         .compress-info.active { display: flex; }
 
-        /* ============ ✅ معرض صور الحالات ============ */
-        .gallery-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-            gap: 8px;
-            margin-top: 8px;
-        }
-        .gallery-item {
-            position: relative;
-            border-radius: var(--radius-xs);
-            overflow: hidden;
-            aspect-ratio: 1;
-            border: 1px solid var(--border);
-        }
-        .gallery-item img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
+        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 8px; margin-top: 8px; }
+        .gallery-item { position: relative; border-radius: var(--radius-xs); overflow: hidden; aspect-ratio: 1; border: 1px solid var(--border); }
+        .gallery-item img { width: 100%; height: 100%; object-fit: cover; }
         .gallery-item .remove-gallery-btn {
-            position: absolute;
-            top: 2px;
-            right: 2px;
-            width: 22px;
-            height: 22px;
-            border-radius: 50%;
-            border: none;
-            background: var(--danger);
-            color: white;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.6rem;
+            position: absolute; top: 2px; right: 2px; width: 22px; height: 22px; border-radius: 50%;
+            border: none; background: var(--danger); color: white; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; font-size: 0.6rem;
         }
         .gallery-add {
-            border: 2px dashed var(--border);
-            border-radius: var(--radius-xs);
-            aspect-ratio: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.2s;
-            color: var(--text-light);
-            font-size: 0.7rem;
-            text-align: center;
-            flex-direction: column;
-            gap: 3px;
+            border: 2px dashed var(--border); border-radius: var(--radius-xs); aspect-ratio: 1;
+            display: flex; align-items: center; justify-content: center; cursor: pointer;
+            transition: all 0.2s; color: var(--text-light); font-size: 0.7rem; text-align: center;
+            flex-direction: column; gap: 3px;
         }
-        .gallery-add:hover {
-            border-color: var(--primary);
-            color: var(--primary);
-            background: var(--primary-light);
-        }
+        .gallery-add:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
         .gallery-add i { font-size: 1.2rem; }
 
-        /* ============ قسم الأسعار ============ */
         .section-divider {
             margin: clamp(14px, 3vw, 20px) 0 clamp(10px, 2.5vw, 14px);
             padding-top: clamp(14px, 3vw, 20px);
             border-top: 2px dashed var(--border);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-weight: 800;
-            font-size: clamp(0.85rem, 2vw, 0.95rem);
-            color: var(--primary-dark);
+            display: flex; align-items: center; gap: 8px;
+            font-weight: 800; font-size: clamp(0.85rem, 2vw, 0.95rem); color: var(--primary-dark);
         }
         .section-divider i { color: var(--warning); }
 
-        .row-2 {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-        }
+        .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
-        /* ============ شارات الحالة ============ */
         .tag-input-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            padding: 8px;
-            background: #F8FAFB;
-            border: 1.5px solid var(--border);
-            border-radius: var(--radius-sm);
-            min-height: 44px;
-            align-items: center;
-            cursor: text;
+            display: flex; flex-wrap: wrap; gap: 6px; padding: 8px;
+            background: #F8FAFB; border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+            min-height: 44px; align-items: center; cursor: text;
         }
-        .tag-input-container:focus-within {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(0,174,239,0.08);
-            background: white;
-        }
+        .tag-input-container:focus-within { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0,174,239,0.08); background: white; }
         .tag {
-            background: var(--primary-light);
-            color: var(--primary-dark);
-            padding: 3px 10px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 5px;
+            background: var(--primary-light); color: var(--primary-dark); padding: 3px 10px;
+            border-radius: 20px; font-size: 0.75rem; font-weight: 700;
+            display: flex; align-items: center; gap: 5px;
         }
         .tag .remove-tag {
-            cursor: pointer;
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            background: rgba(0,0,0,0.1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.6rem;
-            transition: background 0.15s;
+            cursor: pointer; width: 18px; height: 18px; border-radius: 50%;
+            background: rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center;
+            font-size: 0.6rem; transition: background 0.15s;
         }
         .tag .remove-tag:hover { background: var(--danger); color: white; }
-        .tag-input {
-            border: none;
-            outline: none;
-            background: transparent;
-            font-family: 'Cairo', system-ui, sans-serif;
-            font-size: 0.82rem;
-            flex: 1;
-            min-width: 100px;
-            padding: 4px;
-        }
+        .tag-input { border: none; outline: none; background: transparent; font-family: 'Cairo', system-ui, sans-serif; font-size: 0.82rem; flex: 1; min-width: 100px; padding: 4px; }
 
         .saved-indicator {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            background: #E8F5E9;
-            color: #2E7D32;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 0.72rem;
-            font-weight: 700;
-            animation: fadeInOut 2s ease forwards;
+            display: inline-flex; align-items: center; gap: 4px;
+            background: #E8F5E9; color: #2E7D32; padding: 4px 10px; border-radius: 20px;
+            font-size: 0.72rem; font-weight: 700; animation: fadeInOut 2s ease forwards;
         }
         @keyframes fadeInOut {
             0% { opacity: 0; transform: scale(0.8); }
@@ -629,12 +417,7 @@
             100% { opacity: 0; }
         }
 
-        .action-row {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            margin-top: 16px;
-        }
+        .action-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
 
         .toast-container {
             position: fixed;
@@ -757,7 +540,6 @@
 
         let currentTenantId = null;
         let currentNurseId = null;
-        const getTenantStorageKey = (k) => currentTenantId ? `${STORAGE_PREFIX}${currentTenantId}_${k}` : k;
 
         const state = {
             currentUser: null,
@@ -765,7 +547,6 @@
             assignedDoctors: [],
             selectedDoctorId: null,
             doctorInfoCache: {},
-            // ✅ متغيرات الصور المؤقتة
             tempProfileImage: null,
             tempGalleryImages: [],
         };
@@ -793,21 +574,13 @@
             } catch (e) {}
         };
 
-        // ============ ✅ التحقق من صحة رقم الهاتف المصري ============
         const validateEgyptianPhone = (phone) => {
-            // يقبل: 01xxxxxxxxx أو +20 1xxxxxxxxx أو 201xxxxxxxxx
             const cleaned = phone.replace(/[\s\-\+\(\)]/g, '');
-            // أنماط أرقام الموبايل المصرية
-            const patterns = [
-                /^01[0125]\d{8}$/,        // 010, 011, 012, 015
-                /^20\d{10}$/,             // 20xxxxxxxxxx
-                /^0020\d{10}$/,           // 0020xxxxxxxxxx
-            ];
+            const patterns = [/^01[0125]\d{8}$/, /^20\d{10}$/, /^0020\d{10}$/];
             return patterns.some(p => p.test(cleaned));
         };
 
         const formatPhoneForWhatsapp = (phone) => {
-            // تنظيف الرقم وتحويله لصيغة 2xxxxxxxxxx (للينك الواتساب)
             let cleaned = phone.replace(/[\s\-\+\(\)]/g, '');
             if (cleaned.startsWith('0020')) cleaned = cleaned.substring(4);
             if (cleaned.startsWith('20')) cleaned = cleaned.substring(2);
@@ -815,7 +588,6 @@
             return '2' + cleaned;
         };
 
-        // ============ ✅ ضغط الصور ============
         const compressImage = (file, maxWidth = 600, maxHeight = 600, quality = 0.7) => {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -846,7 +618,6 @@
             return `${(bytes / (1024 * 1024)).toFixed(2)} م.ب`;
         };
 
-        // ============ استعادة الجلسة ============
         const restoreSession = () => {
             try {
                 const saved = sessionStorage.getItem('nurse_settings_session');
@@ -863,7 +634,6 @@
             return null;
         };
 
-        // ============ تحميل بيانات الممرض والأطباء ============
         const loadNurseAndDoctors = async (uid) => {
             try {
                 let nurseSnap = null;
@@ -917,7 +687,6 @@
             state.selectedDoctorId = doctorId;
             sessionStorage.setItem('nurse_settings_selected_doctor', doctorId);
             renderDoctorsStrip();
-            // إعادة تعيين الصور المؤقتة
             state.tempProfileImage = null;
             state.tempGalleryImages = [];
 
@@ -932,7 +701,6 @@
             renderSettingsCard(doctor, doctorInfo);
         };
 
-        // ============ عرض بطاقة الإعدادات ============
         const renderSettingsCard = (doctor, doctorInfo) => {
             const container = $('#settingsCardContainer');
             if (!doctor) {
@@ -953,7 +721,6 @@
             const profileImage = doctorInfo?.profile_image || '';
             const galleryImages = doctorInfo?.gallery_images || [];
             
-            // تحميل الصور المؤقتة من البيانات الموجودة
             state.tempProfileImage = profileImage || null;
             state.tempGalleryImages = [...galleryImages];
 
@@ -971,7 +738,6 @@
                         </div>
                     </div>
 
-                    <!-- ✅ الصورة الشخصية -->
                     <div class="form-group">
                         <label><i class="fas fa-camera"></i> الصورة الشخصية للدكتور</label>
                         <div class="upload-area" id="profileUploadArea">
@@ -992,39 +758,33 @@
                         </div>
                     </div>
 
-                    <!-- ✅ الجملة الجاذبة -->
                     <div class="form-group">
                         <label><i class="fas fa-star"></i> الجملة الجاذبة (Hook)</label>
                         <input type="text" id="hookInput" class="form-control" placeholder="مثال: منقذ ٢٣٤١ مريض قلب في آخر ٥ سنين" value="${esc(hook)}" maxlength="100">
                         <div class="field-hint">جملة تسويقية قصيرة تظهر أسفل اسم الدكتور مباشرة</div>
                     </div>
 
-                    <!-- ✅ رسالة الترحيب -->
                     <div class="form-group">
                         <label><i class="fas fa-comment-dots"></i> رسالة الترحيب</label>
-                        <textarea id="welcomeMessageInput" class="form-control" placeholder="مرحباً، أنا د. ${esc(doctor.name)}. بقالي ١٥ سنة بعالج أمراض القلب. هدفي أرجعك لبيتك مطمئن. احجز كشفك النهاردة وخليني أطمن عليك.">${esc(welcomeMessage)}</textarea>
+                        <textarea id="welcomeMessageInput" class="form-control" placeholder="مرحباً، أنا د. ${esc(doctor.name)}. بقالي ١٥ سنة بعالج أمراض القلب.">${esc(welcomeMessage)}</textarea>
                         <div class="field-hint">رسالة شخصية دافئة تظهر للمريض في بطاقة الدكتور</div>
                     </div>
 
-                    <!-- ✅ مواعيد العمل -->
                     <div class="form-group">
                         <label><i class="fas fa-clock"></i> مواعيد العمل</label>
                         <textarea id="workHoursInput" class="form-control" placeholder="السبت - الخميس: 9 صباحاً - 5 مساءً&#10;الجمعة: إجازة">${esc(workHours)}</textarea>
                     </div>
 
-                    <!-- ✅ التخصص -->
                     <div class="form-group">
                         <label><i class="fas fa-stethoscope"></i> التخصص</label>
                         <input type="text" id="specialtyInput" class="form-control" placeholder="قلب وأوعية دموية" value="${esc(specialty)}">
                     </div>
 
-                    <!-- ✅ سنوات الخبرة (اختياري) -->
                     <div class="form-group">
                         <label><i class="fas fa-briefcase"></i> سنوات الخبرة <small style="color:var(--text-light);font-weight:400;">(اختياري)</small></label>
                         <input type="number" id="yearsExperienceInput" class="form-control" placeholder="15" min="0" max="60" value="${esc(yearsExperience)}">
                     </div>
 
-                    <!-- ✅ الأمراض المعالجة -->
                     <div class="form-group">
                         <label><i class="fas fa-tags"></i> الأمراض اللي بيعالجها</label>
                         <div class="tag-input-container" id="conditionsContainer">
@@ -1034,7 +794,6 @@
                         <div class="field-hint">اضغط Enter بعد كل مرض لإضافته</div>
                     </div>
 
-                    <!-- ✅ معرض صور الحالات (اختياري - حتى ٥ صور) -->
                     <div class="form-group">
                         <label><i class="fas fa-images"></i> معرض صور الحالات <small style="color:var(--text-light);font-weight:400;">(اختياري - أقصى حد ٥ صور)</small></label>
                         <div class="gallery-grid" id="galleryGrid">
@@ -1048,7 +807,6 @@
                         <input type="file" id="galleryFileInput" class="file-input-hidden" accept="image/*">
                     </div>
 
-                    <!-- ✅ قسم الأسعار -->
                     <div class="section-divider">
                         <i class="fas fa-money-bill-wave"></i> الأسعار والدفع
                     </div>
@@ -1070,7 +828,6 @@
                         <div class="field-hint">عدد الأيام قبل الحاجة لتجديد الكشف</div>
                     </div>
 
-                    <!-- ✅✅✅ رقم التواصل (واتساب) ✅✅✅ -->
                     <div class="section-divider">
                         <i class="fab fa-whatsapp" style="color:var(--whatsapp);"></i> معلومات التواصل
                     </div>
@@ -1079,20 +836,13 @@
                         <label>
                             <i class="fab fa-whatsapp" style="color:var(--whatsapp);"></i> 
                             رقم التواصل (واتساب)
-                            <span class="whatsapp-badge">
-                                <i class="fab fa-whatsapp"></i> واتساب فقط
-                            </span>
+                            <span class="whatsapp-badge"><i class="fab fa-whatsapp"></i> واتساب فقط</span>
                         </label>
                         <div class="whatsapp-input-wrapper">
                             <span class="whatsapp-prefix">+20</span>
-                            <input type="tel" 
-                                   id="whatsappNumberInput" 
-                                   class="form-control" 
-                                   placeholder="1xxxxxxxxx" 
-                                   value="${esc(whatsappNumber)}" 
-                                   dir="ltr"
-                                   inputmode="numeric"
-                                   maxlength="15">
+                            <input type="tel" id="whatsappNumberInput" class="form-control" 
+                                placeholder="1xxxxxxxxx" value="${esc(whatsappNumber)}" 
+                                dir="ltr" inputmode="numeric" maxlength="15">
                         </div>
                         <div class="whatsapp-validation" id="whatsappValidation"></div>
                         <div class="field-warning">
@@ -1114,14 +864,12 @@
                 </div>
             `;
 
-            // ✅ التحقق المباشر من صحة رقم الواتساب عند التحميل
             setTimeout(() => {
                 initSettingsEvents(doctor.id);
                 if (whatsappNumber) validateAndShowWhatsappStatus(whatsappNumber);
             }, 50);
         };
 
-        // ============ عرض المعرض ============
         const renderGalleryItems = () => {
             return state.tempGalleryImages.map((img, i) => `
                 <div class="gallery-item">
@@ -1131,7 +879,6 @@
             `).join('');
         };
 
-        // ============ ✅ التحقق وعرض حالة الواتساب ============
         const validateAndShowWhatsappStatus = (phone) => {
             const validationDiv = $('#whatsappValidation');
             if (!validationDiv) return;
@@ -1163,9 +910,7 @@
             }
         };
 
-        // ============ تهيئة أحداث البطاقة ============
         const initSettingsEvents = (doctorId) => {
-            // ✅ الصورة الشخصية
             const profileUploadArea = $('#profileUploadArea');
             const profileFileInput = $('#profileFileInput');
             const profilePreviewContainer = $('#profilePreviewContainer');
@@ -1205,7 +950,6 @@
                 profileAvatarPreview.innerHTML = esc((doctor?.name || 'د').charAt(0));
             });
 
-            // ✅ معرض الصور
             const galleryAddBtn = $('#galleryAddBtn');
             const galleryFileInput = $('#galleryFileInput');
 
@@ -1219,24 +963,18 @@
                 }
             });
 
-            // أزرار حذف صور المعرض
             $$('.remove-gallery-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
-                    const index = parseInt(btn.dataset.index);
-                    state.tempGalleryImages.splice(index, 1);
+                    state.tempGalleryImages.splice(parseInt(btn.dataset.index), 1);
                     refreshGallery(doctorId);
                 });
             });
 
-            // ✅ رقم الواتساب - التحقق المباشر
             const whatsappInput = $('#whatsappNumberInput');
             whatsappInput?.addEventListener('input', (e) => {
-                // السماح بالأرقام و + و - ومسافة وأقواس فقط
                 const value = e.target.value;
                 const cleaned = value.replace(/[^\d\s\-\+\(\)]/g, '');
-                if (value !== cleaned) {
-                    e.target.value = cleaned;
-                }
+                if (value !== cleaned) e.target.value = cleaned;
                 validateAndShowWhatsappStatus(cleaned);
             });
 
@@ -1247,7 +985,6 @@
                 }
             });
 
-            // ✅ الأمراض المعالجة (Tags)
             const conditionsInput = $('#conditionsInput');
             const conditionsContainer = $('#conditionsContainer');
 
@@ -1266,12 +1003,10 @@
                 }
             });
 
-            // أزرار حذف التاجات الموجودة
             $$('.remove-tag').forEach(btn => {
                 btn.addEventListener('click', () => btn.closest('.tag').remove());
             });
 
-            // ✅ أزرار الحفظ والمسح
             $('#saveDoctorInfoBtn')?.addEventListener('click', () => saveDoctorInfo(doctorId));
             $('#clearDoctorInfoBtn')?.addEventListener('click', () => {
                 $('#workHoursInput').value = '';
@@ -1297,7 +1032,6 @@
             });
         };
 
-        // ============ تحديث المعرض ============
         const refreshGallery = (doctorId) => {
             const galleryGrid = $('#galleryGrid');
             if (!galleryGrid) return;
@@ -1309,7 +1043,6 @@
                     <span>إضافة</span>
                 </div>` : ''}
             `;
-            // إعادة ربط الأحداث
             const newGalleryAddBtn = $('#galleryAddBtn');
             const galleryFileInput = $('#galleryFileInput');
             newGalleryAddBtn?.addEventListener('click', () => galleryFileInput.click());
@@ -1329,7 +1062,6 @@
             });
         };
 
-        // ============ حفظ بيانات الدكتور ============
         const saveDoctorInfo = async (doctorId) => {
             const workHours = $('#workHoursInput')?.value.trim() || '';
             const specialty = $('#specialtyInput')?.value.trim() || '';
@@ -1341,14 +1073,12 @@
             const followUpPrice = $('#followUpPriceInput')?.value.trim() || '';
             const renewalDays = $('#renewalDaysInput')?.value.trim() || '';
 
-            // ✅ التحقق من صحة رقم الواتساب قبل الحفظ
             if (whatsappNumber && !validateEgyptianPhone(whatsappNumber)) {
                 toast('⚠️ رقم الواتساب غير صحيح! يجب أن يكون رقم موبايل مصري (01xxxxxxxxx)', true);
                 $('#whatsappNumberInput').focus();
                 return;
             }
 
-            // جمع التاجات
             const conditionsTreated = [];
             $$('.tag').forEach(tag => {
                 const text = tag.textContent.replace('×', '').trim();
@@ -1378,6 +1108,7 @@
                     tenantId: currentTenantId,
                 };
 
+                // ✅ الحفظ في مسار المجمع السحابي
                 await set(ref(db, `tenants/${currentTenantId}/doctors_info/${doctorId}`), doctorInfoData);
 
                 state.doctorInfoCache[doctorId] = doctorInfoData;
@@ -1395,7 +1126,6 @@
             }
         };
 
-        // ============ تسجيل الخروج ============
         const logout = async () => {
             try {
                 toast('👋 جاري تسجيل الخروج...');
@@ -1409,7 +1139,6 @@
             }
         };
 
-        // ============ ربط الأحداث ============
         const initEvents = () => {
             $('#backBtn').addEventListener('click', () => {
                 window.location.href = `nurse-dashboard.html?tenant=${currentTenantId || ''}`;
@@ -1417,7 +1146,6 @@
             $('#logoutBtn').addEventListener('click', logout);
         };
 
-        // ============ بدء التشغيل ============
         onAuthStateChanged(auth, async (user) => {
             if (!user) { clearLoginSessionOnly(); window.location.href = 'index.html'; return; }
 
@@ -1438,10 +1166,9 @@
             if (!success) toast('⚠️ تعذر تحميل بعض البيانات', true);
         });
 
-        console.log('⚙️ صفحة إعدادات الممرض - إدارة بيانات الأطباء المتطورة');
-        console.log('📸 صورة شخصية + معرض صور الحالات + أمراض معالجة + Hook + رسالة ترحيب');
-        console.log('📱 رقم واتساب مع تحقق من الصحة المصرية');
-        console.log('💾 الحفظ في: tenants/{tenantId}/doctors_info/{doctorId}');
+        console.log('⚙️ صفحة إعدادات الممرض - حفظ سحابي مباشر');
+        console.log('💾 مسار الحفظ: tenants/{tenantId}/doctors_info/{doctorId}');
+        console.log('☁️ Firebase Realtime Database - بدون IndexedDB');
     </script>
 </body>
 </html>
