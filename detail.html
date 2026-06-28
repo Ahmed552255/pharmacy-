@@ -298,23 +298,13 @@
     const auth = getAuth(app);
     const db = getDatabase(app);
 
-    // ============ ✅ ثوابت التخزين المحلي ============
     const STORAGE_PREFIX = 'shifa_tenant_';
-    
-    const LOGIN_STORAGE_KEYS = [
-        'shifa_session',
-        'shifa_remember',
-        'shifa_last_login',
-        'shifa_secure_session'
-    ];
+    const LOGIN_STORAGE_KEYS = ['shifa_session', 'shifa_remember', 'shifa_last_login', 'shifa_secure_session'];
 
-    // ✅ قراءة المعلمات من الرابط
     const urlParams = new URLSearchParams(window.location.search);
     const patientId = urlParams.get('patientId');
     const patientName = urlParams.get('patientName') || 'المريض';
-    const currentTenantId = urlParams.get('tenant'); // ✅ معرف المجمع
-
-    console.log('📋 معلمات الرابط:', { patientId, patientName, currentTenantId });
+    const currentTenantId = urlParams.get('tenant');
 
     let currentUser = null;
     let userRole = null;
@@ -324,7 +314,6 @@
 
     const $ = (sel) => document.querySelector(sel);
 
-    // ✅ مسح بيانات الجلسة فقط
     const clearLoginSessionOnly = () => {
         try {
             LOGIN_STORAGE_KEYS.forEach(key => localStorage.removeItem(key));
@@ -337,9 +326,7 @@
             }
             sessionKeysToRemove.forEach(key => localStorage.removeItem(key));
             sessionStorage.clear();
-        } catch (e) {
-            console.warn('تعذر مسح بيانات الجلسة:', e.message);
-        }
+        } catch (e) { console.warn('تعذر مسح بيانات الجلسة:', e.message); }
     };
 
     const showToast = (msg, err = false) => {
@@ -352,13 +339,7 @@
         setTimeout(() => t.remove(), 2500);
     };
 
-    // ✅ الحصول على مسار البيانات الصحيح
-    const getDataPath = (path) => {
-        if (currentTenantId) {
-            return `tenants/${currentTenantId}/${path}`;
-        }
-        return path;
-    };
+    const getDataPath = (path) => currentTenantId ? `tenants/${currentTenantId}/${path}` : path;
 
     function escapeHtml(str) {
         if (!str) return '';
@@ -415,7 +396,6 @@
     async function loadPatientData() {
         const contentArea = document.getElementById('contentArea');
         try {
-            // ✅ 1. بيانات المريض من مسار المجمع
             let patientInfo = { name: patientName };
             
             if (currentTenantId) {
@@ -423,7 +403,6 @@
                 if (patientSnap.exists()) {
                     patientInfo = { ...patientInfo, ...patientSnap.val() };
                 } else {
-                    // محاولة المسار العام
                     const publicSnap = await get(ref(db, `patients/${patientId}`));
                     if (publicSnap.exists()) {
                         patientInfo = { ...patientInfo, ...publicSnap.val() };
@@ -436,7 +415,6 @@
                 }
             }
 
-            // ✅ 2. جميع الروشتات من مسار المجمع
             let allPresSnap = null;
             if (currentTenantId) {
                 allPresSnap = await get(ref(db, getDataPath('prescriptions')));
@@ -459,7 +437,6 @@
             patientPrescriptions.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
             allPrescriptions = patientPrescriptions;
 
-            // ✅ 3. أطباء من مسار المجمع
             const doctorIds = [...new Set(patientPrescriptions.map(p => p.doctor_id).filter(Boolean))];
             const doctorsMap = {};
             if (doctorIds.length > 0) {
@@ -467,9 +444,7 @@
                     let snap = null;
                     if (currentTenantId) {
                         snap = await get(ref(db, getDataPath(`users/${docId}`)));
-                        if (!snap.exists()) {
-                            snap = await get(ref(db, `users/${docId}`));
-                        }
+                        if (!snap.exists()) snap = await get(ref(db, `users/${docId}`));
                     } else {
                         snap = await get(ref(db, `users/${docId}`));
                     }
@@ -481,15 +456,12 @@
                 });
             }
 
-            // ✅ 4. عناصر الوصفات من مسار المجمع
             const itemsMap = {};
             for (const pres of patientPrescriptions) {
                 let itemsSnap = null;
                 if (currentTenantId) {
                     itemsSnap = await get(ref(db, getDataPath(`prescription_items/${pres.id}`)));
-                    if (!itemsSnap.exists()) {
-                        itemsSnap = await get(ref(db, `prescription_items/${pres.id}`));
-                    }
+                    if (!itemsSnap.exists()) itemsSnap = await get(ref(db, `prescription_items/${pres.id}`));
                 } else {
                     itemsSnap = await get(ref(db, `prescription_items/${pres.id}`));
                 }
@@ -499,14 +471,11 @@
                     items = Object.values(itemsSnap.val());
                 }
                 
-                // دعم القوالب
                 if (items.length === 0 && pres.template_id) {
                     let templateItemsSnap = null;
                     if (currentTenantId) {
                         templateItemsSnap = await get(ref(db, getDataPath(`template_items/${pres.template_id}`)));
-                        if (!templateItemsSnap.exists()) {
-                            templateItemsSnap = await get(ref(db, `template_items/${pres.template_id}`));
-                        }
+                        if (!templateItemsSnap.exists()) templateItemsSnap = await get(ref(db, `template_items/${pres.template_id}`));
                     } else {
                         templateItemsSnap = await get(ref(db, `template_items/${pres.template_id}`));
                     }
@@ -517,7 +486,6 @@
                 itemsMap[pres.id] = items;
             }
 
-            // ✅ 5. أسماء الأدوية
             const drugIds = [];
             for (const presId in itemsMap) {
                 itemsMap[presId].forEach(item => {
@@ -531,9 +499,7 @@
                     let snap = null;
                     if (currentTenantId) {
                         snap = await get(ref(db, getDataPath(`drugs/${did}`)));
-                        if (!snap.exists()) {
-                            snap = await get(ref(db, `drugs/${did}`));
-                        }
+                        if (!snap.exists()) snap = await get(ref(db, `drugs/${did}`));
                     } else {
                         snap = await get(ref(db, `drugs/${did}`));
                     }
@@ -545,7 +511,6 @@
                 });
             }
 
-            // ✅ 6. تخزين بيانات الطباعة
             patientPrescriptions.forEach(pres => {
                 prescriptionCache[pres.id] = {
                     prescription: pres,
@@ -555,10 +520,7 @@
                 };
             });
 
-            // ✅ 7. عرض الملخص
             renderSummary(patientInfo, patientPrescriptions);
-
-            // ✅ 8. بناء محتوى السجل الطبي
             renderPrescriptionsList(patientPrescriptions, itemsMap, doctorsMap, drugNames);
 
         } catch (err) {
@@ -678,10 +640,7 @@
             displayPrescriptions(filtered);
         }
 
-        searchInput.addEventListener('input', (e) => {
-            filterPrescriptions(e.target.value);
-        });
-
+        searchInput.addEventListener('input', (e) => filterPrescriptions(e.target.value));
         clearBtn.addEventListener('click', () => {
             searchInput.value = '';
             filterPrescriptions('');
@@ -689,7 +648,6 @@
         });
     }
 
-    // ============ ✅ تسجيل الخروج ============
     const setupLogout = () => {
         const logoutBtn = document.getElementById('logoutBtn');
         if (logoutBtn) {
@@ -701,7 +659,6 @@
                     await signOut(auth);
                     window.location.href = 'index.html';
                 } catch (error) {
-                    console.error('خطأ أثناء تسجيل الخروج:', error);
                     clearLoginSessionOnly();
                     window.location.href = 'index.html';
                 }
@@ -709,29 +666,21 @@
         }
     };
 
-    // ============ بدء التشغيل ============
     if (!patientId) {
         document.getElementById('contentArea').innerHTML = 
             '<div class="card"><div class="empty-state"><i class="fas fa-exclamation-triangle" style="color:var(--danger);"></i><p>❌ لا يوجد معرف للمريض</p></div></div>';
     }
 
     onAuthStateChanged(auth, async (user) => {
-        if (!user) {
-            clearLoginSessionOnly();
-            window.location.href = 'index.html';
-            return;
-        }
+        if (!user) { clearLoginSessionOnly(); window.location.href = 'index.html'; return; }
         
         currentUser = user;
         
-        // ✅ التحقق من صلاحية المستخدم
         try {
             let userSnap = null;
             if (currentTenantId) {
                 userSnap = await get(ref(db, `tenants/${currentTenantId}/users/${user.uid}`));
-                if (!userSnap.exists()) {
-                    userSnap = await get(ref(db, `users/${user.uid}`));
-                }
+                if (!userSnap.exists()) userSnap = await get(ref(db, `users/${user.uid}`));
             } else {
                 userSnap = await get(ref(db, `users/${user.uid}`));
             }
@@ -740,36 +689,29 @@
                 const userData = userSnap.val();
                 userRole = userData.role;
                 
-                // ✅ عرض اسم المجمع
                 if (userData.tenantName) {
                     document.getElementById('tenantName').textContent = userData.tenantName;
                     document.getElementById('tenantBadge').style.display = 'flex';
                 }
                 
-                // ✅ زر الخروج متاح للكل
                 setupLogout();
             }
             
-            // ✅ التحقق من الصلاحية (دكتور أو صيدلي أو ممرض)
             if (userRole && !['doctor', 'pharmacist', 'nurse'].includes(userRole)) {
                 document.getElementById('contentArea').innerHTML = 
                     '<div class="card"><div class="empty-state"><i class="fas fa-lock" style="color:var(--danger);"></i><p>⛔ غير مصرح لك بعرض الملف الطبي</p></div></div>';
                 return;
             }
             
-            if (patientId) {
-                loadPatientData();
-            }
+            if (patientId) loadPatientData();
         } catch (err) {
-            console.error('خطأ في التحقق:', err);
-            if (patientId) {
-                loadPatientData();
-            }
+            if (patientId) loadPatientData();
         }
     });
 
     console.log('🚀 صفحة الملف الطبي - نظام المجمعات الطبية المتعددة');
     console.log('🔒 تدعم مسار المجمع والمسار العام للتوافق');
+    console.log('📋 ملاحظات الصيدلي تظهر من السحابة تلقائياً');
 </script>
 </body>
 </html>
