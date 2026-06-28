@@ -397,22 +397,11 @@
         import { firebaseConfig } from './firebase-config.js';
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-        
-        // ✅ تم التغيير من Realtime Database إلى Firestore
-        import { 
-            getFirestore, 
-            collection, 
-            doc, 
-            setDoc, 
-            updateDoc, 
-            deleteDoc, 
-            getDoc, 
-            getDocs
-        } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getDatabase, ref, get, update, set, remove } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
-        const db = getFirestore(app); // ✅ استخدام Firestore
+        const db = getDatabase(app);
 
         // ============ ثوابت التخزين المحلي ============
         const LOGIN_STORAGE_KEYS = ['shifa_session', 'shifa_remember', 'shifa_last_login', 'shifa_secure_session'];
@@ -456,27 +445,16 @@
             if (dot) { dot.className = `sync-dot ${online?'on':'off'}`; dot.title = online ? 'متصل بالسحابة' : 'غير متصل'; }
         };
 
-        // ✅ دالة مساعدة: جلب المستند من المسار الصحيح (المجمع أو العام)
-        async function getDocSafe(collectionPath, docId) {
-            // نحاول المسار مع المجمع أولاً
-            if (currentTenantId) {
-                const docRef = doc(db, 'tenants', currentTenantId, collectionPath, docId);
-                const snap = await getDoc(docRef);
-                if (snap.exists()) return snap;
-            }
-            // نحاول المسار العام
-            const docRef = doc(db, collectionPath, docId);
-            return await getDoc(docRef);
-        }
+        const getDataPath = (path) => currentTenantId ? `tenants/${currentTenantId}/${path}` : path;
 
-        // ============ ✅ تحميل ملاحظات الصيدلي من Firestore ============
+        // ============ ✅ تحميل ملاحظات الصيدلي من السحابة ============
         async function loadPharmacistNotes(prescriptionId) {
             if (!currentTenantId || !currentUser) return '';
             try {
-                const noteDocRef = doc(db, 'tenants', currentTenantId, 'pharmacist_notes', currentUser.uid, 'notes', prescriptionId);
-                const snap = await getDoc(noteDocRef);
+                const noteRef = ref(db, `tenants/${currentTenantId}/pharmacist_notes/${currentUser.uid}/${prescriptionId}`);
+                const snap = await get(noteRef);
                 if (snap.exists()) {
-                    return snap.data().note || '';
+                    return snap.val().note || '';
                 }
                 return '';
             } catch (e) {
@@ -485,12 +463,12 @@
             }
         }
 
-        // ============ ✅ حفظ ملاحظات الصيدلي في Firestore ============
+        // ============ ✅ حفظ ملاحظات الصيدلي في السحابة ============
         async function savePharmacistNotes(prescriptionId, note) {
             if (!currentTenantId || !currentUser) return;
             try {
-                const noteDocRef = doc(db, 'tenants', currentTenantId, 'pharmacist_notes', currentUser.uid, 'notes', prescriptionId);
-                await setDoc(noteDocRef, {
+                const noteRef = ref(db, `tenants/${currentTenantId}/pharmacist_notes/${currentUser.uid}/${prescriptionId}`);
+                await set(noteRef, {
                     note,
                     prescriptionId,
                     updatedAt: new Date().toISOString()
@@ -500,12 +478,11 @@
             }
         }
 
-        // ============ ✅ حذف ملاحظات الصيدلي من Firestore ============
+        // ============ ✅ حذف ملاحظات الصيدلي من السحابة ============
         async function deletePharmacistNotes(prescriptionId) {
             if (!currentTenantId || !currentUser) return;
             try {
-                const noteDocRef = doc(db, 'tenants', currentTenantId, 'pharmacist_notes', currentUser.uid, 'notes', prescriptionId);
-                await deleteDoc(noteDocRef);
+                await remove(ref(db, `tenants/${currentTenantId}/pharmacist_notes/${currentUser.uid}/${prescriptionId}`));
             } catch (e) {
                 console.warn('تعذر حذف الملاحظات:', e.message);
             }
@@ -518,22 +495,29 @@
             }
 
             try {
-                // ✅ جلب الروشتة من Firestore
-                const presSnap = await getDocSafe('prescriptions', prescriptionId);
-                
-                if (!presSnap.exists()) { 
-                    showErrorState('الروشتة غير موجودة'); 
-                    return; 
+                let presSnap = null;
+                if (currentTenantId) {
+                    presSnap = await get(ref(db, getDataPath(`prescriptions/${prescriptionId}`)));
+                    if (!presSnap.exists()) presSnap = await get(ref(db, `prescriptions/${prescriptionId}`));
+                } else {
+                    presSnap = await get(ref(db, `prescriptions/${prescriptionId}`));
                 }
                 
-                const rx = { id: prescriptionId, ...presSnap.data() };
+                if (!presSnap.exists()) { showErrorState('الروشتة غير موجودة'); return; }
+                
+                const rx = { id: prescriptionId, ...presSnap.val() };
 
-                // ✅ جلب عناصر الروشتة من Firestore
-                const itemsSnap = await getDocSafe('prescription_items', prescriptionId);
+                let itemsSnap = null;
+                if (currentTenantId) {
+                    itemsSnap = await get(ref(db, getDataPath(`prescription_items/${prescriptionId}`)));
+                    if (!itemsSnap.exists()) itemsSnap = await get(ref(db, `prescription_items/${prescriptionId}`));
+                } else {
+                    itemsSnap = await get(ref(db, `prescription_items/${prescriptionId}`));
+                }
                 
                 let items = [];
                 if (itemsSnap.exists()) {
-                    const itemsData = itemsSnap.data();
+                    const itemsData = itemsSnap.val();
                     items = Object.entries(itemsData).map(([key, value]) => ({
                         key,
                         drug_name: value.drug_name || value.drug || value.name || '—',
@@ -548,9 +532,15 @@
                 
                 if (doctorId) {
                     try {
-                        const doctorSnap = await getDocSafe('users', doctorId);
+                        let doctorSnap = null;
+                        if (currentTenantId) {
+                            doctorSnap = await get(ref(db, getDataPath(`users/${doctorId}`)));
+                            if (!doctorSnap.exists()) doctorSnap = await get(ref(db, `users/${doctorId}`));
+                        } else {
+                            doctorSnap = await get(ref(db, `users/${doctorId}`));
+                        }
                         if (doctorSnap.exists()) {
-                            const doctorData = doctorSnap.data();
+                            const doctorData = doctorSnap.val();
                             doctorName = doctorData.name || '';
                             doctorSpecialty = doctorData.specialty || '';
                         }
@@ -563,9 +553,15 @@
                 
                 if (patientId && (!patientName || patientName === 'غير معروف')) {
                     try {
-                        const patientSnap = await getDocSafe('patients', patientId);
+                        let patientSnap = null;
+                        if (currentTenantId) {
+                            patientSnap = await get(ref(db, getDataPath(`patients/${patientId}`)));
+                            if (!patientSnap.exists()) patientSnap = await get(ref(db, `patients/${patientId}`));
+                        } else {
+                            patientSnap = await get(ref(db, `patients/${patientId}`));
+                        }
                         if (patientSnap.exists()) {
-                            const patientData = patientSnap.data();
+                            const patientData = patientSnap.val();
                             patientName = patientData.name || patientName;
                             patientPhone = patientData.phone || patientPhone;
                         }
@@ -575,7 +571,7 @@
                 const dateStr = rx.created_at ? new Date(rx.created_at).toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' }) : '—';
                 const timeStr = rx.created_at ? new Date(rx.created_at).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }) : '';
 
-                // ✅ تحميل ملاحظات الصيدلي من Firestore
+                // ✅ تحميل ملاحظات الصيدلي من السحابة
                 const savedNotes = await loadPharmacistNotes(prescriptionId);
 
                 const data = {
@@ -780,7 +776,7 @@
                 });
             }
 
-            // ✅ زر الصرف مع حفظ الملاحظات في Firestore
+            // ✅ زر الصرف مع حفظ الملاحظات في السحابة
             const dispenseBtn = $('#dispenseBtn');
             if (dispenseBtn) {
                 dispenseBtn.addEventListener('click', async () => {
@@ -792,7 +788,7 @@
                     try {
                         const notes = $('#pharmacistNotes')?.value?.trim() || '';
                         
-                        // ✅ حفظ الملاحظات في Firestore
+                        // ✅ حفظ الملاحظات في السحابة
                         if (notes) {
                             await savePharmacistNotes(prescriptionId, notes);
                         } else {
@@ -807,14 +803,11 @@
                             dispensed_at: new Date().toISOString()
                         };
                         
-                        // ✅ تحديث الروشتة في Firestore
-                        if (currentTenantId) {
-                            const rxDocRef = doc(db, 'tenants', currentTenantId, 'prescriptions', prescriptionId);
-                            await updateDoc(rxDocRef, updateData);
-                        } else {
-                            const rxDocRef = doc(db, 'prescriptions', prescriptionId);
-                            await updateDoc(rxDocRef, updateData);
-                        }
+                        const updatePath = currentTenantId 
+                            ? `tenants/${currentTenantId}/prescriptions/${prescriptionId}`
+                            : `prescriptions/${prescriptionId}`;
+                        
+                        await update(ref(db, updatePath), updateData);
                         
                         toast('✅ تم صرف الروشتة بنجاح');
                         setTimeout(() => window.location.reload(), 1200);
@@ -837,7 +830,7 @@
                     undoDispenseBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإلغاء...';
                     
                     try {
-                        // ✅ حذف الملاحظات من Firestore
+                        // ✅ حذف الملاحظات من السحابة
                         await deletePharmacistNotes(prescriptionId);
                         
                         const updateData = {
@@ -848,14 +841,11 @@
                             dispensed_at: null
                         };
                         
-                        // ✅ تحديث الروشتة في Firestore
-                        if (currentTenantId) {
-                            const rxDocRef = doc(db, 'tenants', currentTenantId, 'prescriptions', prescriptionId);
-                            await updateDoc(rxDocRef, updateData);
-                        } else {
-                            const rxDocRef = doc(db, 'prescriptions', prescriptionId);
-                            await updateDoc(rxDocRef, updateData);
-                        }
+                        const updatePath = currentTenantId 
+                            ? `tenants/${currentTenantId}/prescriptions/${prescriptionId}`
+                            : `prescriptions/${prescriptionId}`;
+                        
+                        await update(ref(db, updatePath), updateData);
                         
                         toast('✅ تم إلغاء صرف الروشتة');
                         setTimeout(() => window.location.reload(), 1200);
@@ -893,7 +883,6 @@
         window.addEventListener('online', () => setSyncStatus(true));
         window.addEventListener('offline', () => setSyncStatus(false));
 
-        // ✅ تم تعديل onAuthStateChanged لـ Firestore
         onAuthStateChanged(auth, async (user) => {
             if (!user) { clearLoginSessionOnly(); window.location.href = 'index.html'; return; }
             
@@ -902,19 +891,14 @@
             try {
                 let userSnap = null;
                 if (currentTenantId) {
-                    const userDocRef = doc(db, 'tenants', currentTenantId, 'users', user.uid);
-                    userSnap = await getDoc(userDocRef);
-                    if (!userSnap.exists()) {
-                        const publicDocRef = doc(db, 'users', user.uid);
-                        userSnap = await getDoc(publicDocRef);
-                    }
+                    userSnap = await get(ref(db, `tenants/${currentTenantId}/users/${user.uid}`));
+                    if (!userSnap.exists()) userSnap = await get(ref(db, `users/${user.uid}`));
                 } else {
-                    const publicDocRef = doc(db, 'users', user.uid);
-                    userSnap = await getDoc(publicDocRef);
+                    userSnap = await get(ref(db, `users/${user.uid}`));
                 }
                 
                 if (userSnap.exists()) {
-                    const userData = userSnap.data();
+                    const userData = userSnap.val();
                     if (userData.tenantName && $('#tenantName')) {
                         $('#tenantName').textContent = userData.tenantName;
                         $('#tenantBadge').style.display = 'flex';
@@ -930,8 +914,8 @@
             await loadPrescription();
         });
 
-        console.log('🚀 صفحة تفاصيل الروشتة - Firestore');
-        console.log('☁️ ملاحظات الصيدلي تحفظ في Firestore بدلاً من Realtime Database');
+        console.log('🚀 صفحة تفاصيل الروشتة - تخزين سحابي للملاحظات');
+        console.log('☁️ ملاحظات الصيدلي تحفظ في Firebase بدلاً من localStorage');
     </script>
 </body>
 </html>
