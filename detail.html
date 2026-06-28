@@ -297,11 +297,23 @@
     import { firebaseConfig } from './firebase-config.js';
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
     import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-    import { getDatabase, ref, get, query, orderByChild, equalTo, limitToFirst } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+    
+    // ✅ تم التغيير من Realtime Database إلى Firestore
+    import { 
+        getFirestore, 
+        collection, 
+        doc, 
+        getDoc, 
+        getDocs,
+        query,
+        where,
+        orderBy,
+        limit
+    } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
-    const db = getDatabase(app);
+    const db = getFirestore(app); // ✅ استخدام Firestore
 
     const STORAGE_PREFIX = 'shifa_tenant_';
     const LOGIN_STORAGE_KEYS = ['shifa_session', 'shifa_remember', 'shifa_last_login', 'shifa_secure_session'];
@@ -348,7 +360,29 @@
         setTimeout(() => t.remove(), 2500);
     };
 
-    const getDataPath = (path) => currentTenantId ? `tenants/${currentTenantId}/${path}` : path;
+    // ✅ دالة مساعدة: جلب المستند من المسار الصحيح (المجمع أو العام)
+    async function getDocSafe(collectionPath, docId) {
+        if (currentTenantId) {
+            const docRef = doc(db, 'tenants', currentTenantId, collectionPath, docId);
+            const snap = await getDoc(docRef);
+            if (snap.exists()) return snap;
+        }
+        const docRef = doc(db, collectionPath, docId);
+        return await getDoc(docRef);
+    }
+
+    // ✅ دالة مساعدة: جلب مجموعة مع استعلام (المجمع أو العام)
+    async function getDocsSafe(collectionPath, field, operator, value) {
+        if (currentTenantId) {
+            const colRef = collection(db, 'tenants', currentTenantId, collectionPath);
+            const q = query(colRef, where(field, operator, value), limit(50));
+            const snap = await getDocs(q);
+            if (!snap.empty) return snap;
+        }
+        const colRef = collection(db, collectionPath);
+        const q = query(colRef, where(field, operator, value), limit(50));
+        return await getDocs(q);
+    }
 
     function escapeHtml(str) {
         if (!str) return '';
@@ -407,71 +441,39 @@
         try {
             let patientInfo = { name: patientName };
             
-            if (currentTenantId) {
-                const patientSnap = await get(ref(db, getDataPath(`patients/${patientId}`)));
-                if (patientSnap.exists()) {
-                    patientInfo = { ...patientInfo, ...patientSnap.val() };
-                } else {
-                    const publicSnap = await get(ref(db, `patients/${patientId}`));
-                    if (publicSnap.exists()) {
-                        patientInfo = { ...patientInfo, ...publicSnap.val() };
-                    }
-                }
-            } else {
-                const patientSnap = await get(ref(db, `patients/${patientId}`));
-                if (patientSnap.exists()) {
-                    patientInfo = patientSnap.val();
-                }
+            // ✅ جلب بيانات المريض من Firestore
+            const patientSnap = await getDocSafe('patients', patientId);
+            if (patientSnap.exists()) {
+                patientInfo = { ...patientInfo, ...patientSnap.data() };
             }
 
-            // ✅ استخدام استعلام محسن مع limitToFirst لتقليل البيانات المحملة
-            let allPresSnap = null;
-            if (currentTenantId) {
-                const presQuery = query(
-                    ref(db, getDataPath('prescriptions')),
-                    orderByChild('patient_id'),
-                    equalTo(patientId),
-                    limitToFirst(50) // ✅ حد أقصى 50 وصفة في البداية
-                );
-                allPresSnap = await get(presQuery);
-                if (!allPresSnap.exists()) {
-                    allPresSnap = await get(ref(db, 'prescriptions'));
-                }
-            } else {
-                allPresSnap = await get(ref(db, 'prescriptions'));
-            }
+            // ✅ جلب الوصفات من Firestore مع استعلام محسن
+            const presSnap = await getDocsSafe('prescriptions', 'patient_id', '==', patientId);
             
             let patientPrescriptions = [];
-            if (allPresSnap.exists()) {
-                allPresSnap.forEach(child => {
-                    const val = child.val();
-                    if (String(val.patient_id) === String(patientId)) {
-                        patientPrescriptions.push({ id: child.key, ...val });
-                    }
+            if (!presSnap.empty) {
+                presSnap.forEach(docSnap => {
+                    patientPrescriptions.push({ id: docSnap.id, ...docSnap.data() });
                 });
             }
+            
             patientPrescriptions.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
             allPrescriptions = patientPrescriptions;
             
             // ✅ إعادة تعيين عداد الـ Pagination
             displayedRecordsCount = RECORDS_PER_PAGE;
 
+            // ✅ جلب بيانات الأطباء
             const doctorIds = [...new Set(patientPrescriptions.map(p => p.doctor_id).filter(Boolean))];
             const doctorsMap = {};
             if (doctorIds.length > 0) {
                 const doctorPromises = doctorIds.map(async (docId) => {
-                    let snap = null;
-                    if (currentTenantId) {
-                        snap = await get(ref(db, getDataPath(`users/${docId}`)));
-                        if (!snap.exists()) snap = await get(ref(db, `users/${docId}`));
-                    } else {
-                        snap = await get(ref(db, `users/${docId}`));
-                    }
+                    const snap = await getDocSafe('users', docId);
                     return { docId, snap };
                 });
                 const results = await Promise.all(doctorPromises);
                 results.forEach(({ docId, snap }) => {
-                    if (snap.exists()) doctorsMap[docId] = snap.val();
+                    if (snap.exists()) doctorsMap[docId] = snap.data();
                 });
             }
 
@@ -479,21 +481,16 @@
             const itemsMap = {};
             const initialBatch = patientPrescriptions.slice(0, RECORDS_PER_PAGE);
             for (const pres of initialBatch) {
-                let itemsSnap = null;
-                if (currentTenantId) {
-                    itemsSnap = await get(ref(db, getDataPath(`prescription_items/${pres.id}`)));
-                    if (!itemsSnap.exists()) itemsSnap = await get(ref(db, `prescription_items/${pres.id}`));
-                } else {
-                    itemsSnap = await get(ref(db, `prescription_items/${pres.id}`));
-                }
+                const itemsSnap = await getDocSafe('prescription_items', pres.id);
                 
                 let items = [];
                 if (itemsSnap.exists()) {
-                    items = Object.values(itemsSnap.val());
+                    items = Object.values(itemsSnap.data());
                 }
                 itemsMap[pres.id] = items;
             }
 
+            // ✅ جلب أسماء الأدوية
             const drugIds = [];
             for (const presId in itemsMap) {
                 itemsMap[presId].forEach(item => {
@@ -504,18 +501,12 @@
             const drugNames = {};
             if (uniqueDrugIds.length > 0) {
                 const drugPromises = uniqueDrugIds.map(async (did) => {
-                    let snap = null;
-                    if (currentTenantId) {
-                        snap = await get(ref(db, getDataPath(`drugs/${did}`)));
-                        if (!snap.exists()) snap = await get(ref(db, `drugs/${did}`));
-                    } else {
-                        snap = await get(ref(db, `drugs/${did}`));
-                    }
+                    const snap = await getDocSafe('drugs', did);
                     return { did, snap };
                 });
                 const results = await Promise.all(drugPromises);
                 results.forEach(({ did, snap }) => {
-                    if (snap.exists()) drugNames[did] = snap.val().name;
+                    if (snap.exists()) drugNames[did] = snap.data().name;
                 });
             }
 
@@ -588,23 +579,16 @@
                 return;
             }
             
-            // ✅ عرض عدد محدود فقط - يقلل الحمل على المتصفح
             const toShow = showAll ? list : list.slice(0, displayedRecordsCount);
             
             // ✅ تحميل عناصر الوصفات غير المحملة بعد
             for (const pres of toShow) {
                 if (!prescriptionCache[pres.id]) {
-                    let itemsSnap = null;
-                    if (currentTenantId) {
-                        itemsSnap = await get(ref(db, getDataPath(`prescription_items/${pres.id}`)));
-                        if (!itemsSnap.exists()) itemsSnap = await get(ref(db, `prescription_items/${pres.id}`));
-                    } else {
-                        itemsSnap = await get(ref(db, `prescription_items/${pres.id}`));
-                    }
+                    const itemsSnap = await getDocSafe('prescription_items', pres.id);
                     
                     let items = [];
                     if (itemsSnap.exists()) {
-                        items = Object.values(itemsSnap.val());
+                        items = Object.values(itemsSnap.data());
                     }
                     
                     prescriptionCache[pres.id] = {
@@ -652,7 +636,7 @@
             });
             container.innerHTML = html;
 
-            // ✅ زر "تحميل المزيد" - يظهر إذا كان هناك المزيد
+            // ✅ زر "تحميل المزيد"
             const loadMoreContainer = document.getElementById('loadMoreContainer');
             if (loadMoreContainer && !showAll && list.length > displayedRecordsCount) {
                 const remaining = list.length - displayedRecordsCount;
@@ -733,22 +717,17 @@
             '<div class="card"><div class="empty-state"><i class="fas fa-exclamation-triangle" style="color:var(--danger);"></i><p>❌ لا يوجد معرف للمريض</p></div></div>';
     }
 
+    // ✅ تم تعديل onAuthStateChanged لـ Firestore
     onAuthStateChanged(auth, async (user) => {
         if (!user) { clearLoginSessionOnly(); window.location.href = 'index.html'; return; }
         
         currentUser = user;
         
         try {
-            let userSnap = null;
-            if (currentTenantId) {
-                userSnap = await get(ref(db, `tenants/${currentTenantId}/users/${user.uid}`));
-                if (!userSnap.exists()) userSnap = await get(ref(db, `users/${user.uid}`));
-            } else {
-                userSnap = await get(ref(db, `users/${user.uid}`));
-            }
+            const userSnap = await getDocSafe('users', user.uid);
             
             if (userSnap.exists()) {
-                const userData = userSnap.val();
+                const userData = userSnap.data();
                 userRole = userData.role;
                 
                 if (userData.tenantName) {
@@ -771,7 +750,7 @@
         }
     });
 
-    console.log('🚀 صفحة الملف الطبي - نظام المجمعات الطبية المتعددة مع Pagination');
+    console.log('🚀 صفحة الملف الطبي - Firestore مع Pagination');
     console.log('🔒 تدعم مسار المجمع والمسار العام للتوافق');
     console.log('📋 ملاحظات الصيدلي تظهر من السحابة تلقائياً');
     console.log('📄 Pagination: ' + RECORDS_PER_PAGE + ' وصفات في الصفحة');
