@@ -1,28 +1,11 @@
 import { firebaseConfig } from './firebase-config.js';
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-
-// ✅ تم التغيير من Realtime Database إلى Firestore
-import { 
-    getFirestore, 
-    collection, 
-    doc, 
-    setDoc, 
-    updateDoc, 
-    deleteDoc, 
-    getDoc, 
-    getDocs, 
-    onSnapshot,
-    query,
-    where,
-    orderBy,
-    addDoc,
-    writeBatch
-} from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+import { getDatabase, ref, onValue, set, push, update, get, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const db = getFirestore(app); // ✅ استخدام Firestore
+const db = getDatabase(app);
 
 const STORAGE_PREFIX = 'shifa_tenant_';
 
@@ -157,7 +140,7 @@ const getDateDaysAgo = (days, fromDate = null) => {
 
 // ✅ دالة مساعدة: ترجع تاريخ الأيام الـ 15 الأخيرة (من اليوم - 14 إلى اليوم)
 const getLast15DaysRange = () => {
-    const startDate = getDateDaysAgo(14);
+    const startDate = getDateDaysAgo(14); // من 14 يوم فات (يعني 15 يوم شامل اليوم)
     const endDate = today();
     return { startDate, endDate };
 };
@@ -194,39 +177,37 @@ const setSyncStatus = (online) => {
     }
 };
 
-// ✅ تم تعديل fetchPreviousRecordsCount لـ Firestore
 async function fetchPreviousRecordsCount(patientId) {
     if (!patientId || !currentTenantId) return 0;
     try {
-        const prescriptionsRef = collection(db, 'tenants', currentTenantId, 'prescriptions');
-        const q = query(prescriptionsRef, where('patient_id', '==', String(patientId)));
-        const querySnapshot = await getDocs(q);
-        return querySnapshot.size;
+        const snap = await get(ref(db, `tenants/${currentTenantId}/prescriptions`));
+        if (!snap.exists()) return 0;
+        let count = 0;
+        snap.forEach(child => {
+            const rx = child.val();
+            if (String(rx.patient_id) === String(patientId)) count++;
+        });
+        return count;
     } catch (e) {
         return 0;
     }
 }
 
-// ✅ تم تعديل restorePrescription لـ Firestore
 async function restorePrescription(rxId) {
     try {
-        const rxDocRef = doc(db, 'tenants', currentTenantId, 'prescriptions', rxId);
-        const itemsDocRef = doc(db, 'tenants', currentTenantId, 'prescription_items', rxId);
-        
         const [rxSnap, itemsSnap] = await Promise.all([
-            getDoc(rxDocRef),
-            getDoc(itemsDocRef)
+            get(ref(db, `tenants/${currentTenantId}/prescriptions/${rxId}`)),
+            get(ref(db, `tenants/${currentTenantId}/prescription_items/${rxId}`))
         ]);
         
         if (rxSnap.exists()) {
-            const diagnosis = rxSnap.data().diagnosis || '';
+            const diagnosis = rxSnap.val().diagnosis || '';
             $('#diagnosisInput').value = diagnosis;
         }
         
         state.prescription = [];
         if (itemsSnap.exists()) {
-            const itemsData = itemsSnap.data();
-            state.prescription = Object.entries(itemsData).map(([key, it]) => ({
+            state.prescription = Object.values(itemsSnap.val()).map(it => ({
                 drug: it.drug_name || it.drug_id || '',
                 form: it.form || 'tablet',
                 dose: it.dose || ''
@@ -282,9 +263,15 @@ const doseManager = {
 };
 
 // ============================================================
-// ✅✅✅ نظام المراقبة الذكي - نافذة منزلقة 15 يوم (معدل لـ Firestore) ✅✅✅
+// ✅✅✅ نظام المراقبة الذكي - نافذة منزلقة 15 يوم ✅✅✅
 // ============================================================
 const prescriptionTracker = {
+    /**
+     * تتبع وصفة دواء لدكتور معين
+     * - بيضيف وصفة جديدة لتاريخ اليوم
+     * - بيحافظ على آخر 15 يوم فقط (النافذة المنزلقة)
+     * - اليوم 16: يتمسح اليوم 1 تلقائياً
+     */
     async trackDrugPrescription(drugName, doctorId, doctorName) {
         if (!currentTenantId || !doctorId) return;
         
@@ -292,15 +279,16 @@ const prescriptionTracker = {
             const todayDate = today();
             const drugKey = drugName.replace(/[.#$/[\]]/g, '_');
             
-            const drugDocRef = doc(db, 'tenants', currentTenantId, 'doctor_prescriptions', doctorId, 'drugs', drugKey);
-            const snap = await getDoc(drugDocRef);
+            const drugRef = ref(db, `tenants/${currentTenantId}/doctor_prescriptions/${doctorId}/${drugKey}`);
+            const snap = await get(drugRef);
             
             const now = new Date().toISOString();
             
             if (snap.exists()) {
-                const data = snap.data();
+                const data = snap.val();
                 let history = data.history || [];
                 
+                // ✅ 1. إضافة وصفة اليوم
                 const existingToday = history.find(h => h.date === todayDate);
                 if (existingToday) {
                     existingToday.count = (existingToday.count || 0) + 1;
@@ -311,11 +299,17 @@ const prescriptionTracker = {
                     });
                 }
                 
+                // ✅ 2. ترتيب التاريخ تصاعدياً
                 history.sort((a, b) => a.date.localeCompare(b.date));
                 
+                // ✅ 3. النافذة المنزلقة: نحتفظ بآخر 15 يوم فقط
+                // نحسب تاريخ البداية المسموح به (من 14 يوم فات لليوم = 15 يوم)
                 const cutoffDate = getDateDaysAgo(14);
+                
+                // ✅ نحتفظ فقط بالتواريخ الأحدث من cutoffDate
                 const filteredHistory = history.filter(h => h.date >= cutoffDate);
                 
+                // ✅ لو في تواريخ اتمسحت، نعرضها في اللوج
                 const removedCount = history.length - filteredHistory.length;
                 if (removedCount > 0) {
                     const removedDates = history
@@ -325,9 +319,11 @@ const prescriptionTracker = {
                     console.log(`🪟 نافذة منزلقة: تمت إزالة ${removedCount} أيام قديمة (${removedDates}) - ${drugName}`);
                 }
                 
+                // ✅ 4. حساب الإجمالي للنافذة الحالية
                 const totalCount15Days = filteredHistory.reduce((sum, h) => sum + (h.count || 0), 0);
                 
-                await setDoc(drugDocRef, {
+                // ✅ 5. حفظ البيانات المحدثة
+                await set(drugRef, {
                     drug_name: drugName,
                     doctor_id: doctorId,
                     doctor_name: doctorName || 'طبيب',
@@ -343,9 +339,10 @@ const prescriptionTracker = {
                 console.log(`📊 ${drugName}: ${totalCount15Days} وصفة في آخر 15 يوم (${cutoffDate} → ${todayDate})`);
                 
             } else {
+                // ✅ أول وصفة للدواء
                 const windowStart = getDateDaysAgo(14);
                 
-                await setDoc(drugDocRef, {
+                await set(drugRef, {
                     drug_name: drugName,
                     doctor_id: doctorId,
                     doctor_name: doctorName || 'طبيب',
@@ -366,42 +363,46 @@ const prescriptionTracker = {
         }
     },
     
+    /**
+     * جلب إحصائيات دواء معين لكل الدكاترة في المجمع
+     * مع إعادة حساب النافذة المنزلقة تلقائياً
+     */
     async getDrugStatsForAllDoctors(drugName) {
         if (!currentTenantId) return [];
         
         try {
             const drugKey = drugName.replace(/[.#$/[\]]/g, '_');
-            const allDoctorsRef = collection(db, 'tenants', currentTenantId, 'doctor_prescriptions');
-            const allDoctorsSnap = await getDocs(allDoctorsRef);
+            const allDoctorsSnap = await get(ref(db, `tenants/${currentTenantId}/doctor_prescriptions`));
             
-            if (allDoctorsSnap.empty) return [];
+            if (!allDoctorsSnap.exists()) return [];
             
             const results = [];
             const cutoffDate = getDateDaysAgo(14);
             
-            for (const doctorDoc of allDoctorsSnap.docs) {
-                const doctorId = doctorDoc.id;
-                const drugsRef = collection(db, 'tenants', currentTenantId, 'doctor_prescriptions', doctorId, 'drugs');
-                const drugDocSnap = await getDoc(doc(drugsRef, drugKey));
+            allDoctorsSnap.forEach(doctorSnap => {
+                const doctorId = doctorSnap.key;
+                const doctorData = doctorSnap.val();
                 
-                if (drugDocSnap.exists()) {
-                    const data = drugDocSnap.data();
-                    const history = data.history || [];
-                    const filteredHistory = history.filter(h => h.date >= cutoffDate);
-                    const totalCount15Days = filteredHistory.reduce((sum, h) => sum + (h.count || 0), 0);
-                    
-                    results.push({
-                        doctor_id: doctorId,
-                        doctor_name: data.doctor_name || 'طبيب',
-                        drug_name: data.drug_name || drugName,
-                        total_count_15days: totalCount15Days,
-                        last_prescribed: data.last_prescribed || '',
-                        history: filteredHistory,
-                        window_start: cutoffDate,
-                        window_end: today()
-                    });
-                }
-            }
+                Object.entries(doctorData).forEach(([key, data]) => {
+                    if (key === drugKey || (data.drug_name || '').toLowerCase() === drugName.toLowerCase()) {
+                        // ✅ إعادة حساب النافذة المنزلقة
+                        const history = data.history || [];
+                        const filteredHistory = history.filter(h => h.date >= cutoffDate);
+                        const totalCount15Days = filteredHistory.reduce((sum, h) => sum + (h.count || 0), 0);
+                        
+                        results.push({
+                            doctor_id: doctorId,
+                            doctor_name: data.doctor_name || 'طبيب',
+                            drug_name: data.drug_name || drugName,
+                            total_count_15days: totalCount15Days,
+                            last_prescribed: data.last_prescribed || '',
+                            history: filteredHistory,
+                            window_start: cutoffDate,
+                            window_end: today()
+                        });
+                    }
+                });
+            });
             
             results.sort((a, b) => b.total_count_15days - a.total_count_15days);
             
@@ -415,7 +416,7 @@ const prescriptionTracker = {
 };
 
 // ============================================================
-// ✅✅✅ drugManager مع ترتيب ذكي للاقتراحات (معدل لـ Firestore) ✅✅✅
+// ✅✅✅ drugManager مع ترتيب ذكي للاقتراحات ✅✅✅
 // ============================================================
 const drugManager = {
     _cachePromise: null,
@@ -425,21 +426,12 @@ const drugManager = {
         
         this._cachePromise = (async () => {
             try { 
-                const tenantDrugsRef = collection(db, 'tenants', currentTenantId, 'drugs');
-                const tenantSnap = await getDocs(tenantDrugsRef);
-                
-                if (!tenantSnap.empty) {
-                    state.globalDrugsCache = [];
-                    tenantSnap.forEach(docSnap => {
-                        state.globalDrugsCache.push(docSnap.data());
-                    });
+                const snap = await get(ref(db, `tenants/${currentTenantId}/drugs`));
+                if (snap.exists()) {
+                    state.globalDrugsCache = Object.values(snap.val());
                 } else {
-                    const globalDrugsRef = collection(db, 'drugs');
-                    const globalSnap = await getDocs(globalDrugsRef);
-                    state.globalDrugsCache = [];
-                    globalSnap.forEach(docSnap => {
-                        state.globalDrugsCache.push(docSnap.data());
-                    });
+                    const globalSnap = await get(ref(db, 'drugs'));
+                    state.globalDrugsCache = globalSnap.exists() ? Object.values(globalSnap.val()) : [];
                 }
             } catch(e) { 
                 state.globalDrugsCache = []; 
@@ -674,7 +666,6 @@ function updateQueueCount() {
     $('#doneCount').textContent = doneCount;
 }
 
-// ✅ تم تعديل selectPatient لـ Firestore
 async function selectPatient(appointmentId) {
     const apt = state.appointments.find(a => a.id === appointmentId);
     if (!apt) return;
@@ -685,8 +676,7 @@ async function selectPatient(appointmentId) {
     }
     
     if (apt.status === 'انتظار') { 
-        const aptDocRef = doc(db, 'tenants', currentTenantId, 'appointments', appointmentId);
-        await updateDoc(aptDocRef, { status: 'قيد الكشف' }); 
+        await update(ref(db, `tenants/${currentTenantId}/appointments/${appointmentId}`), { status: 'قيد الكشف' }); 
     }
     state.currentAppointment = apt; 
     state.prescription = []; 
@@ -705,28 +695,21 @@ async function selectPatient(appointmentId) {
     await saveSessionToDB();
 }
 
-// ✅ تم تعديل openCompletedPrescriptionForEditing لـ Firestore
 async function openCompletedPrescriptionForEditing(apt) {
     try {
-        const rxDocRef = doc(db, 'tenants', currentTenantId, 'prescriptions', apt.id);
-        const itemsDocRef = doc(db, 'tenants', currentTenantId, 'prescription_items', apt.id);
-        
-        const [rxSnap, itemsSnap] = await Promise.all([
-            getDoc(rxDocRef),
-            getDoc(itemsDocRef)
-        ]);
+        const prescriptionSnap = await get(ref(db, `tenants/${currentTenantId}/prescriptions/${apt.id}`));
+        const itemsSnap = await get(ref(db, `tenants/${currentTenantId}/prescription_items/${apt.id}`));
         
         let diagnosis = '';
         let items = [];
         
-        if (rxSnap.exists()) {
-            const rx = rxSnap.data();
+        if (prescriptionSnap.exists()) {
+            const rx = prescriptionSnap.val();
             diagnosis = rx.diagnosis || '';
         }
         
         if (itemsSnap.exists()) {
-            const itemsData = itemsSnap.data();
-            items = Object.entries(itemsData).map(([key, it]) => ({
+            items = Object.values(itemsSnap.val()).map(it => ({
                 drug: it.drug_name || it.drug_id || '',
                 form: it.form || 'tablet',
                 dose: it.dose || ''
@@ -754,7 +737,6 @@ async function openCompletedPrescriptionForEditing(apt) {
     }
 }
 
-// ✅ تم تعديل saveCompletedPrescriptionEdit لـ Firestore
 async function saveCompletedPrescriptionEdit() {
     if (!state.isEditingCompleted || !state.editingCompletedRxId) return;
     
@@ -768,27 +750,30 @@ async function saveCompletedPrescriptionEdit() {
     
     try {
         const now = new Date().toISOString();
+        const updates = {};
         
-        const rxDocRef = doc(db, 'tenants', currentTenantId, 'prescriptions', state.editingCompletedRxId);
-        await updateDoc(rxDocRef, {
-            diagnosis: diagnosis,
-            item_count: items.length,
-            updated_at: now,
-            last_edited_by: state.user.uid,
-            last_edited_at: now
-        });
+        updates[`tenants/${currentTenantId}/prescriptions/${state.editingCompletedRxId}/diagnosis`] = diagnosis;
+        updates[`tenants/${currentTenantId}/prescriptions/${state.editingCompletedRxId}/item_count`] = items.length;
+        updates[`tenants/${currentTenantId}/prescriptions/${state.editingCompletedRxId}/updated_at`] = now;
+        updates[`tenants/${currentTenantId}/prescriptions/${state.editingCompletedRxId}/last_edited_by`] = state.user.uid;
+        updates[`tenants/${currentTenantId}/prescriptions/${state.editingCompletedRxId}/last_edited_at`] = now;
         
-        const itemsData = {};
+        const oldItemsSnap = await get(ref(db, `tenants/${currentTenantId}/prescription_items/${state.editingCompletedRxId}`));
+        if (oldItemsSnap.exists()) {
+            Object.keys(oldItemsSnap.val()).forEach(key => {
+                updates[`tenants/${currentTenantId}/prescription_items/${state.editingCompletedRxId}/${key}`] = null;
+            });
+        }
+        
         items.forEach((item, i) => {
-            itemsData[`item_${i}`] = {
+            updates[`tenants/${currentTenantId}/prescription_items/${state.editingCompletedRxId}/item_${i}`] = {
                 drug_name: item.drug,
                 dose: item.dose,
                 form: item.form
             };
         });
         
-        const itemsDocRef = doc(db, 'tenants', currentTenantId, 'prescription_items', state.editingCompletedRxId);
-        await setDoc(itemsDocRef, itemsData);
+        await update(ref(db), updates);
         
         items.forEach(item => {
             const strength = extractStrength(item.drug);
@@ -914,26 +899,15 @@ const quickAdd = {
     }
 };
 
-// ✅ تم تعديل checkTemplateNameExists لـ Firestore
 async function checkTemplateNameExists(name) {
     if (!state.user) return false;
-    const templatesRef = collection(db, 'tenants', currentTenantId, 'prescription_templates', state.user.uid, 'templates');
-    const snap = await getDocs(templatesRef);
-    
-    if (snap.empty) return false;
-    
+    const snap = await get(ref(db, `tenants/${currentTenantId}/prescription_templates/${state.user.uid}`));
+    if (!snap.exists()) return false;
+    const templates = snap.val();
     const nameLower = name.trim().toLowerCase();
-    let exists = false;
-    snap.forEach(docSnap => {
-        const t = docSnap.data();
-        if ((t.name || '').toLowerCase() === nameLower) {
-            exists = true;
-        }
-    });
-    return exists;
+    return Object.values(templates).some(t => (t.name || '').toLowerCase() === nameLower);
 }
 
-// ✅ تم تعديل saveAsNewTemplate لـ Firestore
 async function saveAsNewTemplate() {
     const nameInput = $('#newTemplateNameInput');
     const nameError = $('#templateNameError');
@@ -957,30 +931,28 @@ async function saveAsNewTemplate() {
     try {
         const diagnosis = $('#diagnosisInput').value.trim();
         const now = new Date().toISOString();
+        const templateId = push(ref(db, `tenants/${currentTenantId}/prescription_templates/${state.user.uid}`)).key;
         
-        const templatesRef = collection(db, 'tenants', currentTenantId, 'prescription_templates', state.user.uid, 'templates');
-        const newTemplateRef = await addDoc(templatesRef, {
+        const templateData = {
             name: templateName,
             diagnosis: diagnosis,
             doctor_id: state.user.uid,
             created_at: now,
             itemCount: state.prescription.length,
             tenantId: currentTenantId
-        });
+        };
         
-        const templateId = newTemplateRef.id;
-        
-        const templateItemsData = {};
+        const updates = {};
+        updates[`tenants/${currentTenantId}/prescription_templates/${state.user.uid}/${templateId}`] = templateData;
         state.prescription.forEach((item, i) => {
-            templateItemsData[`item_${i}`] = {
+            updates[`tenants/${currentTenantId}/template_items/${templateId}/item_${i}`] = {
                 drug_name: item.drug,
                 form: item.form,
                 dose: item.dose
             };
         });
         
-        const templateItemsDocRef = doc(db, 'tenants', currentTenantId, 'template_items', templateId);
-        await setDoc(templateItemsDocRef, templateItemsData);
+        await update(ref(db), updates);
         
         state.loadedTemplateId = templateId;
         state.loadedTemplateName = templateName;
@@ -1008,7 +980,7 @@ function openSaveNewTemplateModal() {
 }
 
 // ============================================================
-// ✅✅✅ دالة فتح سجل المريض - عام لكل المجمعات (معدلة لـ Firestore) ✅✅✅
+// ✅✅✅ دالة فتح سجل المريض - عام لكل المجمعات ✅✅✅
 // ============================================================
 async function openPatientFile() {
     const pid = state.currentAppointment?.patient_id || state.currentAppointment?.patientId;
@@ -1020,72 +992,66 @@ async function openPatientFile() {
     content.innerHTML = '<div style="text-align:center;padding:30px;"><div class="loader-circle"></div></div>';
     
     try {
-        const patientDocRef = doc(db, 'tenants', currentTenantId, 'patients', pid);
-        const patientSnap = await getDoc(patientDocRef);
-        const patient = patientSnap.exists() ? patientSnap.data() : {}; 
+        const patientSnap = await get(ref(db, `tenants/${currentTenantId}/patients/${pid}`));
+        const patient = patientSnap.exists() ? patientSnap.val() : {}; 
         const patientName = patient.name || 'غير معروف';
         
-        const tenantsSnap = await getDocs(collection(db, 'tenants'));
-        const tenants = [];
-        tenantsSnap.forEach(docSnap => tenants.push(docSnap.id));
+        const tenantsSnap = await get(ref(db, 'tenants'));
+        const tenants = tenantsSnap.exists() ? Object.keys(tenantsSnap.val()) : [];
         
         const patientRx = [];
         const doctorsCache = {};
         
         for (const tenantId of tenants) {
             try {
-                const prescriptionsRef = collection(db, 'tenants', tenantId, 'prescriptions');
-                const q = query(prescriptionsRef, where('patient_id', '==', String(pid)));
-                const prescriptionsSnap = await getDocs(q);
-                
-                if (prescriptionsSnap.empty) continue;
+                const prescriptionsSnap = await get(ref(db, `tenants/${tenantId}/prescriptions`));
+                if (!prescriptionsSnap.exists()) continue;
                 
                 const rxPromises = [];
                 
-                prescriptionsSnap.forEach(docSnap => {
-                    const rx = docSnap.data();
-                    const isSameTenant = (tenantId === currentTenantId);
-                    
-                    rxPromises.push((async () => {
-                        const itemsDocRef = doc(db, 'tenants', tenantId, 'prescription_items', docSnap.id);
-                        const itemsSnap = await getDoc(itemsDocRef);
-                        let items = [];
-                        if (itemsSnap.exists()) {
-                            const itemsData = itemsSnap.data();
-                            items = Object.entries(itemsData).map(([key, it]) => ({
-                                drug: it.drug_name || it.drug_id || '',
-                                form: it.form || 'tablet',
-                                dose: it.dose || ''
-                            }));
-                        }
+                prescriptionsSnap.forEach(child => {
+                    const rx = child.val();
+                    if (String(rx.patient_id) === String(pid)) {
+                        const isSameTenant = (tenantId === currentTenantId);
                         
-                        let doctorDisplayName;
-                        if (isSameTenant) {
-                            doctorDisplayName = rx.doctor_name || 'طبيب';
-                            
-                            if (rx.doctor_id && (!rx.doctor_name || rx.doctor_name === 'طبيب')) {
-                                if (!doctorsCache[rx.doctor_id]) {
-                                    try {
-                                        const docRef = doc(db, 'tenants', tenantId, 'users', rx.doctor_id);
-                                        const docSnap = await getDoc(docRef);
-                                        doctorsCache[rx.doctor_id] = docSnap.exists() ? (docSnap.data().name || 'طبيب') : 'طبيب';
-                                    } catch(e) { doctorsCache[rx.doctor_id] = 'طبيب'; }
-                                }
-                                doctorDisplayName = doctorsCache[rx.doctor_id];
+                        rxPromises.push((async () => {
+                            const itemsSnap = await get(ref(db, `tenants/${tenantId}/prescription_items/${child.key}`));
+                            let items = [];
+                            if (itemsSnap.exists()) {
+                                items = Object.values(itemsSnap.val()).map(it => ({
+                                    drug: it.drug_name || it.drug_id || '',
+                                    form: it.form || 'tablet',
+                                    dose: it.dose || ''
+                                }));
                             }
-                        } else {
-                            doctorDisplayName = null;
-                        }
-                        
-                        patientRx.push({
-                            id: docSnap.id,
-                            tenantId: tenantId,
-                            data: rx,
-                            items,
-                            isSameTenant,
-                            doctorDisplayName
-                        });
-                    })());
+                            
+                            let doctorDisplayName;
+                            if (isSameTenant) {
+                                doctorDisplayName = rx.doctor_name || 'طبيب';
+                                
+                                if (rx.doctor_id && (!rx.doctor_name || rx.doctor_name === 'طبيب')) {
+                                    if (!doctorsCache[rx.doctor_id]) {
+                                        try {
+                                            const docSnap = await get(ref(db, `tenants/${tenantId}/users/${rx.doctor_id}`));
+                                            doctorsCache[rx.doctor_id] = docSnap.exists() ? (docSnap.val().name || 'طبيب') : 'طبيب';
+                                        } catch(e) { doctorsCache[rx.doctor_id] = 'طبيب'; }
+                                    }
+                                    doctorDisplayName = doctorsCache[rx.doctor_id];
+                                }
+                            } else {
+                                doctorDisplayName = null;
+                            }
+                            
+                            patientRx.push({
+                                id: child.key,
+                                tenantId: tenantId,
+                                data: rx,
+                                items,
+                                isSameTenant,
+                                doctorDisplayName
+                            });
+                        })());
+                    }
                 });
                 
                 await Promise.all(rxPromises);
@@ -1194,7 +1160,6 @@ async function openPatientFile() {
     }
 }
 
-// ✅ تم تعديل handleFinishSession لـ Firestore
 async function handleFinishSession() {
     if (!state.currentAppointment || state.isEditingCompleted) return;
     const diagnosis = $('#diagnosisInput').value.trim();
@@ -1202,20 +1167,13 @@ async function handleFinishSession() {
     
     if (state.loadedTemplateId && state.loadedTemplateName) {
         const currentRx = JSON.stringify(state.prescription);
-        const templateDocRef = doc(db, 'tenants', currentTenantId, 'prescription_templates', state.user.uid, 'templates', state.loadedTemplateId);
-        const templateSnap = await getDoc(templateDocRef);
-        
+        const templateSnap = await get(ref(db, `tenants/${currentTenantId}/prescription_templates/${state.user.uid}/${state.loadedTemplateId}`));
         if (templateSnap.exists()) {
-            const itemsDocRef = doc(db, 'tenants', currentTenantId, 'template_items', state.loadedTemplateId);
-            const itemsSnap = await getDoc(itemsDocRef);
-            
+            const itemsSnap = await get(ref(db, `tenants/${currentTenantId}/template_items/${state.loadedTemplateId}`));
             let origItems = []; 
-            if (itemsSnap.exists()) { 
-                const itemsData = itemsSnap.data();
-                origItems = Object.entries(itemsData).map(([key, it]) => ({ drug: it.drug_name || it.drug_id, form: it.form, dose: it.dose })); 
-            }
+            if (itemsSnap.exists()) { origItems = Object.values(itemsSnap.val()).map(it => ({ drug: it.drug_name || it.drug_id, form: it.form, dose: it.dose })); }
             const currentDx = $('#diagnosisInput').value.trim();
-            if (currentRx !== JSON.stringify(origItems) || currentDx !== (templateSnap.data().diagnosis || '')) { 
+            if (currentRx !== JSON.stringify(origItems) || currentDx !== (templateSnap.val().diagnosis || '')) { 
                 state._pendingFinish = true; 
                 $('#saveTemplateMsg').textContent = `القالب "${state.loadedTemplateName}" تم تعديله. هل تريد حفظ التغييرات؟`; 
                 $('#saveTemplateTitle').innerHTML = '<i class="fas fa-save"></i> تحديث القالب'; 
@@ -1245,22 +1203,13 @@ async function handleSkipSave() {
     $('#saveTemplateModal').style.display = 'none'; 
 }
 
-// ✅ تم تعديل handleTemplates لـ Firestore
 async function handleTemplates() {
-    const templatesRef = collection(db, 'tenants', currentTenantId, 'prescription_templates', state.user.uid, 'templates');
-    const snap = await getDocs(templatesRef); 
+    const snap = await get(ref(db, `tenants/${currentTenantId}/prescription_templates/${state.user.uid}`)); 
     const list = $('#templatesList');
-    
-    if (snap.empty) { 
-        list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-sec);">لا توجد قوالب</div>'; 
-    } else { 
-        let html = '';
-        snap.forEach(docSnap => {
-            const t = docSnap.data();
-            html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px;border-bottom:1px solid var(--border);"><div><b>${esc(t.name)}</b><div>${t.itemCount||0} أدوية</div></div><button class="btn btn-primary btn-sm load-template-btn" data-id="${docSnap.id}" data-name="${esc(t.name)}">تحميل</button></div>`;
-        });
-        list.innerHTML = html;
-        
+    if (!snap.exists()) { list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-sec);">لا توجد قوالب</div>'; }
+    else { 
+        const templates = snap.val(); 
+        list.innerHTML = Object.entries(templates).map(([id, t]) => `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px;border-bottom:1px solid var(--border);"><div><b>${esc(t.name)}</b><div>${t.itemCount||0} أدوية</div></div><button class="btn btn-primary btn-sm load-template-btn" data-id="${id}" data-name="${esc(t.name)}">تحميل</button></div>`).join(''); 
         list.querySelectorAll('.load-template-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 loadTemplate(btn.dataset.id, btn.dataset.name);
@@ -1312,28 +1261,19 @@ async function handleSessions() {
     $('#sessionsModal').style.display = 'flex';
 }
 
-// ✅ تم تعديل loadTemplate لـ Firestore
 async function loadTemplate(templateId, templateName) {
     if (state.isEditingCompleted) {
         toast('لا يمكن تحميل قالب أثناء تعديل وصفة منتهية', true);
         return;
     }
     
-    const itemsDocRef = doc(db, 'tenants', currentTenantId, 'template_items', templateId);
-    const snap = await getDoc(itemsDocRef);
-    
+    const snap = await get(ref(db, `tenants/${currentTenantId}/template_items/${templateId}`)); 
     state.prescription = [];
-    if (snap.exists()) { 
-        const itemsData = snap.data();
-        state.prescription = Object.entries(itemsData).map(([key, it]) => ({ drug: it.drug_name || it.drug_id, form: it.form, dose: it.dose })); 
-    }
-    
-    const templateDocRef = doc(db, 'tenants', currentTenantId, 'prescription_templates', state.user.uid, 'templates', templateId);
-    const templateSnap = await getDoc(templateDocRef);
-    
-    if (templateSnap.exists() && templateSnap.data().diagnosis) { 
+    if (snap.exists()) { state.prescription = Object.values(snap.val()).map(it => ({ drug: it.drug_name || it.drug_id, form: it.form, dose: it.dose })); }
+    const templateSnap = await get(ref(db, `tenants/${currentTenantId}/prescription_templates/${state.user.uid}/${templateId}`));
+    if (templateSnap.exists() && templateSnap.val().diagnosis) { 
         const diagInput = $('#diagnosisInput'); 
-        if (diagInput) diagInput.value = templateSnap.data().diagnosis; 
+        if (diagInput) diagInput.value = templateSnap.val().diagnosis; 
     }
     state.loadedTemplateId = templateId; 
     state.loadedTemplateName = templateName;
@@ -1348,7 +1288,6 @@ async function loadTemplate(templateId, templateName) {
     toast(`📋 تم تحميل القالب: ${templateName}`);
 }
 
-// ✅ تم تعديل finalizeSession لـ Firestore
 async function finalizeSession(saveTemplate, templateName, templateAction) {
     const apt = state.currentAppointment; 
     const diagnosis = $('#diagnosisInput').value.trim(); 
@@ -1358,34 +1297,12 @@ async function finalizeSession(saveTemplate, templateName, templateAction) {
         
         if (saveTemplate && templateName) { 
             let templateId = state.loadedTemplateId; 
-            
-            if (templateAction === 'new' || !templateId) {
-                const templatesRef = collection(db, 'tenants', currentTenantId, 'prescription_templates', state.user.uid, 'templates');
-                const newTemplateRef = await addDoc(templatesRef, {
-                    name: templateName,
-                    diagnosis,
-                    doctor_id: state.user.uid,
-                    created_at: now,
-                    itemCount: state.prescription.length,
-                    tenantId: currentTenantId
-                });
-                templateId = newTemplateRef.id;
-            } else {
-                const templateDocRef = doc(db, 'tenants', currentTenantId, 'prescription_templates', state.user.uid, 'templates', templateId);
-                await updateDoc(templateDocRef, {
-                    name: templateName,
-                    diagnosis,
-                    itemCount: state.prescription.length,
-                    updated_at: now
-                });
-            }
-            
-            const templateItemsData = {};
-            state.prescription.forEach((item, i) => {
-                templateItemsData[`item_${i}`] = { drug_name: item.drug, form: item.form, dose: item.dose };
-            });
-            const templateItemsDocRef = doc(db, 'tenants', currentTenantId, 'template_items', templateId);
-            await setDoc(templateItemsDocRef, templateItemsData);
+            if (templateAction === 'new' || !templateId) templateId = push(ref(db, `tenants/${currentTenantId}/prescription_templates/${state.user.uid}`)).key; 
+            const templateData = { name: templateName, diagnosis, doctor_id: state.user.uid, created_at: now, itemCount: state.prescription.length, tenantId: currentTenantId }; 
+            const updates = {}; 
+            updates[`tenants/${currentTenantId}/prescription_templates/${state.user.uid}/${templateId}`] = templateData; 
+            state.prescription.forEach((item, i) => { updates[`tenants/${currentTenantId}/template_items/${templateId}/item_${i}`] = { drug_name: item.drug, form: item.form, dose: item.dose }; }); 
+            await update(ref(db), updates); 
         }
         
         const prescriptionData = { 
@@ -1400,23 +1317,18 @@ async function finalizeSession(saveTemplate, templateName, templateAction) {
             tenantId: currentTenantId
         };
         
-        const rxDocRef = doc(db, 'tenants', currentTenantId, 'prescriptions', prescriptionId);
-        await setDoc(rxDocRef, prescriptionData);
-        
-        const rxItemsData = {};
+        const finalUpdates = {}; 
+        finalUpdates[`tenants/${currentTenantId}/prescriptions/${prescriptionId}`] = prescriptionData;
         state.prescription.forEach((item, i) => { 
-            rxItemsData[`item_${i}`] = { 
+            finalUpdates[`tenants/${currentTenantId}/prescription_items/${prescriptionId}/item_${i}`] = { 
                 drug_name: item.drug, 
                 dose: item.dose, 
                 form: item.form 
             }; 
         });
-        const rxItemsDocRef = doc(db, 'tenants', currentTenantId, 'prescription_items', prescriptionId);
-        await setDoc(rxItemsDocRef, rxItemsData);
+        finalUpdates[`tenants/${currentTenantId}/appointments/${apt.id}/status`] = 'منتهي';
         
-        const aptDocRef = doc(db, 'tenants', currentTenantId, 'appointments', apt.id);
-        await updateDoc(aptDocRef, { status: 'منتهي' });
-        
+        await update(ref(db), finalUpdates);
         await deleteSession(apt.id);
         
         // ✅ تتبع الأدوية الموصوفة في نظام المراقبة (النافذة المنزلقة)
@@ -1647,7 +1559,6 @@ window.shifaDoctorTools = {
     getCurrentTenantId: () => currentTenantId
 };
 
-// ✅ تم تعديل onAuthStateChanged لـ Firestore
 onAuthStateChanged(auth, async (user) => {
     if (!user) { 
         clearLoginSessionOnly();
@@ -1693,11 +1604,9 @@ onAuthStateChanged(auth, async (user) => {
     }
 
     try {
-        const tenantUserDocRef = doc(db, 'tenants', currentTenantId, 'users', user.uid);
-        const tenantUserSnap = await getDoc(tenantUserDocRef);
-        
+        const tenantUserSnap = await get(ref(db, `tenants/${currentTenantId}/users/${user.uid}`));
         if (tenantUserSnap.exists()) {
-            state.user = { uid: user.uid, ...tenantUserSnap.data() };
+            state.user = { uid: user.uid, ...tenantUserSnap.val() };
         } else {
             state.user = { uid: user.uid, name: 'طبيب' };
         }
@@ -1715,16 +1624,13 @@ onAuthStateChanged(auth, async (user) => {
         await Promise.all([sessionDB.open(), favoritesDB.open(), favoriteDosesDB.open(), drugManager.loadCache()]);
         setupEventListeners();
         
-        // ✅ مستمع حي للكشوفات باستخدام Firestore
-        const appointmentsRef = collection(db, 'tenants', currentTenantId, 'appointments');
-        const q = query(appointmentsRef, where('doctor_id', '==', user.uid));
-        
-        onSnapshot(q, (snapshot) => {
+        const q = query(ref(db, `tenants/${currentTenantId}/appointments`), orderByChild('doctor_id'), equalTo(user.uid));
+        onValue(q, (snap) => {
             const apps = []; 
-            snapshot.forEach(docSnap => { 
-                const a = docSnap.data(); 
+            snap.forEach(c => { 
+                const a = c.val(); 
                 if (a.date === today() && a.status !== 'ملغي') {
-                    apps.push({ id: docSnap.id, ...a }); 
+                    apps.push({ id: c.key, ...a }); 
                 }
             });
             apps.sort((a,b) => (a.time||'').localeCompare(b.time||''));
@@ -1757,7 +1663,7 @@ onAuthStateChanged(auth, async (user) => {
     }
 });
 
-console.log('🚀 لوحة الطبيب - Firestore');
+console.log('🚀 لوحة الطبيب - نظام المجمعات الطبية المتعددة');
 console.log('🔍 البحث الذكي: ترتيب حسب بداية النص أولاً');
 console.log('💊 الشكل الصيدلي: يُحفظ في الروشتة فقط للصيدلي');
 console.log('⭐ المفضلات: تبحث بشكل ذكي مع كل حرف يُكتب');
@@ -1765,3 +1671,4 @@ console.log('🔒 كل طبيب يشوف كشوفاته هو فقط في مجم�
 console.log('🪟 نظام مراقبة: نافذة منزلقة 15 يوم (اليوم 16 يتمسح اليوم 1 فقط)');
 console.log('🏥 سجل موحد: يظهر وصفات المريض من كل المجمعات مع إخفاء اسم الدكتور من المجمعات الأخرى');
 console.log('💾 وضع الحفظ: يمسح جلسة الدخول فقط - يحتفظ ببيانات المجمع');
+اعمل ده نفس تعديلات صفحه الممرض
