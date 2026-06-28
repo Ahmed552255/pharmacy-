@@ -4,892 +4,734 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#00AEEF">
-    <title>شفاء · إعدادات الممرض</title>
-    
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Google Fonts -->
+    <title>شفاء · لوحة الممرض</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap&subset=arabic" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
     
     <style>
         :root {
             --primary: #00AEEF;
-            --primary-light: #E0F7FA;
             --primary-dark: #008080;
-            --bg: #FAFAFA;
+            --primary-light: #E0F7FA;
+            --bg: #F5F7FA;
             --white: #FFFFFF;
             --ink: #1A3C4A;
             --text-sec: #5A7D8A;
-            --text-light: #8FA4AD;
             --danger: #E57373;
             --success: #26A69A;
             --warning: #FFA726;
-            --whatsapp: #25D366;
-            --whatsapp-light: #E8F5E9;
-            --border: #E0E0E0;
-            --shadow-xs: 0 1px 4px rgba(0,0,0,0.04);
-            --shadow-sm: 0 4px 12px rgba(0,0,0,0.06);
-            --shadow-md: 0 8px 24px rgba(0,0,0,0.1);
-            --radius-xs: 8px;
-            --radius-sm: 14px;
-            --radius-md: 20px;
-            --radius-lg: 28px;
-            --radius-xl: 50px;
-            --safe-bottom: env(safe-area-inset-bottom, 16px);
+            --shadow: 0 4px 20px rgba(0,0,0,0.08);
+            --border: #E0E8ED;
         }
 
-        * { 
-            margin: 0; 
-            padding: 0; 
-            box-sizing: border-box; 
-            -webkit-tap-highlight-color: transparent; 
-        }
-        
-        input, textarea, select { 
-            -webkit-user-select: text; 
-            user-select: text; 
-        }
-
-        html {
-            font-size: clamp(13px, 2.8vw, 15px);
-            -webkit-font-smoothing: antialiased;
-            -webkit-text-size-adjust: 100%;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
         body {
-            font-family: 'Cairo', system-ui, sans-serif;
+            font-family: 'Cairo', sans-serif;
             background: var(--bg);
             color: var(--ink);
             min-height: 100vh;
-            min-height: 100dvh;
-            padding: clamp(8px, 2vw, 14px);
-            padding-bottom: calc(clamp(8px, 2vw, 14px) + var(--safe-bottom) + 40vh);
-            overflow-x: hidden;
-            -webkit-overflow-scrolling: touch;
+            padding: 0;
+            direction: rtl;
         }
 
-        .container { 
-            max-width: min(900px, 98vw); 
-            margin: 0 auto; 
-        }
-
-        #pageLoader {
+        /* شاشة التحميل */
+        #authLoader {
             position: fixed;
             inset: 0;
-            background: rgba(250,250,250,0.95);
-            backdrop-filter: blur(6px);
-            -webkit-backdrop-filter: blur(6px);
+            background: var(--bg);
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            z-index: 2000;
-            flex-direction: column;
-            gap: 14px;
-        }
-        
-        .loader-circle {
-            width: 38px; 
-            height: 38px;
-            border: 3px solid var(--primary-light);
-            border-top-color: var(--primary);
-            border-radius: 50%;
-            animation: spin 0.7s linear infinite;
-        }
-        
-        @keyframes spin { 
-            to { transform: rotate(360deg); } 
+            z-index: 9999;
         }
 
+        .loader-spin {
+            width: 48px;
+            height: 48px;
+            border: 4px solid var(--primary-light);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loader-text {
+            margin-top: 16px;
+            color: var(--text-sec);
+            font-weight: 600;
+        }
+
+        /* الحاوية الرئيسية */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 16px;
+        }
+
+        /* الهيدر */
         .app-header {
+            background: var(--white);
+            border-radius: 16px;
+            padding: 16px 24px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            background: var(--white);
-            border-radius: var(--radius-lg);
-            padding: clamp(8px, 2vw, 12px) clamp(12px, 3vw, 18px);
-            margin-bottom: clamp(10px, 2.5vw, 16px);
-            border: 1px solid var(--border);
-            box-shadow: var(--shadow-sm);
             flex-wrap: wrap;
+            gap: 12px;
+            box-shadow: var(--shadow);
+            margin-bottom: 16px;
+        }
+
+        .logo h2 {
+            font-size: 1.4rem;
+            color: var(--primary-dark);
+            display: flex;
+            align-items: center;
             gap: 8px;
-            position: sticky;
-            top: 6px;
-            z-index: 100;
         }
-        
-        .logo h2 { 
-            font-size: clamp(1.1rem, 3vw, 1.3rem); 
-            font-weight: 800; 
-            color: var(--primary-dark); 
-            white-space: nowrap; 
+
+        .sync-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
         }
-        
-        .logo i { color: var(--primary); }
-        
-        .header-actions { 
-            display: flex; 
-            gap: 6px; 
-            flex-wrap: wrap; 
-            align-items: center; 
+
+        .sync-dot.on {
+            background: var(--success);
+            box-shadow: 0 0 6px var(--success);
+        }
+
+        .sync-dot.off {
+            background: var(--danger);
+            box-shadow: 0 0 6px var(--danger);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
         }
 
         .tenant-badge {
             background: var(--primary-light);
-            padding: 4px 10px;
-            border-radius: var(--radius-xl);
-            font-size: 0.72rem;
-            font-weight: 600;
             color: var(--primary-dark);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
             display: flex;
             align-items: center;
-            gap: 5px;
-            white-space: nowrap;
-        }
-
-        .btn {
-            padding: clamp(7px, 1.5vw, 9px) clamp(12px, 2.5vw, 16px);
-            border-radius: var(--radius-xl);
-            border: none;
-            font-weight: 700;
-            font-family: 'Cairo', system-ui, sans-serif;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            font-size: clamp(0.78rem, 2vw, 0.85rem);
-            white-space: nowrap;
-            touch-action: manipulation;
-            user-select: none;
-            transition: all 0.15s ease;
-            min-height: clamp(32px, 8vw, 38px);
-        }
-        
-        .btn:active { 
-            transform: scale(0.96); 
-            opacity: 0.85; 
-        }
-        
-        .btn-primary { 
-            background: var(--primary); 
-            color: white; 
-            box-shadow: 0 3px 10px rgba(0,174,239,0.2); 
-        }
-        
-        .btn-outline { 
-            background: var(--white); 
-            color: var(--ink); 
-            border: 1.5px solid var(--border); 
-        }
-        
-        .btn-danger { 
-            background: var(--danger); 
-            color: white; 
-        }
-        
-        .btn-back { 
-            background: rgba(255,255,255,0.9); 
-            color: var(--primary-dark); 
-            border: 1.5px solid var(--primary); 
-            font-weight: 700; 
-        }
-        
-        .btn-back i { color: var(--primary); }
-
-        .section-title {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: clamp(8px, 2vw, 12px);
-            font-size: clamp(0.9rem, 2.2vw, 1rem);
-            font-weight: 800;
-            color: var(--ink);
-        }
-        
-        .section-title i { color: var(--primary); }
-
-        .doctors-strip {
-            background: var(--white);
-            border-radius: var(--radius-xl);
-            padding: 5px;
-            border: 1px solid var(--border);
-            box-shadow: var(--shadow-sm);
-            margin-bottom: clamp(12px, 3vw, 18px);
-            overflow: hidden;
-        }
-        
-        .doctors-strip .strip-scroll {
-            display: flex;
             gap: 6px;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-            scroll-behavior: smooth;
-            scroll-snap-type: x proximity;
-            padding: 4px;
-            scrollbar-width: none;
-            -ms-overflow-style: none;
-        }
-        
-        .doctors-strip .strip-scroll::-webkit-scrollbar { 
-            display: none; 
         }
 
-        .doctor-pill {
+        #welcomeMsg {
+            font-weight: 600;
+            color: var(--ink);
+            font-size: 0.9rem;
+        }
+
+        /* الأزرار */
+        .btn {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 12px;
+            font-family: 'Cairo', sans-serif;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 8px;
-            padding: 9px 14px;
-            background: var(--white);
-            border-radius: var(--radius-xl);
-            border: 1.5px solid var(--border);
-            cursor: pointer;
+            gap: 6px;
+            transition: all 0.2s;
             white-space: nowrap;
-            flex-shrink: 0;
-            scroll-snap-align: start;
-            transition: all 0.2s ease;
-            font-weight: 600;
-            font-size: clamp(0.78rem, 2vw, 0.85rem);
-            touch-action: manipulation;
-            min-height: clamp(34px, 8vw, 40px);
         }
-        
-        .doctor-pill:active { 
-            transform: scale(0.95); 
+
+        .btn:active {
+            transform: scale(0.97);
         }
-        
-        .doctor-pill.active {
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+
+        .btn-primary {
+            background: var(--primary);
             color: white;
-            border-color: var(--primary);
-            box-shadow: 0 4px 14px rgba(0,174,239,0.3);
+            box-shadow: 0 4px 12px rgba(0,174,239,0.3);
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--danger);
+            border: 2px solid var(--danger);
+        }
+
+        .btn-outline:hover {
+            background: rgba(229,115,115,0.1);
+        }
+
+        .btn-settings {
+            background: var(--bg);
+            color: var(--ink);
+            border: 1px solid var(--border);
+        }
+
+        .btn-notifications {
+            background: var(--white);
+            color: var(--warning);
+            border: 2px solid var(--warning);
+            position: relative;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -6px;
+            left: -6px;
+            background: var(--danger);
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             font-weight: 700;
         }
-        
-        .doctor-pill .pill-avatar {
-            width: 28px; 
-            height: 28px; 
-            min-width: 28px;
-            background: var(--primary-light);
-            border-radius: 50%;
-            display: flex; 
-            align-items: center; 
-            justify-content: center;
-            font-size: 0.75rem; 
-            color: var(--primary-dark);
-        }
-        
-        .doctor-pill.active .pill-avatar { 
-            background: rgba(255,255,255,0.3); 
-            color: white; 
-        }
 
-        .settings-card {
-            background: var(--white);
-            border-radius: var(--radius-lg);
-            padding: clamp(14px, 3vw, 20px) clamp(16px, 3.5vw, 22px);
-            border: 1px solid var(--border);
-            box-shadow: var(--shadow-md);
-            margin-bottom: 14px;
-            transition: all 0.3s ease;
-        }
-        
-        .settings-card.empty {
-            text-align: center;
-            padding: clamp(30px, 8vw, 50px) 20px;
-            color: var(--text-sec);
-        }
-        
-        .settings-card.empty i { 
-            font-size: clamp(2.5rem, 7vw, 3.5rem); 
-            opacity: 0.15; 
-            margin-bottom: 12px; 
-            display: block; 
-        }
-        
-        .settings-card.empty h3 { 
-            font-size: clamp(1rem, 2.5vw, 1.15rem); 
-            margin-bottom: 6px; 
-            color: var(--ink); 
-        }
-
-        .doctor-info-header {
+        /* صف التحكم */
+        .controls-row {
             display: flex;
             align-items: center;
             gap: 12px;
             margin-bottom: 16px;
-            padding-bottom: 14px;
-            border-bottom: 1px solid var(--border);
+            flex-wrap: wrap;
         }
-        
-        .doctor-avatar-lg {
-            width: clamp(44px, 10vw, 56px);
-            height: clamp(44px, 10vw, 56px);
-            min-width: clamp(44px, 10vw, 56px);
-            background: linear-gradient(135deg, var(--primary-light), var(--primary));
-            border-radius: 50%;
+
+        .doctors-tabs {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            flex: 1;
+        }
+
+        .doctor-tab {
+            padding: 8px 16px;
+            background: var(--white);
+            border: 2px solid var(--border);
+            border-radius: 20px;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .doctor-tab.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .doctor-tab:hover {
+            border-color: var(--primary);
+        }
+
+        .date-picker {
             display: flex;
             align-items: center;
-            justify-content: center;
-            font-size: clamp(1.1rem, 2.5vw, 1.3rem);
+            gap: 8px;
+        }
+
+        .btn-today {
+            padding: 8px 16px;
+            background: var(--success);
             color: white;
-            font-weight: 800;
-            aspect-ratio: 1;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            font-weight: 600;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .date-input {
+            padding: 8px 12px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            font-family: 'Cairo', sans-serif;
+            font-size: 0.85rem;
+            color: var(--ink);
+            background: var(--white);
+        }
+
+        /* تبويبات الحالة */
+        .status-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .status-tab {
+            padding: 10px 20px;
+            background: var(--white);
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .status-tab.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .status-tab:hover:not(.active) {
+            border-color: var(--primary);
+        }
+
+        .badge {
+            background: rgba(0,0,0,0.1);
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+        .status-tab.active .badge {
+            background: rgba(255,255,255,0.3);
+        }
+
+        /* الجدول */
+        .table-container {
+            background: var(--white);
+            border-radius: 16px;
+            box-shadow: var(--shadow);
             overflow: hidden;
         }
-        
-        .doctor-avatar-lg img { 
-            width: 100%; 
-            height: 100%; 
-            object-fit: cover; 
-        }
-        
-        .doctor-info-text h3 { 
-            font-size: clamp(1rem, 2.5vw, 1.15rem); 
-            font-weight: 800; 
-            color: var(--ink); 
-        }
-        
-        .doctor-info-text span { 
-            font-size: clamp(0.75rem, 1.8vw, 0.82rem); 
-            color: var(--text-sec); 
+
+        .table-scroll {
+            overflow-x: auto;
         }
 
-        .form-group { 
-            margin-bottom: clamp(10px, 2.5vw, 14px); 
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 800px;
         }
-        
+
+        thead {
+            background: var(--primary-light);
+        }
+
+        th {
+            padding: 14px 16px;
+            text-align: right;
+            font-weight: 700;
+            color: var(--primary-dark);
+            font-size: 0.9rem;
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.9rem;
+        }
+
+        tbody tr:hover {
+            background: rgba(0,174,239,0.03);
+        }
+
+        .empty-row td {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-sec);
+        }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .status-waiting {
+            background: #FFF3E0;
+            color: #E65100;
+        }
+
+        .status-inprogress {
+            background: #E3F2FD;
+            color: #1565C0;
+        }
+
+        .status-done {
+            background: #E8F5E9;
+            color: #2E7D32;
+        }
+
+        .action-btns {
+            display: flex;
+            gap: 6px;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 8px;
+            font-family: 'Cairo', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.2s;
+        }
+
+        .btn-edit {
+            background: #FFF3E0;
+            color: #E65100;
+        }
+
+        .btn-status {
+            background: #E3F2FD;
+            color: #1565C0;
+        }
+
+        .btn-delete {
+            background: #FFEBEE;
+            color: #C62828;
+        }
+
+        /* المودال */
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-card {
+            background: var(--white);
+            border-radius: 20px;
+            width: 100%;
+            max-width: 560px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .modal-header h3 {
+            font-size: 1.2rem;
+            color: var(--primary-dark);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.8rem;
+            color: var(--text-sec);
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 8px;
+            line-height: 1;
+        }
+
+        .close-btn:hover {
+            background: rgba(0,0,0,0.05);
+            color: var(--danger);
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
         .form-group label {
             display: block;
-            margin-bottom: 5px;
-            font-weight: 700;
-            font-size: clamp(0.82rem, 2vw, 0.9rem);
+            font-weight: 600;
+            margin-bottom: 6px;
             color: var(--ink);
-            display: flex;
-            align-items: center;
-            gap: 6px;
+            font-size: 0.9rem;
         }
-        
-        .form-group label i { 
-            color: var(--primary); 
-            width: 18px; 
-            text-align: center; 
-        }
-        
+
         .form-control {
             width: 100%;
-            padding: clamp(9px, 2vw, 11px) clamp(12px, 2.5vw, 14px);
-            border-radius: var(--radius-sm);
-            border: 1.5px solid var(--border);
-            background: #F5FAFC;
-            font-family: 'Cairo', system-ui, sans-serif;
-            font-size: clamp(0.82rem, 2vw, 0.9rem);
+            padding: 10px 14px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            font-family: 'Cairo', sans-serif;
+            font-size: 0.9rem;
             color: var(--ink);
-            -webkit-appearance: none;
-            appearance: none;
-            transition: all 0.15s ease;
-            resize: vertical;
+            background: var(--white);
+            transition: border-color 0.2s;
         }
-        
-        .form-control:focus { 
-            outline: none; 
-            border-color: var(--primary); 
-            background: white; 
-            box-shadow: 0 0 0 3px rgba(0,174,239,0.08); 
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(0,174,239,0.1);
         }
-        
-        textarea.form-control { 
-            min-height: clamp(70px, 18vw, 90px); 
-            line-height: 1.6; 
-        }
-        
+
         select.form-control {
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath fill='%238FA4AD' d='M5 7L1 3h8z'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: left 12px center;
-            padding-left: 30px;
             cursor: pointer;
         }
 
-        .whatsapp-input-wrapper { 
-            position: relative; 
-            display: flex; 
-            align-items: center; 
+        .search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 10;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+            display: none;
         }
-        
-        .whatsapp-prefix { 
-            position: absolute; 
-            right: 12px; 
-            font-weight: 700; 
-            color: var(--text-sec); 
-            font-size: 0.9rem; 
-            z-index: 2; 
-            pointer-events: none; 
+
+        .search-results.show {
+            display: block;
         }
-        
-        .whatsapp-input-wrapper .form-control { 
-            padding-right: 60px; 
-            direction: ltr; 
-            text-align: right; 
+
+        .search-item {
+            padding: 10px 14px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border);
+            transition: background 0.2s;
         }
-        
-        .whatsapp-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            background: var(--whatsapp-light);
-            color: var(--whatsapp);
-            padding: 3px 8px;
-            border-radius: 20px;
-            font-size: 0.7rem;
-            font-weight: 700;
-            margin-top: 4px;
+
+        .search-item:hover {
+            background: var(--primary-light);
         }
-        
-        .whatsapp-validation { 
-            font-size: 0.72rem; 
-            margin-top: 4px; 
-            display: flex; 
-            align-items: center; 
-            gap: 4px; 
+
+        .search-item:last-child {
+            border-bottom: none;
         }
-        
-        .whatsapp-validation.valid { color: var(--success); }
-        .whatsapp-validation.invalid { color: var(--danger); }
-        
-        .field-hint { 
-            font-size: clamp(0.68rem, 1.6vw, 0.73rem); 
-            color: var(--text-sec); 
-            margin-top: 4px; 
-            padding-right: 26px; 
-        }
-        
-        .field-warning {
-            font-size: clamp(0.68rem, 1.6vw, 0.73rem);
-            color: var(--warning);
-            margin-top: 4px;
-            padding-right: 26px;
-            display: flex;
-            align-items: center;
-            gap: 4px;
+
+        .alert-msg {
+            margin-top: 12px;
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-size: 0.85rem;
             font-weight: 600;
+            display: none;
         }
 
-        .upload-area {
-            border: 2px dashed var(--border);
-            border-radius: var(--radius-md);
-            padding: 20px 16px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s;
-            background: #FAFBFC;
-            position: relative;
-            min-height: 100px;
+        .alert-msg.error {
+            display: block;
+            background: #FFEBEE;
+            color: #C62828;
+            border: 1px solid #FFCDD2;
+        }
+
+        .alert-msg.success {
+            display: block;
+            background: #E8F5E9;
+            color: #2E7D32;
+            border: 1px solid #C8E6C9;
+        }
+
+        .toggle-id-container {
             display: flex;
-            flex-direction: column;
             align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-        
-        .upload-area:hover { 
-            border-color: var(--primary); 
-            background: var(--primary-light); 
-        }
-        
-        .upload-area i { 
-            font-size: 1.8rem; 
-            color: var(--primary); 
-            opacity: 0.6; 
-        }
-        
-        .upload-area span { 
-            font-size: 0.8rem; 
-            color: var(--text-sec); 
-            font-weight: 600; 
-        }
-        
-        .upload-area small { 
-            font-size: 0.68rem; 
-            color: var(--text-light); 
-        }
-        
-        .file-input-hidden { 
-            display: none; 
+            justify-content: space-between;
+            margin-bottom: 6px;
         }
 
-        .preview-container { 
-            display: none; 
-            position: relative; 
-            margin-top: 10px; 
-            border-radius: var(--radius-sm); 
-            overflow: hidden; 
-            border: 1px solid var(--border); 
-        }
-        
-        .preview-container.active { 
-            display: block; 
-        }
-        
-        .preview-container img { 
-            width: 100%; 
-            max-height: 200px; 
-            object-fit: contain; 
-            background: #F5F5F5; 
-        }
-        
-        .preview-overlay { 
-            position: absolute; 
-            top: 6px; 
-            right: 6px; 
-            display: flex; 
-            gap: 4px; 
-        }
-        
-        .preview-btn {
-            width: 30px; 
-            height: 30px; 
-            border-radius: 50%; 
-            border: none;
-            background: rgba(0,0,0,0.6); 
-            color: white; 
-            cursor: pointer;
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            font-size: 0.75rem; 
-            transition: background 0.15s;
-        }
-        
-        .preview-btn:hover { 
-            background: rgba(0,0,0,0.8); 
-        }
-        
-        .preview-btn.remove { 
-            background: var(--danger); 
-        }
-
-        .compress-info {
-            display: none; 
-            background: #E8F5E9; 
-            border-radius: var(--radius-xs); 
-            padding: 6px 10px;
-            font-size: 0.7rem; 
-            color: #2E7D32; 
-            font-weight: 600; 
-            margin-top: 6px; 
-            align-items: center; 
-            gap: 4px;
-        }
-        
-        .compress-info.active { 
-            display: flex; 
-        }
-
-        .gallery-grid { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); 
-            gap: 8px; 
-            margin-top: 8px; 
-        }
-        
-        .gallery-item { 
-            position: relative; 
-            border-radius: var(--radius-xs); 
-            overflow: hidden; 
-            aspect-ratio: 1; 
-            border: 1px solid var(--border); 
-        }
-        
-        .gallery-item img { 
-            width: 100%; 
-            height: 100%; 
-            object-fit: cover; 
-        }
-        
-        .gallery-item .remove-gallery-btn {
-            position: absolute; 
-            top: 2px; 
-            right: 2px; 
-            width: 22px; 
-            height: 22px; 
-            border-radius: 50%;
-            border: none; 
-            background: var(--danger); 
-            color: white; 
-            cursor: pointer;
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            font-size: 0.6rem;
-        }
-        
-        .gallery-add {
-            border: 2px dashed var(--border); 
-            border-radius: var(--radius-xs); 
-            aspect-ratio: 1;
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            cursor: pointer;
-            transition: all 0.2s; 
-            color: var(--text-light); 
-            font-size: 0.7rem; 
-            text-align: center;
-            flex-direction: column; 
-            gap: 3px;
-        }
-        
-        .gallery-add:hover { 
-            border-color: var(--primary); 
-            color: var(--primary); 
-            background: var(--primary-light); 
-        }
-        
-        .gallery-add i { 
-            font-size: 1.2rem; 
-        }
-
-        .section-divider {
-            margin: clamp(14px, 3vw, 20px) 0 clamp(10px, 2.5vw, 14px);
-            padding-top: clamp(14px, 3vw, 20px);
-            border-top: 2px dashed var(--border);
-            display: flex; 
-            align-items: center; 
-            gap: 8px;
-            font-weight: 800; 
-            font-size: clamp(0.85rem, 2vw, 0.95rem); 
+        .btn-toggle-id {
+            background: var(--primary-light);
             color: var(--primary-dark);
-        }
-        
-        .section-divider i { 
-            color: var(--warning); 
-        }
-
-        .row-2 { 
-            display: grid; 
-            grid-template-columns: 1fr 1fr; 
-            gap: 10px; 
-        }
-
-        .tag-input-container {
-            display: flex; 
-            flex-wrap: wrap; 
-            gap: 6px; 
-            padding: 8px;
-            background: #F8FAFB; 
-            border: 1.5px solid var(--border); 
-            border-radius: var(--radius-sm);
-            min-height: 44px; 
-            align-items: center; 
-            cursor: text;
-        }
-        
-        .tag-input-container:focus-within { 
-            border-color: var(--primary); 
-            box-shadow: 0 0 0 3px rgba(0,174,239,0.08); 
-            background: white; 
-        }
-        
-        .tag {
-            background: var(--primary-light); 
-            color: var(--primary-dark); 
-            padding: 3px 10px;
-            border-radius: 20px; 
-            font-size: 0.75rem; 
-            font-weight: 700;
-            display: flex; 
-            align-items: center; 
-            gap: 5px;
-        }
-        
-        .tag .remove-tag {
-            cursor: pointer; 
-            width: 18px; 
-            height: 18px; 
-            border-radius: 50%;
-            background: rgba(0,0,0,0.1); 
-            display: flex; 
-            align-items: center; 
-            justify-content: center;
-            font-size: 0.6rem; 
-            transition: background 0.15s;
-        }
-        
-        .tag .remove-tag:hover { 
-            background: var(--danger); 
-            color: white; 
-        }
-        
-        .tag-input { 
-            border: none; 
-            outline: none; 
-            background: transparent; 
-            font-family: 'Cairo', system-ui, sans-serif; 
-            font-size: 0.82rem; 
-            flex: 1; 
-            min-width: 100px; 
-            padding: 4px; 
-        }
-
-        .saved-indicator {
-            display: inline-flex; 
-            align-items: center; 
+            border: none;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-family: 'Cairo', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
             gap: 4px;
-            background: #E8F5E9; 
-            color: #2E7D32; 
-            padding: 4px 10px; 
-            border-radius: 20px;
-            font-size: 0.72rem; 
-            font-weight: 700; 
-            animation: fadeInOut 2s ease forwards;
-        }
-        
-        @keyframes fadeInOut {
-            0% { opacity: 0; transform: scale(0.8); }
-            30% { opacity: 1; transform: scale(1); }
-            80% { opacity: 1; }
-            100% { opacity: 0; }
         }
 
-        .action-row { 
-            display: flex; 
-            gap: 8px; 
-            flex-wrap: wrap; 
-            margin-top: 16px; 
-        }
-
+        /* توست */
         .toast-container {
             position: fixed;
-            bottom: max(16px, 3vw);
+            top: 20px;
             left: 50%;
             transform: translateX(-50%);
-            z-index: 3000;
+            z-index: 9999;
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 8px;
             pointer-events: none;
-            padding-bottom: var(--safe-bottom);
-            max-width: 90vw;
-        }
-        
-        .toast {
-            background: #1A3C4A;
-            color: white;
-            padding: 10px 18px;
-            border-radius: var(--radius-xl);
-            font-weight: 700;
-            font-size: 0.82rem;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.18);
-            animation: toastIn 0.3s ease, toastOut 0.3s ease 2.2s forwards;
-            white-space: nowrap;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        
-        .toast.err { 
-            background: #C62828; 
-        }
-        
-        @keyframes toastIn { 
-            from { transform: translateY(16px); opacity: 0; } 
-            to { transform: translateY(0); opacity: 1; } 
-        }
-        
-        @keyframes toastOut { 
-            from { transform: translateY(0); opacity: 1; } 
-            to { transform: translateY(-16px); opacity: 0; } 
         }
 
-        .keyboard-scroll-spacer { 
-            height: 1px; 
-            width: 100%; 
-            pointer-events: none; 
-            opacity: 0; 
+        .toast {
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: white;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            animation: toastIn 0.3s ease-out;
+            pointer-events: auto;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .toast.success {
+            background: var(--success);
+        }
+
+        .toast.error {
+            background: var(--danger);
+        }
+
+        .toast.info {
+            background: var(--primary);
+        }
+
+        @keyframes toastIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* مساحة للوحة المفاتيح في الموبايل */
+        .keyboard-scroll-spacer {
+            height: 200px;
+            display: none;
         }
 
         @media (max-width: 768px) {
-            body { 
-                padding: 6px; 
-                padding-bottom: calc(6px + var(--safe-bottom) + 50vh); 
+            .keyboard-scroll-spacer {
+                display: block;
             }
-            .app-header { 
-                padding: 8px 10px; 
-                top: 3px; 
-                border-radius: var(--radius-md); 
-                gap: 6px; 
+            
+            .app-header {
+                flex-direction: column;
+                text-align: center;
             }
-            .logo h2 { 
-                font-size: 1.05rem; 
+            
+            .header-actions {
+                justify-content: center;
             }
-            .btn { 
-                padding: 6px 10px; 
-                font-size: 0.75rem; 
-                min-height: 30px; 
+            
+            .modal-card {
+                max-width: 100%;
+                border-radius: 16px;
             }
-            .doctor-pill { 
-                padding: 7px 10px; 
-                font-size: 0.75rem; 
-            }
-            .settings-card { 
-                padding: 12px 14px; 
-                border-radius: var(--radius-md); 
-            }
-            .action-row { 
-                flex-direction: column; 
-            }
-            .action-row .btn { 
-                width: 100%; 
-                justify-content: center; 
-            }
-            .row-2 { 
-                grid-template-columns: 1fr; 
-            }
-            .gallery-grid { 
-                grid-template-columns: repeat(auto-fill, minmax(65px, 1fr)); 
+            
+            .btn {
+                padding: 8px 14px;
+                font-size: 0.8rem;
             }
         }
 
-        @media (max-width: 400px) {
-            html { 
-                font-size: 13px; 
+        @media (max-width: 480px) {
+            .controls-row {
+                flex-direction: column;
             }
-            body { 
-                padding: 3px; 
-                padding-bottom: calc(3px + var(--safe-bottom) + 60vh); 
+            
+            .doctors-tabs {
+                justify-content: center;
             }
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-            *, *::before, *::after { 
-                animation-duration: 0.001ms !important; 
-                transition-duration: 0.001ms !important; 
+            
+            .status-tab {
+                padding: 8px 14px;
+                font-size: 0.8rem;
             }
         }
     </style>
 </head>
 <body>
 
-    <div id="pageLoader">
-        <div class="loader-circle"></div>
-        <span style="font-weight:700;color:var(--primary-dark);">جارٍ تحميل الإعدادات...</span>
+    <div id="authLoader">
+        <div class="loader-spin"></div>
+        <span class="loader-text">جارٍ تحميل البيانات...</span>
     </div>
 
     <div class="toast-container" id="toastContainer"></div>
 
-    <div class="container" id="mainContent" style="display:none;">
+    <div class="container" id="mainContainer" style="display:none;">
         <header class="app-header">
             <div class="logo">
-                <h2><i class="fas fa-cog"></i> إعدادات الممرض</h2>
+                <h2><i class="fas fa-heartbeat"></i> شفاء · الممرض <span class="sync-dot on" id="syncDot" title="حالة المزامنة"></span></h2>
             </div>
             <div class="header-actions">
                 <span class="tenant-badge" id="tenantBadge">
-                    <i class="fas fa-hospital"></i> <span id="tenantName">المجمع الطبي</span>
+                    <i class="fas fa-hospital"></i> <span id="tenantName"></span>
                 </span>
-                <button class="btn btn-back" id="backBtn">
-                    <i class="fas fa-arrow-right"></i> العودة للوحة التحكم
+                <span id="welcomeMsg"></span>
+                <!-- ✅ زر الإشعارات -->
+                <button class="btn btn-notifications" id="notificationsBtn" title="الإشعارات">
+                    <i class="fas fa-bell"></i>
+                    <span class="notification-badge" id="notificationBadge" style="display:none;">0</span>
+                </button>
+                <button class="btn btn-primary" id="addBookingBtn">
+                    <i class="fas fa-plus"></i> كشف جديد
+                </button>
+                <button class="btn btn-settings" id="settingsBtn" title="الإعدادات">
+                    <i class="fas fa-cog"></i> إعدادات
                 </button>
                 <button class="btn btn-outline" id="logoutBtn">
                     <i class="fas fa-sign-out-alt"></i> خروج
@@ -897,672 +739,168 @@
             </div>
         </header>
 
-        <div class="section-title">
-            <i class="fas fa-user-md"></i> الأطباء المرتبطون بك
-        </div>
-
-        <div class="doctors-strip" id="doctorsStrip">
-            <div class="strip-scroll" id="doctorStripContainer">
-                <div style="padding:10px;color:var(--text-sec);text-align:center;width:100%;">
-                    <i class="fas fa-spinner fa-spin"></i> جاري التحميل...
-                </div>
+        <div class="controls-row">
+            <div class="doctors-tabs" id="doctorsTabs"></div>
+            <div class="date-picker">
+                <button class="btn-today" id="todayBtn">
+                    <i class="fas fa-calendar-alt"></i> اليوم
+                </button>
+                <input type="date" id="filterDate" class="date-input">
             </div>
         </div>
 
-        <div id="settingsCardContainer">
-            <div class="settings-card empty">
-                <i class="fas fa-hand-point-up"></i>
-                <h3>اختر طبيباً من القائمة أعلاه</h3>
-                <p style="color:var(--text-sec);font-size:0.85rem;">لتعديل بياناته التسويقية كاملة</p>
-            </div>
+        <div class="status-tabs">
+            <button class="status-tab active" data-tab="waiting">
+                <i class="fas fa-hourglass-half"></i> قيد الانتظار
+                <span class="badge" id="countWaiting">0</span>
+            </button>
+            <button class="status-tab" data-tab="inprogress">
+                <i class="fas fa-stethoscope"></i> قيد الكشف
+                <span class="badge" id="countInProgress">0</span>
+            </button>
+            <button class="status-tab" data-tab="done">
+                <i class="fas fa-check-circle"></i> منتهي
+                <span class="badge" id="countDone">0</span>
+            </button>
         </div>
 
+        <div class="table-container">
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>المريض</th>
+                            <th>الطبيب</th>
+                            <th>التاريخ</th>
+                            <th>نوع الكشف</th>
+                            <th>الحالة</th>
+                            <th>إجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bookingsBody">
+                        <tr class="empty-row"><td colspan="7"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
         <div class="keyboard-scroll-spacer"></div>
     </div>
 
-    <script type="module">
-        import { firebaseConfig } from './firebase-config.js';
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-        import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
-
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getDatabase(app);
-
-        const STORAGE_PREFIX = 'shifa_tenant_';
-        const LOGIN_STORAGE_KEYS = ['shifa_session', 'shifa_remember', 'shifa_last_login', 'shifa_secure_session'];
-
-        let currentTenantId = null;
-        let currentNurseId = null;
-
-        const state = {
-            currentUser: null,
-            nurseData: null,
-            assignedDoctors: [],
-            selectedDoctorId: null,
-            doctorInfoCache: {},
-            tempProfileImage: null,
-            tempGalleryImages: [],
-        };
-
-        const $ = (s) => document.querySelector(s);
-        const $$ = (s) => document.querySelectorAll(s);
-        const esc = (s) => { if (!s) return ''; const d = document.createElement('div'); d.textContent = String(s); return d.innerHTML; };
-        const toast = (msg, err = false) => {
-            const c = $('#toastContainer');
-            const t = document.createElement('div');
-            t.className = `toast ${err ? 'err' : ''}`;
-            t.innerHTML = `<i class="fas ${err ? 'fa-exclamation-circle' : 'fa-check-circle'}"></i> ${msg}`;
-            c.appendChild(t);
-            setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateY(-10px)'; setTimeout(() => t.remove(), 300); }, 2500);
-        };
-
-        const clearLoginSessionOnly = () => {
-            try {
-                LOGIN_STORAGE_KEYS.forEach(k => localStorage.removeItem(k));
-                for (let i = 0; i < localStorage.length; i++) {
-                    const k = localStorage.key(i);
-                    if (k && (k.startsWith('shifa_session') || k.startsWith('shifa_secure'))) localStorage.removeItem(k);
-                }
-                sessionStorage.clear();
-            } catch (e) {}
-        };
-
-        const validateEgyptianPhone = (phone) => {
-            const cleaned = phone.replace(/[\s\-\+\(\)]/g, '');
-            const patterns = [/^01[0125]\d{8}$/, /^20\d{10}$/, /^0020\d{10}$/];
-            return patterns.some(p => p.test(cleaned));
-        };
-
-        const formatPhoneForWhatsapp = (phone) => {
-            let cleaned = phone.replace(/[\s\-\+\(\)]/g, '');
-            if (cleaned.startsWith('0020')) cleaned = cleaned.substring(4);
-            if (cleaned.startsWith('20')) cleaned = cleaned.substring(2);
-            if (cleaned.startsWith('0')) cleaned = cleaned.substring(1);
-            return '2' + cleaned;
-        };
-
-        const compressImage = (file, maxWidth = 600, maxHeight = 600, quality = 0.7) => {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const img = new Image();
-                    img.onload = () => {
-                        let width = img.width, height = img.height;
-                        if (width > maxWidth) { height = (height * maxWidth) / width; width = maxWidth; }
-                        if (height > maxHeight) { width = (width * maxHeight) / height; height = maxHeight; }
-                        const canvas = document.createElement('canvas');
-                        canvas.width = width; canvas.height = height;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0, width, height);
-                        const base64 = canvas.toDataURL('image/jpeg', quality);
-                        resolve({ base64, width, height, originalSize: file.size, compressedSize: Math.round(base64.length * 0.75) });
-                    };
-                    img.onerror = reject;
-                    img.src = e.target.result;
-                };
-                reader.onerror = reject;
-                reader.readAsDataURL(file);
-            });
-        };
-
-        const formatSize = (bytes) => {
-            if (bytes < 1024) return `${bytes} بايت`;
-            if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} ك.ب`;
-            return `${(bytes / (1024 * 1024)).toFixed(2)} م.ب`;
-        };
-
-        const restoreSession = () => {
-            try {
-                const saved = sessionStorage.getItem('nurse_settings_session');
-                if (saved) {
-                    const data = JSON.parse(saved);
-                    if (data.tenantId) currentTenantId = data.tenantId;
-                    if (data.uid) currentNurseId = data.uid;
-                    return data;
-                }
-            } catch (e) {}
-            const urlParams = new URLSearchParams(window.location.search);
-            const tenantFromUrl = urlParams.get('tenant');
-            if (tenantFromUrl) currentTenantId = tenantFromUrl;
-            return null;
-        };
-
-        const loadNurseAndDoctors = async (uid) => {
-            try {
-                let nurseSnap = null;
-                if (currentTenantId) nurseSnap = await get(ref(db, `tenants/${currentTenantId}/users/${uid}`));
-                if (!nurseSnap || !nurseSnap.exists()) nurseSnap = await get(ref(db, `users/${uid}`));
-                if (!nurseSnap.exists() || nurseSnap.val().role !== 'nurse') { toast('هذا الحساب ليس ممرضاً', true); return false; }
-
-                state.nurseData = { id: uid, ...nurseSnap.val() };
-                $('#tenantName').textContent = state.nurseData.tenantName || 'المجمع الطبي';
-
-                let linksSnap = null;
-                if (currentTenantId) linksSnap = await get(ref(db, `tenants/${currentTenantId}/links/${uid}`));
-                const doctorIds = linksSnap?.exists() ? Object.keys(linksSnap.val()) : [];
-
-                if (doctorIds.length === 0) {
-                    $('#doctorStripContainer').innerHTML = '<div style="padding:10px;color:var(--text-sec);text-align:center;">لا يوجد أطباء مرتبطين بك</div>';
-                    return true;
-                }
-
-                const doctorPromises = doctorIds.map(async (docId) => {
-                    let snap = null;
-                    if (currentTenantId) snap = await get(ref(db, `tenants/${currentTenantId}/users/${docId}`));
-                    if (!snap || !snap.exists()) snap = await get(ref(db, `users/${docId}`));
-                    return { id: docId, name: snap.exists() ? snap.val().name : 'دكتور', email: snap.exists() ? snap.val().email : '' };
-                });
-                state.assignedDoctors = await Promise.all(doctorPromises);
-                renderDoctorsStrip();
-
-                const savedDoctorId = sessionStorage.getItem('nurse_settings_selected_doctor');
-                if (savedDoctorId && state.assignedDoctors.find(d => d.id === savedDoctorId)) selectDoctor(savedDoctorId);
-
-                return true;
-            } catch (err) { toast('خطأ في تحميل البيانات', true); return false; }
-        };
-
-        const renderDoctorsStrip = () => {
-            const container = $('#doctorStripContainer');
-            if (state.assignedDoctors.length === 0) { container.innerHTML = '<div style="padding:10px;color:var(--text-sec);text-align:center;">لا يوجد أطباء</div>'; return; }
-            container.innerHTML = state.assignedDoctors.map(doc => `
-                <div class="doctor-pill ${state.selectedDoctorId === doc.id ? 'active' : ''}" data-id="${doc.id}">
-                    <div class="pill-avatar"><i class="fas fa-user-md"></i></div>
-                    <span>د. ${esc(doc.name)}</span>
-                </div>
-            `).join('');
-            container.querySelectorAll('.doctor-pill').forEach(pill => {
-                pill.addEventListener('click', () => { selectDoctor(pill.dataset.id); pill.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }); });
-            });
-        };
-
-        const selectDoctor = async (doctorId) => {
-            state.selectedDoctorId = doctorId;
-            sessionStorage.setItem('nurse_settings_selected_doctor', doctorId);
-            renderDoctorsStrip();
-            state.tempProfileImage = null;
-            state.tempGalleryImages = [];
-
-            let doctorInfo = state.doctorInfoCache[doctorId] || null;
-            if (!doctorInfo) {
-                try {
-                    const infoSnap = await get(ref(db, `tenants/${currentTenantId}/doctors_info/${doctorId}`));
-                    if (infoSnap.exists()) { doctorInfo = infoSnap.val(); state.doctorInfoCache[doctorId] = doctorInfo; }
-                } catch (e) {}
-            }
-            const doctor = state.assignedDoctors.find(d => d.id === doctorId);
-            renderSettingsCard(doctor, doctorInfo);
-        };
-
-        const renderSettingsCard = (doctor, doctorInfo) => {
-            const container = $('#settingsCardContainer');
-            if (!doctor) {
-                container.innerHTML = `<div class="settings-card empty"><i class="fas fa-hand-point-up"></i><h3>اختر طبيباً</h3></div>`;
-                return;
-            }
-
-            const workHours = doctorInfo?.work_hours || '';
-            const welcomeMessage = doctorInfo?.welcome_message || '';
-            const specialty = doctorInfo?.specialty || '';
-            const hook = doctorInfo?.hook || '';
-            const yearsExperience = doctorInfo?.years_experience || '';
-            const conditionsTreated = doctorInfo?.conditions_treated || [];
-            const whatsappNumber = doctorInfo?.whatsapp_number || '';
-            const examPrice = doctorInfo?.exam_price || '';
-            const followUpPrice = doctorInfo?.follow_up_price || '';
-            const renewalDays = doctorInfo?.renewal_days || '';
-            const profileImage = doctorInfo?.profile_image || '';
-            const galleryImages = doctorInfo?.gallery_images || [];
-            
-            state.tempProfileImage = profileImage || null;
-            state.tempGalleryImages = [...galleryImages];
-
-            const conditionsTags = conditionsTreated.map(c => `<span class="tag">${esc(c)} <span class="remove-tag" data-tag="${esc(c)}">×</span></span>`).join('');
-
-            container.innerHTML = `
-                <div class="settings-card">
-                    <div class="doctor-info-header">
-                        <div class="doctor-avatar-lg" id="profileAvatarPreview">
-                            ${profileImage ? `<img src="${profileImage}" alt="صورة الدكتور">` : esc((doctor.name || 'د').charAt(0))}
+    <!-- مودال الكشف -->
+    <div id="bookingModal" class="modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 id="modalTitle"><i class="fas fa-calendar-plus"></i> كشف جديد</h3>
+                <button class="close-btn" id="closeModalBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="bookingForm" autocomplete="off">
+                    <input type="hidden" id="editId">
+                    
+                    <div class="form-group">
+                        <label>الطبيب *</label>
+                        <select id="doctorSelect" class="form-control" required></select>
+                    </div>
+                    
+                    <!-- ✅ قسم البحث برقم الهاتف (يُخفى عند استخدام وضع القرية) -->
+                    <div id="phoneSearchSection">
+                        <div class="form-group search-box" style="position:relative;">
+                            <label>البحث عن مريض (برقم الهاتف)</label>
+                            <input type="text" id="patientSearch" class="form-control" placeholder="أدخل رقم الهاتف للبحث..." autocomplete="off" dir="ltr">
+                            <div id="searchResults" class="search-results"></div>
                         </div>
-                        <div class="doctor-info-text">
-                            <h3>د. ${esc(doctor.name)}</h3>
-                            <span><i class="fas fa-envelope"></i> ${esc(doctor.email || '')}</span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>اسم المريض *</label>
+                        <input type="text" id="patientName" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>العمر</label>
+                        <input type="number" id="patientAge" class="form-control" min="0" max="150">
+                    </div>
+                    
+                    <!-- ✅ قسم الهاتف (يُخفى عند استخدام وضع القرية) -->
+                    <div id="phoneSection">
+                        <div class="form-group">
+                            <div class="toggle-id-container">
+                                <label>رقم الهاتف</label>
+                                <button type="button" class="btn-toggle-id" id="toggleIdModeBtn">
+                                    <i class="fas fa-tree"></i> استخدام بيانات القرية
+                                </button>
+                            </div>
+                            <input type="tel" id="patientPhone" class="form-control" dir="ltr">
                         </div>
                     </div>
 
-                    <div class="form-group">
-                        <label><i class="fas fa-camera"></i> الصورة الشخصية للدكتور</label>
-                        <div class="upload-area" id="profileUploadArea">
-                            <i class="fas fa-cloud-upload-alt"></i>
-                            <span>اضغط لرفع صورة الدكتور</span>
-                            <small>JPG, PNG, WebP - يتم ضغطها تلقائياً</small>
-                        </div>
-                        <input type="file" id="profileFileInput" class="file-input-hidden" accept="image/*">
-                        <div class="preview-container" id="profilePreviewContainer">
-                            <img id="profilePreviewImage" src="" alt="معاينة">
-                            <div class="preview-overlay">
-                                <button type="button" class="preview-btn remove" id="removeProfileImageBtn" title="إزالة">×</button>
+                    <!-- ✅ قسم بيانات القرية (يظهر بدل الهاتف عند التبديل) -->
+                    <div id="villageSection" style="display:none;">
+                        <div class="form-group">
+                            <div class="toggle-id-container">
+                                <label>بيانات القرية</label>
+                                <button type="button" class="btn-toggle-id" id="togglePhoneModeBtn">
+                                    <i class="fas fa-mobile-alt"></i> استخدام رقم الهاتف
+                                </button>
                             </div>
                         </div>
-                        <div class="compress-info" id="profileCompressInfo">
-                            <i class="fas fa-compress-arrows-alt"></i>
-                            <span id="profileCompressText"></span>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label><i class="fas fa-star"></i> الجملة الجاذبة (Hook)</label>
-                        <input type="text" id="hookInput" class="form-control" placeholder="مثال: منقذ ٢٣٤١ مريض قلب في آخر ٥ سنين" value="${esc(hook)}" maxlength="100">
-                        <div class="field-hint">جملة تسويقية قصيرة تظهر أسفل اسم الدكتور مباشرة</div>
-                    </div>
-
-                    <div class="form-group">
-                        <label><i class="fas fa-comment-dots"></i> رسالة الترحيب</label>
-                        <textarea id="welcomeMessageInput" class="form-control" placeholder="مرحباً، أنا د. ${esc(doctor.name)}. بقالي ١٥ سنة بعالج أمراض القلب.">${esc(welcomeMessage)}</textarea>
-                        <div class="field-hint">رسالة شخصية دافئة تظهر للمريض في بطاقة الدكتور</div>
-                    </div>
-
-                    <div class="form-group">
-                        <label><i class="fas fa-clock"></i> مواعيد العمل</label>
-                        <textarea id="workHoursInput" class="form-control" placeholder="السبت - الخميس: 9 صباحاً - 5 مساءً&#10;الجمعة: إجازة">${esc(workHours)}</textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label><i class="fas fa-stethoscope"></i> التخصص</label>
-                        <input type="text" id="specialtyInput" class="form-control" placeholder="قلب وأوعية دموية" value="${esc(specialty)}">
-                    </div>
-
-                    <div class="form-group">
-                        <label><i class="fas fa-briefcase"></i> سنوات الخبرة <small style="color:var(--text-light);font-weight:400;">(اختياري)</small></label>
-                        <input type="number" id="yearsExperienceInput" class="form-control" placeholder="15" min="0" max="60" value="${esc(yearsExperience)}">
-                    </div>
-
-                    <div class="form-group">
-                        <label><i class="fas fa-tags"></i> الأمراض اللي بيعالجها</label>
-                        <div class="tag-input-container" id="conditionsContainer">
-                            ${conditionsTags}
-                            <input type="text" class="tag-input" id="conditionsInput" placeholder="اكتب اسم المرض واضغط Enter..." maxlength="40">
-                        </div>
-                        <div class="field-hint">اضغط Enter بعد كل مرض لإضافته</div>
-                    </div>
-
-                    <div class="form-group">
-                        <label><i class="fas fa-images"></i> معرض صور الحالات <small style="color:var(--text-light);font-weight:400;">(اختياري - أقصى حد ٥ صور)</small></label>
-                        <div class="gallery-grid" id="galleryGrid">
-                            ${renderGalleryItems()}
-                            ${state.tempGalleryImages.length < 5 ? `
-                            <div class="gallery-add" id="galleryAddBtn">
-                                <i class="fas fa-plus"></i>
-                                <span>إضافة</span>
-                            </div>` : ''}
-                        </div>
-                        <input type="file" id="galleryFileInput" class="file-input-hidden" accept="image/*">
-                    </div>
-
-                    <div class="section-divider">
-                        <i class="fas fa-money-bill-wave"></i> الأسعار والدفع
-                    </div>
-
-                    <div class="row-2">
                         <div class="form-group">
-                            <label><i class="fas fa-tag"></i> سعر الكشف (ج.م)</label>
-                            <input type="number" id="examPriceInput" class="form-control" placeholder="300" min="0" step="0.01" value="${esc(examPrice)}">
+                            <label>اسم الأب</label>
+                            <input type="text" id="fatherName" class="form-control" placeholder="اسم الأب">
                         </div>
                         <div class="form-group">
-                            <label><i class="fas fa-redo"></i> سعر الإعادة (ج.م)</label>
-                            <input type="number" id="followUpPriceInput" class="form-control" placeholder="200" min="0" step="0.01" value="${esc(followUpPrice)}">
+                            <label>اسم العائلة</label>
+                            <input type="text" id="familyName" class="form-control" placeholder="اسم العائلة">
                         </div>
+                        <div class="form-group">
+                            <label>اسم القرية</label>
+                            <input type="text" id="villageName" class="form-control" placeholder="اسم القرية">
+                        </div>
+                        <div id="villageSearchResults" class="search-results" style="position:relative;margin-top:8px;"></div>
                     </div>
 
                     <div class="form-group">
-                        <label><i class="fas fa-calendar-alt"></i> مدة صلاحية الكشف (أيام)</label>
-                        <input type="number" id="renewalDaysInput" class="form-control" placeholder="7" min="0" max="365" value="${esc(renewalDays)}">
-                        <div class="field-hint">عدد الأيام قبل الحاجة لتجديد الكشف</div>
+                        <label>نوع الكشف *</label>
+                        <select id="visitType" class="form-control" required>
+                            <option value="new">🆕 كشف جديد</option>
+                            <option value="follow">🔄 إعادة (متابعة)</option>
+                        </select>
                     </div>
-
-                    <div class="section-divider">
-                        <i class="fab fa-whatsapp" style="color:var(--whatsapp);"></i> معلومات التواصل
-                    </div>
-
+                    
                     <div class="form-group">
-                        <label>
-                            <i class="fab fa-whatsapp" style="color:var(--whatsapp);"></i> 
-                            رقم التواصل (واتساب)
-                            <span class="whatsapp-badge"><i class="fab fa-whatsapp"></i> واتساب فقط</span>
-                        </label>
-                        <div class="whatsapp-input-wrapper">
-                            <span class="whatsapp-prefix">+20</span>
-                            <input type="tel" id="whatsappNumberInput" class="form-control" 
-                                placeholder="1xxxxxxxxx" value="${esc(whatsappNumber)}" 
-                                dir="ltr" inputmode="numeric" maxlength="15">
-                        </div>
-                        <div class="whatsapp-validation" id="whatsappValidation"></div>
-                        <div class="field-warning">
-                            <i class="fas fa-exclamation-triangle"></i>
-                            <span>يجب أن يكون الرقم موبايل وعليه واتساب (01xxxxxxxxx)</span>
-                        </div>
-                        <div class="field-hint">سيتم استخدام هذا الرقم للتواصل المباشر مع الدكتور عبر واتساب</div>
+                        <label>التاريخ *</label>
+                        <input type="date" id="apptDate" class="form-control" required>
                     </div>
+                    
+                    <button type="submit" class="btn btn-primary" style="width:100%;" id="submitBtn">
+                        <i class="fas fa-save"></i> تأكيد الكشف
+                    </button>
+                    
+                    <div id="formAlert" class="alert-msg"></div>
+                </form>
+                
+                <div class="keyboard-scroll-spacer"></div>
+            </div>
+        </div>
+    </div>
 
-                    <div class="action-row">
-                        <button class="btn btn-primary" id="saveDoctorInfoBtn">
-                            <i class="fas fa-save"></i> حفظ جميع البيانات
-                        </button>
-                        <button class="btn btn-outline" id="clearDoctorInfoBtn">
-                            <i class="fas fa-undo"></i> مسح الحقول
-                        </button>
-                    </div>
-                    <div id="saveIndicator" style="margin-top:8px;min-height:24px;"></div>
+    <!-- ✅ مودال الإشعارات -->
+    <div id="notificationsModal" class="modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3><i class="fas fa-bell"></i> إشعارات الحجوزات الجديدة</h3>
+                <button class="close-btn" id="closeNotificationsBtn">&times;</button>
+            </div>
+            <div class="modal-body" id="notificationsBody">
+                <div style="text-align:center;padding:20px;color:var(--text-sec);">
+                    <i class="fas fa-spinner fa-spin"></i> جاري تحميل الإشعارات...
                 </div>
-            `;
+            </div>
+        </div>
+    </div>
 
-            setTimeout(() => {
-                initSettingsEvents(doctor.id);
-                if (whatsappNumber) validateAndShowWhatsappStatus(whatsappNumber);
-            }, 50);
-        };
-
-        const renderGalleryItems = () => {
-            return state.tempGalleryImages.map((img, i) => `
-                <div class="gallery-item">
-                    <img src="${img}" alt="حالة ${i + 1}">
-                    <button class="remove-gallery-btn" data-index="${i}" title="إزالة">×</button>
-                </div>
-            `).join('');
-        };
-
-        const validateAndShowWhatsappStatus = (phone) => {
-            const validationDiv = $('#whatsappValidation');
-            if (!validationDiv) return;
-            
-            const cleaned = phone.replace(/[\s\-\+\(\)]/g, '');
-            
-            if (!cleaned) {
-                validationDiv.className = 'whatsapp-validation';
-                validationDiv.innerHTML = '';
-                return;
-            }
-
-            const isValid = validateEgyptianPhone(phone);
-            
-            if (isValid) {
-                const formatted = formatPhoneForWhatsapp(phone);
-                validationDiv.className = 'whatsapp-validation valid';
-                validationDiv.innerHTML = `
-                    <i class="fas fa-check-circle"></i>
-                    <span>رقم صحيح ✓</span>
-                    <span style="font-size:0.65rem;opacity:0.8;">رابط واتساب: wa.me/${formatted}</span>
-                `;
-            } else {
-                validationDiv.className = 'whatsapp-validation invalid';
-                validationDiv.innerHTML = `
-                    <i class="fas fa-times-circle"></i>
-                    <span>رقم غير صحيح - يجب أن يبدأ بـ 01xxxxxxxxx أو +20 1xxxxxxxxx</span>
-                `;
-            }
-        };
-
-        const initSettingsEvents = (doctorId) => {
-            const profileUploadArea = $('#profileUploadArea');
-            const profileFileInput = $('#profileFileInput');
-            const profilePreviewContainer = $('#profilePreviewContainer');
-            const profilePreviewImage = $('#profilePreviewImage');
-            const profileCompressInfo = $('#profileCompressInfo');
-            const profileCompressText = $('#profileCompressText');
-            const removeProfileImageBtn = $('#removeProfileImageBtn');
-            const profileAvatarPreview = $('#profileAvatarPreview');
-
-            if (state.tempProfileImage) {
-                profilePreviewImage.src = state.tempProfileImage;
-                profilePreviewContainer.classList.add('active');
-                profileUploadArea.style.display = 'none';
-            }
-
-            profileUploadArea?.addEventListener('click', () => profileFileInput.click());
-            profileFileInput?.addEventListener('change', async (e) => {
-                if (e.target.files[0]) {
-                    const compressed = await compressImage(e.target.files[0], 500, 500, 0.65);
-                    state.tempProfileImage = compressed.base64;
-                    profilePreviewImage.src = compressed.base64;
-                    profilePreviewContainer.classList.add('active');
-                    profileUploadArea.style.display = 'none';
-                    profileCompressText.textContent = `تم ضغط الصورة: ${formatSize(compressed.originalSize)} → ${formatSize(compressed.compressedSize)}`;
-                    profileCompressInfo.classList.add('active');
-                    profileAvatarPreview.innerHTML = `<img src="${compressed.base64}" alt="صورة الدكتور">`;
-                }
-            });
-
-            removeProfileImageBtn?.addEventListener('click', () => {
-                state.tempProfileImage = null;
-                profilePreviewContainer.classList.remove('active');
-                profileCompressInfo.classList.remove('active');
-                profileUploadArea.style.display = 'flex';
-                profileFileInput.value = '';
-                const doctor = state.assignedDoctors.find(d => d.id === doctorId);
-                profileAvatarPreview.innerHTML = esc((doctor?.name || 'د').charAt(0));
-            });
-
-            const galleryAddBtn = $('#galleryAddBtn');
-            const galleryFileInput = $('#galleryFileInput');
-
-            galleryAddBtn?.addEventListener('click', () => galleryFileInput.click());
-            galleryFileInput?.addEventListener('change', async (e) => {
-                if (e.target.files[0] && state.tempGalleryImages.length < 5) {
-                    const compressed = await compressImage(e.target.files[0], 800, 800, 0.7);
-                    state.tempGalleryImages.push(compressed.base64);
-                    refreshGallery(doctorId);
-                    toast('✅ تمت إضافة الصورة');
-                }
-            });
-
-            $$('.remove-gallery-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    state.tempGalleryImages.splice(parseInt(btn.dataset.index), 1);
-                    refreshGallery(doctorId);
-                });
-            });
-
-            const whatsappInput = $('#whatsappNumberInput');
-            whatsappInput?.addEventListener('input', (e) => {
-                const value = e.target.value;
-                const cleaned = value.replace(/[^\d\s\-\+\(\)]/g, '');
-                if (value !== cleaned) e.target.value = cleaned;
-                validateAndShowWhatsappStatus(cleaned);
-            });
-
-            whatsappInput?.addEventListener('blur', () => {
-                const value = whatsappInput.value.trim();
-                if (value && !validateEgyptianPhone(value)) {
-                    toast('⚠️ رقم الهاتف غير صالح للاستخدام مع واتساب', true);
-                }
-            });
-
-            const conditionsInput = $('#conditionsInput');
-            const conditionsContainer = $('#conditionsContainer');
-
-            conditionsInput?.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    const value = conditionsInput.value.trim();
-                    if (value && !state.doctorInfoCache[doctorId]?.conditions_treated?.includes(value)) {
-                        const tag = document.createElement('span');
-                        tag.className = 'tag';
-                        tag.innerHTML = `${esc(value)} <span class="remove-tag">×</span>`;
-                        tag.querySelector('.remove-tag').addEventListener('click', () => tag.remove());
-                        conditionsContainer.insertBefore(tag, conditionsInput);
-                    }
-                    conditionsInput.value = '';
-                }
-            });
-
-            $$('.remove-tag').forEach(btn => {
-                btn.addEventListener('click', () => btn.closest('.tag').remove());
-            });
-
-            $('#saveDoctorInfoBtn')?.addEventListener('click', () => saveDoctorInfo(doctorId));
-            $('#clearDoctorInfoBtn')?.addEventListener('click', () => {
-                $('#workHoursInput').value = '';
-                $('#specialtyInput').value = '';
-                $('#welcomeMessageInput').value = '';
-                $('#hookInput').value = '';
-                $('#yearsExperienceInput').value = '';
-                $('#whatsappNumberInput').value = '';
-                $('#examPriceInput').value = '';
-                $('#followUpPriceInput').value = '';
-                $('#renewalDaysInput').value = '';
-                $('#whatsappValidation').className = 'whatsapp-validation';
-                $('#whatsappValidation').innerHTML = '';
-                $$('.tag').forEach(t => t.remove());
-                state.tempProfileImage = null;
-                state.tempGalleryImages = [];
-                refreshGallery(doctorId);
-                profilePreviewContainer?.classList.remove('active');
-                profileCompressInfo?.classList.remove('active');
-                if (profileUploadArea) profileUploadArea.style.display = 'flex';
-                const doctor = state.assignedDoctors.find(d => d.id === doctorId);
-                if (profileAvatarPreview) profileAvatarPreview.innerHTML = esc((doctor?.name || 'د').charAt(0));
-            });
-        };
-
-        const refreshGallery = (doctorId) => {
-            const galleryGrid = $('#galleryGrid');
-            if (!galleryGrid) return;
-            galleryGrid.innerHTML = `
-                ${renderGalleryItems()}
-                ${state.tempGalleryImages.length < 5 ? `
-                <div class="gallery-add" id="galleryAddBtn">
-                    <i class="fas fa-plus"></i>
-                    <span>إضافة</span>
-                </div>` : ''}
-            `;
-            const newGalleryAddBtn = $('#galleryAddBtn');
-            const galleryFileInput = $('#galleryFileInput');
-            newGalleryAddBtn?.addEventListener('click', () => galleryFileInput.click());
-            galleryFileInput?.addEventListener('change', async (e) => {
-                if (e.target.files[0] && state.tempGalleryImages.length < 5) {
-                    const compressed = await compressImage(e.target.files[0], 800, 800, 0.7);
-                    state.tempGalleryImages.push(compressed.base64);
-                    refreshGallery(doctorId);
-                    toast('✅ تمت إضافة الصورة');
-                }
-            });
-            $$('.remove-gallery-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    state.tempGalleryImages.splice(parseInt(btn.dataset.index), 1);
-                    refreshGallery(doctorId);
-                });
-            });
-        };
-
-        const saveDoctorInfo = async (doctorId) => {
-            const workHours = $('#workHoursInput')?.value.trim() || '';
-            const specialty = $('#specialtyInput')?.value.trim() || '';
-            const welcomeMessage = $('#welcomeMessageInput')?.value.trim() || '';
-            const hook = $('#hookInput')?.value.trim() || '';
-            const yearsExperience = $('#yearsExperienceInput')?.value.trim() || '';
-            const whatsappNumber = $('#whatsappNumberInput')?.value.trim() || '';
-            const examPrice = $('#examPriceInput')?.value.trim() || '';
-            const followUpPrice = $('#followUpPriceInput')?.value.trim() || '';
-            const renewalDays = $('#renewalDaysInput')?.value.trim() || '';
-
-            if (whatsappNumber && !validateEgyptianPhone(whatsappNumber)) {
-                toast('⚠️ رقم الواتساب غير صحيح! يجب أن يكون رقم موبايل مصري (01xxxxxxxxx)', true);
-                $('#whatsappNumberInput').focus();
-                return;
-            }
-
-            const conditionsTreated = [];
-            $$('.tag').forEach(tag => {
-                const text = tag.textContent.replace('×', '').trim();
-                if (text) conditionsTreated.push(text);
-            });
-
-            try {
-                const doctorInfoData = {
-                    work_hours: workHours,
-                    specialty: specialty,
-                    welcome_message: welcomeMessage,
-                    hook: hook,
-                    years_experience: yearsExperience || null,
-                    conditions_treated: conditionsTreated,
-                    whatsapp_number: whatsappNumber || null,
-                    profile_image: state.tempProfileImage || null,
-                    gallery_images: state.tempGalleryImages,
-                    exam_price: examPrice || null,
-                    follow_up_price: followUpPrice || null,
-                    renewal_days: renewalDays || null,
-                    payment_method: 'cash',
-                    updated_by: currentNurseId || state.currentUser?.uid,
-                    updated_by_name: state.nurseData?.name || 'ممرض',
-                    updated_at: new Date().toISOString(),
-                    doctor_id: doctorId,
-                    doctor_name: state.assignedDoctors.find(d => d.id === doctorId)?.name || '',
-                    tenantId: currentTenantId,
-                };
-
-                await set(ref(db, `tenants/${currentTenantId}/doctors_info/${doctorId}`), doctorInfoData);
-
-                state.doctorInfoCache[doctorId] = doctorInfoData;
-
-                const indicator = $('#saveIndicator');
-                if (indicator) {
-                    indicator.innerHTML = '<span class="saved-indicator"><i class="fas fa-check-circle"></i> تم حفظ جميع البيانات بنجاح ✓</span>';
-                    setTimeout(() => { indicator.innerHTML = ''; }, 2500);
-                }
-
-                toast('✅ تم حفظ بيانات الدكتور بنجاح');
-            } catch (err) {
-                console.error('خطأ في الحفظ:', err);
-                toast('❌ فشل حفظ البيانات: ' + err.message, true);
-            }
-        };
-
-        const logout = async () => {
-            try {
-                toast('👋 جاري تسجيل الخروج...');
-                clearLoginSessionOnly();
-                state.currentUser = null; state.nurseData = null; state.assignedDoctors = [];
-                await signOut(auth);
-                window.location.href = 'index.html';
-            } catch (e) {
-                clearLoginSessionOnly();
-                window.location.href = 'index.html';
-            }
-        };
-
-        const initEvents = () => {
-            $('#backBtn').addEventListener('click', () => {
-                window.location.href = `nurse-dashboard.html?tenant=${currentTenantId || ''}`;
-            });
-            $('#logoutBtn').addEventListener('click', logout);
-        };
-
-        onAuthStateChanged(auth, async (user) => {
-            if (!user) { clearLoginSessionOnly(); window.location.href = 'index.html'; return; }
-
-            state.currentUser = { uid: user.uid };
-            restoreSession();
-            if (!currentTenantId) currentTenantId = user.uid;
-            if (!currentNurseId) currentNurseId = user.uid;
-
-            sessionStorage.setItem('userUid', user.uid);
-            sessionStorage.setItem('userRole', 'nurse');
-
-            initEvents();
-
-            const success = await loadNurseAndDoctors(user.uid);
-            $('#pageLoader').style.display = 'none';
-            $('#mainContent').style.display = 'block';
-
-            if (!success) toast('⚠️ تعذر تحميل بعض البيانات', true);
-        });
-
-        console.log('⚙️ صفحة إعدادات الممرض - حفظ سحابي مباشر');
-        console.log('💾 مسار الحفظ: tenants/{tenantId}/doctors_info/{doctorId}');
-        console.log('☁️ Firebase Realtime Database - بدون IndexedDB');
-    </script>
+    <script type="module" src="nurse-dashboard.js"></script>
 </body>
 </html>
