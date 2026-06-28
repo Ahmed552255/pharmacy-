@@ -19,9 +19,12 @@
             --white: #FFFFFF;
             --ink: #1A3C4A;
             --text-sec: #5A7D8A;
+            --text-light: #8FA4AD;
             --danger: #E57373;
             --success: #26A69A;
             --warning: #FFA726;
+            --whatsapp: #25D366;
+            --whatsapp-light: #E8F5E9;
             --border: #E0E0E0;
             --shadow-xs: 0 1px 4px rgba(0,0,0,0.04);
             --shadow-sm: 0 4px 12px rgba(0,0,0,0.06);
@@ -327,11 +330,64 @@
             padding-left: 30px;
             cursor: pointer;
         }
+        
+        /* ✅ تنسيق خاص لحقل الواتساب */
+        .whatsapp-input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .whatsapp-prefix {
+            position: absolute;
+            right: 12px;
+            font-weight: 700;
+            color: var(--text-sec);
+            font-size: 0.9rem;
+            z-index: 2;
+            pointer-events: none;
+        }
+        .whatsapp-input-wrapper .form-control {
+            padding-right: 60px;
+            direction: ltr;
+            text-align: right;
+        }
+        .whatsapp-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: var(--whatsapp-light);
+            color: var(--whatsapp);
+            padding: 3px 8px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            margin-top: 4px;
+        }
+        .whatsapp-validation {
+            font-size: 0.72rem;
+            margin-top: 4px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .whatsapp-validation.valid { color: var(--success); }
+        .whatsapp-validation.invalid { color: var(--danger); }
+        
         .field-hint {
             font-size: clamp(0.68rem, 1.6vw, 0.73rem);
             color: var(--text-sec);
             margin-top: 4px;
             padding-right: 26px;
+        }
+        .field-warning {
+            font-size: clamp(0.68rem, 1.6vw, 0.73rem);
+            color: var(--warning);
+            margin-top: 4px;
+            padding-right: 26px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-weight: 600;
         }
 
         /* ============ ✅ رفع الصور ============ */
@@ -737,6 +793,28 @@
             } catch (e) {}
         };
 
+        // ============ ✅ التحقق من صحة رقم الهاتف المصري ============
+        const validateEgyptianPhone = (phone) => {
+            // يقبل: 01xxxxxxxxx أو +20 1xxxxxxxxx أو 201xxxxxxxxx
+            const cleaned = phone.replace(/[\s\-\+\(\)]/g, '');
+            // أنماط أرقام الموبايل المصرية
+            const patterns = [
+                /^01[0125]\d{8}$/,        // 010, 011, 012, 015
+                /^20\d{10}$/,             // 20xxxxxxxxxx
+                /^0020\d{10}$/,           // 0020xxxxxxxxxx
+            ];
+            return patterns.some(p => p.test(cleaned));
+        };
+
+        const formatPhoneForWhatsapp = (phone) => {
+            // تنظيف الرقم وتحويله لصيغة 2xxxxxxxxxx (للينك الواتساب)
+            let cleaned = phone.replace(/[\s\-\+\(\)]/g, '');
+            if (cleaned.startsWith('0020')) cleaned = cleaned.substring(4);
+            if (cleaned.startsWith('20')) cleaned = cleaned.substring(2);
+            if (cleaned.startsWith('0')) cleaned = cleaned.substring(1);
+            return '2' + cleaned;
+        };
+
         // ============ ✅ ضغط الصور ============
         const compressImage = (file, maxWidth = 600, maxHeight = 600, quality = 0.7) => {
             return new Promise((resolve, reject) => {
@@ -868,6 +946,7 @@
             const hook = doctorInfo?.hook || '';
             const yearsExperience = doctorInfo?.years_experience || '';
             const conditionsTreated = doctorInfo?.conditions_treated || [];
+            const whatsappNumber = doctorInfo?.whatsapp_number || '';
             const examPrice = doctorInfo?.exam_price || '';
             const followUpPrice = doctorInfo?.follow_up_price || '';
             const renewalDays = doctorInfo?.renewal_days || '';
@@ -991,6 +1070,38 @@
                         <div class="field-hint">عدد الأيام قبل الحاجة لتجديد الكشف</div>
                     </div>
 
+                    <!-- ✅✅✅ رقم التواصل (واتساب) ✅✅✅ -->
+                    <div class="section-divider">
+                        <i class="fab fa-whatsapp" style="color:var(--whatsapp);"></i> معلومات التواصل
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            <i class="fab fa-whatsapp" style="color:var(--whatsapp);"></i> 
+                            رقم التواصل (واتساب)
+                            <span class="whatsapp-badge">
+                                <i class="fab fa-whatsapp"></i> واتساب فقط
+                            </span>
+                        </label>
+                        <div class="whatsapp-input-wrapper">
+                            <span class="whatsapp-prefix">+20</span>
+                            <input type="tel" 
+                                   id="whatsappNumberInput" 
+                                   class="form-control" 
+                                   placeholder="1xxxxxxxxx" 
+                                   value="${esc(whatsappNumber)}" 
+                                   dir="ltr"
+                                   inputmode="numeric"
+                                   maxlength="15">
+                        </div>
+                        <div class="whatsapp-validation" id="whatsappValidation"></div>
+                        <div class="field-warning">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <span>يجب أن يكون الرقم موبايل وعليه واتساب (01xxxxxxxxx)</span>
+                        </div>
+                        <div class="field-hint">سيتم استخدام هذا الرقم للتواصل المباشر مع الدكتور عبر واتساب</div>
+                    </div>
+
                     <div class="action-row">
                         <button class="btn btn-primary" id="saveDoctorInfoBtn">
                             <i class="fas fa-save"></i> حفظ جميع البيانات
@@ -1003,8 +1114,11 @@
                 </div>
             `;
 
-            // تهيئة الأحداث بعد رسم الـ DOM
-            setTimeout(() => initSettingsEvents(doctor.id), 50);
+            // ✅ التحقق المباشر من صحة رقم الواتساب عند التحميل
+            setTimeout(() => {
+                initSettingsEvents(doctor.id);
+                if (whatsappNumber) validateAndShowWhatsappStatus(whatsappNumber);
+            }, 50);
         };
 
         // ============ عرض المعرض ============
@@ -1015,6 +1129,38 @@
                     <button class="remove-gallery-btn" data-index="${i}" title="إزالة">×</button>
                 </div>
             `).join('');
+        };
+
+        // ============ ✅ التحقق وعرض حالة الواتساب ============
+        const validateAndShowWhatsappStatus = (phone) => {
+            const validationDiv = $('#whatsappValidation');
+            if (!validationDiv) return;
+            
+            const cleaned = phone.replace(/[\s\-\+\(\)]/g, '');
+            
+            if (!cleaned) {
+                validationDiv.className = 'whatsapp-validation';
+                validationDiv.innerHTML = '';
+                return;
+            }
+
+            const isValid = validateEgyptianPhone(phone);
+            
+            if (isValid) {
+                const formatted = formatPhoneForWhatsapp(phone);
+                validationDiv.className = 'whatsapp-validation valid';
+                validationDiv.innerHTML = `
+                    <i class="fas fa-check-circle"></i>
+                    <span>رقم صحيح ✓</span>
+                    <span style="font-size:0.65rem;opacity:0.8;">رابط واتساب: wa.me/${formatted}</span>
+                `;
+            } else {
+                validationDiv.className = 'whatsapp-validation invalid';
+                validationDiv.innerHTML = `
+                    <i class="fas fa-times-circle"></i>
+                    <span>رقم غير صحيح - يجب أن يبدأ بـ 01xxxxxxxxx أو +20 1xxxxxxxxx</span>
+                `;
+            }
         };
 
         // ============ تهيئة أحداث البطاقة ============
@@ -1082,6 +1228,25 @@
                 });
             });
 
+            // ✅ رقم الواتساب - التحقق المباشر
+            const whatsappInput = $('#whatsappNumberInput');
+            whatsappInput?.addEventListener('input', (e) => {
+                // السماح بالأرقام و + و - ومسافة وأقواس فقط
+                const value = e.target.value;
+                const cleaned = value.replace(/[^\d\s\-\+\(\)]/g, '');
+                if (value !== cleaned) {
+                    e.target.value = cleaned;
+                }
+                validateAndShowWhatsappStatus(cleaned);
+            });
+
+            whatsappInput?.addEventListener('blur', () => {
+                const value = whatsappInput.value.trim();
+                if (value && !validateEgyptianPhone(value)) {
+                    toast('⚠️ رقم الهاتف غير صالح للاستخدام مع واتساب', true);
+                }
+            });
+
             // ✅ الأمراض المعالجة (Tags)
             const conditionsInput = $('#conditionsInput');
             const conditionsContainer = $('#conditionsContainer');
@@ -1114,9 +1279,12 @@
                 $('#welcomeMessageInput').value = '';
                 $('#hookInput').value = '';
                 $('#yearsExperienceInput').value = '';
+                $('#whatsappNumberInput').value = '';
                 $('#examPriceInput').value = '';
                 $('#followUpPriceInput').value = '';
                 $('#renewalDaysInput').value = '';
+                $('#whatsappValidation').className = 'whatsapp-validation';
+                $('#whatsappValidation').innerHTML = '';
                 $$('.tag').forEach(t => t.remove());
                 state.tempProfileImage = null;
                 state.tempGalleryImages = [];
@@ -1168,9 +1336,17 @@
             const welcomeMessage = $('#welcomeMessageInput')?.value.trim() || '';
             const hook = $('#hookInput')?.value.trim() || '';
             const yearsExperience = $('#yearsExperienceInput')?.value.trim() || '';
+            const whatsappNumber = $('#whatsappNumberInput')?.value.trim() || '';
             const examPrice = $('#examPriceInput')?.value.trim() || '';
             const followUpPrice = $('#followUpPriceInput')?.value.trim() || '';
             const renewalDays = $('#renewalDaysInput')?.value.trim() || '';
+
+            // ✅ التحقق من صحة رقم الواتساب قبل الحفظ
+            if (whatsappNumber && !validateEgyptianPhone(whatsappNumber)) {
+                toast('⚠️ رقم الواتساب غير صحيح! يجب أن يكون رقم موبايل مصري (01xxxxxxxxx)', true);
+                $('#whatsappNumberInput').focus();
+                return;
+            }
 
             // جمع التاجات
             const conditionsTreated = [];
@@ -1187,12 +1363,13 @@
                     hook: hook,
                     years_experience: yearsExperience || null,
                     conditions_treated: conditionsTreated,
+                    whatsapp_number: whatsappNumber || null,
                     profile_image: state.tempProfileImage || null,
                     gallery_images: state.tempGalleryImages,
                     exam_price: examPrice || null,
                     follow_up_price: followUpPrice || null,
                     renewal_days: renewalDays || null,
-                    payment_method: 'cash', // ✅ كاش فقط
+                    payment_method: 'cash',
                     updated_by: currentNurseId || state.currentUser?.uid,
                     updated_by_name: state.nurseData?.name || 'ممرض',
                     updated_at: new Date().toISOString(),
@@ -1263,6 +1440,7 @@
 
         console.log('⚙️ صفحة إعدادات الممرض - إدارة بيانات الأطباء المتطورة');
         console.log('📸 صورة شخصية + معرض صور الحالات + أمراض معالجة + Hook + رسالة ترحيب');
+        console.log('📱 رقم واتساب مع تحقق من الصحة المصرية');
         console.log('💾 الحفظ في: tenants/{tenantId}/doctors_info/{doctorId}');
     </script>
 </body>
