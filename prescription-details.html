@@ -60,10 +60,7 @@
             backface-visibility: hidden;
         }
 
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-        }
+        .container { max-width: 800px; margin: 0 auto; }
 
         #pageLoader {
             position: fixed;
@@ -86,9 +83,7 @@
             animation: spin 0.7s linear infinite;
         }
         
-        @keyframes spin { 
-            to { transform: rotate(360deg); } 
-        }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
         .app-header {
             display: flex;
@@ -107,15 +102,8 @@
             z-index: 100;
         }
         
-        .logo h2 {
-            font-size: 1.3rem;
-            font-weight: 800;
-            color: var(--primary-dark);
-            white-space: nowrap;
-        }
-        
+        .logo h2 { font-size: 1.3rem; font-weight: 800; color: var(--primary-dark); white-space: nowrap; }
         .logo i { color: var(--primary); }
-        
         .header-actions { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
 
         .btn {
@@ -139,35 +127,11 @@
         }
         
         .btn:active { opacity: 0.8; }
-        
-        .btn-primary {
-            background: var(--primary);
-            color: white;
-            box-shadow: 0 3px 10px rgba(0,174,239,0.2);
-        }
-        
-        .btn-outline {
-            background: var(--white);
-            color: var(--ink);
-            border: 1.5px solid var(--border);
-        }
-        
-        .btn-success {
-            background: var(--success);
-            color: white;
-            box-shadow: 0 3px 10px rgba(38,166,154,0.2);
-        }
-        
-        .btn-danger {
-            background: var(--danger);
-            color: white;
-        }
-        
-        .btn-sm { 
-            padding: 6px 12px; 
-            font-size: 0.78rem; 
-            min-height: 32px;
-        }
+        .btn-primary { background: var(--primary); color: white; box-shadow: 0 3px 10px rgba(0,174,239,0.2); }
+        .btn-outline { background: var(--white); color: var(--ink); border: 1.5px solid var(--border); }
+        .btn-success { background: var(--success); color: white; box-shadow: 0 3px 10px rgba(38,166,154,0.2); }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-sm { padding: 6px 12px; font-size: 0.78rem; min-height: 32px; }
 
         .card {
             background: var(--white);
@@ -186,11 +150,7 @@
             padding-bottom: 12px;
             border-bottom: 1px solid var(--border);
         }
-        
-        .card-header h3 {
-            font-size: 1rem;
-            font-weight: 800;
-        }
+        .card-header h3 { font-size: 1rem; font-weight: 800; }
         
         .icon-circle {
             width: 40px;
@@ -202,7 +162,6 @@
             font-size: 1rem;
             flex-shrink: 0;
         }
-        
         .icon-cyan { background: var(--primary-light); color: var(--primary-dark); }
         .icon-green { background: #E8F5E9; color: #00695C; }
         .icon-blue { background: #E3F2FD; color: #1565C0; }
@@ -213,35 +172,10 @@
             gap: 10px;
         }
         
-        .info-item {
-            display: flex;
-            align-items: flex-start;
-            gap: 8px;
-            font-size: 0.85rem;
-        }
-        
-        .info-item i {
-            color: var(--primary);
-            width: 18px;
-            margin-top: 3px;
-            text-align: center;
-            flex-shrink: 0;
-        }
-        
-        .info-item strong {
-            display: block;
-            font-size: 0.73rem;
-            color: var(--text-sec);
-            margin-bottom: 2px;
-        }
-        
-        .info-item .clickable {
-            color: var(--primary);
-            cursor: pointer;
-            font-weight: 700;
-            text-decoration: underline;
-            text-underline-offset: 3px;
-        }
+        .info-item { display: flex; align-items: flex-start; gap: 8px; font-size: 0.85rem; }
+        .info-item i { color: var(--primary); width: 18px; margin-top: 3px; text-align: center; flex-shrink: 0; }
+        .info-item strong { display: block; font-size: 0.73rem; color: var(--text-sec); margin-bottom: 2px; }
+        .info-item .clickable { color: var(--primary); cursor: pointer; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
 
         .status-badge {
             display: inline-flex;
@@ -252,16 +186,8 @@
             font-weight: 700;
             font-size: 0.8rem;
         }
-        
-        .status-pending {
-            background: #FFF3E0;
-            color: #E65100;
-        }
-        
-        .status-dispensed {
-            background: #E8F5E9;
-            color: #00695C;
-        }
+        .status-pending { background: #FFF3E0; color: #E65100; }
+        .status-dispensed { background: #E8F5E9; color: #00695C; }
 
         .tenant-badge {
             background: var(--primary-light);
@@ -311,13 +237,7 @@
             text-align: center;
         }
         
-        .rx-table td {
-            padding: 10px 8px;
-            border-bottom: 1px solid var(--border);
-            vertical-align: middle;
-            text-align: center;
-        }
-        
+        .rx-table td { padding: 10px 8px; border-bottom: 1px solid var(--border); vertical-align: middle; text-align: center; }
         .rx-table tbody tr:last-child td { border-bottom: none; }
         
         .drug-form-badge {
@@ -352,16 +272,9 @@
             min-height: 60px;
         }
         
-        .form-control:focus {
-            outline: none;
-            border-color: var(--primary);
-            background: white;
-        }
+        .form-control:focus { outline: none; border-color: var(--primary); background: white; }
 
-        .dispense-card {
-            border: 2px dashed var(--success);
-            background: rgba(38,166,154,0.03);
-        }
+        .dispense-card { border: 2px dashed var(--success); background: rgba(38,166,154,0.03); }
         
         .dispensed-info {
             background: #E8F5E9;
@@ -386,12 +299,7 @@
             margin-top: 10px;
         }
 
-        .action-row {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            margin-top: 12px;
-        }
+        .action-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
 
         .toast-container {
             position: fixed;
@@ -418,51 +326,22 @@
             align-items: center;
             gap: 7px;
         }
-        
         .toast.err { background: #C62828; }
         .toast.removing { opacity: 0; transform: translateY(-10px); transition: all 0.3s ease; }
         
-        .empty-state {
-            text-align: center;
-            padding: 40px 15px;
-            color: var(--text-sec);
-        }
-        
+        .empty-state { text-align: center; padding: 40px 15px; color: var(--text-sec); }
         .empty-state i { font-size: 2.5rem; opacity: 0.2; margin-bottom: 10px; display: block; }
 
         @media (max-width: 600px) {
             body { padding: 8px; }
-            
-            .app-header { 
-                padding: 8px 12px; 
-                top: 4px; 
-                border-radius: var(--radius-md); 
-            }
-            
+            .app-header { padding: 8px 12px; top: 4px; border-radius: var(--radius-md); }
             .logo h2 { font-size: 1.15rem; }
-            
-            .card { 
-                padding: 12px 14px; 
-                border-radius: var(--radius-md); 
-            }
-            
+            .card { padding: 12px 14px; border-radius: var(--radius-md); }
             .info-grid { grid-template-columns: 1fr; }
-            
-            .btn { 
-                padding: 6px 10px; 
-                font-size: 0.75rem; 
-                gap: 4px; 
-                min-height: 30px;
-            }
-            
+            .btn { padding: 6px 10px; font-size: 0.75rem; gap: 4px; min-height: 30px; }
             .rx-table { font-size: 0.78rem; }
             .rx-table th, .rx-table td { padding: 8px 5px; }
-            
-            .rx-table-wrap { 
-                margin: 0 -14px; 
-                padding: 0 14px; 
-            }
-            
+            .rx-table-wrap { margin: 0 -14px; padding: 0 14px; }
             .action-row { flex-direction: column; }
             .action-row .btn { width: 100%; justify-content: center; }
         }
@@ -518,50 +397,28 @@
         import { firebaseConfig } from './firebase-config.js';
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-        import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+        import { getDatabase, ref, get, update, set, remove } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getDatabase(app);
 
-        // ============ ✅ ثوابت التخزين المحلي ============
-        const STORAGE_PREFIX = 'shifa_tenant_';
-        
-        const LOGIN_STORAGE_KEYS = [
-            'shifa_session',
-            'shifa_remember',
-            'shifa_last_login',
-            'shifa_secure_session'
-        ];
+        // ============ ثوابت التخزين المحلي ============
+        const LOGIN_STORAGE_KEYS = ['shifa_session', 'shifa_remember', 'shifa_last_login', 'shifa_secure_session'];
 
-        // ✅ قراءة معرف المجمع من الرابط
         const urlParams = new URLSearchParams(window.location.search);
         const prescriptionId = urlParams.get('id');
-        const currentTenantId = urlParams.get('tenant'); // ✅ معرف المجمع
+        const currentTenantId = urlParams.get('tenant');
         const patientIdFromUrl = urlParams.get('patientId');
         const patientNameFromUrl = urlParams.get('patientName');
         const doctorIdFromUrl = urlParams.get('doctorId');
-
-        console.log('📋 معلمات الرابط:', {
-            prescriptionId,
-            currentTenantId,
-            patientIdFromUrl,
-            patientNameFromUrl,
-            doctorIdFromUrl
-        });
 
         let currentUser = null;
         let pharmacistData = null;
         let isPharmacist = false;
 
         const $ = (sel) => document.querySelector(sel);
-        
-        const esc = (s) => {
-            if (!s) return '';
-            const div = document.createElement('div');
-            div.textContent = String(s);
-            return div.innerHTML;
-        };
+        const esc = (s) => { if (!s) return ''; const div = document.createElement('div'); div.textContent = String(s); return div.innerHTML; };
         
         const toast = (msg, err=false) => {
             const container = $('#toastContainer');
@@ -569,50 +426,67 @@
             t.className = `toast ${err?'err':''}`;
             t.innerHTML = `<i class="fas ${err?'fa-exclamation-circle':'fa-check-circle'}"></i> ${msg}`;
             container.appendChild(t);
-            setTimeout(() => {
-                t.classList.add('removing');
-                setTimeout(() => t.remove(), 300);
-            }, 2500);
+            setTimeout(() => { t.classList.add('removing'); setTimeout(() => t.remove(), 300); }, 2500);
         };
 
-        // ✅ مسح بيانات الجلسة فقط
         const clearLoginSessionOnly = () => {
             try {
-                LOGIN_STORAGE_KEYS.forEach(key => {
-                    localStorage.removeItem(key);
-                });
-                
-                const sessionKeysToRemove = [];
+                LOGIN_STORAGE_KEYS.forEach(key => localStorage.removeItem(key));
                 for (let i = 0; i < localStorage.length; i++) {
                     const key = localStorage.key(i);
-                    if (key && (key.startsWith('shifa_session') || key.startsWith('shifa_secure'))) {
-                        sessionKeysToRemove.push(key);
-                    }
+                    if (key && (key.startsWith('shifa_session') || key.startsWith('shifa_secure'))) localStorage.removeItem(key);
                 }
-                sessionKeysToRemove.forEach(key => localStorage.removeItem(key));
-                
                 sessionStorage.clear();
-            } catch (e) {
-                console.warn('تعذر مسح بيانات الجلسة:', e.message);
-            }
+            } catch (e) { console.warn('تعذر مسح بيانات الجلسة:', e.message); }
         };
 
-        // ✅ تحديث مؤشر المزامنة
         const setSyncStatus = (online) => {
             const dot = $('#syncDot');
-            if (dot) {
-                dot.className = `sync-dot ${online ? 'on' : 'off'}`;
-                dot.title = online ? 'متصل بالسحابة' : 'غير متصل';
-            }
+            if (dot) { dot.className = `sync-dot ${online?'on':'off'}`; dot.title = online ? 'متصل بالسحابة' : 'غير متصل'; }
         };
 
-        // ✅ الحصول على مسار البيانات الصحيح
-        const getDataPath = (path) => {
-            if (currentTenantId) {
-                return `tenants/${currentTenantId}/${path}`;
+        const getDataPath = (path) => currentTenantId ? `tenants/${currentTenantId}/${path}` : path;
+
+        // ============ ✅ تحميل ملاحظات الصيدلي من السحابة ============
+        async function loadPharmacistNotes(prescriptionId) {
+            if (!currentTenantId || !currentUser) return '';
+            try {
+                const noteRef = ref(db, `tenants/${currentTenantId}/pharmacist_notes/${currentUser.uid}/${prescriptionId}`);
+                const snap = await get(noteRef);
+                if (snap.exists()) {
+                    return snap.val().note || '';
+                }
+                return '';
+            } catch (e) {
+                console.warn('تعذر تحميل الملاحظات:', e.message);
+                return '';
             }
-            return path;
-        };
+        }
+
+        // ============ ✅ حفظ ملاحظات الصيدلي في السحابة ============
+        async function savePharmacistNotes(prescriptionId, note) {
+            if (!currentTenantId || !currentUser) return;
+            try {
+                const noteRef = ref(db, `tenants/${currentTenantId}/pharmacist_notes/${currentUser.uid}/${prescriptionId}`);
+                await set(noteRef, {
+                    note,
+                    prescriptionId,
+                    updatedAt: new Date().toISOString()
+                });
+            } catch (e) {
+                console.warn('تعذر حفظ الملاحظات:', e.message);
+            }
+        }
+
+        // ============ ✅ حذف ملاحظات الصيدلي من السحابة ============
+        async function deletePharmacistNotes(prescriptionId) {
+            if (!currentTenantId || !currentUser) return;
+            try {
+                await remove(ref(db, `tenants/${currentTenantId}/pharmacist_notes/${currentUser.uid}/${prescriptionId}`));
+            } catch (e) {
+                console.warn('تعذر حذف الملاحظات:', e.message);
+            }
+        }
 
         async function loadPrescription() {
             if (!prescriptionId) {
@@ -621,35 +495,22 @@
             }
 
             try {
-                // ✅ جلب الروشتة من مسار المجمع أو المسار العام
                 let presSnap = null;
-                
                 if (currentTenantId) {
-                    // جرب مسار المجمع أولاً
                     presSnap = await get(ref(db, getDataPath(`prescriptions/${prescriptionId}`)));
-                    if (!presSnap.exists()) {
-                        console.log('⚠️ الروشتة غير موجودة في مسار المجمع، محاولة المسار العام...');
-                        presSnap = await get(ref(db, `prescriptions/${prescriptionId}`));
-                    }
+                    if (!presSnap.exists()) presSnap = await get(ref(db, `prescriptions/${prescriptionId}`));
                 } else {
                     presSnap = await get(ref(db, `prescriptions/${prescriptionId}`));
                 }
                 
-                if (!presSnap.exists()) {
-                    showErrorState('الروشتة غير موجودة');
-                    return;
-                }
+                if (!presSnap.exists()) { showErrorState('الروشتة غير موجودة'); return; }
                 
                 const rx = { id: prescriptionId, ...presSnap.val() };
-                console.log('📋 بيانات الروشتة:', rx);
 
-                // ✅ جلب عناصر الروشتة
                 let itemsSnap = null;
                 if (currentTenantId) {
                     itemsSnap = await get(ref(db, getDataPath(`prescription_items/${prescriptionId}`)));
-                    if (!itemsSnap.exists()) {
-                        itemsSnap = await get(ref(db, `prescription_items/${prescriptionId}`));
-                    }
+                    if (!itemsSnap.exists()) itemsSnap = await get(ref(db, `prescription_items/${prescriptionId}`));
                 } else {
                     itemsSnap = await get(ref(db, `prescription_items/${prescriptionId}`));
                 }
@@ -663,10 +524,8 @@
                         form: value.form || 'tablet',
                         dose: value.dose || '—'
                     }));
-                    console.log('💊 العناصر:', items);
                 }
 
-                // ✅ جلب بيانات الطبيب من مسار المجمع
                 const doctorId = rx.doctor_id || doctorIdFromUrl;
                 let doctorName = '';
                 let doctorSpecialty = '';
@@ -676,24 +535,18 @@
                         let doctorSnap = null;
                         if (currentTenantId) {
                             doctorSnap = await get(ref(db, getDataPath(`users/${doctorId}`)));
-                            if (!doctorSnap.exists()) {
-                                doctorSnap = await get(ref(db, `users/${doctorId}`));
-                            }
+                            if (!doctorSnap.exists()) doctorSnap = await get(ref(db, `users/${doctorId}`));
                         } else {
                             doctorSnap = await get(ref(db, `users/${doctorId}`));
                         }
-                        
                         if (doctorSnap.exists()) {
                             const doctorData = doctorSnap.val();
                             doctorName = doctorData.name || '';
                             doctorSpecialty = doctorData.specialty || '';
                         }
-                    } catch(e) {
-                        console.warn('تعذر جلب بيانات الطبيب:', e);
-                    }
+                    } catch(e) { console.warn('تعذر جلب بيانات الطبيب:', e); }
                 }
 
-                // ✅ جلب بيانات المريض من مسار المجمع
                 const patientId = rx.patient_id || patientIdFromUrl;
                 let patientName = patientNameFromUrl || rx.patient_name || 'غير معروف';
                 let patientPhone = rx.patient_phone || '';
@@ -703,30 +556,23 @@
                         let patientSnap = null;
                         if (currentTenantId) {
                             patientSnap = await get(ref(db, getDataPath(`patients/${patientId}`)));
-                            if (!patientSnap.exists()) {
-                                patientSnap = await get(ref(db, `patients/${patientId}`));
-                            }
+                            if (!patientSnap.exists()) patientSnap = await get(ref(db, `patients/${patientId}`));
                         } else {
                             patientSnap = await get(ref(db, `patients/${patientId}`));
                         }
-                        
                         if (patientSnap.exists()) {
                             const patientData = patientSnap.val();
                             patientName = patientData.name || patientName;
                             patientPhone = patientData.phone || patientPhone;
                         }
-                    } catch(e) {
-                        console.warn('تعذر جلب بيانات المريض:', e);
-                    }
+                    } catch(e) { console.warn('تعذر جلب بيانات المريض:', e); }
                 }
 
-                // ✅ تاريخ الكشف
-                const dateStr = rx.created_at 
-                    ? new Date(rx.created_at).toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' })
-                    : '—';
-                const timeStr = rx.created_at 
-                    ? new Date(rx.created_at).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })
-                    : '';
+                const dateStr = rx.created_at ? new Date(rx.created_at).toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' }) : '—';
+                const timeStr = rx.created_at ? new Date(rx.created_at).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }) : '';
+
+                // ✅ تحميل ملاحظات الصيدلي من السحابة
+                const savedNotes = await loadPharmacistNotes(prescriptionId);
 
                 const data = {
                     ...rx,
@@ -740,9 +586,9 @@
                     _itemCount: items.length,
                     _dateStr: dateStr,
                     _timeStr: timeStr,
+                    _savedNotes: savedNotes
                 };
 
-                console.log('✅ البيانات النهائية:', data);
                 renderPrescription(data);
                 
             } catch (err) {
@@ -768,54 +614,28 @@
             const statusLabel = isDispensed ? 'تم الصرف' : 'لم تصرف بعد';
             const statusClass = isDispensed ? 'status-dispensed' : 'status-pending';
             
-            console.log('🎨 عرض البيانات:', {
-                items: data._items,
-                count: data._itemCount,
-                doctorName: data._doctorName,
-                patientName: data._patientName
-            });
-
-            // ✅ بناء جدول الأدوية
-            let itemsHtml = '';
-            if (data._items && data._items.length > 0) {
-                const formLabels = {
-                    'tablet': 'أقراص',
-                    'capsule': 'كبسولات',
-                    'syrup': 'شراب',
-                    'injection': 'حقن',
-                    'suppository': 'لبوس',
-                    'drops': 'نقط',
-                    'spray': 'بخاخ',
-                    'cream': 'كريم'
-                };
-                
-                itemsHtml = data._items.map((item, i) => {
-                    const drugName = item.drug_name || item.drug || item.name || '—';
-                    const form = item.form || 'tablet';
-                    const dose = item.dose || '—';
-                    
-                    return `
+            const formLabels = {
+                'tablet': 'أقراص', 'capsule': 'كبسولات', 'syrup': 'شراب',
+                'injection': 'حقن', 'suppository': 'لبوس', 'drops': 'نقط',
+                'spray': 'بخاخ', 'cream': 'كريم'
+            };
+            
+            let itemsHtml = data._items && data._items.length > 0 
+                ? data._items.map(item => `
                     <tr>
-                        <td><strong>${esc(drugName)}</strong></td>
-                        <td><span class="drug-form-badge">${formLabels[form] || form}</span></td>
-                        <td><span class="dose-highlight">${esc(dose)}</span></td>
-                    </tr>`;
-                }).join('');
-            } else {
-                itemsHtml = '<tr><td colspan="3" style="text-align:center;padding:20px;color:var(--text-sec);">لا توجد أدوية مسجلة</td></tr>';
-            }
+                        <td><strong>${esc(item.drug_name)}</strong></td>
+                        <td><span class="drug-form-badge">${formLabels[item.form] || item.form}</span></td>
+                        <td><span class="dose-highlight">${esc(item.dose)}</span></td>
+                    </tr>`).join('')
+                : '<tr><td colspan="3" style="text-align:center;padding:20px;color:var(--text-sec);">لا توجد أدوية مسجلة</td></tr>';
 
-            // ✅ قسم الصرف (متاح للصيادلة في نفس المجمع)
             let dispenseSection = '';
             if (isDispensed) {
-                let notesHtml = '';
-                if (data.pharmacist_notes) {
-                    notesHtml = `
+                let notesHtml = data._savedNotes ? `
                     <div class="pharmacist-notes-display">
                         <i class="fas fa-pen" style="margin-left:6px;"></i>
-                        <strong>ملاحظات الصيدلي:</strong> ${esc(data.pharmacist_notes)}
-                    </div>`;
-                }
+                        <strong>ملاحظات الصيدلي:</strong> ${esc(data._savedNotes)}
+                    </div>` : '';
                 
                 dispenseSection = `
                 <div class="card">
@@ -838,7 +658,6 @@
                     </div>` : ''}
                 </div>`;
             } else if (isPharmacist) {
-                // ✅ الصيدلي المسجل دخوله في نفس المجمع يقدر يصرف
                 dispenseSection = `
                 <div class="card dispense-card">
                     <div class="card-header">
@@ -849,16 +668,13 @@
                     <div style="margin-bottom:12px;">
                         <label style="display:block;font-weight:700;margin-bottom:6px;font-size:0.85rem;">
                             <i class="fas fa-pen" style="color:var(--warning);margin-left:4px;"></i>
-                            ملاحظات الصيدلي <small style="font-weight:400;color:var(--text-sec);">(اختياري)</small>
+                            ملاحظات الصيدلي <small style="font-weight:400;color:var(--text-sec);">(اختياري - تخزين سحابي)</small>
                         </label>
-                        <textarea 
-                            id="pharmacistNotes" 
-                            class="form-control" 
+                        <textarea id="pharmacistNotes" class="form-control" 
                             placeholder="مثال: تحذيرات، تعليمات إضافية للمريض، بدائل الأدوية..."
-                            style="min-height:60px;"
-                        ></textarea>
+                            style="min-height:60px;">${esc(data._savedNotes || '')}</textarea>
                         <div style="font-size:0.7rem;color:var(--text-sec);margin-top:4px;">
-                            هذه الملاحظات ستظهر للمريض مع الروشتة
+                            هذه الملاحظات ستحفظ في السحابة وتظهر مع الروشتة
                         </div>
                     </div>
                     
@@ -872,7 +688,6 @@
             }
 
             const html = `
-            <!-- ✅ بطاقة معلومات الروشتة -->
             <div class="card">
                 <div class="card-header">
                     <div class="icon-circle icon-cyan"><i class="fas fa-clipboard-list"></i></div>
@@ -897,10 +712,7 @@
                     </div>
                     <div class="info-item">
                         <i class="fas fa-calendar-alt"></i>
-                        <div>
-                            <strong>تاريخ الكشف</strong>
-                            <span>${data._dateStr} · ${data._timeStr}</span>
-                        </div>
+                        <div><strong>تاريخ الكشف</strong><span>${data._dateStr} · ${data._timeStr}</span></div>
                     </div>
                     <div class="info-item">
                         <i class="fas fa-cubes"></i>
@@ -908,10 +720,7 @@
                     </div>
                     <div class="info-item" style="grid-column:1/-1;">
                         <i class="fas fa-notes-medical"></i>
-                        <div>
-                            <strong>التشخيص</strong> 
-                            <span>${esc(data.diagnosis || 'غير محدد')}</span>
-                        </div>
+                        <div><strong>التشخيص</strong> <span>${esc(data.diagnosis || 'غير محدد')}</span></div>
                     </div>
                 </div>
                 <div style="margin-top:12px;">
@@ -920,18 +729,11 @@
                     </span>
                 </div>
                 <div class="action-row">
-                    ${data._patientId ? `
-                    <button class="btn btn-outline btn-sm" id="patientFileBtn">
-                        <i class="fas fa-folder-open"></i> ملف المريض
-                    </button>` : ''}
-                    ${data._patientPhone ? `
-                    <a href="tel:${esc(data._patientPhone)}" class="btn btn-outline btn-sm" style="text-decoration:none;">
-                        <i class="fas fa-phone"></i> ${esc(data._patientPhone)}
-                    </a>` : ''}
+                    ${data._patientId ? `<button class="btn btn-outline btn-sm" id="patientFileBtn"><i class="fas fa-folder-open"></i> ملف المريض</button>` : ''}
+                    ${data._patientPhone ? `<a href="tel:${esc(data._patientPhone)}" class="btn btn-outline btn-sm" style="text-decoration:none;"><i class="fas fa-phone"></i> ${esc(data._patientPhone)}</a>` : ''}
                 </div>
             </div>
 
-            <!-- ✅ بطاقة الأدوية -->
             <div class="card">
                 <div class="card-header">
                     <div class="icon-circle icon-blue"><i class="fas fa-pills"></i></div>
@@ -940,11 +742,7 @@
                 <div class="rx-table-wrap">
                     <table class="rx-table">
                         <thead>
-                            <tr>
-                                <th>اسم الدواء</th>
-                                <th>الشكل الصيدلي</th>
-                                <th>الجرعة</th>
-                            </tr>
+                            <tr><th>اسم الدواء</th><th>الشكل الصيدلي</th><th>الجرعة</th></tr>
                         </thead>
                         <tbody>${itemsHtml}</tbody>
                     </table>
@@ -956,9 +754,7 @@
 
             $('#dynamicContent').innerHTML = html;
 
-            // ✅ أزرار
             $('#printBtn')?.addEventListener('click', () => window.print());
-            
             $('#backBtn')?.addEventListener('click', () => {
                 if (document.referrer && document.referrer.includes(window.location.host)) {
                     window.history.back();
@@ -969,24 +765,18 @@
 
             $('#patientFileBtn')?.addEventListener('click', () => {
                 const pid = data._patientId;
-                const pname = data._patientName;
-                if (pid) {
-                    window.open(`patient-file.html?patientId=${pid}&patientName=${encodeURIComponent(pname)}&tenant=${currentTenantId || ''}`, '_blank');
-                }
+                if (pid) window.open(`patient-file.html?patientId=${pid}&patientName=${encodeURIComponent(data._patientName)}&tenant=${currentTenantId||''}`, '_blank');
             });
 
             const patientNameLink = document.getElementById('patientNameLink');
             if (patientNameLink) {
                 patientNameLink.addEventListener('click', () => {
                     const pid = patientNameLink.dataset.patientId;
-                    const pname = patientNameLink.dataset.patientName;
-                    if (pid) {
-                        window.open(`patient-file.html?patientId=${pid}&patientName=${encodeURIComponent(pname)}&tenant=${currentTenantId || ''}`, '_blank');
-                    }
+                    if (pid) window.open(`patient-file.html?patientId=${pid}&patientName=${encodeURIComponent(data._patientName)}&tenant=${currentTenantId||''}`, '_blank');
                 });
             }
 
-            // ✅ زر الصرف مع حفظ الملاحظات (متاح لأي صيدلي في المجمع)
+            // ✅ زر الصرف مع حفظ الملاحظات في السحابة
             const dispenseBtn = $('#dispenseBtn');
             if (dispenseBtn) {
                 dispenseBtn.addEventListener('click', async () => {
@@ -998,18 +788,21 @@
                     try {
                         const notes = $('#pharmacistNotes')?.value?.trim() || '';
                         
+                        // ✅ حفظ الملاحظات في السحابة
+                        if (notes) {
+                            await savePharmacistNotes(prescriptionId, notes);
+                        } else {
+                            await deletePharmacistNotes(prescriptionId);
+                        }
+                        
                         const updateData = {
                             status: 'تم الصرف',
                             pharmacist_id: currentUser.uid,
                             pharmacist_name: pharmacistData?.name || currentUser.displayName || 'صيدلي',
+                            pharmacist_notes: notes || null,
                             dispensed_at: new Date().toISOString()
                         };
                         
-                        if (notes) {
-                            updateData.pharmacist_notes = notes;
-                        }
-                        
-                        // ✅ تحديث في مسار المجمع الصحيح
                         const updatePath = currentTenantId 
                             ? `tenants/${currentTenantId}/prescriptions/${prescriptionId}`
                             : `prescriptions/${prescriptionId}`;
@@ -1017,10 +810,7 @@
                         await update(ref(db, updatePath), updateData);
                         
                         toast('✅ تم صرف الروشتة بنجاح');
-                        
-                        setTimeout(() => {
-                            window.location.reload();
-                        }, 1200);
+                        setTimeout(() => window.location.reload(), 1200);
                     } catch (err) {
                         console.error('❌ خطأ في الصرف:', err);
                         toast('❌ فشل الصرف: ' + err.message, true);
@@ -1030,7 +820,7 @@
                 });
             }
 
-            // ✅ زر إلغاء الصرف (متاح للصيادلة)
+            // ✅ زر إلغاء الصرف
             const undoDispenseBtn = $('#undoDispenseBtn');
             if (undoDispenseBtn) {
                 undoDispenseBtn.addEventListener('click', async () => {
@@ -1040,6 +830,9 @@
                     undoDispenseBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإلغاء...';
                     
                     try {
+                        // ✅ حذف الملاحظات من السحابة
+                        await deletePharmacistNotes(prescriptionId);
+                        
                         const updateData = {
                             status: 'لم تصرف بعد',
                             pharmacist_id: null,
@@ -1055,10 +848,7 @@
                         await update(ref(db, updatePath), updateData);
                         
                         toast('✅ تم إلغاء صرف الروشتة');
-                        
-                        setTimeout(() => {
-                            window.location.reload();
-                        }, 1200);
+                        setTimeout(() => window.location.reload(), 1200);
                     } catch (err) {
                         console.error('❌ خطأ في إلغاء الصرف:', err);
                         toast('❌ فشل إلغاء الصرف: ' + err.message, true);
@@ -1072,7 +862,6 @@
             $('#mainContent').style.display = 'block';
         }
 
-        // ============ ✅ تسجيل الخروج ============
         const setupLogout = () => {
             const logoutBtn = $('#logoutBtn');
             if (logoutBtn) {
@@ -1084,7 +873,6 @@
                         await signOut(auth);
                         window.location.href = 'index.html';
                     } catch (error) {
-                        console.error('خطأ أثناء تسجيل الخروج:', error);
                         clearLoginSessionOnly();
                         window.location.href = 'index.html';
                     }
@@ -1092,64 +880,42 @@
             }
         };
 
-        // ============ مستمعي الاتصال ============
-        window.addEventListener('online', () => {
-            setSyncStatus(true);
-        });
-        
-        window.addEventListener('offline', () => {
-            setSyncStatus(false);
-        });
+        window.addEventListener('online', () => setSyncStatus(true));
+        window.addEventListener('offline', () => setSyncStatus(false));
 
-        // ============ بدء التشغيل ============
         onAuthStateChanged(auth, async (user) => {
-            if (!user) {
-                clearLoginSessionOnly();
-                window.location.href = 'index.html';
-                return;
-            }
+            if (!user) { clearLoginSessionOnly(); window.location.href = 'index.html'; return; }
             
             currentUser = user;
             
-            // ✅ التحقق من صلاحية المستخدم وتحديد إذا كان صيدلي
             try {
-                // جرب مسار المجمع أولاً
                 let userSnap = null;
                 if (currentTenantId) {
                     userSnap = await get(ref(db, `tenants/${currentTenantId}/users/${user.uid}`));
-                    if (!userSnap.exists()) {
-                        userSnap = await get(ref(db, `users/${user.uid}`));
-                    }
+                    if (!userSnap.exists()) userSnap = await get(ref(db, `users/${user.uid}`));
                 } else {
                     userSnap = await get(ref(db, `users/${user.uid}`));
                 }
                 
                 if (userSnap.exists()) {
                     const userData = userSnap.val();
-                    
-                    // ✅ عرض اسم المجمع
                     if (userData.tenantName && $('#tenantName')) {
                         $('#tenantName').textContent = userData.tenantName;
                         $('#tenantBadge').style.display = 'flex';
                     }
-                    
-                    // ✅ تحديد إذا كان صيدلي
                     if (userData.role === 'pharmacist') {
                         isPharmacist = true;
                         pharmacistData = { id: user.uid, ...userData };
                         setupLogout();
                     }
                 }
-            } catch(e) {
-                console.warn('تعذر التحقق من بيانات المستخدم:', e);
-            }
+            } catch(e) { console.warn('تعذر التحقق من بيانات المستخدم:', e); }
             
             await loadPrescription();
         });
 
-        console.log('🚀 صفحة تفاصيل الروشتة - نظام المجمعات الطبية المتعددة');
-        console.log('🔒 تدعم مسار المجمع والمسار العام للتوافق');
-        console.log('💊 الصيادلة في نفس المجمع يمكنهم صرف الروشتات');
+        console.log('🚀 صفحة تفاصيل الروشتة - تخزين سحابي للملاحظات');
+        console.log('☁️ ملاحظات الصيدلي تحفظ في Firebase بدلاً من localStorage');
     </script>
 </body>
 </html>
