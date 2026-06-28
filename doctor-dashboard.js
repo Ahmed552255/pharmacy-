@@ -1,1857 +1,2385 @@
-import { firebaseConfig } from './firebase-config.js';
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-import { getDatabase, ref, onValue, set, push, update, get, query, orderByChild, equalTo, remove } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getDatabase(app);
-
-const STORAGE_PREFIX = 'shifa_tenant_';
-
-const LOGIN_STORAGE_KEYS = [
-    'shifa_session',
-    'shifa_remember',
-    'shifa_last_login',
-    'shifa_secure_session'
-];
-
-let currentTenantId = null;
-
-const getTenantStorageKey = (baseKey) => {
-    return currentTenantId ? `${STORAGE_PREFIX}${currentTenantId}_${baseKey}` : baseKey;
-};
-
-// ============================================================
-// ✅ نظام إدارة الجلسات المعلقة - تخزين سحابي بدلاً من IndexedDB
-// ============================================================
-class SessionDB {
-    constructor() {
-        this._basePath = null;
-    }
-    
-    get basePath() {
-        if (!this._basePath) {
-            this._basePath = currentTenantId 
-                ? `tenants/${currentTenantId}/doctor_sessions` 
-                : 'doctor_sessions';
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#00AEEF">
+    <title>شفاء · لوحة الممرض</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap&subset=arabic" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
+    <style>
+        :root {
+            --primary: #00AEEF;
+            --primary-light: #E0F7FA;
+            --primary-dark: #008080;
+            --bg: #FAFAFA;
+            --white: #FFFFFF;
+            --ink: #1A3C4A;
+            --text-sec: #5A7D8A;
+            --danger: #E57373;
+            --success: #26A69A;
+            --warning: #FFA726;
+            --border: #E0E0E0;
+            --shadow-xs: 0 2px 6px rgba(0,0,0,0.03);
+            --shadow-sm: 0 4px 12px rgba(0,0,0,0.05);
+            --shadow-md: 0 8px 24px rgba(0,0,0,0.08);
+            --radius-xs: 8px;
+            --radius-sm: 14px;
+            --radius-md: 20px;
+            --radius-lg: 26px;
+            --radius-xl: 50px;
         }
-        return this._basePath;
-    }
-    
-    async save(session) {
-        if (!currentTenantId) return;
-        try {
-            const sessionRef = ref(db, `${this.basePath}/${session.id}`);
-            await set(sessionRef, {
-                ...session,
-                updatedAt: new Date().toISOString(),
-                userId: auth.currentUser?.uid
-            });
-        } catch (err) {
-            console.warn('تعذر حفظ الجلسة سحابياً:', err.message);
-        }
-    }
-    
-    async getAll() {
-        if (!currentTenantId) return [];
-        try {
-            const userId = auth.currentUser?.uid;
-            if (!userId) return [];
-            
-            const sessionsRef = query(
-                ref(db, this.basePath),
-                orderByChild('userId'),
-                equalTo(userId)
-            );
-            
-            const snap = await get(sessionsRef);
-            if (!snap.exists()) return [];
-            
-            const sessions = [];
-            snap.forEach(child => {
-                sessions.push({ id: child.key, ...child.val() });
-            });
-            
-            // ترتيب حسب آخر تحديث
-            sessions.sort((a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || ''));
-            
-            return sessions;
-        } catch (err) {
-            console.warn('تعذر جلب الجلسات:', err.message);
-            return [];
-        }
-    }
-    
-    async delete(id) {
-        if (!currentTenantId) return;
-        try {
-            await remove(ref(db, `${this.basePath}/${id}`));
-        } catch (err) {
-            console.warn('تعذر حذف الجلسة:', err.message);
-        }
-    }
-}
 
-// ============================================================
-// ✅ نظام الأدوية المفضلة - تخزين سحابي مع حد أقصى للتكلفة
-// ============================================================
-class FavoriteDrugsDB {
-    constructor() {
-        this._basePath = null;
-    }
-    
-    get basePath() {
-        if (!this._basePath) {
-            this._basePath = currentTenantId 
-                ? `tenants/${currentTenantId}/doctor_favorites` 
-                : 'doctor_favorites';
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html {
+            font-size: 15px;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-font-smoothing: antialiased;
+            -webkit-text-size-adjust: 100%;
+            text-rendering: optimizeSpeed;
         }
-        return this._basePath;
-    }
-    
-    get maxFavorites() { return 50; } // حد أقصى للأدوية المفضلة لكل دكتور
-    
-    async getAll() {
-        if (!currentTenantId) return [];
-        try {
-            const userId = auth.currentUser?.uid;
-            if (!userId) return [];
-            
-            const favRef = ref(db, `${this.basePath}/${userId}`);
-            const snap = await get(favRef);
-            if (!snap.exists()) return [];
-            
-            return Object.values(snap.val());
-        } catch (err) {
-            console.warn('تعذر جلب المفضلات:', err.message);
-            return [];
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: var(--bg);
+            color: var(--ink);
+            min-height: 100vh;
+            min-height: 100dvh;
+            padding: 12px;
+            padding-bottom: 45vh;
+            overflow-x: hidden;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            -webkit-overflow-scrolling: touch;
         }
-    }
-    
-    async incrementAndSave(fullName, name, form, strength) {
-        if (!currentTenantId) return;
-        try {
-            const userId = auth.currentUser?.uid;
-            if (!userId) return;
+
+        .container { max-width: 1100px; margin: 0 auto; }
+
+        #authLoader {
+            position: fixed;
+            inset: 0;
+            background: rgba(250,250,250,0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .loader-spin {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #E0E0E0;
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .loader-text {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--primary-dark);
+        }
+
+        .app-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            padding: 10px 18px;
+            margin-bottom: 16px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+            flex-wrap: wrap;
+            gap: 10px;
+            position: sticky;
+            top: 6px;
+            z-index: 100;
+        }
+
+        .logo h2 {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: var(--primary-dark);
+            white-space: nowrap;
+        }
+
+        .logo i { color: var(--primary); }
+
+        .header-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        #welcomeMsg {
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--text-sec);
+        }
+
+        .tenant-badge {
+            background: var(--primary-light);
+            padding: 4px 10px;
+            border-radius: var(--radius-xl);
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: var(--primary-dark);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn {
+            padding: 9px 16px;
+            border-radius: var(--radius-xl);
+            border: none;
+            font-weight: 700;
+            font-family: 'Cairo', sans-serif;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.83rem;
+            white-space: nowrap;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+            transition: all 0.2s ease;
+        }
+
+        .btn:active { 
+            opacity: 0.8; 
+            transform: scale(0.97);
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 3px 10px rgba(0,174,239,0.2);
+        }
+
+        .btn-primary:hover {
+            background: #0099D6;
+            box-shadow: 0 4px 14px rgba(0,174,239,0.3);
+        }
+
+        .btn-outline {
+            background: var(--white);
+            color: var(--ink);
+            border: 1.5px solid var(--border);
+        }
+
+        .btn-outline:hover {
+            background: #F5FAFC;
+            border-color: var(--primary);
+        }
+
+        .btn-settings {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 3px 10px rgba(102, 126, 234, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-settings::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn-settings:hover::before {
+            left: 100%;
+        }
+
+        .btn-settings:hover {
+            background: linear-gradient(135deg, #5a6fd6 0%, #6a3f8f 100%);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-settings i {
+            font-size: 0.9rem;
+            animation: gearPulse 2s infinite;
+        }
+
+        @keyframes gearPulse {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(15deg); }
+            75% { transform: rotate(-15deg); }
+        }
+
+        /* ✅ زر الإشعارات */
+        .btn-notifications {
+            background: linear-gradient(135deg, #FF6B6B, #FF8E53);
+            color: white;
+            box-shadow: 0 3px 10px rgba(255,107,107,0.3);
+            position: relative;
+        }
+
+        .btn-notifications:hover {
+            background: linear-gradient(135deg, #FF5252, #FF7B3D);
+            box-shadow: 0 5px 15px rgba(255,107,107,0.4);
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #FF1744;
+            color: white;
+            border-radius: 50%;
+            width: 22px;
+            height: 22px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid white;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .controls-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .doctors-tabs {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            flex: 1;
+        }
+
+        .doctor-tab {
+            background: var(--white);
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-xl);
+            padding: 7px 14px;
+            font-weight: 600;
+            color: var(--ink);
+            cursor: pointer;
+            font-size: 0.82rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            box-shadow: var(--shadow-xs);
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+
+        .doctor-tab i { color: var(--primary); }
+
+        .doctor-tab.active {
+            background: var(--primary);
+            color: white;
+            border-color: transparent;
+            box-shadow: 0 4px 12px rgba(0,174,239,0.3);
+        }
+        .doctor-tab.active i { color: white; }
+
+        .doctor-tab:active:not(.active) {
+            background: var(--primary-light);
+        }
+
+        .doctor-tab:hover:not(.active) {
+            border-color: var(--primary);
+            transform: translateY(-1px);
+        }
+
+        .date-picker {
+            display: flex;
+            align-items: center;
+            background: var(--white);
+            border-radius: var(--radius-xl);
+            padding: 3px;
+            border: 1.5px solid var(--border);
+            box-shadow: var(--shadow-xs);
+            gap: 3px;
+        }
+
+        .btn-today {
+            background: transparent;
+            border: none;
+            padding: 7px 12px;
+            border-radius: var(--radius-xl);
+            font-family: 'Cairo', sans-serif;
+            font-weight: 600;
+            color: var(--primary);
+            cursor: pointer;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            touch-action: manipulation;
+            transition: background 0.2s;
+        }
+
+        .btn-today:active { background: var(--primary-light); }
+        .btn-today:hover { background: #F0F8FF; }
+
+        .date-input {
+            border: none;
+            padding: 7px 10px;
+            font-family: 'Cairo', sans-serif;
+            font-size: 0.8rem;
+            border-right: 1px solid var(--border);
+            background: transparent;
+            color: var(--ink);
+            outline: none;
+        }
+
+        .status-tabs {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+            background: var(--white);
+            border-radius: var(--radius-xl);
+            padding: 5px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .status-tab {
+            background: transparent;
+            border: none;
+            padding: 9px 16px;
+            border-radius: var(--radius-xl);
+            font-weight: 600;
+            font-family: 'Cairo', sans-serif;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.82rem;
+            color: var(--text-sec);
+            flex: 1;
+            justify-content: center;
+            min-width: 80px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+
+        .status-tab .badge {
+            background: rgba(0,0,0,0.04);
+            border-radius: 30px;
+            padding: 2px 9px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .status-tab.active {
+            background: white;
+            color: var(--primary);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+        }
+
+        .status-tab.active .badge {
+            background: var(--primary-light);
+            color: var(--primary);
+        }
+
+        .status-tab:active:not(.active) {
+            background: rgba(255,255,255,0.6);
+        }
+
+        .status-tab:hover:not(.active) {
+            background: rgba(255,255,255,0.8);
+        }
+
+        .table-container {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .table-scroll {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: center;
+            min-width: 650px;
+            font-size: 0.85rem;
+        }
+
+        th, td { padding: 12px 8px; }
+
+        thead th {
+            background: #F5FAFC;
+            font-weight: 700;
+            color: var(--ink);
+            font-size: 0.78rem;
+            white-space: nowrap;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid var(--border);
+            transition: background 0.2s;
+        }
+
+        tbody tr:hover {
+            background: #F8FDFF;
+        }
+
+        tbody tr:last-child { border-bottom: none; }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 30px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+        }
+
+        .s-waiting { background: #FFF8E1; color: #F57F17; }
+        .s-inprogress { background: #E0F7FA; color: #006064; }
+        .s-done { background: #E8F5E9; color: #1B5E20; }
+        .s-cancelled { background: #FFEBEE; color: #B71C1C; }
+
+        .visit-type-badge {
+            padding: 3px 9px;
+            border-radius: 30px;
+            font-size: 0.68rem;
+            font-weight: 700;
+        }
+        .vt-new { background: #E3F2FD; color: #0D47A1; }
+        .vt-follow { background: #F3E5F5; color: #6A1B9A; }
+
+        .action-btns {
+            display: flex;
+            gap: 4px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .icon-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: var(--radius-xs);
+            border: none;
+            background: var(--white);
+            color: var(--text-sec);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--border);
+            font-size: 0.78rem;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+
+        .icon-btn:hover {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+            transform: scale(1.1);
+        }
+
+        .icon-btn:active { 
+            background: var(--primary); 
+            color: white; 
+            border-color: var(--primary); 
+        }
+        .icon-btn.danger:active { 
+            background: var(--danger); 
+            color: white; 
+            border-color: var(--danger); 
+        }
+        .icon-btn.danger:hover {
+            background: #FF5252;
+            color: white;
+            border-color: #FF5252;
+        }
+
+        .empty-row td {
+            text-align: center;
+            padding: 35px;
+            color: var(--text-sec);
+        }
+
+        .sync-dot {
+            display: inline-block;
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            margin-left: 5px;
+            vertical-align: middle;
+        }
+        .sync-dot.on { background: var(--success); }
+        .sync-dot.off { background: #FFB74D; }
+
+        .keyboard-scroll-spacer {
+            height: 1px;
+            width: 100%;
+            pointer-events: none;
+            opacity: 0;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.25);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 16px;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-card {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            width: 100%;
+            max-width: 480px;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.12);
+            border: 1px solid var(--border);
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            padding: 14px 18px;
+            background: #F5FAFC;
+            border-bottom: 1px solid var(--border);
+            border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .modal-header h3 { font-size: 1.05rem; font-weight: 700; }
+
+        .close-btn {
+            background: none;
+            border: none;
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            font-size: 22px;
+            color: var(--text-sec);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .close-btn:active { background: rgba(0,0,0,0.05); }
+        .close-btn:hover { background: rgba(0,0,0,0.05); }
+
+        .modal-body { 
+            padding: 18px;
+            padding-bottom: 45vh;
+        }
+
+        .form-group { margin-bottom: 14px; }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            font-size: 0.83rem;
+            color: var(--ink);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: var(--radius-sm);
+            border: 1.5px solid var(--border);
+            background: #F5FAFC;
+            font-family: 'Cairo', sans-serif;
+            font-size: 0.85rem;
+            color: var(--ink);
+            -webkit-appearance: none;
+            appearance: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: white;
+            box-shadow: 0 0 0 3px rgba(0,174,239,0.1);
+        }
+
+        .search-box { position: relative; }
+
+        .search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            margin-top: 3px;
+            max-height: 160px;
+            overflow-y: auto;
+            display: none;
+            z-index: 20;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .search-item {
+            padding: 9px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.83rem;
+            transition: background 0.2s;
+        }
+
+        .search-item:active { background: #E0F7FA; }
+        .search-item:hover { background: #F0F8FF; }
+        .search-item:last-child { border-bottom: none; }
+
+        .alert-msg {
+            color: var(--danger);
+            text-align: center;
+            margin-top: 10px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .toast-container {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 3000;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            pointer-events: none;
+        }
+
+        .toast {
+            background: #1A3C4A;
+            color: white;
+            padding: 11px 20px;
+            border-radius: var(--radius-xl);
+            font-weight: 600;
+            font-size: 0.82rem;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.18);
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            animation: toastIn 0.3s ease;
+        }
+
+        @keyframes toastIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .toast.err { background: #C62828; }
+        .toast.removing { 
+            opacity: 0; 
+            transform: translateY(-10px); 
+            transition: all 0.3s ease; 
+        }
+
+        /* ✅ مودال الإشعارات */
+        .notification-item {
+            padding: 12px;
+            border-bottom: 1px solid var(--border);
+            transition: background 0.2s;
+        }
+
+        .notification-item:hover {
+            background: #F8FDFF;
+        }
+
+        .notification-item:last-child {
+            border-bottom: none;
+        }
+
+        .notification-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .notification-patient {
+            font-weight: 700;
+            color: var(--ink);
+        }
+
+        .notification-time {
+            font-size: 0.7rem;
+            color: var(--text-sec);
+        }
+
+        .notification-details {
+            font-size: 0.8rem;
+            color: var(--text-sec);
+            margin-bottom: 6px;
+        }
+
+        .notification-actions {
+            display: flex;
+            gap: 6px;
+        }
+
+        .btn-confirm {
+            background: var(--success);
+            color: white;
+            border: none;
+            padding: 5px 12px;
+            border-radius: var(--radius-xl);
+            font-family: 'Cairo', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-confirm:hover {
+            background: #1B8E7A;
+        }
+
+        .btn-dismiss {
+            background: #E0E0E0;
+            color: var(--ink);
+            border: none;
+            padding: 5px 12px;
+            border-radius: var(--radius-xl);
+            font-family: 'Cairo', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-dismiss:hover {
+            background: #BDBDBD;
+        }
+
+        /* ✅ زر تبديل وضع الهوية (رقم الهاتف / بيانات القرية) */
+        .btn-toggle-id {
+            background: linear-gradient(135deg, #8D6E63, #A1887F);
+            color: white;
+            border: none;
+            border-radius: var(--radius-xl);
+            padding: 5px 12px;
+            font-family: 'Cairo', sans-serif;
+            font-size: 0.72rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            white-space: nowrap;
+            touch-action: manipulation;
+        }
+
+        .btn-toggle-id:hover {
+            background: linear-gradient(135deg, #6D4C41, #8D6E63);
+            box-shadow: 0 3px 8px rgba(109, 76, 65, 0.3);
+        }
+
+        .btn-toggle-id:active {
+            transform: scale(0.96);
+        }
+
+        .toggle-id-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+
+        @media (max-width: 768px) {
+            body { 
+                padding: 8px;
+                padding-bottom: 55vh;
+            }
+
+            .app-header {
+                padding: 8px 12px;
+                top: 4px;
+                border-radius: var(--radius-md);
+            }
+
+            .logo h2 { font-size: 1.15rem; }
+
+            .btn { padding: 7px 12px; font-size: 0.78rem; }
+
+            .btn-settings { padding: 7px 12px; }
+
+            .doctor-tab { padding: 6px 10px; font-size: 0.76rem; }
+
+            .status-tab { padding: 7px 10px; font-size: 0.76rem; }
+
+            .status-tab .badge { font-size: 0.7rem; }
+
+            table { min-width: 550px; font-size: 0.78rem; }
+
+            th, td { padding: 8px 5px; }
+
+            .icon-btn { width: 28px; height: 28px; font-size: 0.7rem; }
+
+            .controls-row { flex-direction: column; align-items: stretch; }
+
+            .date-picker { width: 100%; justify-content: space-between; }
+
+            .modal-card { max-width: 100%; border-radius: var(--radius-md); }
+
+            .mini-stat { min-width: 70px; padding: 8px 10px; }
+            .mini-stat-info h4 { font-size: 1.1rem; }
             
-            const safeKey = fullName.replace(/[.#$/[\]]/g, '_');
-            const favRef = ref(db, `${this.basePath}/${userId}/${safeKey}`);
+            .modal-body {
+                padding-bottom: 55vh;
+            }
+
+            .header-actions {
+                justify-content: center;
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .status-tabs { flex-direction: column; gap: 3px; }
+            .status-tab { justify-content: space-between; }
+            .doctors-tabs { flex-direction: column; }
             
-            const snap = await get(favRef);
-            let drug;
+            body {
+                padding-bottom: 65vh;
+            }
             
-            if (snap.exists()) {
-                drug = snap.val();
-                drug.usageCount = (drug.usageCount || 0) + 1;
-                drug.lastUsed = new Date().toISOString();
-            } else {
-                // التحقق من الحد الأقصى قبل إضافة جديد
-                const allFavs = await this.getAll();
-                if (allFavs.length >= this.maxFavorites) {
-                    // حذف الأقل استخداماً
-                    const sorted = allFavs.sort((a, b) => (a.usageCount || 0) - (b.usageCount || 0));
-                    const toRemove = sorted[0];
-                    if (toRemove) {
-                        const removeKey = (toRemove.fullName || '').replace(/[.#$/[\]]/g, '_');
-                        await remove(ref(db, `${this.basePath}/${userId}/${removeKey}`));
-                    }
-                }
+            .modal-body {
+                padding-bottom: 65vh;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.001ms !important;
+                transition-duration: 0.001ms !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="authLoader">
+        <div class="loader-spin"></div>
+        <span class="loader-text">جارٍ تحميل البيانات...</span>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <div class="container" id="mainContainer" style="display:none;">
+        <header class="app-header">
+            <div class="logo">
+                <h2><i class="fas fa-heartbeat"></i> شفاء · الممرض <span class="sync-dot on" id="syncDot" title="حالة المزامنة"></span></h2>
+            </div>
+            <div class="header-actions">
+                <span class="tenant-badge" id="tenantBadge">
+                    <i class="fas fa-hospital"></i> <span id="tenantName"></span>
+                </span>
+                <span id="welcomeMsg"></span>
+                <!-- ✅ زر الإشعارات -->
+                <button class="btn btn-notifications" id="notificationsBtn" title="الإشعارات">
+                    <i class="fas fa-bell"></i>
+                    <span class="notification-badge" id="notificationBadge" style="display:none;">0</span>
+                </button>
+                <button class="btn btn-primary" id="addBookingBtn">
+                    <i class="fas fa-plus"></i> كشف جديد
+                </button>
+                <button class="btn btn-settings" id="settingsBtn" title="الإعدادات">
+                    <i class="fas fa-cog"></i> إعدادات
+                </button>
+                <button class="btn btn-outline" id="logoutBtn">
+                    <i class="fas fa-sign-out-alt"></i> خروج
+                </button>
+            </div>
+        </header>
+
+        <div class="controls-row">
+            <div class="doctors-tabs" id="doctorsTabs"></div>
+            <div class="date-picker">
+                <button class="btn-today" id="todayBtn">
+                    <i class="fas fa-calendar-alt"></i> اليوم
+                </button>
+                <input type="date" id="filterDate" class="date-input">
+            </div>
+        </div>
+
+        <div class="status-tabs">
+            <button class="status-tab active" data-tab="waiting">
+                <i class="fas fa-hourglass-half"></i> قيد الانتظار
+                <span class="badge" id="countWaiting">0</span>
+            </button>
+            <button class="status-tab" data-tab="inprogress">
+                <i class="fas fa-stethoscope"></i> قيد الكشف
+                <span class="badge" id="countInProgress">0</span>
+            </button>
+            <button class="status-tab" data-tab="done">
+                <i class="fas fa-check-circle"></i> منتهي
+                <span class="badge" id="countDone">0</span>
+            </button>
+        </div>
+
+        <div class="table-container">
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>المريض</th>
+                            <th>الطبيب</th>
+                            <th>التاريخ</th>
+                            <th>نوع الكشف</th>
+                            <th>الحالة</th>
+                            <th>إجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bookingsBody">
+                        <tr class="empty-row"><td colspan="7"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="keyboard-scroll-spacer"></div>
+    </div>
+
+    <!-- مودال الكشف -->
+    <div id="bookingModal" class="modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 id="modalTitle"><i class="fas fa-calendar-plus"></i> كشف جديد</h3>
+                <button class="close-btn" id="closeModalBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="bookingForm" autocomplete="off">
+                    <input type="hidden" id="editId">
+                    
+                    <div class="form-group">
+                        <label>الطبيب *</label>
+                        <select id="doctorSelect" class="form-control" required></select>
+                    </div>
+                    
+                    <!-- ✅ قسم البحث برقم الهاتف (يُخفى عند استخدام وضع القرية) -->
+                    <div id="phoneSearchSection">
+                        <div class="form-group search-box">
+                            <label>البحث عن مريض (برقم الهاتف)</label>
+                            <input type="text" id="patientSearch" class="form-control" placeholder="أدخل رقم الهاتف للبحث..." autocomplete="off" dir="ltr">
+                            <div id="searchResults" class="search-results"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>اسم المريض *</label>
+                        <input type="text" id="patientName" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>العمر</label>
+                        <input type="number" id="patientAge" class="form-control" min="0" max="150">
+                    </div>
+                    
+                    <!-- ✅ قسم الهاتف (يُخفى عند استخدام وضع القرية) -->
+                    <div id="phoneSection">
+                        <div class="form-group">
+                            <div class="toggle-id-container">
+                                <label>رقم الهاتف</label>
+                                <button type="button" class="btn-toggle-id" id="toggleIdModeBtn">
+                                    <i class="fas fa-tree"></i> استخدام بيانات القرية
+                                </button>
+                            </div>
+                            <input type="tel" id="patientPhone" class="form-control" dir="ltr">
+                        </div>
+                    </div>
+
+                    <!-- ✅ قسم بيانات القرية (يظهر بدل الهاتف عند التبديل) -->
+                    <div id="villageSection" style="display:none;">
+                        <div class="form-group">
+                            <div class="toggle-id-container">
+                                <label>بيانات القرية</label>
+                                <button type="button" class="btn-toggle-id" id="togglePhoneModeBtn">
+                                    <i class="fas fa-mobile-alt"></i> استخدام رقم الهاتف
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>اسم الأب</label>
+                            <input type="text" id="fatherName" class="form-control" placeholder="اسم الأب">
+                        </div>
+                        <div class="form-group">
+                            <label>اسم العائلة</label>
+                            <input type="text" id="familyName" class="form-control" placeholder="اسم العائلة">
+                        </div>
+                        <div class="form-group">
+                            <label>اسم القرية</label>
+                            <input type="text" id="villageName" class="form-control" placeholder="اسم القرية">
+                        </div>
+                        <div id="villageSearchResults" class="search-results" style="position:relative;margin-top:8px;"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>نوع الكشف *</label>
+                        <select id="visitType" class="form-control" required>
+                            <option value="new">🆕 كشف جديد</option>
+                            <option value="follow">🔄 إعادة (متابعة)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>التاريخ *</label>
+                        <input type="date" id="apptDate" class="form-control" required>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary" style="width:100%;" id="submitBtn">
+                        <i class="fas fa-save"></i> تأكيد الكشف
+                    </button>
+                    
+                    <div id="formAlert" class="alert-msg"></div>
+                </form>
                 
-                drug = {
-                    fullName,
-                    name,
-                    form,
-                    strength,
-                    usageCount: 1,
-                    hidden: false,
-                    firstUsed: new Date().toISOString(),
-                    lastUsed: new Date().toISOString()
-                };
-            }
-            
-            await set(favRef, drug);
-        } catch (err) {
-            console.warn('تعذر حفظ المفضلة:', err.message);
-        }
-    }
-    
-    async hideDrug(fullName) {
-        if (!currentTenantId) return;
-        try {
-            const userId = auth.currentUser?.uid;
-            if (!userId) return;
-            
-            const safeKey = fullName.replace(/[.#$/[\]]/g, '_');
-            const favRef = ref(db, `${this.basePath}/${userId}/${safeKey}`);
-            
-            const snap = await get(favRef);
-            if (snap.exists()) {
-                const drug = snap.val();
-                drug.hidden = true;
-                await set(favRef, drug);
-            }
-        } catch (err) {
-            console.warn('تعذر إخفاء الدواء:', err.message);
-        }
-    }
-    
-    async search(term, formFilter = null, limit = 5) {
-        const all = await this.getAll();
-        const termLower = term.toLowerCase();
-        
-        let results = all.filter(d => {
-            if (d.hidden) return false;
-            const nameLower = (d.name || '').toLowerCase();
-            const fullNameLower = (d.fullName || '').toLowerCase();
-            const strengthLower = (d.strength || '').toLowerCase();
-            
-            return nameLower.includes(termLower) ||
-                   fullNameLower.includes(termLower) ||
-                   strengthLower.includes(termLower);
-        });
-        
-        results.sort((a, b) => (b.usageCount || 0) - (a.usageCount || 0));
-        return results.slice(0, limit);
-    }
-}
+                <div class="keyboard-scroll-spacer"></div>
+            </div>
+        </div>
+    </div>
 
-// ============================================================
-// ✅ نظام الجرعات المفضلة - تخزين سحابي
-// ============================================================
-class FavoriteDosesDB {
-    constructor() {
-        this._basePath = null;
-    }
-    
-    get basePath() {
-        if (!this._basePath) {
-            this._basePath = currentTenantId 
-                ? `tenants/${currentTenantId}/doctor_doses` 
-                : 'doctor_doses';
-        }
-        return this._basePath;
-    }
-    
-    get maxDoses() { return 30; }
-    
-    async getAll() {
-        if (!currentTenantId) return [];
-        try {
-            const userId = auth.currentUser?.uid;
-            if (!userId) return [];
-            
-            const dosesRef = ref(db, `${this.basePath}/${userId}`);
-            const snap = await get(dosesRef);
-            if (!snap.exists()) return [];
-            
-            return Object.values(snap.val());
-        } catch (err) {
-            console.warn('تعذر جلب الجرعات:', err.message);
-            return [];
-        }
-    }
-    
-    async recordDose(drugName, form, dose, freqLabel) {
-        if (!currentTenantId) return;
-        try {
-            const userId = auth.currentUser?.uid;
-            if (!userId) return;
-            
-            const id = `${drugName}_${form}_${dose}`.replace(/[.#$/[\]]/g, '_');
-            const doseRef = ref(db, `${this.basePath}/${userId}/${id}`);
-            
-            const snap = await get(doseRef);
-            let entry;
-            
-            if (snap.exists()) {
-                entry = snap.val();
-                entry.usageCount = (entry.usageCount || 0) + 1;
-                entry.lastUsed = new Date().toISOString();
-            } else {
-                const allDoses = await this.getAll();
-                if (allDoses.length >= this.maxDoses) {
-                    const sorted = allDoses.sort((a, b) => (a.usageCount || 0) - (b.usageCount || 0));
-                    const toRemove = sorted[0];
-                    if (toRemove) {
-                        const removeKey = (toRemove.id || '').replace(/[.#$/[\]]/g, '_');
-                        await remove(ref(db, `${this.basePath}/${userId}/${removeKey}`));
-                    }
+    <!-- ✅ مودال الإشعارات -->
+    <div id="notificationsModal" class="modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3><i class="fas fa-bell"></i> إشعارات الحجوزات الجديدة</h3>
+                <button class="close-btn" id="closeNotificationsBtn">&times;</button>
+            </div>
+            <div class="modal-body" id="notificationsBody">
+                <div style="text-align:center;padding:20px;color:var(--text-sec);">
+                    <i class="fas fa-spinner fa-spin"></i> جاري تحميل الإشعارات...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { firebaseConfig } from './firebase-config.js';
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        // ✅ استخدام Firestore بدل Realtime Database
+        import { 
+            getFirestore, 
+            collection, doc, setDoc, updateDoc, getDoc, getDocs, deleteDoc,
+            onSnapshot, query, where, 
+            enableIndexedDbPersistence,
+            serverTimestamp, addDoc
+        } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        // ============ تهيئة Firebase ============
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app); // ✅ Firestore
+
+        // ✅ تفعيل التخزين المحلي IndexedDB
+        enableIndexedDbPersistence(db)
+            .then(() => console.log('✅ تم تفعيل التخزين المحلي IndexedDB'))
+            .catch((err) => {
+                if (err.code === 'failed-precondition') {
+                    console.warn('⚠️ التخزين المحلي معطل - علامات تبويب متعددة');
+                } else if (err.code === 'unimplemented') {
+                    console.warn('⚠️ المتصفح لا يدعم التخزين المحلي');
                 }
-                
-                entry = {
-                    id,
-                    drugName,
-                    form,
-                    dose,
-                    freqLabel,
-                    usageCount: 1,
-                    firstUsed: new Date().toISOString(),
-                    lastUsed: new Date().toISOString()
-                };
-            }
-            
-            await set(doseRef, entry);
-        } catch (err) {
-            console.warn('تعذر حفظ الجرعة:', err.message);
-        }
-    }
-    
-    async search(drugName, form, limit = 3) {
-        const all = await this.getAll();
-        let results = all.filter(d => d.drugName === drugName && d.form === form);
-        results.sort((a, b) => (b.usageCount || 0) - (a.usageCount || 0));
-        return results.slice(0, limit);
-    }
-}
+            });
 
-const sessionDB = new SessionDB();
-const favoritesDB = new FavoriteDrugsDB();
-const favoriteDosesDB = new FavoriteDosesDB();
-
-const state = {
-    user: null, doctorData: null, appointments: [], currentAppointment: null,
-    prescription: [], diagnosis: '', loadedTemplateId: null, loadedTemplateName: null,
-    activeSessionId: null, drugCache: [], globalDrugsCache: [], currentTab: 'current',
-    editingPrescription: null, editingRxId: null, editingPatientName: '',
-    isEditingCompleted: false, editingCompletedRxId: null,
-    previousRecordsCount: 0
-};
-
-const $ = (sel) => document.querySelector(sel);
-const $$ = (sel) => document.querySelectorAll(sel);
-const today = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
-const esc = (s) => { if (!s) return ''; const d = document.createElement('div'); d.textContent = String(s); return d.innerHTML; };
-const toast = (msg, err=false) => { const c = $('#toastContainer'); const t = document.createElement('div'); t.className = `toast ${err?'err':''}`; t.innerHTML = `<i class="fas ${err?'fa-exclamation-circle':'fa-check-circle'}"></i> ${msg}`; c.appendChild(t); setTimeout(() => { if (t.parentNode) t.remove(); }, 2500); };
-const getPatientName = (apt) => apt?.patient_name || apt?.patientName || 'غير معروف';
-const extractStrength = (text) => { const match = text.match(/(\d+(?:\.\d+)?\s*(?:gm|g|gram|mg|mcg|mcgm|IU|MU|ml|%|mcg\/ml|mg\/ml|mg\/5ml|mcg\/puff)(?:\/\d*\s*(?:ml|gm|g))?)/i); return match ? match[1] : ''; };
-
-// ✅ دالة مساعدة: ترجع تاريخ قبل N يوم من تاريخ معين
-const getDateDaysAgo = (days, fromDate = null) => {
-    const d = fromDate ? new Date(fromDate) : new Date();
-    d.setDate(d.getDate() - days);
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-};
-
-// ✅ دالة مساعدة: ترجع تاريخ الأيام الـ 15 الأخيرة
-const getLast15DaysRange = () => {
-    const startDate = getDateDaysAgo(14);
-    const endDate = today();
-    return { startDate, endDate };
-};
-
-const clearLoginSessionOnly = () => {
-    try {
-        LOGIN_STORAGE_KEYS.forEach(key => {
-            localStorage.removeItem(key);
-        });
+        // ============ ✅ ثوابت التخزين المحلي ============
+        const STORAGE_PREFIX = 'shifa_tenant_';
         
-        const sessionKeysToRemove = [];
-        for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (key && (key.startsWith('shifa_session') || key.startsWith('shifa_secure'))) {
-                sessionKeysToRemove.push(key);
-            }
-        }
-        sessionKeysToRemove.forEach(key => localStorage.removeItem(key));
+        const LOGIN_STORAGE_KEYS = [
+            'shifa_session',
+            'shifa_remember',
+            'shifa_last_login',
+            'shifa_secure_session'
+        ];
         
-        sessionStorage.clear();
+        let currentTenantId = null;
         
-        console.log(`✅ تم مسح ${LOGIN_STORAGE_KEYS.length + sessionKeysToRemove.length} مفتاح جلسة`);
-        console.log('💾 تم الإبقاء على بيانات المجمع المحلية');
-    } catch (e) {
-        console.warn('تعذر مسح بيانات الجلسة:', e.message);
-    }
-};
-
-const setSyncStatus = (online) => {
-    const dot = $('#syncDot');
-    if (dot) {
-        dot.className = `sync-dot ${online ? 'on' : 'off'}`;
-        dot.title = online ? 'متصل بالسحابة' : 'غير متصل - استخدام البيانات المحلية';
-    }
-};
-
-async function fetchPreviousRecordsCount(patientId) {
-    if (!patientId || !currentTenantId) return 0;
-    try {
-        const snap = await get(ref(db, `tenants/${currentTenantId}/prescriptions`));
-        if (!snap.exists()) return 0;
-        let count = 0;
-        snap.forEach(child => {
-            const rx = child.val();
-            if (String(rx.patient_id) === String(patientId)) count++;
-        });
-        return count;
-    } catch (e) {
-        return 0;
-    }
-}
-
-async function restorePrescription(rxId) {
-    try {
-        const [rxSnap, itemsSnap] = await Promise.all([
-            get(ref(db, `tenants/${currentTenantId}/prescriptions/${rxId}`)),
-            get(ref(db, `tenants/${currentTenantId}/prescription_items/${rxId}`))
-        ]);
-        
-        if (rxSnap.exists()) {
-            const diagnosis = rxSnap.val().diagnosis || '';
-            $('#diagnosisInput').value = diagnosis;
-        }
-        
-        state.prescription = [];
-        if (itemsSnap.exists()) {
-            state.prescription = Object.values(itemsSnap.val()).map(it => ({
-                drug: it.drug_name || it.drug_id || '',
-                form: it.form || 'tablet',
-                dose: it.dose || ''
-            }));
-        }
-        
-        state.prescription.forEach(item => {
-            const strength = extractStrength(item.drug);
-            const pureName = strength ? item.drug.replace(strength, '').trim() : item.drug;
-            drugManager.recordUsage(item.drug, pureName, item.form, strength);
-        });
-        
-        renderRxList();
-        saveSessionToDB();
-        $('#patientFileModal').style.display = 'none';
-        toast('✅ تم استرداد الوصفة بنجاح');
-    } catch (err) {
-        console.error('خطأ في استرداد الوصفة:', err);
-        toast('خطأ في استرداد الوصفة', true);
-    }
-}
-
-const doseManager = {
-    generateSuggestions(count, form) {
-        const num = parseInt(count);
-        if (!num || num < 1) return [];
-        const suggestions = [];
-        const formLabels = {
-            tablet: { unit: 'قرص', emoji: '💊' },
-            syrup: { unit: 'مل', emoji: '🥄' },
-            injection: { unit: 'سم', emoji: '💉' },
-            suppository: { unit: 'لبوس', emoji: '🧴' },
-            drops: { unit: 'نقطة', emoji: '💧' }
+        const getTenantStorageKey = (baseKey) => {
+            return currentTenantId ? `${STORAGE_PREFIX}${currentTenantId}_${baseKey}` : baseKey;
         };
-        const fl = formLabels[form] || { unit: 'جرعة', emoji: '💊' };
-        if (num === 1) { suggestions.push({ dose: `1 ${fl.unit}`, freq: 'مرة واحدة', label: `${fl.emoji} ${fl.unit} واحدة` }); }
-        else if (num === 2) { suggestions.push({ dose: `1 ${fl.unit}`, freq: 'كل 12 ساعة', label: `${fl.emoji} ${fl.unit} كل 12 ساعة` }); }
-        else if (num === 3) { suggestions.push({ dose: `1 ${fl.unit}`, freq: 'كل 8 ساعات', label: `${fl.emoji} ${fl.unit} كل 8 ساعات` }); }
-        else if (num === 4) { suggestions.push({ dose: `1 ${fl.unit}`, freq: 'كل 6 ساعات', label: `${fl.emoji} ${fl.unit} كل 6 ساعات` }); suggestions.push({ dose: `2 ${fl.unit}`, freq: 'كل 12 ساعة', label: `${fl.emoji} 2 ${fl.unit} كل 12 ساعة` }); }
-        else if (num === 6) { suggestions.push({ dose: `1 ${fl.unit}`, freq: 'كل 4 ساعات', label: `${fl.emoji} ${fl.unit} كل 4 ساعات` }); suggestions.push({ dose: `2 ${fl.unit}`, freq: 'كل 8 ساعات', label: `${fl.emoji} 2 ${fl.unit} كل 8 ساعات` }); }
-        else { suggestions.push({ dose: `${num} ${fl.unit}`, freq: 'يومياً', label: `${fl.emoji} ${num} ${fl.unit} يومياً` }); }
-        suggestions.push({ dose: `${num} ${fl.unit}`, freq: 'عند اللزوم', label: `${fl.emoji} ${num} ${fl.unit} عند اللزوم` });
-        return suggestions;
-    },
-    async getSuggestions(countText, form, drugName) {
-        const suggestions = [];
-        const num = parseInt(countText);
-        if (num && num >= 1) { const smart = this.generateSuggestions(num, form); smart.forEach(s => suggestions.push({ ...s, source: 'smart' })); }
-        if (drugName) { const favDoses = await favoriteDosesDB.search(drugName, form, 3); favDoses.forEach(fd => { const exists = suggestions.find(s => s.dose === fd.dose && s.freq === fd.freqLabel); if (!exists) { suggestions.unshift({ dose: fd.dose, freq: fd.freqLabel, label: `${fd.dose} - ${fd.freqLabel}`, source: 'favorite', usageCount: fd.usageCount }); } else { exists.source = 'favorite'; exists.usageCount = fd.usageCount; } }); }
-        return suggestions;
-    },
-    async recordUsage(drugName, form, dose, freqLabel) { await favoriteDosesDB.recordDose(drugName, form, dose, freqLabel); }
-};
 
-// ============================================================
-// ✅✅✅ نظام المراقبة الذكي - نافذة منزلقة 15 يوم ✅✅✅
-// ============================================================
-const prescriptionTracker = {
-    async trackDrugPrescription(drugName, doctorId, doctorName) {
-        if (!currentTenantId || !doctorId) return;
-        
-        try {
-            const todayDate = today();
-            const drugKey = drugName.replace(/[.#$/[\]]/g, '_');
-            
-            const drugRef = ref(db, `tenants/${currentTenantId}/doctor_prescriptions/${doctorId}/${drugKey}`);
-            const snap = await get(drugRef);
-            
-            const now = new Date().toISOString();
-            
-            if (snap.exists()) {
-                const data = snap.val();
-                let history = data.history || [];
-                
-                const existingToday = history.find(h => h.date === todayDate);
-                if (existingToday) {
-                    existingToday.count = (existingToday.count || 0) + 1;
-                } else {
-                    history.push({
-                        date: todayDate,
-                        count: 1
-                    });
+        // ============ حالة التطبيق ============
+        const state = {
+            currentUser: null,
+            nurseData: null,
+            assignedDoctors: [],
+            selectedDoctorId: null,
+            allBookings: [],
+            currentTab: 'waiting',
+            currentDate: '',
+            selectedPatientId: null,
+            unsubscribeBookings: null,
+            unsubscribeNotifications: null,
+            idMode: 'phone',
+            // ✅ كاش محلي ذكي للمرضى (اللي الممرض شافهم فقط)
+            localPatientsCache: {},
+        };
+
+        // ============ دوال مساعدة ============
+        const $ = (sel) => document.querySelector(sel);
+        const $$ = (sel) => document.querySelectorAll(sel);
+
+        const getToday = () => {
+            const d = new Date();
+            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        };
+
+        const escapeHtml = (str) => {
+            if (!str) return '';
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        };
+
+        const showToast = (msg, isError = false) => {
+            const container = $('#toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${isError ? 'err' : ''}`;
+            toast.innerHTML = `<i class="fas ${isError ? 'fa-exclamation-circle' : 'fa-check-circle'}"></i> ${msg}`;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.classList.add('removing');
+                setTimeout(() => toast.remove(), 300);
+            }, 2500);
+        };
+
+        // ============ ✅ تخزين محلي ذكي للمرضى ============
+        const getLocalPatientsCacheKey = () => getTenantStorageKey('nurse_patients_cache');
+
+        const loadPatientsCacheFromLocal = () => {
+            if (!currentTenantId) return;
+            try {
+                const key = getLocalPatientsCacheKey();
+                const cached = localStorage.getItem(key);
+                if (cached) {
+                    state.localPatientsCache = JSON.parse(cached);
+                    console.log(`📦 تم تحميل ${Object.keys(state.localPatientsCache).length} مريض من الكاش المحلي`);
                 }
-                
-                history.sort((a, b) => a.date.localeCompare(b.date));
-                
-                const cutoffDate = getDateDaysAgo(14);
-                const filteredHistory = history.filter(h => h.date >= cutoffDate);
-                
-                const removedCount = history.length - filteredHistory.length;
-                if (removedCount > 0) {
-                    const removedDates = history
-                        .filter(h => h.date < cutoffDate)
-                        .map(h => h.date)
-                        .join('، ');
-                    console.log(`🪟 نافذة منزلقة: تمت إزالة ${removedCount} أيام قديمة (${removedDates}) - ${drugName}`);
-                }
-                
-                const totalCount15Days = filteredHistory.reduce((sum, h) => sum + (h.count || 0), 0);
-                
-                await set(drugRef, {
-                    drug_name: drugName,
-                    doctor_id: doctorId,
-                    doctor_name: doctorName || 'طبيب',
-                    first_prescribed: data.first_prescribed || todayDate,
-                    last_prescribed: todayDate,
-                    total_count_15days: totalCount15Days,
-                    history: filteredHistory,
-                    window_start: cutoffDate,
-                    window_end: todayDate,
-                    updated_at: now
-                });
-                
-                console.log(`📊 ${drugName}: ${totalCount15Days} وصفة في آخر 15 يوم (${cutoffDate} → ${todayDate})`);
-                
-            } else {
-                const windowStart = getDateDaysAgo(14);
-                
-                await set(drugRef, {
-                    drug_name: drugName,
-                    doctor_id: doctorId,
-                    doctor_name: doctorName || 'طبيب',
-                    first_prescribed: todayDate,
-                    last_prescribed: todayDate,
-                    total_count_15days: 1,
-                    history: [{ date: todayDate, count: 1 }],
-                    window_start: windowStart,
-                    window_end: todayDate,
-                    updated_at: now
-                });
-                
-                console.log(`🆕 ${drugName}: أول وصفة للدواء (نافذة 15 يوم: ${windowStart} → ${todayDate})`);
+            } catch (e) {
+                console.warn('تعذر تحميل كاش المرضى:', e.message);
+                state.localPatientsCache = {};
             }
-            
-        } catch (err) {
-            console.warn('⚠️ تعذر تتبع وصفة الدواء:', err.message);
-        }
-    },
-    
-    async getDrugStatsForAllDoctors(drugName) {
-        if (!currentTenantId) return [];
-        
-        try {
-            const drugKey = drugName.replace(/[.#$/[\]]/g, '_');
-            const allDoctorsSnap = await get(ref(db, `tenants/${currentTenantId}/doctor_prescriptions`));
-            
-            if (!allDoctorsSnap.exists()) return [];
-            
-            const results = [];
-            const cutoffDate = getDateDaysAgo(14);
-            
-            allDoctorsSnap.forEach(doctorSnap => {
-                const doctorId = doctorSnap.key;
-                const doctorData = doctorSnap.val();
+        };
+
+        const savePatientToLocalCache = (patientId, patientData) => {
+            if (!currentTenantId || !patientId) return;
+            try {
+                state.localPatientsCache[patientId] = {
+                    ...patientData,
+                    _cachedAt: Date.now()
+                };
                 
-                Object.entries(doctorData).forEach(([key, data]) => {
-                    if (key === drugKey || (data.drug_name || '').toLowerCase() === drugName.toLowerCase()) {
-                        const history = data.history || [];
-                        const filteredHistory = history.filter(h => h.date >= cutoffDate);
-                        const totalCount15Days = filteredHistory.reduce((sum, h) => sum + (h.count || 0), 0);
-                        
-                        results.push({
-                            doctor_id: doctorId,
-                            doctor_name: data.doctor_name || 'طبيب',
-                            drug_name: data.drug_name || drugName,
-                            total_count_15days: totalCount15Days,
-                            last_prescribed: data.last_prescribed || '',
-                            history: filteredHistory,
-                            window_start: cutoffDate,
-                            window_end: today()
-                        });
-                    }
-                });
-            });
+                // نحتفظ بآخر 100 مريض فقط
+                const entries = Object.entries(state.localPatientsCache);
+                if (entries.length > 100) {
+                    entries.sort((a, b) => (a[1]._cachedAt || 0) - (b[1]._cachedAt || 0));
+                    const toRemove = entries.slice(0, entries.length - 100);
+                    toRemove.forEach(([id]) => delete state.localPatientsCache[id]);
+                }
+                
+                const key = getLocalPatientsCacheKey();
+                localStorage.setItem(key, JSON.stringify(state.localPatientsCache));
+            } catch (e) {
+                console.warn('تعذر حفظ المريض في الكاش المحلي:', e.message);
+            }
+        };
+
+        const searchInLocalCache = (searchTerm, searchType = 'phone') => {
+            if (!currentTenantId || !searchTerm) return [];
             
-            results.sort((a, b) => b.total_count_15days - a.total_count_15days);
+            const t = searchTerm.trim().toLowerCase();
+            const results = [];
+            
+            Object.entries(state.localPatientsCache).forEach(([id, p]) => {
+                if (searchType === 'phone') {
+                    if (p.phone && p.phone.includes(t)) {
+                        results.push({ id, ...p, _source: 'local' });
+                    }
+                }
+            });
             
             return results;
-            
-        } catch (err) {
-            console.warn('⚠️ تعذر جلب إحصائيات الدواء:', err.message);
-            return [];
-        }
-    }
-};
-
-// ============================================================
-// ✅✅✅ drugManager مع ترتيب ذكي للاقتراحات ✅✅✅
-// ============================================================
-const drugManager = {
-    _cachePromise: null,
-    
-    async loadCache() {
-        if (this._cachePromise) return this._cachePromise;
-        
-        this._cachePromise = (async () => {
-            try { 
-                const snap = await get(ref(db, `tenants/${currentTenantId}/drugs`));
-                if (snap.exists()) {
-                    state.globalDrugsCache = Object.values(snap.val());
-                } else {
-                    const globalSnap = await get(ref(db, 'drugs'));
-                    state.globalDrugsCache = globalSnap.exists() ? Object.values(globalSnap.val()) : [];
-                }
-            } catch(e) { 
-                state.globalDrugsCache = []; 
-            }
-            
-            try {
-                let localDrugs = [];
-                
-                if (window.__drugsDatabase && Array.isArray(window.__drugsDatabase)) {
-                    localDrugs = window.__drugsDatabase;
-                } else if (window.drugsDatabase && Array.isArray(window.drugsDatabase)) {
-                    localDrugs = window.drugsDatabase;
-                } else {
-                    try {
-                        const response = await fetch('./drugs-database.js');
-                        if (response.ok) {
-                            const text = await response.text();
-                            const regex = /"([^"]+)"/g;
-                            let match;
-                            while ((match = regex.exec(text)) !== null) {
-                                const name = match[1].trim();
-                                if (name.length >= 3 && 
-                                    !name.startsWith('//') && 
-                                    !name.startsWith('const') && 
-                                    !name.startsWith('export') &&
-                                    !name.startsWith('window') &&
-                                    !name.startsWith('&') &&
-                                    name !== 'drugsDatabase') {
-                                    localDrugs.push(name);
-                                }
-                            }
-                        }
-                    } catch(fetchErr) {
-                        console.warn('⚠️ تعذر تحميل ملف drugs-database.js:', fetchErr.message);
-                    }
-                }
-                
-                if (localDrugs.length > 0) {
-                    const seen = new Set(state.globalDrugsCache.map(d => (d.name || '').toLowerCase()));
-                    
-                    localDrugs.forEach(drugName => {
-                        if (drugName && !seen.has(drugName.toLowerCase())) {
-                            seen.add(drugName.toLowerCase());
-                            const strength = extractStrength(drugName);
-                            state.globalDrugsCache.push({
-                                id: `local_${state.globalDrugsCache.length}`,
-                                name: drugName,
-                                fullName: drugName,
-                                form: 'tablet',
-                                strength: strength,
-                                freq: 0
-                            });
-                        }
-                    });
-                    
-                    console.log(`✅ تم تحميل ${localDrugs.length} دواء من الملف المحلي`);
-                    console.log(`📦 إجمالي الأدوية في الذاكرة: ${state.globalDrugsCache.length}`);
-                }
-            } catch(err) {
-                console.warn('⚠️ خطأ في تحميل الأدوية المحلية:', err.message);
-            }
-            
-            state.drugCache = [...state.globalDrugsCache];
-        })();
-        
-        return this._cachePromise;
-    },
-    
-    async getSuggestions(term, form = null) {
-        const termLower = term.toLowerCase().trim();
-        const suggestions = []; 
-        const seenNames = new Set();
-        
-        const localFavs = await favoritesDB.search(termLower, null, 8);
-        localFavs.forEach(d => { 
-            const key = `${(d.name || '').toLowerCase()}_${(d.form || '').toLowerCase()}_${(d.strength || '').toLowerCase()}`; 
-            if (!seenNames.has(key)) { 
-                seenNames.add(key); 
-                suggestions.push({ 
-                    name: d.fullName || `${d.name} ${d.strength || ''}`.trim(), 
-                    form: d.form || 'tablet', 
-                    strength: d.strength || '', 
-                    freq: d.usageCount || 0, 
-                    source: 'favorite', 
-                    originalName: d.name || '' 
-                }); 
-            } 
-        });
-        
-        const remainingSlots = 10 - suggestions.length;
-        if (remainingSlots > 0) { 
-            let globalResults = state.globalDrugsCache.filter(d => { 
-                const name = (d.name || '').toLowerCase(); 
-                const fullName = (d.fullName || '').toLowerCase();
-                const strength = (d.strength || '').toLowerCase();
-                return name.includes(termLower) || 
-                       fullName.includes(termLower) ||
-                       strength.includes(termLower);
-            });
-            
-            globalResults.sort((a, b) => {
-                const aName = (a.name || a.fullName || '').toLowerCase();
-                const bName = (b.name || b.fullName || '').toLowerCase();
-                
-                const aStartsExact = aName.startsWith(termLower) ? 0 : 1;
-                const bStartsExact = bName.startsWith(termLower) ? 0 : 1;
-                
-                if (aStartsExact !== bStartsExact) {
-                    return aStartsExact - bStartsExact;
-                }
-                
-                if (aName.length !== bName.length) {
-                    return aName.length - bName.length;
-                }
-                
-                return aName.localeCompare(bName);
-            });
-            
-            const topResults = globalResults.slice(0, remainingSlots);
-            
-            for (const d of topResults) { 
-                const key = `${(d.name || '').toLowerCase()}_${(d.form || '').toLowerCase()}`; 
-                if (!seenNames.has(key)) { 
-                    seenNames.add(key); 
-                    suggestions.push({ 
-                        name: d.fullName || d.name || '', 
-                        form: d.form || 'tablet', 
-                        strength: d.strength || extractStrength(d.name || ''), 
-                        freq: d.freq || 0, 
-                        source: 'global', 
-                        originalName: d.name || '' 
-                    }); 
-                } 
-            }
-        }
-        
-        suggestions.sort((a, b) => {
-            const aName = (a.name || '').toLowerCase();
-            const bName = (b.name || '').toLowerCase();
-            
-            const aStarts = aName.startsWith(termLower) ? 0 : 1;
-            const bStarts = bName.startsWith(termLower) ? 0 : 1;
-            
-            if (aStarts !== bStarts) return aStarts - bStarts;
-            
-            if (a.source === 'favorite' && b.source !== 'favorite') return -1;
-            if (b.source === 'favorite' && a.source !== 'favorite') return 1;
-            
-            return aName.length - bName.length;
-        });
-        
-        return suggestions;
-    },
-    
-    async recordUsage(fullDrugName, name, form, strength) { 
-        await favoritesDB.incrementAndSave(fullDrugName, name, form, strength); 
-    },
-    
-    async hideSuggestion(fullDrugName, name, form) { 
-        await favoritesDB.hideDrug(fullDrugName); 
-        toast(`تم تقليل ظهور "${fullDrugName}"`); 
-    }
-};
-
-// ============ باقي الدوال بدون تغيير ============
-
-async function saveSessionToDB() { 
-    if (!state.currentAppointment) return; 
-    if (state.isEditingCompleted) return;
-    const session = { 
-        id: state.currentAppointment.id, 
-        appointment: state.currentAppointment, 
-        prescription: state.prescription.slice(), 
-        diagnosis: $('#diagnosisInput')?.value || '', 
-        loadedTemplateId: state.loadedTemplateId, 
-        loadedTemplateName: state.loadedTemplateName, 
-        updatedAt: new Date().toISOString() 
-    }; 
-    sessionDB.save(session).catch(() => {}); 
-    state.activeSessionId = session.id; 
-}
-
-async function restoreSession() { 
-    const sessions = await sessionDB.getAll(); 
-    if (sessions.length === 0) return false; 
-    const s = sessions[0]; 
-    state.currentAppointment = s.appointment; 
-    state.prescription = s.prescription || []; 
-    state.loadedTemplateId = s.loadedTemplateId || null; 
-    state.loadedTemplateName = s.loadedTemplateName || null; 
-    state.activeSessionId = s.id; 
-    state.isEditingCompleted = false;
-    state.editingCompletedRxId = null;
-    const diagInput = $('#diagnosisInput'); 
-    if (diagInput) diagInput.value = s.diagnosis || ''; 
-    return true; 
-}
-
-async function deleteSession(id) { 
-    await sessionDB.delete(id); 
-    if (state.activeSessionId === id) state.activeSessionId = null; 
-}
-
-function renderSidebar() {
-    const currentPatients = state.appointments.filter(a => a.status === 'قيد الكشف');
-    const waitingPatients = state.appointments.filter(a => a.status === 'انتظار');
-    const donePatients = state.appointments.filter(a => a.status === 'منتهي');
-    $('#currentCount').textContent = currentPatients.length;
-    $('#waitingCount').textContent = waitingPatients.length;
-    $('#doneCount').textContent = donePatients.length;
-    renderPatientList('currentPatientsList', currentPatients, false);
-    renderPatientList('waitingPatientsList', waitingPatients, false);
-    renderPatientList('donePatientsList', donePatients, true);
-}
-
-function renderPatientList(containerId, patients, isDone) {
-    const container = $('#' + containerId);
-    if (!container) return;
-    if (patients.length === 0) { 
-        const label = containerId.includes('current') ? 'جاري كشفهم' : containerId.includes('waiting') ? 'منتظرين' : 'منتهين'; 
-        container.innerHTML = `<div class="empty-queue">لا يوجد مرضى ${label}</div>`; 
-        return; 
-    }
-    container.innerHTML = patients.map(apt => { 
-        let cls = 'mini-queue-item'; 
-        if (isDone) cls += ' done'; 
-        if (state.currentAppointment && apt.id === state.currentAppointment.id && !isDone) cls += ' current'; 
-        const name = getPatientName(apt); 
-        const statusIcon = apt.status === 'منتهي' ? '✅' : apt.status === 'قيد الكشف' ? '🩺' : '⏳';
-        return `<div class="${cls}" data-id="${apt.id}"><div style="display:flex;justify-content:space-between;align-items:center;"><div><b>${esc(name)}</b><div style="font-size:0.7rem;color:var(--text-sec);">${apt.time||''} · ${apt.age||'--'} سنة</div></div><span class="patient-status-icon">${statusIcon}</span></div></div>`; 
-    }).join('');
-}
-
-function updateQueueCount() {
-    const waiting = state.appointments.filter(a => a.status === 'انتظار').length;
-    const currentCount = state.appointments.filter(a => a.status === 'قيد الكشف').length;
-    const doneCount = state.appointments.filter(a => a.status === 'منتهي').length;
-    $('#currentCount').textContent = currentCount;
-    $('#waitingCount').textContent = waiting;
-    $('#doneCount').textContent = doneCount;
-}
-
-async function selectPatient(appointmentId) {
-    const apt = state.appointments.find(a => a.id === appointmentId);
-    if (!apt) return;
-    
-    if (apt.status === 'منتهي') {
-        await openCompletedPrescriptionForEditing(apt);
-        return;
-    }
-    
-    if (apt.status === 'انتظار') { 
-        await update(ref(db, `tenants/${currentTenantId}/appointments/${appointmentId}`), { status: 'قيد الكشف' }); 
-    }
-    state.currentAppointment = apt; 
-    state.prescription = []; 
-    state.diagnosis = ''; 
-    state.loadedTemplateId = null; 
-    state.loadedTemplateName = null;
-    state.isEditingCompleted = false;
-    state.editingCompletedRxId = null;
-    const diagInput = $('#diagnosisInput'); 
-    if (diagInput) diagInput.value = '';
-    
-    const patientId = apt.patient_id || apt.patientId;
-    state.previousRecordsCount = await fetchPreviousRecordsCount(patientId);
-    
-    updateWorkspace(); 
-    await saveSessionToDB();
-}
-
-async function openCompletedPrescriptionForEditing(apt) {
-    try {
-        const prescriptionSnap = await get(ref(db, `tenants/${currentTenantId}/prescriptions/${apt.id}`));
-        const itemsSnap = await get(ref(db, `tenants/${currentTenantId}/prescription_items/${apt.id}`));
-        
-        let diagnosis = '';
-        let items = [];
-        
-        if (prescriptionSnap.exists()) {
-            const rx = prescriptionSnap.val();
-            diagnosis = rx.diagnosis || '';
-        }
-        
-        if (itemsSnap.exists()) {
-            items = Object.values(itemsSnap.val()).map(it => ({
-                drug: it.drug_name || it.drug_id || '',
-                form: it.form || 'tablet',
-                dose: it.dose || ''
-            }));
-        }
-        
-        state.isEditingCompleted = true;
-        state.editingCompletedRxId = apt.id;
-        state.currentAppointment = apt;
-        state.prescription = items;
-        state.loadedTemplateId = null;
-        state.loadedTemplateName = null;
-        
-        const patientId = apt.patient_id || apt.patientId;
-        state.previousRecordsCount = await fetchPreviousRecordsCount(patientId);
-        
-        const diagInput = $('#diagnosisInput');
-        if (diagInput) diagInput.value = diagnosis;
-        
-        updateWorkspace();
-        toast('📝 يمكنك الآن تعديل الوصفة المنتهية');
-    } catch (err) {
-        console.error('خطأ في فتح الوصفة المنتهية:', err);
-        toast('خطأ في تحميل الوصفة', true);
-    }
-}
-
-async function saveCompletedPrescriptionEdit() {
-    if (!state.isEditingCompleted || !state.editingCompletedRxId) return;
-    
-    const diagnosis = $('#diagnosisInput').value.trim();
-    const items = state.prescription.filter(it => it.drug.trim() !== '');
-    
-    if (items.length === 0 && !diagnosis) {
-        toast('لا توجد بيانات لحفظها', true);
-        return;
-    }
-    
-    try {
-        const now = new Date().toISOString();
-        const updates = {};
-        
-        updates[`tenants/${currentTenantId}/prescriptions/${state.editingCompletedRxId}/diagnosis`] = diagnosis;
-        updates[`tenants/${currentTenantId}/prescriptions/${state.editingCompletedRxId}/item_count`] = items.length;
-        updates[`tenants/${currentTenantId}/prescriptions/${state.editingCompletedRxId}/updated_at`] = now;
-        updates[`tenants/${currentTenantId}/prescriptions/${state.editingCompletedRxId}/last_edited_by`] = state.user.uid;
-        updates[`tenants/${currentTenantId}/prescriptions/${state.editingCompletedRxId}/last_edited_at`] = now;
-        
-        const oldItemsSnap = await get(ref(db, `tenants/${currentTenantId}/prescription_items/${state.editingCompletedRxId}`));
-        if (oldItemsSnap.exists()) {
-            Object.keys(oldItemsSnap.val()).forEach(key => {
-                updates[`tenants/${currentTenantId}/prescription_items/${state.editingCompletedRxId}/${key}`] = null;
-            });
-        }
-        
-        items.forEach((item, i) => {
-            updates[`tenants/${currentTenantId}/prescription_items/${state.editingCompletedRxId}/item_${i}`] = {
-                drug_name: item.drug,
-                dose: item.dose,
-                form: item.form
-            };
-        });
-        
-        await update(ref(db), updates);
-        
-        items.forEach(item => {
-            const strength = extractStrength(item.drug);
-            const pureName = strength ? item.drug.replace(strength, '').trim() : item.drug;
-            drugManager.recordUsage(item.drug, pureName, item.form, strength);
-        });
-        
-        state.isEditingCompleted = false;
-        state.editingCompletedRxId = null;
-        state.currentAppointment = null;
-        state.prescription = [];
-        state.previousRecordsCount = 0;
-        
-        const diagInput = $('#diagnosisInput');
-        if (diagInput) diagInput.value = '';
-        
-        updateWorkspace();
-        toast('✅ تم حفظ تعديلات الوصفة بنجاح');
-    } catch (err) {
-        console.error('خطأ في حفظ تعديلات الوصفة:', err);
-        toast('خطأ في حفظ التعديلات: ' + err.message, true);
-    }
-}
-
-function cancelCompletedEdit() {
-    state.isEditingCompleted = false;
-    state.editingCompletedRxId = null;
-    state.currentAppointment = null;
-    state.prescription = [];
-    state.previousRecordsCount = 0;
-    
-    const diagInput = $('#diagnosisInput');
-    if (diagInput) diagInput.value = '';
-    
-    updateWorkspace();
-    toast('تم إلغاء تعديل الوصفة');
-}
-
-function updateWorkspace() {
-    if (!state.currentAppointment) { 
-        $('#noPatientSelected').style.display = 'block'; 
-        $('#patientWorkspace').style.display = 'none'; 
-        $('#loadedTemplateInfo').style.display = 'none';
-        $('#editModeInfo').style.display = 'none';
-        $('#workspace').classList.remove('editing-completed');
-        $('#recordCountBadge').style.display = 'none';
-        return; 
-    }
-    
-    $('#noPatientSelected').style.display = 'none'; 
-    $('#patientWorkspace').style.display = 'block';
-    
-    const apt = state.currentAppointment; 
-    const name = getPatientName(apt);
-    $('#patientNameDisplay').textContent = name;
-    $('#patientMeta').textContent = `${apt.time||''} · ${apt.age||'--'} سنة · ${apt.phone||''}`;
-    $('#patientAvatar').textContent = name.charAt(0).toUpperCase();
-    
-    if (state.previousRecordsCount > 0) {
-        $('#recordCountBadge').textContent = state.previousRecordsCount;
-        $('#recordCountBadge').style.display = 'inline-flex';
-    } else {
-        $('#recordCountBadge').style.display = 'none';
-    }
-    
-    if (state.isEditingCompleted) {
-        $('#workspace').classList.add('editing-completed');
-        $('#finishSessionBtn').style.display = 'none';
-        $('#saveCompletedEditBtn').style.display = 'flex';
-        $('#cancelEditCompletedBtn').style.display = 'inline-flex';
-        $('#saveAsTemplateBtn').style.display = 'inline-flex';
-        $('#loadedTemplateInfo').style.display = 'none';
-        $('#editModeInfo').textContent = '⚠️ وضع تعديل وصفة منتهية - التغييرات ستحفظ في نفس الوصفة';
-        $('#editModeInfo').style.display = 'block';
-        $('#patientStatusBadge').innerHTML = '<span class="prescription-status-badge status-pending">📋 وصفة منتهية</span>';
-        $('#patientStatusBadge').style.display = 'inline-flex';
-    } else {
-        $('#workspace').classList.remove('editing-completed');
-        $('#finishSessionBtn').style.display = 'flex';
-        $('#saveCompletedEditBtn').style.display = 'none';
-        $('#cancelEditCompletedBtn').style.display = 'none';
-        $('#saveAsTemplateBtn').style.display = 'inline-flex';
-        $('#editModeInfo').style.display = 'none';
-        $('#patientStatusBadge').style.display = 'none';
-        
-        if (state.loadedTemplateId && state.loadedTemplateName) {
-            $('#loadedTemplateInfo').textContent = `📋 القالب المحمل: ${state.loadedTemplateName}`;
-            $('#loadedTemplateInfo').style.display = 'block';
-        } else {
-            $('#loadedTemplateInfo').style.display = 'none';
-        }
-    }
-    
-    renderRxList(); 
-    renderSidebar();
-}
-
-function renderRxList() {
-    const container = $('#rxItemsContainer'); 
-    const count = state.prescription.length;
-    $('#rxCount').textContent = count > 0 ? `(${count} أدوية)` : '';
-    if (count === 0) { 
-        container.innerHTML = '<span style="color:var(--text-sec);font-size:0.82rem;">لم تُضف أدوية بعد</span>'; 
-        return; 
-    }
-    container.innerHTML = state.prescription.map((item, i) => `<span class="rx-chip"><span class="drug-name">${esc(item.drug)}</span><span style="font-size:0.7rem;color:var(--text-sec);">${esc(item.form==='tablet'?'أقراص':item.form==='syrup'?'شراب':item.form==='injection'?'حقن':item.form==='suppository'?'لبوس':'نقط')}</span><span class="drug-dose">${esc(item.dose)}</span><button class="remove-chip" data-index="${i}" title="حذف" aria-label="حذف الدواء">&times;</button></span>`).join('');
-}
-
-const quickAdd = {
-    addDrug() {
-        const drugInput = $('#drugSearchInput'); const drugName = drugInput.value.trim();
-        const form = $('#drugFormSelect').value; const doseInput = $('#doseInput'); const dose = doseInput.value.trim();
-        if (!drugName) { toast('أدخل اسم الدواء', true); drugInput.focus(); return; }
-        if (!dose) { toast('أدخل الجرعة', true); doseInput.focus(); return; }
-        const strength = extractStrength(drugName); const pureName = strength ? drugName.replace(strength, '').trim() : drugName;
-        const freqMatch = dose.match(/كل\s+(\d+)\s*ساعة|مرة\s*واحدة|يومياً|عند\s*اللزوم/); const freqLabel = freqMatch ? freqMatch[0] : '';
-        state.prescription.push({ drug: drugName, form: form, dose });
-        drugManager.recordUsage(drugName, pureName, form, strength);
-        if (freqLabel) doseManager.recordUsage(drugName, form, dose, freqLabel);
-        drugInput.value = ''; doseInput.value = ''; drugInput.focus();
-        renderRxList(); 
-        saveSessionToDB();
-    }
-};
-
-async function checkTemplateNameExists(name) {
-    if (!state.user) return false;
-    const snap = await get(ref(db, `tenants/${currentTenantId}/prescription_templates/${state.user.uid}`));
-    if (!snap.exists()) return false;
-    const templates = snap.val();
-    const nameLower = name.trim().toLowerCase();
-    return Object.values(templates).some(t => (t.name || '').toLowerCase() === nameLower);
-}
-
-async function saveAsNewTemplate() {
-    const nameInput = $('#newTemplateNameInput');
-    const nameError = $('#templateNameError');
-    const templateName = nameInput.value.trim();
-    
-    if (!templateName) {
-        nameError.textContent = 'الرجاء إدخال اسم للقالب';
-        nameError.style.display = 'block';
-        nameInput.focus();
-        return;
-    }
-    
-    const exists = await checkTemplateNameExists(templateName);
-    if (exists) {
-        nameError.textContent = '⚠️ يوجد قالب بنفس الاسم. الرجاء اختيار اسم آخر.';
-        nameError.style.display = 'block';
-        nameInput.focus();
-        return;
-    }
-    
-    try {
-        const diagnosis = $('#diagnosisInput').value.trim();
-        const now = new Date().toISOString();
-        const templateId = push(ref(db, `tenants/${currentTenantId}/prescription_templates/${state.user.uid}`)).key;
-        
-        const templateData = {
-            name: templateName,
-            diagnosis: diagnosis,
-            doctor_id: state.user.uid,
-            created_at: now,
-            itemCount: state.prescription.length,
-            tenantId: currentTenantId
         };
-        
-        const updates = {};
-        updates[`tenants/${currentTenantId}/prescription_templates/${state.user.uid}/${templateId}`] = templateData;
-        state.prescription.forEach((item, i) => {
-            updates[`tenants/${currentTenantId}/template_items/${templateId}/item_${i}`] = {
-                drug_name: item.drug,
-                form: item.form,
-                dose: item.dose
-            };
-        });
-        
-        await update(ref(db), updates);
-        
-        state.loadedTemplateId = templateId;
-        state.loadedTemplateName = templateName;
-        updateWorkspace();
-        
-        $('#saveNewTemplateModal').style.display = 'none';
-        toast(`✅ تم حفظ القالب "${templateName}" بنجاح`);
-    } catch (err) {
-        console.error('خطأ في حفظ القالب:', err);
-        toast('خطأ في حفظ القالب', true);
-    }
-}
 
-function openSaveNewTemplateModal() {
-    const diagnosis = $('#diagnosisInput').value.trim();
-    if (state.prescription.length === 0 && !diagnosis) {
-        toast('لا توجد بيانات لحفظها. أضف أدوية أو تشخيص أولاً.', true);
-        return;
-    }
-    
-    $('#newTemplateNameInput').value = '';
-    $('#templateNameError').style.display = 'none';
-    $('#saveNewTemplateModal').style.display = 'flex';
-    setTimeout(() => $('#newTemplateNameInput').focus(), 100);
-}
+        const searchInLocalCacheByVillage = (fatherName, familyName, villageName) => {
+            if (!currentTenantId) return [];
+            
+            const results = [];
+            
+            Object.entries(state.localPatientsCache).forEach(([id, p]) => {
+                const matchFather = !fatherName || (p.father_name && p.father_name.includes(fatherName));
+                const matchFamily = !familyName || (p.family_name && p.family_name.includes(familyName));
+                const matchVillage = !villageName || (p.village_name && p.village_name.includes(villageName));
+                
+                if (matchFather && matchFamily && matchVillage && (fatherName || familyName || villageName)) {
+                    results.push({ id, ...p, _source: 'local' });
+                }
+            });
+            
+            return results;
+        };
 
-// ============================================================
-// ✅✅✅ دالة فتح سجل المريض - عام لكل المجمعات ✅✅✅
-// ============================================================
-async function openPatientFile() {
-    const pid = state.currentAppointment?.patient_id || state.currentAppointment?.patientId;
-    if (!pid) { toast('لا يوجد ملف للمريض', true); return; }
-    
-    const modal = $('#patientFileModal'); 
-    const content = $('#patientFileContent');
-    modal.style.display = 'flex'; 
-    content.innerHTML = '<div style="text-align:center;padding:30px;"><div class="loader-circle"></div></div>';
-    
-    try {
-        const patientSnap = await get(ref(db, `tenants/${currentTenantId}/patients/${pid}`));
-        const patient = patientSnap.exists() ? patientSnap.val() : {}; 
-        const patientName = patient.name || 'غير معروف';
-        
-        const tenantsSnap = await get(ref(db, 'tenants'));
-        const tenants = tenantsSnap.exists() ? Object.keys(tenantsSnap.val()) : [];
-        
-        const patientRx = [];
-        const doctorsCache = {};
-        
-        for (const tenantId of tenants) {
+        // ============ ✅ مسح بيانات الجلسة فقط ============
+        const clearLoginSessionOnly = () => {
             try {
-                const prescriptionsSnap = await get(ref(db, `tenants/${tenantId}/prescriptions`));
-                if (!prescriptionsSnap.exists()) continue;
-                
-                const rxPromises = [];
-                
-                prescriptionsSnap.forEach(child => {
-                    const rx = child.val();
-                    if (String(rx.patient_id) === String(pid)) {
-                        const isSameTenant = (tenantId === currentTenantId);
-                        
-                        rxPromises.push((async () => {
-                            const itemsSnap = await get(ref(db, `tenants/${tenantId}/prescription_items/${child.key}`));
-                            let items = [];
-                            if (itemsSnap.exists()) {
-                                items = Object.values(itemsSnap.val()).map(it => ({
-                                    drug: it.drug_name || it.drug_id || '',
-                                    form: it.form || 'tablet',
-                                    dose: it.dose || ''
-                                }));
-                            }
-                            
-                            let doctorDisplayName;
-                            if (isSameTenant) {
-                                doctorDisplayName = rx.doctor_name || 'طبيب';
-                                
-                                if (rx.doctor_id && (!rx.doctor_name || rx.doctor_name === 'طبيب')) {
-                                    if (!doctorsCache[rx.doctor_id]) {
-                                        try {
-                                            const docSnap = await get(ref(db, `tenants/${tenantId}/users/${rx.doctor_id}`));
-                                            doctorsCache[rx.doctor_id] = docSnap.exists() ? (docSnap.val().name || 'طبيب') : 'طبيب';
-                                        } catch(e) { doctorsCache[rx.doctor_id] = 'طبيب'; }
-                                    }
-                                    doctorDisplayName = doctorsCache[rx.doctor_id];
-                                }
-                            } else {
-                                doctorDisplayName = null;
-                            }
-                            
-                            patientRx.push({
-                                id: child.key,
-                                tenantId: tenantId,
-                                data: rx,
-                                items,
-                                isSameTenant,
-                                doctorDisplayName
-                            });
-                        })());
-                    }
+                LOGIN_STORAGE_KEYS.forEach(key => {
+                    localStorage.removeItem(key);
                 });
                 
-                await Promise.all(rxPromises);
-                
-            } catch(e) {
-                console.warn(`تعذر قراءة وصفات من المجمع ${tenantId}:`, e.message);
-            }
-        }
-        
-        patientRx.sort((a, b) => (b.data.created_at || '').localeCompare(a.data.created_at || ''));
-        const totalRx = patientRx.length;
-        
-        let html = `<div style="margin-bottom:20px;">
-            <h4>📁 ${esc(patientName)} - ${totalRx} وصفات (كل المجمعات)</h4>
-            <div style="font-size:0.75rem;color:var(--text-sec);">
-                🏥 السجل موحد من كل الفروع | 👨‍⚕️ اسم الدكتور يظهر فقط من نفس المجمع
-            </div>
-        </div>`;
-        
-        if (patientRx.length === 0) { 
-            html += '<div style="text-align:center;padding:20px;color:var(--text-sec);">لا توجد وصفات مسجلة لهذا المريض</div>'; 
-        } else {
-            for (const r of patientRx) {
-                const rx = r.data;
-                
-                const dateStr = rx.created_at 
-                    ? new Date(rx.created_at).toLocaleDateString('ar-EG', { 
-                        year: 'numeric', month: 'long', day: 'numeric',
-                        hour: '2-digit', minute: '2-digit'
-                      }) 
-                    : '—';
-                
-                const statusBadge = rx.status === 'تم الصرف' 
-                    ? '<span class="prescription-status-badge status-dispensed">✅ تم الصرف</span>' 
-                    : rx.status === 'صرفت جزئياً' 
-                        ? '<span class="prescription-status-badge status-partial">📦 جزئي</span>' 
-                        : '<span class="prescription-status-badge status-pending">⏳ لم تصرف</span>';
-                
-                const doctorInfo = r.isSameTenant && r.doctorDisplayName
-                    ? `<span style="color:var(--accent);font-weight:600;">👨‍⚕️ د. ${esc(r.doctorDisplayName)}</span>`
-                    : `<span style="color:var(--text-sec);font-style:italic;">👨‍⚕️ مجمع آخر</span>`;
-                
-                let drugsHtml = '';
-                if (r.items && r.items.length > 0) {
-                    drugsHtml = '<div class="prescription-history-drugs">' + 
-                        r.items.map(item => {
-                            const formEmoji = item.form === 'tablet' ? '💊' : item.form === 'syrup' ? '🥄' : item.form === 'injection' ? '💉' : item.form === 'suppository' ? '🧴' : '💧';
-                            return `<span class="drug-mini-tag">${formEmoji} ${esc(item.drug)} <span class="tag-dose">${esc(item.dose)}</span></span>`;
-                        }).join('') + 
-                        '</div>';
+                const sessionKeysToRemove = [];
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key && (key.startsWith('shifa_session') || key.startsWith('shifa_secure'))) {
+                        sessionKeysToRemove.push(key);
+                    }
                 }
+                sessionKeysToRemove.forEach(key => localStorage.removeItem(key));
                 
-                const diagnosisPreview = rx.diagnosis 
-                    ? esc(rx.diagnosis).substring(0, 80) + (rx.diagnosis.length > 80 ? '...' : '') 
-                    : 'بدون تشخيص';
+                sessionStorage.clear();
                 
-                html += `
-                    <div class="prescription-history-item" data-rx-id="${r.id}" data-tenant="${r.tenantId}">
-                        <div class="prescription-history-header">
-                            <div style="flex:1;min-width:200px;">
-                                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-                                    ${statusBadge}
-                                    ${doctorInfo}
-                                </div>
-                                <div style="margin-top:6px;">
-                                    <b>📅 ${dateStr}</b>
-                                </div>
-                                <div style="color:var(--text-sec);font-size:0.8rem;margin-top:4px;">
-                                    ${diagnosisPreview}
-                                </div>
-                            </div>
-                            ${r.isSameTenant ? `
-                            <button class="btn btn-info btn-sm restore-prescription-btn" data-rx-id="${r.id}" data-tenant="${r.tenantId}" style="white-space:nowrap;">
-                                <i class="fas fa-undo"></i> استرداد
-                            </button>
-                            ` : `
-                            <span style="font-size:0.7rem;color:var(--text-sec);">🔒 للعرض فقط</span>
-                            `}
-                        </div>
-                        ${drugsHtml}
-                    </div>
-                `;
+                console.log(`✅ تم مسح ${LOGIN_STORAGE_KEYS.length + sessionKeysToRemove.length} مفتاح جلسة`);
+                console.log('💾 تم الإبقاء على بيانات المجمع المحلية والكاش');
+            } catch (e) {
+                console.warn('تعذر مسح بيانات الجلسة:', e.message);
             }
-        }
+        };
+
+        // ============ إدارة التخزين المحلي للكشوفات والأطباء ============
+        const getLocalBookingsKey = () => getTenantStorageKey('nurse_bookings');
+        const getLocalDoctorsKey = () => getTenantStorageKey('nurse_doctors');
         
-        content.innerHTML = html;
-        
-        content.querySelectorAll('.restore-prescription-btn').forEach(btn => {
-            btn.addEventListener('click', async (e) => {
-                e.stopPropagation();
-                const rxId = btn.dataset.rxId;
-                const rxTenant = btn.dataset.tenant;
+        const saveBookingsToLocal = (bookings) => {
+            if (!currentTenantId) return;
+            try {
+                const key = getLocalBookingsKey();
+                const data = {
+                    bookings: bookings.map(b => ({ ...b })),
+                    lastUpdated: Date.now()
+                };
+                localStorage.setItem(key, JSON.stringify(data));
+            } catch (e) {
+                console.warn('تعذر حفظ الكشوفات محلياً:', e.message);
+            }
+        };
+
+        const loadBookingsFromLocal = (doctorId, date) => {
+            if (!currentTenantId) return null;
+            try {
+                const key = getLocalBookingsKey();
+                const cached = localStorage.getItem(key);
+                if (!cached) return null;
                 
-                if (rxTenant !== currentTenantId) {
-                    toast('لا يمكن استرداد وصفة من مجمع آخر', true);
+                const data = JSON.parse(cached);
+                if (!data.bookings) return null;
+                
+                const filtered = data.bookings.filter(b => {
+                    return b.doctor_id === doctorId && b.date === date;
+                });
+                
+                return filtered.length > 0 ? filtered : null;
+            } catch (e) {
+                console.warn('تعذر تحميل الكشوفات المحلية:', e.message);
+                return null;
+            }
+        };
+
+        const saveDoctorsToLocal = (doctors) => {
+            if (!currentTenantId) return;
+            try {
+                const key = getLocalDoctorsKey();
+                const data = {
+                    doctors,
+                    cachedAt: Date.now()
+                };
+                localStorage.setItem(key, JSON.stringify(data));
+            } catch (e) {
+                console.warn('تعذر حفظ الأطباء محلياً:', e.message);
+            }
+        };
+
+        const loadDoctorsFromLocal = () => {
+            if (!currentTenantId) return null;
+            try {
+                const key = getLocalDoctorsKey();
+                const data = localStorage.getItem(key);
+                if (!data) return null;
+                
+                const parsed = JSON.parse(data);
+                const now = Date.now();
+                const expiryMs = 50 * 24 * 60 * 60 * 1000;
+                
+                if ((now - parsed.cachedAt) < expiryMs) {
+                    return parsed.doctors;
+                }
+                return null;
+            } catch (e) {
+                return null;
+            }
+        };
+
+        // ============ تحديث مؤشر المزامنة ============
+        const setSyncStatus = (online) => {
+            const dot = $('#syncDot');
+            if (dot) {
+                dot.className = `sync-dot ${online ? 'on' : 'off'}`;
+                dot.title = online ? 'متصل بالسحابة' : 'غير متصل - استخدام البيانات المحلية';
+            }
+        };
+
+        // ============ ✅ تبديل وضع الهوية ============
+        const toggleIdMode = (mode) => {
+            state.idMode = mode;
+            const phoneSection = $('#phoneSection');
+            const phoneSearchSection = $('#phoneSearchSection');
+            const villageSection = $('#villageSection');
+            
+            if (mode === 'village') {
+                phoneSection.style.display = 'none';
+                phoneSearchSection.style.display = 'none';
+                villageSection.style.display = 'block';
+                $('#patientPhone').value = '';
+                $('#patientSearch').value = '';
+                $('#searchResults').style.display = 'none';
+            } else {
+                phoneSection.style.display = 'block';
+                phoneSearchSection.style.display = 'block';
+                villageSection.style.display = 'none';
+                $('#fatherName').value = '';
+                $('#familyName').value = '';
+                $('#villageName').value = '';
+                $('#villageSearchResults').style.display = 'none';
+                $('#villageSearchResults').innerHTML = '';
+            }
+        };
+
+        // ============ ✅ البحث الذكي بالقرية (محلي أولاً ← سحابي) ============
+        let villageSearchTimer;
+        const setupVillageSearch = () => {
+            const fatherInput = $('#fatherName');
+            const familyInput = $('#familyName');
+            const villageInput = $('#villageName');
+            
+            const performVillageSearch = () => {
+                const father = fatherInput.value.trim();
+                const family = familyInput.value.trim();
+                const village = villageInput.value.trim();
+                
+                if (!father && !family && !village) {
+                    $('#villageSearchResults').style.display = 'none';
                     return;
                 }
                 
-                await restorePrescription(rxId);
-            });
-        });
-        
-    } catch (err) { 
-        console.error('خطأ في تحميل سجل المريض:', err);
-        content.innerHTML = '<div style="color:var(--danger);text-align:center;padding:20px;">❌ خطأ في تحميل الملف الطبي</div>'; 
-    }
-}
+                clearTimeout(villageSearchTimer);
+                villageSearchTimer = setTimeout(async () => {
+                    let results = [];
+                    
+                    // ✅ 1. البحث في الكاش المحلي أولاً
+                    const localResults = searchInLocalCacheByVillage(father, family, village);
+                    if (localResults.length > 0) {
+                        results = localResults;
+                        console.log(`📦 وجد ${localResults.length} مريض في الكاش المحلي`);
+                    }
+                    
+                    // ✅ 2. البحث في السحابة
+                    try {
+                        const patientsRef = collection(db, 'patients');
+                        const snapshot = await getDocs(patientsRef);
+                        snapshot.forEach(doc => {
+                            const p = doc.data();
+                            const matchFather = !father || (p.father_name && p.father_name.includes(father));
+                            const matchFamily = !family || (p.family_name && p.family_name.includes(family));
+                            const matchVillage = !village || (p.village_name && p.village_name.includes(village));
+                            
+                            if (matchFather && matchFamily && matchVillage && (father || family || village)) {
+                                const exists = results.find(r => r.id === doc.id);
+                                if (!exists) {
+                                    const patientData = { id: doc.id, ...p, _source: 'cloud' };
+                                    results.push(patientData);
+                                    // ✅ نخزن في الكاش المحلي تلقائياً
+                                    savePatientToLocalCache(doc.id, p);
+                                }
+                            }
+                        });
+                    } catch (err) {
+                        console.warn('تعذر البحث في السحابة:', err.message);
+                    }
 
-async function handleFinishSession() {
-    if (!state.currentAppointment || state.isEditingCompleted) return;
-    const diagnosis = $('#diagnosisInput').value.trim();
-    if (state.prescription.length === 0 && !diagnosis) { toast('أضف أدوية أو تشخيص', true); return; }
-    
-    if (state.loadedTemplateId && state.loadedTemplateName) {
-        const currentRx = JSON.stringify(state.prescription);
-        const templateSnap = await get(ref(db, `tenants/${currentTenantId}/prescription_templates/${state.user.uid}/${state.loadedTemplateId}`));
-        if (templateSnap.exists()) {
-            const itemsSnap = await get(ref(db, `tenants/${currentTenantId}/template_items/${state.loadedTemplateId}`));
-            let origItems = []; 
-            if (itemsSnap.exists()) { origItems = Object.values(itemsSnap.val()).map(it => ({ drug: it.drug_name || it.drug_id, form: it.form, dose: it.dose })); }
-            const currentDx = $('#diagnosisInput').value.trim();
-            if (currentRx !== JSON.stringify(origItems) || currentDx !== (templateSnap.val().diagnosis || '')) { 
-                state._pendingFinish = true; 
-                $('#saveTemplateMsg').textContent = `القالب "${state.loadedTemplateName}" تم تعديله. هل تريد حفظ التغييرات؟`; 
-                $('#saveTemplateTitle').innerHTML = '<i class="fas fa-save"></i> تحديث القالب'; 
-                $('#templateNameInput').value = state.loadedTemplateName; 
-                $('#saveTemplateModal').style.display = 'flex'; 
-                return; 
-            }
-        }
-    }
-    await finalizeSession(false, null, null);
-}
+                    const container = $('#villageSearchResults');
+                    if (results.length === 0) {
+                        container.innerHTML = '<div class="search-item" style="color:var(--text-sec);">لا توجد نتائج - يمكنك إضافة مريض جديد</div>';
+                    } else {
+                        container.innerHTML = results.map(p => `
+                            <div class="search-item" data-id="${p.id}">
+                                <b>${escapeHtml(p.name)}</b>
+                                <small style="color:var(--text-sec);">
+                                    ${escapeHtml(p.father_name || '')} - ${escapeHtml(p.family_name || '')} - ${escapeHtml(p.village_name || '')}
+                                    ${p._source === 'local' ? '📦' : '☁️'}
+                                </small>
+                            </div>
+                        `).join('');
 
-async function handleSaveAsNew() { 
-    const name = $('#templateNameInput').value.trim() || state.loadedTemplateName || 'قالب جديد'; 
-    await finalizeSession(true, name, 'new'); 
-    $('#saveTemplateModal').style.display = 'none'; 
-}
-
-async function handleUpdateExisting() { 
-    const name = $('#templateNameInput').value.trim() || state.loadedTemplateName; 
-    await finalizeSession(true, name, 'update'); 
-    $('#saveTemplateModal').style.display = 'none'; 
-}
-
-async function handleSkipSave() { 
-    await finalizeSession(false, null, null); 
-    $('#saveTemplateModal').style.display = 'none'; 
-}
-
-async function handleTemplates() {
-    const snap = await get(ref(db, `tenants/${currentTenantId}/prescription_templates/${state.user.uid}`)); 
-    const list = $('#templatesList');
-    if (!snap.exists()) { list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-sec);">لا توجد قوالب</div>'; }
-    else { 
-        const templates = snap.val(); 
-        list.innerHTML = Object.entries(templates).map(([id, t]) => `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px;border-bottom:1px solid var(--border);"><div><b>${esc(t.name)}</b><div>${t.itemCount||0} أدوية</div></div><button class="btn btn-primary btn-sm load-template-btn" data-id="${id}" data-name="${esc(t.name)}">تحميل</button></div>`).join(''); 
-        list.querySelectorAll('.load-template-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                loadTemplate(btn.dataset.id, btn.dataset.name);
-                $('#templatesModal').style.display = 'none';
-            });
-        });
-    }
-    $('#templatesModal').style.display = 'flex';
-}
-
-async function handleSessions() {
-    const sessions = await sessionDB.getAll(); 
-    const list = $('#sessionsList');
-    if (sessions.length === 0) { list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-sec);">لا توجد جلسات معلقة</div>'; }
-    else { 
-        list.innerHTML = sessions.map(s => `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px;border-bottom:1px solid var(--border);"><div><b>${esc(getPatientName(s.appointment))}</b><div>${s.prescription.length} أدوية</div></div><div style="display:flex;gap:4px;"><button class="btn btn-primary btn-sm restore-session-btn" data-id="${s.id}">استكمال</button><button class="btn btn-outline btn-sm delete-session-btn" data-id="${s.id}"><i class="fas fa-trash"></i></button></div></div>`).join(''); 
-        list.querySelectorAll('.restore-session-btn').forEach(btn => {
-            btn.addEventListener('click', async () => {
-                const sessionId = btn.dataset.id;
-                const sessions = await sessionDB.getAll();
-                const session = sessions.find(s => s.id === sessionId);
-                if (session) {
-                    state.currentAppointment = session.appointment;
-                    state.prescription = session.prescription || [];
-                    state.loadedTemplateId = session.loadedTemplateId || null;
-                    state.loadedTemplateName = session.loadedTemplateName || null;
-                    state.activeSessionId = session.id;
-                    state.isEditingCompleted = false;
-                    state.editingCompletedRxId = null;
-                    const patientId = session.appointment.patient_id || session.appointment.patientId;
-                    state.previousRecordsCount = await fetchPreviousRecordsCount(patientId);
-                    const diagInput = $('#diagnosisInput');
-                    if (diagInput) diagInput.value = session.diagnosis || '';
-                    updateWorkspace();
-                    $('#sessionsModal').style.display = 'none';
-                    toast('🔄 تم استكمال الجلسة');
-                }
-            });
-        });
-        list.querySelectorAll('.delete-session-btn').forEach(btn => {
-            btn.addEventListener('click', async () => {
-                const sessionId = btn.dataset.id;
-                await deleteSession(sessionId);
-                toast('🗑️ تم حذف الجلسة المعلقة');
-                handleSessions();
-            });
-        });
-    }
-    $('#sessionsModal').style.display = 'flex';
-}
-
-async function loadTemplate(templateId, templateName) {
-    if (state.isEditingCompleted) {
-        toast('لا يمكن تحميل قالب أثناء تعديل وصفة منتهية', true);
-        return;
-    }
-    
-    const snap = await get(ref(db, `tenants/${currentTenantId}/template_items/${templateId}`)); 
-    state.prescription = [];
-    if (snap.exists()) { state.prescription = Object.values(snap.val()).map(it => ({ drug: it.drug_name || it.drug_id, form: it.form, dose: it.dose })); }
-    const templateSnap = await get(ref(db, `tenants/${currentTenantId}/prescription_templates/${state.user.uid}/${templateId}`));
-    if (templateSnap.exists() && templateSnap.val().diagnosis) { 
-        const diagInput = $('#diagnosisInput'); 
-        if (diagInput) diagInput.value = templateSnap.val().diagnosis; 
-    }
-    state.loadedTemplateId = templateId; 
-    state.loadedTemplateName = templateName;
-    state.prescription.forEach(item => { 
-        const strength = extractStrength(item.drug); 
-        const pureName = strength ? item.drug.replace(strength, '').trim() : item.drug; 
-        drugManager.recordUsage(item.drug, pureName, item.form, strength); 
-    });
-    renderRxList(); 
-    updateWorkspace();
-    saveSessionToDB(); 
-    toast(`📋 تم تحميل القالب: ${templateName}`);
-}
-
-async function finalizeSession(saveTemplate, templateName, templateAction) {
-    const apt = state.currentAppointment; 
-    const diagnosis = $('#diagnosisInput').value.trim(); 
-    const prescriptionId = apt.id;
-    try {
-        const now = new Date().toISOString();
-        
-        if (saveTemplate && templateName) { 
-            let templateId = state.loadedTemplateId; 
-            if (templateAction === 'new' || !templateId) templateId = push(ref(db, `tenants/${currentTenantId}/prescription_templates/${state.user.uid}`)).key; 
-            const templateData = { name: templateName, diagnosis, doctor_id: state.user.uid, created_at: now, itemCount: state.prescription.length, tenantId: currentTenantId }; 
-            const updates = {}; 
-            updates[`tenants/${currentTenantId}/prescription_templates/${state.user.uid}/${templateId}`] = templateData; 
-            state.prescription.forEach((item, i) => { updates[`tenants/${currentTenantId}/template_items/${templateId}/item_${i}`] = { drug_name: item.drug, form: item.form, dose: item.dose }; }); 
-            await update(ref(db), updates); 
-        }
-        
-        const prescriptionData = { 
-            patient_id: apt.patient_id || apt.patientId || '', 
-            patient_name: getPatientName(apt), 
-            doctor_id: state.user.uid,
-            doctor_name: state.user.name || 'طبيب',
-            diagnosis, 
-            created_at: now, 
-            status: 'لم تصرف بعد',
-            item_count: state.prescription.length,
-            tenantId: currentTenantId
-        };
-        
-        const finalUpdates = {}; 
-        finalUpdates[`tenants/${currentTenantId}/prescriptions/${prescriptionId}`] = prescriptionData;
-        state.prescription.forEach((item, i) => { 
-            finalUpdates[`tenants/${currentTenantId}/prescription_items/${prescriptionId}/item_${i}`] = { 
-                drug_name: item.drug, 
-                dose: item.dose, 
-                form: item.form 
-            }; 
-        });
-        finalUpdates[`tenants/${currentTenantId}/appointments/${apt.id}/status`] = 'منتهي';
-        
-        await update(ref(db), finalUpdates);
-        await deleteSession(apt.id);
-        
-        // ✅ تتبع الأدوية الموصوفة في نظام المراقبة (النافذة المنزلقة)
-        if (state.user && state.user.uid) {
-            const doctorName = state.user.name || 'طبيب';
-            const uniqueDrugs = [...new Set(state.prescription.map(p => p.drug))];
+                        container.querySelectorAll('.search-item[data-id]').forEach(item => {
+                            item.addEventListener('click', () => {
+                                const patient = results.find(p => p.id === item.dataset.id);
+                                if (patient) selectVillagePatient(patient);
+                            });
+                        });
+                    }
+                    container.style.display = 'block';
+                }, 400);
+            };
             
-            for (const drugName of uniqueDrugs) {
-                await prescriptionTracker.trackDrugPrescription(
-                    drugName,
-                    state.user.uid,
-                    doctorName
-                );
-            }
-            console.log(`📊 تم تتبع ${uniqueDrugs.length} دواء في نظام المراقبة (نافذة منزلقة 15 يوم)`);
-        }
-        
-        state.currentAppointment = null; 
-        state.prescription = []; 
-        state.diagnosis = ''; 
-        state.loadedTemplateId = null; 
-        state.loadedTemplateName = null;
-        state.isEditingCompleted = false;
-        state.editingCompletedRxId = null;
-        state.previousRecordsCount = 0;
-        const diagInput = $('#diagnosisInput'); 
-        if (diagInput) diagInput.value = '';
-        updateWorkspace(); 
-        toast('✅ تم إنهاء الكشف وإرسال الوصفة للصيدلية');
-    } catch (err) { 
-        console.error(err); 
-        toast('خطأ في حفظ الوصفة: '+err.message, true); 
-    }
-}
-
-const setupEventListeners = () => {
-    $('#queueTabs').addEventListener('click', (e) => {
-        const tab = e.target.closest('.queue-tab');
-        if (!tab) return;
-        const tabName = tab.dataset.tab;
-        state.currentTab = tabName;
-        $$('.queue-tab').forEach(t => t.classList.remove('active'));
-        tab.classList.add('active');
-        $$('.tab-content').forEach(c => c.classList.remove('active'));
-        const contentMap = { current: 'tabCurrent', waiting: 'tabWaiting', done: 'tabDone' };
-        const targetContent = $('#' + contentMap[tabName]);
-        if (targetContent) targetContent.classList.add('active');
-        updateQueueCount();
-    });
-    
-    ['currentPatientsList', 'waitingPatientsList', 'donePatientsList'].forEach(id => {
-        const container = $('#' + id);
-        if (container) {
-            container.addEventListener('click', (e) => {
-                const item = e.target.closest('.mini-queue-item');
-                if (item) selectPatient(item.dataset.id);
-            });
-        }
-    });
-    
-    $('#addDrugBtn').addEventListener('click', () => quickAdd.addDrug());
-    $('#doseInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); quickAdd.addDrug(); } });
-    
-    $('#rxItemsContainer').addEventListener('click', (e) => {
-        const removeBtn = e.target.closest('.remove-chip');
-        if (!removeBtn) return;
-        const index = parseInt(removeBtn.dataset.index);
-        state.prescription.splice(index, 1);
-        renderRxList();
-        saveSessionToDB();
-    });
-    
-    let doseTimer;
-    $('#doseInput').addEventListener('input', () => {
-        const val = $('#doseInput').value.trim();
-        clearTimeout(doseTimer);
-        if (val.length < 1) { $('#doseSuggestions').style.display = 'none'; return; }
-        doseTimer = setTimeout(async () => {
-            const form = $('#drugFormSelect').value;
-            const drugName = $('#drugSearchInput').value.trim();
-            const suggestions = await doseManager.getSuggestions(val, form, drugName || null);
-            const dd = $('#doseSuggestions');
-            if (suggestions.length === 0) { dd.style.display = 'none'; return; }
-            dd.innerHTML = suggestions.map(s => `<div class="dose-suggestion-item${s.source==='favorite'?' favorite-dose':''}" data-dose="${esc(s.dose)}" data-freq="${esc(s.freq||'')}"><span>${esc(s.label)}</span><span class="freq-badge">${esc(s.freq||'')}</span></div>`).join('');
-            dd.style.display = 'block';
-            dd.querySelectorAll('.dose-suggestion-item').forEach(item => {
-                item.addEventListener('click', () => {
-                    const doseEl = $('#doseInput');
-                    doseEl.value = `${item.dataset.dose} - ${item.dataset.freq}`;
-                    dd.style.display = 'none';
-                    doseEl.focus();
-                });
-            });
-        }, 150);
-    });
-
-    document.addEventListener('click', (e) => { 
-        if (!$('#doseInput').contains(e.target) && !$('#doseSuggestions').contains(e.target)) { 
-            $('#doseSuggestions').style.display = 'none'; 
-        } 
-    });
-
-    let searchTimer;
-    $('#drugSearchInput').addEventListener('input', () => {
-        const term = $('#drugSearchInput').value.trim();
-        clearTimeout(searchTimer);
-        if (term.length < 1) { $('#drugSuggestions').style.display = 'none'; return; }
-        searchTimer = setTimeout(async () => {
-            const results = await drugManager.getSuggestions(term, null);
-            const dd = $('#drugSuggestions');
-            if (results.length === 0) { 
-                dd.innerHTML = `<div class="suggestion-item" id="createNewDrug" style="color:var(--accent);">➕ إضافة "${esc(term)}" كدواء جديد</div>`; 
-                dd.style.display = 'block'; 
-                const createBtn = $('#createNewDrug');
-                if (createBtn) {
-                    createBtn.addEventListener('click', () => {
-                        $('#drugSearchInput').value = term;
-                        $('#drugSuggestions').style.display = 'none';
-                        $('#doseInput').focus();
-                    });
+            fatherInput.addEventListener('input', performVillageSearch);
+            familyInput.addEventListener('input', performVillageSearch);
+            villageInput.addEventListener('input', performVillageSearch);
+            
+            document.addEventListener('click', (e) => {
+                const villageSection = $('#villageSection');
+                const searchResults = $('#villageSearchResults');
+                if (villageSection && searchResults && !villageSection.contains(e.target)) {
+                    searchResults.style.display = 'none';
                 }
+            });
+        };
+
+        const selectVillagePatient = (patient) => {
+            $('#patientName').value = patient.name || '';
+            $('#patientAge').value = patient.age || '';
+            $('#patientPhone').value = patient.phone || '';
+            $('#fatherName').value = patient.father_name || '';
+            $('#familyName').value = patient.family_name || '';
+            $('#villageName').value = patient.village_name || '';
+            state.selectedPatientId = patient.id;
+            $('#villageSearchResults').style.display = 'none';
+        };
+
+        // ============ ✅ زر الإعدادات ============
+        $('#settingsBtn').addEventListener('click', () => {
+            try {
+                const sessionData = {
+                    uid: state.currentUser?.uid,
+                    tenantId: currentTenantId,
+                    nurseName: state.nurseData?.name,
+                    timestamp: Date.now()
+                };
+                sessionStorage.setItem('nurse_settings_session', JSON.stringify(sessionData));
+            } catch (e) {
+                console.warn('تعذر حفظ جلسة الإعدادات:', e.message);
+            }
+            
+            window.location.href = 'nurse-settings.html';
+        });
+
+        // ============ ✅ تحميل الإشعارات (Firestore) ============
+        const loadNotifications = () => {
+            if (!currentTenantId) return;
+
+            const bookingsRef = collection(db, 'tenants', currentTenantId, 'appointments');
+            const q = query(bookingsRef);
+            
+            state.unsubscribeNotifications = onSnapshot(q, (snapshot) => {
+                const notifications = [];
+                snapshot.forEach(doc => {
+                    const booking = doc.data();
+                    if (booking.created_by !== state.currentUser?.uid) {
+                        notifications.push({
+                            id: doc.id,
+                            ...booking
+                        });
+                    }
+                });
+
+                const badge = $('#notificationBadge');
+                if (notifications.length > 0) {
+                    badge.style.display = 'flex';
+                    badge.textContent = notifications.length;
+                } else {
+                    badge.style.display = 'none';
+                }
+
+                state.notifications = notifications;
+            });
+        };
+
+        // ============ ✅ فتح مودال الإشعارات ============
+        const openNotificationsModal = () => {
+            const modal = $('#notificationsModal');
+            const body = $('#notificationsBody');
+
+            if (!state.notifications || state.notifications.length === 0) {
+                body.innerHTML = `
+                    <div style="text-align:center;padding:40px;color:var(--text-sec);">
+                        <i class="fas fa-bell-slash" style="font-size:3rem;opacity:0.2;margin-bottom:12px;"></i>
+                        <h4>لا توجد إشعارات جديدة</h4>
+                    </div>
+                `;
             } else {
-                dd.innerHTML = results.map(d => `<div class="suggestion-item" data-name="${esc(d.name)}" data-form="${d.form || 'tablet'}"><div class="suggestion-content">${esc(d.name)} <span class="usage-count">${d.freq||0}x</span></div><button class="hide-suggestion-btn" data-fullname="${esc(d.name)}" data-name="${esc(d.originalName||d.name)}" data-form="${d.form || 'tablet'}">×</button></div>`).join('');
-                dd.style.display = 'block';
-                dd.querySelectorAll('.suggestion-item').forEach(item => {
-                    item.addEventListener('click', (e) => {
-                        if (e.target.closest('.hide-suggestion-btn')) return;
-                        $('#drugSearchInput').value = item.dataset.name;
-                        if (item.dataset.form && item.dataset.form !== 'tablet') {
-                            $('#drugFormSelect').value = item.dataset.form;
+                body.innerHTML = state.notifications.map(notif => {
+                    const doctorName = state.assignedDoctors.find(d => d.id === notif.doctor_id)?.name || 'غير معروف';
+                    const visitType = notif.visit_type === 'new' ? 'كشف جديد' : 'إعادة (متابعة)';
+                    
+                    return `
+                        <div class="notification-item">
+                            <div class="notification-header">
+                                <span class="notification-patient">
+                                    <i class="fas fa-user"></i> ${escapeHtml(notif.patient_name || 'مريض')}
+                                </span>
+                                <span class="notification-time">
+                                    ${notif.date || ''}
+                                </span>
+                            </div>
+                            <div class="notification-details">
+                                <i class="fas fa-stethoscope"></i> ${visitType} عند د. ${escapeHtml(doctorName)}
+                            </div>
+                            <div class="notification-actions">
+                                <button class="btn-confirm" data-notification-id="${notif.id}">
+                                    <i class="fas fa-check"></i> تأكيد وإضافة للطبيب
+                                </button>
+                                <button class="btn-dismiss" data-notification-id="${notif.id}">
+                                    <i class="fas fa-times"></i> تجاهل
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                body.querySelectorAll('.btn-confirm').forEach(btn => {
+                    btn.addEventListener('click', () => confirmBooking(btn.dataset.notificationId));
+                });
+
+                body.querySelectorAll('.btn-dismiss').forEach(btn => {
+                    btn.addEventListener('click', () => dismissNotification(btn.dataset.notificationId));
+                });
+            }
+
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        };
+
+        const closeNotificationsModal = () => {
+            $('#notificationsModal').style.display = 'none';
+            document.body.style.overflow = '';
+        };
+
+        // ============ ✅ تأكيد الحجز وإضافته للطبيب ============
+        const confirmBooking = async (bookingId) => {
+            try {
+                const booking = state.notifications?.find(n => n.id === bookingId);
+                if (!booking) {
+                    showToast('الإشعار غير موجود', true);
+                    return;
+                }
+
+                $('#editId').value = '';
+                $('#modalTitle').innerHTML = '<i class="fas fa-calendar-plus"></i> كشف جديد';
+                $('#doctorSelect').value = booking.doctor_id || state.selectedDoctorId;
+                $('#patientName').value = booking.patient_name || '';
+                $('#patientAge').value = booking.age || '';
+                $('#patientPhone').value = booking.phone || '';
+                $('#visitType').value = booking.visit_type || 'new';
+                $('#apptDate').value = booking.date || state.currentDate;
+                state.selectedPatientId = booking.patient_id || null;
+                
+                if (booking.father_name || booking.family_name || booking.village_name) {
+                    toggleIdMode('village');
+                    $('#fatherName').value = booking.father_name || '';
+                    $('#familyName').value = booking.family_name || '';
+                    $('#villageName').value = booking.village_name || '';
+                } else {
+                    toggleIdMode('phone');
+                }
+
+                closeNotificationsModal();
+                $('#bookingModal').style.display = 'flex';
+                
+                await deleteDoc(doc(db, 'tenants', currentTenantId, 'appointments', bookingId));
+                
+                showToast('✅ تم نقل بيانات المريض لنموذج الكشف');
+            } catch (err) {
+                showToast('خطأ في التأكيد: ' + err.message, true);
+            }
+        };
+
+        const dismissNotification = async (bookingId) => {
+            try {
+                await deleteDoc(doc(db, 'tenants', currentTenantId, 'appointments', bookingId));
+                showToast('تم تجاهل الإشعار');
+            } catch (err) {
+                showToast('خطأ في التجاهل: ' + err.message, true);
+            }
+        };
+
+        // ============ ✅ تحميل بيانات الممرض (Firestore) ============
+        const loadNurseData = async (uid) => {
+            try {
+                const nurseDoc = await getDoc(doc(db, 'tenants', currentTenantId, 'users', uid));
+                
+                let nurseData = null;
+                if (nurseDoc.exists()) {
+                    nurseData = { id: uid, ...nurseDoc.data() };
+                } else {
+                    const oldDoc = await getDoc(doc(db, 'users', uid));
+                    if (oldDoc.exists() && oldDoc.data().role === 'nurse') {
+                        nurseData = { id: uid, ...oldDoc.data() };
+                    }
+                }
+                
+                if (!nurseData || nurseData.role !== 'nurse') {
+                    showToast('هذا الحساب ليس ممرضاً', true);
+                    return false;
+                }
+
+                state.nurseData = nurseData;
+                $('#welcomeMsg').textContent = `أهلاً، ${state.nurseData.name || 'ممرض'}`;
+                
+                const tenantName = nurseData.tenantName || 'المجمع الطبي';
+                $('#tenantName').textContent = tenantName;
+
+                // ✅ تحميل الروابط (الأطباء المرتبطين)
+                const linksDoc = await getDoc(doc(db, 'tenants', currentTenantId, 'links', uid));
+                const doctorIds = linksDoc.exists() ? Object.keys(linksDoc.data()) : [];
+
+                if (doctorIds.length === 0) {
+                    const localDoctors = loadDoctorsFromLocal();
+                    if (localDoctors && localDoctors.length > 0) {
+                        state.assignedDoctors = localDoctors;
+                        renderDoctorsTabs();
+                        populateDoctorSelect();
+                        state.selectedDoctorId = state.assignedDoctors[0].id;
+                        highlightDoctorTab(state.selectedDoctorId);
+                        
+                        const localBookings = loadBookingsFromLocal(state.selectedDoctorId, state.currentDate);
+                        if (localBookings) {
+                            state.allBookings = localBookings;
+                            updateCounts();
+                            renderTable();
                         }
-                        $('#drugSuggestions').style.display = 'none';
-                        $('#doseInput').focus();
-                    });
+                        
+                        setSyncStatus(false);
+                        showToast('⚠️ استخدام البيانات المحلية - لا يوجد اتصال', true);
+                        return true;
+                    }
+                    
+                    $('#doctorsTabs').innerHTML = '<div style="padding:10px;color:var(--text-sec);">لا يوجد أطباء مرتبطين بك</div>';
+                    return false;
+                }
+
+                const doctorPromises = doctorIds.map(async (docId) => {
+                    const snap = await getDoc(doc(db, 'tenants', currentTenantId, 'users', docId));
+                    if (snap.exists()) {
+                        return { id: docId, name: snap.data().name || 'دكتور' };
+                    }
+                    const oldSnap = await getDoc(doc(db, 'users', docId));
+                    return { id: docId, name: oldSnap.exists() ? oldSnap.data().name : 'دكتور' };
                 });
-                dd.querySelectorAll('.hide-suggestion-btn').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        drugManager.hideSuggestion(btn.dataset.fullname, btn.dataset.name, btn.dataset.form);
-                        $('#drugSuggestions').style.display = 'none';
-                    });
+                state.assignedDoctors = await Promise.all(doctorPromises);
+                
+                saveDoctorsToLocal(state.assignedDoctors);
+
+                renderDoctorsTabs();
+                populateDoctorSelect();
+                state.selectedDoctorId = state.assignedDoctors[0].id;
+                highlightDoctorTab(state.selectedDoctorId);
+                loadBookings();
+                loadNotifications();
+                setSyncStatus(true);
+                return true;
+
+            } catch (err) {
+                const localDoctors = loadDoctorsFromLocal();
+                if (localDoctors && localDoctors.length > 0) {
+                    state.assignedDoctors = localDoctors;
+                    renderDoctorsTabs();
+                    populateDoctorSelect();
+                    state.selectedDoctorId = state.assignedDoctors[0].id;
+                    highlightDoctorTab(state.selectedDoctorId);
+                    
+                    const localBookings = loadBookingsFromLocal(state.selectedDoctorId, state.currentDate);
+                    if (localBookings) {
+                        state.allBookings = localBookings;
+                        updateCounts();
+                        renderTable();
+                    }
+                    
+                    setSyncStatus(false);
+                    showToast('⚠️ استخدام البيانات المحلية - لا يوجد اتصال', true);
+                    return true;
+                }
+                
+                showToast('خطأ في تحميل البيانات: ' + err.message, true);
+                return false;
+            }
+        };
+
+        const renderDoctorsTabs = () => {
+            $('#doctorsTabs').innerHTML = state.assignedDoctors.map(doc => `
+                <button class="doctor-tab" data-id="${doc.id}">
+                    <i class="fas fa-user-md"></i> د. ${escapeHtml(doc.name)}
+                </button>
+            `).join('');
+
+            $$('.doctor-tab').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    state.selectedDoctorId = btn.dataset.id;
+                    highlightDoctorTab(state.selectedDoctorId);
+                    loadBookings();
                 });
-            }
-        }, 200);
-    });
-
-    $('#saveAsTemplateBtn').addEventListener('click', openSaveNewTemplateModal);
-    
-    $('#closeSaveNewTemplateBtn').addEventListener('click', () => $('#saveNewTemplateModal').style.display = 'none');
-    $('#cancelSaveNewTemplateBtn').addEventListener('click', () => $('#saveNewTemplateModal').style.display = 'none');
-    $('#confirmSaveNewTemplateBtn').addEventListener('click', saveAsNewTemplate);
-    $('#newTemplateNameInput').addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            saveAsNewTemplate();
-        }
-    });
-    
-    $('#newTemplateNameInput').addEventListener('input', () => {
-        $('#templateNameError').style.display = 'none';
-    });
-
-    $('#saveCompletedEditBtn').addEventListener('click', saveCompletedPrescriptionEdit);
-    $('#cancelEditCompletedBtn').addEventListener('click', cancelCompletedEdit);
-
-    $('#finishSessionBtn').addEventListener('click', handleFinishSession);
-    $('#saveAsNewBtn').addEventListener('click', handleSaveAsNew);
-    $('#updateExistingBtn').addEventListener('click', handleUpdateExisting);
-    $('#skipSaveBtn').addEventListener('click', handleSkipSave);
-    $('#templatesBtn').addEventListener('click', handleTemplates);
-    $('#sessionsBtn').addEventListener('click', handleSessions);
-    $('#viewPatientFileBtn').addEventListener('click', openPatientFile);
-    $('#clearRxBtn').addEventListener('click', () => { 
-        if (state.prescription.length === 0) return; 
-        if (confirm('مسح كل الأدوية؟')) { 
-            state.prescription = []; 
-            renderRxList(); 
-            saveSessionToDB(); 
-        } 
-    });
-    $('#diagnosisInput').addEventListener('input', () => { 
-        clearTimeout(state._diagTimer); 
-        state._diagTimer = setTimeout(saveSessionToDB, 500); 
-    });
-    
-    $('#logoutBtn').addEventListener('click', async () => { 
-        try {
-            toast('👋 جاري تسجيل الخروج...');
-            clearLoginSessionOnly();
-            state.user = null;
-            state.doctorData = null;
-            state.appointments = [];
-            await signOut(auth); 
-            window.location.href = 'index.html';
-        } catch(e) {
-            console.error('خطأ أثناء تسجيل الخروج:', e);
-            clearLoginSessionOnly();
-            window.location.href = 'index.html';
-        }
-    });
-    
-    $$('.close-btn').forEach(b => b.addEventListener('click', () => { b.closest('.modal').style.display = 'none'; }));
-    window.addEventListener('click', (e) => { 
-        if (e.target.classList.contains('modal')) e.target.style.display = 'none'; 
-        if (!$('#drugSearchInput').contains(e.target) && !$('#drugSuggestions').contains(e.target)) $('#drugSuggestions').style.display = 'none'; 
-    });
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { $$('.modal').forEach(m => m.style.display = 'none'); } });
-
-    $('#closePatientFileBtn').addEventListener('click', () => $('#patientFileModal').style.display = 'none');
-    $('#closeSaveTemplateBtn').addEventListener('click', () => $('#saveTemplateModal').style.display = 'none');
-    
-    window.addEventListener('online', () => {
-        setSyncStatus(true);
-        toast('📡 تم استعادة الاتصال');
-    });
-    
-    window.addEventListener('offline', () => {
-        setSyncStatus(false);
-        toast('⚠️ انقطع الاتصال - استخدام البيانات المحلية', true);
-    });
-};
-
-// ============================================================
-// ✅ تصدير الدوال للاستخدام من ملفات تانية (للصيدلي مثلاً)
-// ============================================================
-window.shifaDoctorTools = {
-    getDrugStatsForAllDoctors: prescriptionTracker.getDrugStatsForAllDoctors.bind(prescriptionTracker),
-    getCurrentTenantId: () => currentTenantId
-};
-
-onAuthStateChanged(auth, async (user) => {
-    if (!user) { 
-        clearLoginSessionOnly();
-        window.location.href = 'index.html'; 
-        return; 
-    }
-    
-    const urlParams = new URLSearchParams(window.location.search);
-    const tenantFromUrl = urlParams.get('tenant');
-    
-    if (tenantFromUrl) {
-        currentTenantId = tenantFromUrl;
-        console.log(`✅ تم استلام معرف المجمع من الرابط: ${currentTenantId}`);
-    } else {
-        try {
-            const encrypted = localStorage.getItem('shifa_secure_session');
-            if (encrypted) {
-                const decoded = atob(encrypted);
-                const match = decoded.match(/"tenantId":"([^"]+)"/);
-                if (match) {
-                    currentTenantId = match[1];
-                    console.log(`📦 تم استخراج معرف المجمع من الجلسة: ${currentTenantId}`);
-                }
-            }
-        } catch (e) {
-            console.warn('تعذر فك تشفير الجلسة:', e.message);
-        }
-        
-        if (!currentTenantId) {
-            const oldSession = localStorage.getItem('shifa_session');
-            if (oldSession) {
-                try {
-                    const parsed = JSON.parse(oldSession);
-                    currentTenantId = parsed.tenantId || user.uid;
-                } catch (e) {
-                    currentTenantId = user.uid;
-                }
-            } else {
-                currentTenantId = user.uid;
-            }
-            console.log(`📦 تم تحديد المجمع من الجلسة القديمة: ${currentTenantId}`);
-        }
-    }
-
-    try {
-        const tenantUserSnap = await get(ref(db, `tenants/${currentTenantId}/users/${user.uid}`));
-        if (tenantUserSnap.exists()) {
-            state.user = { uid: user.uid, ...tenantUserSnap.val() };
-        } else {
-            state.user = { uid: user.uid, name: 'طبيب' };
-        }
-        
-        $('#welcomeMsg').textContent = `د. ${state.user.name||'طبيب'}`; 
-        $('#welcomeMsg').style.display = 'inline';
-        
-        const tenantName = state.user.tenantName || 'المجمع الطبي';
-        $('#tenantName').textContent = tenantName;
-        
-        sessionStorage.setItem('userUid', user.uid); 
-        sessionStorage.setItem('userRole', 'doctor'); 
-        sessionStorage.setItem('userName', state.user.name||'');
-        
-        await drugManager.loadCache();
-        setupEventListeners();
-        
-        const q = query(ref(db, `tenants/${currentTenantId}/appointments`), orderByChild('doctor_id'), equalTo(user.uid));
-        onValue(q, (snap) => {
-            const apps = []; 
-            snap.forEach(c => { 
-                const a = c.val(); 
-                if (a.date === today() && a.status !== 'ملغي') {
-                    apps.push({ id: c.key, ...a }); 
-                }
             });
-            apps.sort((a,b) => (a.time||'').localeCompare(b.time||''));
-            state.appointments = apps; 
+        };
+
+        const highlightDoctorTab = (docId) => {
+            $$('.doctor-tab').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.id === docId);
+            });
+        };
+
+        const populateDoctorSelect = () => {
+            $('#doctorSelect').innerHTML = state.assignedDoctors.map(doc =>
+                `<option value="${doc.id}">د. ${escapeHtml(doc.name)}</option>`
+            ).join('');
+        };
+
+        // ============ ✅ تحميل الكشوفات (Firestore) ============
+        const loadBookings = () => {
+            if (state.unsubscribeBookings) state.unsubscribeBookings();
+            if (!state.selectedDoctorId || !currentTenantId) return;
+
+            const bookingsRef = collection(db, 'tenants', currentTenantId, 'appointments');
+            const q = query(bookingsRef, 
+                where('doctor_id', '==', state.selectedDoctorId),
+                where('date', '==', state.currentDate)
+            );
+            
+            state.unsubscribeBookings = onSnapshot(q, (snapshot) => {
+                const bookings = [];
+                snapshot.forEach(doc => {
+                    bookings.push({ id: doc.id, ...doc.data() });
+                });
+                bookings.sort((a, b) => (a.patient_name || '').localeCompare(b.patient_name || ''));
+                state.allBookings = bookings;
+                
+                saveBookingsToLocal(bookings);
+                setSyncStatus(true);
+                
+                updateCounts();
+                renderTable();
+            }, (error) => {
+                console.warn('خطأ في تحميل الكشوفات، استخدام المحلي:', error.message);
+                const localBookings = loadBookingsFromLocal(state.selectedDoctorId, state.currentDate);
+                if (localBookings) {
+                    state.allBookings = localBookings;
+                    updateCounts();
+                    renderTable();
+                }
+                setSyncStatus(false);
+            });
+        };
+
+        const updateCounts = () => {
+            const counts = { waiting: 0, inprogress: 0, done: 0 };
+            state.allBookings.forEach(b => {
+                if (b.status === 'انتظار') counts.waiting++;
+                else if (b.status === 'قيد الكشف') counts.inprogress++;
+                else if (b.status === 'منتهي') counts.done++;
+            });
+            $('#countWaiting').textContent = counts.waiting;
+            $('#countInProgress').textContent = counts.inprogress;
+            $('#countDone').textContent = counts.done;
+        };
+
+        const renderTable = () => {
+            let filtered = [];
+            if (state.currentTab === 'waiting') filtered = state.allBookings.filter(b => b.status === 'انتظار');
+            else if (state.currentTab === 'inprogress') filtered = state.allBookings.filter(b => b.status === 'قيد الكشف');
+            else if (state.currentTab === 'done') filtered = state.allBookings.filter(b => b.status === 'منتهي');
+
+            const tbody = $('#bookingsBody');
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr class="empty-row"><td colspan="7">لا توجد كشوفات في هذا القسم</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = filtered.map((b, i) => {
+                const statusMap = {
+                    'انتظار': 's-waiting',
+                    'قيد الكشف': 's-inprogress',
+                    'منتهي': 's-done',
+                    'ملغي': 's-cancelled'
+                };
+                const statusClass = statusMap[b.status] || 's-waiting';
+                const visitTypeClass = b.visit_type === 'new' ? 'vt-new' : 'vt-follow';
+                const visitTypeText = b.visit_type === 'new' ? 'جديد' : 'إعادة';
+
+                const doctorName = state.assignedDoctors.find(d => d.id === b.doctor_id)?.name || 'دكتور';
+
+                const actions = state.currentTab === 'waiting' ? `
+                    <button class="icon-btn" data-action="edit" data-id="${b.id}" title="تعديل">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="icon-btn danger" data-action="cancel" data-id="${b.id}" title="إلغاء">
+                        <i class="fas fa-times"></i>
+                    </button>
+                ` : '<span style="opacity:0.4;">—</span>';
+
+                return `
+                <tr>
+                    <td>${i + 1}</td>
+                    <td><b>${escapeHtml(b.patient_name || '-')}</b></td>
+                    <td>د. ${escapeHtml(doctorName)}</td>
+                    <td>${b.date || '-'}</td>
+                    <td><span class="visit-type-badge ${visitTypeClass}">${visitTypeText}</span></td>
+                    <td><span class="status-badge ${statusClass}">${b.status || 'انتظار'}</span></td>
+                    <td><div class="action-btns">${actions}</div></td>
+                </tr>`;
+            }).join('');
+        };
+
+        // ============ أحداث الجدول ============
+        $('#bookingsBody').addEventListener('click', (e) => {
+            const btn = e.target.closest('[data-action]');
+            if (!btn) return;
+            const id = btn.dataset.id;
+            const booking = state.allBookings.find(b => b.id === id);
+            if (!booking) return;
+
+            if (btn.dataset.action === 'cancel') cancelBooking(id);
+            else if (btn.dataset.action === 'edit') openEditModal(booking);
+        });
+
+        const cancelBooking = async (id) => {
+            try {
+                await updateDoc(doc(db, 'tenants', currentTenantId, 'appointments', id), { status: 'ملغي' });
+                showToast('تم إلغاء الكشف');
+            } catch (err) {
+                showToast('خطأ في الإلغاء: ' + err.message, true);
+            }
+        };
+
+        // ============ المودال ============
+        const openAddModal = () => {
+            if (state.assignedDoctors.length === 0) {
+                showToast('لا يوجد أطباء مرتبطين بك', true);
+                return;
+            }
+            $('#editId').value = '';
+            $('#modalTitle').innerHTML = '<i class="fas fa-calendar-plus"></i> كشف جديد';
+            resetForm();
+            toggleIdMode('phone');
+            $('#bookingModal').style.display = 'flex';
+        };
+
+        const openEditModal = (booking) => {
+            $('#editId').value = booking.id;
+            $('#modalTitle').innerHTML = '<i class="fas fa-edit"></i> تعديل الكشف';
+            $('#doctorSelect').value = booking.doctor_id || state.selectedDoctorId;
+            $('#patientName').value = booking.patient_name || '';
+            $('#patientAge').value = booking.age || '';
+            $('#patientPhone').value = booking.phone || '';
+            $('#visitType').value = booking.visit_type || 'new';
+            $('#apptDate').value = booking.date || state.currentDate;
+            state.selectedPatientId = booking.patient_id || null;
+            
+            if (booking.father_name || booking.family_name || booking.village_name) {
+                toggleIdMode('village');
+                $('#fatherName').value = booking.father_name || '';
+                $('#familyName').value = booking.family_name || '';
+                $('#villageName').value = booking.village_name || '';
+            } else {
+                toggleIdMode('phone');
+            }
+            
+            $('#bookingModal').style.display = 'flex';
+        };
+
+        const closeModal = () => {
+            $('#bookingModal').style.display = 'none';
+            resetForm();
+        };
+
+        const resetForm = () => {
+            $('#bookingForm').reset();
+            $('#apptDate').value = state.currentDate;
+            $('#visitType').value = 'new';
+            state.selectedPatientId = null;
+            $('#formAlert').textContent = '';
+            $('#searchResults').style.display = 'none';
+            $('#villageSearchResults').style.display = 'none';
+            $('#villageSearchResults').innerHTML = '';
+            toggleIdMode('phone');
+        };
+
+        // ============ ✅ البحث الذكي برقم الهاتف (محلي أولاً ← سحابي) ============
+        let searchTimer;
+        $('#patientSearch').addEventListener('input', (e) => {
+            const phone = e.target.value.trim();
+            if (phone.length < 1) {
+                $('#searchResults').style.display = 'none';
+                return;
+            }
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(async () => {
+                let results = [];
+                
+                // ✅ 1. البحث في الكاش المحلي أولاً
+                const localResults = searchInLocalCache(phone, 'phone');
+                if (localResults.length > 0) {
+                    results = localResults;
+                    console.log(`📦 وجد ${localResults.length} مريض في الكاش المحلي`);
+                }
+                
+                // ✅ 2. البحث في السحابة
+                try {
+                    const patientsRef = collection(db, 'patients');
+                    const snapshot = await getDocs(patientsRef);
+                    snapshot.forEach(doc => {
+                        const p = doc.data();
+                        if (p.phone && p.phone.includes(phone)) {
+                            const exists = results.find(r => r.id === doc.id);
+                            if (!exists) {
+                                const patientData = { id: doc.id, ...p, _source: 'cloud' };
+                                results.push(patientData);
+                                // ✅ نخزن في الكاش المحلي تلقائياً
+                                savePatientToLocalCache(doc.id, p);
+                            }
+                        }
+                    });
+                } catch (err) {
+                    console.warn('تعذر البحث في السحابة:', err.message);
+                }
+
+                const container = $('#searchResults');
+                if (results.length === 0) {
+                    container.innerHTML = '<div class="search-item" style="color:var(--text-sec);">لا توجد نتائج - يمكنك إضافة مريض جديد</div>';
+                } else {
+                    container.innerHTML = results.map(p => `
+                        <div class="search-item" data-id="${p.id}">
+                            <b>${escapeHtml(p.name)}</b>
+                            <small style="color:var(--text-sec);">
+                                ${escapeHtml(p.phone || '')}
+                                ${p._source === 'local' ? '📦' : '☁️'}
+                            </small>
+                        </div>
+                    `).join('');
+
+                    container.querySelectorAll('.search-item[data-id]').forEach(item => {
+                        item.addEventListener('click', () => {
+                            const patient = results.find(p => p.id === item.dataset.id);
+                            if (patient) selectPatient(patient);
+                        });
+                    });
+                }
+                container.style.display = 'block';
+            }, 250);
+        });
+
+        const selectPatient = (patient) => {
+            $('#patientName').value = patient.name || '';
+            $('#patientAge').value = patient.age || '';
+            $('#patientPhone').value = patient.phone || '';
+            state.selectedPatientId = patient.id;
+            $('#patientSearch').value = '';
+            $('#searchResults').style.display = 'none';
+            
+            if (patient.father_name || patient.family_name || patient.village_name) {
+                toggleIdMode('village');
+                $('#fatherName').value = patient.father_name || '';
+                $('#familyName').value = patient.family_name || '';
+                $('#villageName').value = patient.village_name || '';
+            }
+        };
+
+        document.addEventListener('click', (e) => {
+            if (!$('#patientSearch').contains(e.target) && !$('#searchResults').contains(e.target)) {
+                $('#searchResults').style.display = 'none';
+            }
+        });
+
+        // ============ ✅ التحقق من تكرار رقم الهاتف (محلي + سحابي) ============
+        const checkPhoneUniqueness = async (phone, excludeId = null) => {
+            if (!phone || phone.trim() === '') return null;
+            
+            // البحث المحلي أولاً
+            const localResults = searchInLocalCache(phone, 'phone');
+            const localDuplicate = localResults.find(p => p.phone === phone && p.id !== excludeId);
+            if (localDuplicate) return localDuplicate;
+
+            try {
+                const patientsRef = collection(db, 'patients');
+                const snapshot = await getDocs(patientsRef);
+                let duplicate = null;
+                snapshot.forEach(doc => {
+                    const p = doc.data();
+                    if (p.phone === phone && doc.id !== excludeId && !duplicate) {
+                        duplicate = { id: doc.id, ...p };
+                    }
+                });
+                return duplicate;
+            } catch (err) {
+                console.warn('تعذر التحقق من uniqueness الهاتف:', err.message);
+                return null;
+            }
+        };
+
+        // ============ ✅ حفظ الكشف مع إضافة المريض في المسار العام (Firestore) ============
+        $('#bookingForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const editId = $('#editId').value;
+            const doctorId = $('#doctorSelect').value;
+            const name = $('#patientName').value.trim();
+            const age = $('#patientAge').value.trim();
+            const phone = state.idMode === 'phone' ? $('#patientPhone').value.trim() : '';
+            const visitType = $('#visitType').value;
+            const date = $('#apptDate').value;
+
+            const fatherName = state.idMode === 'village' ? $('#fatherName').value.trim() : '';
+            const familyName = state.idMode === 'village' ? $('#familyName').value.trim() : '';
+            const villageName = state.idMode === 'village' ? $('#villageName').value.trim() : '';
+
+            if (!doctorId || !name || !visitType || !date) {
+                $('#formAlert').textContent = 'جميع الحقول المطلوبة (*) يجب ملؤها';
+                return;
+            }
+
+            if (state.idMode === 'phone' && phone) {
+                const existingPhone = await checkPhoneUniqueness(phone, state.selectedPatientId);
+                if (existingPhone && !state.selectedPatientId) {
+                    $('#formAlert').textContent = `⚠️ رقم الهاتف "${phone}" مسجل مسبقاً للمريض "${existingPhone.name}". الرجاء البحث عن المريض أولاً أو استخدام رقم هاتف مختلف.`;
+                    return;
+                }
+            }
+
+            const submitBtn = $('#submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
+            $('#formAlert').textContent = '';
+
+            try {
+                let patientId = state.selectedPatientId;
+
+                if (!patientId) {
+                    // ✅ إضافة مريض جديد
+                    const patientData = {
+                        name,
+                        age: age || null,
+                        phone: phone || null,
+                        father_name: fatherName || null,
+                        family_name: familyName || null,
+                        village_name: villageName || null,
+                        created_at: serverTimestamp()
+                    };
+                    
+                    const newRef = await addDoc(collection(db, 'patients'), patientData);
+                    patientId = newRef.id;
+                    
+                    // ✅ تخزين في الكاش المحلي
+                    savePatientToLocalCache(patientId, { ...patientData, created_at: new Date().toISOString() });
+                } else {
+                    // تحديث بيانات المريض
+                    const updateData = {
+                        name,
+                        age: age || null,
+                        updated_at: serverTimestamp()
+                    };
+                    
+                    if (state.idMode === 'phone') {
+                        updateData.phone = phone || null;
+                    } else {
+                        updateData.father_name = fatherName || null;
+                        updateData.family_name = familyName || null;
+                        updateData.village_name = villageName || null;
+                    }
+                    
+                    try {
+                        await updateDoc(doc(db, 'patients', patientId), updateData);
+                        savePatientToLocalCache(patientId, { 
+                            ...state.localPatientsCache[patientId], 
+                            ...updateData,
+                            _cachedAt: Date.now()
+                        });
+                    } catch (updateErr) {
+                        console.warn('تعذر تحديث المريض:', updateErr.message);
+                    }
+                }
+
+                const bookingData = {
+                    patient_name: name,
+                    patient_id: patientId,
+                    age: age || null,
+                    phone: phone || null,
+                    father_name: fatherName || null,
+                    family_name: familyName || null,
+                    village_name: villageName || null,
+                    doctor_id: doctorId,
+                    nurse_id: state.currentUser.uid,
+                    visit_type: visitType,
+                    date,
+                    status: 'انتظار',
+                    tenantId: currentTenantId
+                };
+
+                if (editId) {
+                    await updateDoc(doc(db, 'tenants', currentTenantId, 'appointments', editId), bookingData);
+                    showToast('تم تعديل الكشف بنجاح');
+                } else {
+                    bookingData.created_at = serverTimestamp();
+                    bookingData.created_by = state.currentUser.uid;
+                    await addDoc(collection(db, 'tenants', currentTenantId, 'appointments'), bookingData);
+                    showToast('تم حجز الكشف بنجاح');
+                }
+
+                closeModal();
+            } catch (err) {
+                $('#formAlert').textContent = 'خطأ: ' + err.message;
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-save"></i> تأكيد الكشف';
+            }
+        });
+
+        // ============ تبويبات الحالة ============
+        $$('.status-tab').forEach(btn => {
+            btn.addEventListener('click', () => {
+                $$('.status-tab').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                state.currentTab = btn.dataset.tab;
+                renderTable();
+            });
+        });
+
+        // ============ تغيير التاريخ ============
+        $('#filterDate').addEventListener('change', () => {
+            state.currentDate = $('#filterDate').value;
+            if (state.selectedDoctorId) loadBookings();
+        });
+
+        $('#todayBtn').addEventListener('click', () => {
+            state.currentDate = getToday();
+            $('#filterDate').value = state.currentDate;
+            if (state.selectedDoctorId) loadBookings();
+        });
+
+        // ============ ✅ أحداث الإشعارات ============
+        $('#notificationsBtn').addEventListener('click', openNotificationsModal);
+        $('#closeNotificationsBtn').addEventListener('click', closeNotificationsModal);
+        window.addEventListener('click', (e) => {
+            if (e.target === $('#notificationsModal')) closeNotificationsModal();
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && $('#notificationsModal').style.display === 'flex') closeNotificationsModal();
+        });
+
+        // ============ ✅ تسجيل الخروج ============
+        $('#logoutBtn').addEventListener('click', async () => {
+            try {
+                showToast('👋 جاري تسجيل الخروج...');
+                
+                if (state.unsubscribeBookings) {
+                    state.unsubscribeBookings();
+                    state.unsubscribeBookings = null;
+                }
+                if (state.unsubscribeNotifications) {
+                    state.unsubscribeNotifications();
+                    state.unsubscribeNotifications = null;
+                }
+                
+                clearLoginSessionOnly();
+                
+                state.currentUser = null;
+                state.nurseData = null;
+                state.assignedDoctors = [];
+                state.allBookings = [];
+                
+                await signOut(auth);
+                
+                window.location.href = 'index.html';
+                
+            } catch (error) {
+                console.error('خطأ أثناء تسجيل الخروج:', error);
+                clearLoginSessionOnly();
+                window.location.href = 'index.html';
+            }
+        });
+
+        // ============ أحداث أخرى ============
+        $('#addBookingBtn').addEventListener('click', openAddModal);
+        $('#closeModalBtn').addEventListener('click', closeModal);
+        window.addEventListener('click', (e) => {
+            if (e.target === $('#bookingModal')) closeModal();
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && $('#bookingModal').style.display === 'flex') closeModal();
+        });
+
+        // ============ ✅ أحداث تبديل وضع الهوية ============
+        $('#toggleIdModeBtn').addEventListener('click', () => toggleIdMode('village'));
+        $('#togglePhoneModeBtn').addEventListener('click', () => toggleIdMode('phone'));
+
+        // ============ مستمعي الاتصال بالإنترنت ============
+        window.addEventListener('online', () => {
             setSyncStatus(true);
-            updateQueueCount(); 
-            renderSidebar();
-            if (state.currentAppointment) updateWorkspace();
-        }, (error) => {
-            console.warn('خطأ في تحميل الكشوفات:', error.message);
-            setSyncStatus(false);
+            showToast('📡 تم استعادة الاتصال - جاري المزامنة');
+            if (state.selectedDoctorId) loadBookings();
         });
         
-        const restored = await restoreSession();
-        if (restored) { 
-            const patientId = state.currentAppointment?.patient_id || state.currentAppointment?.patientId;
-            if (patientId) state.previousRecordsCount = await fetchPreviousRecordsCount(patientId);
-            updateWorkspace(); 
-            toast('🔄 تم استعادة آخر جلسة'); 
-        }
-        
-        $('#appLoader').style.display = 'none'; 
-        $('#mainContainer').style.display = 'block';
-        
-    } catch (error) { 
-        console.error('خطأ في بدء التشغيل:', error); 
-        $('#appLoader').style.display = 'none'; 
-        $('#mainContainer').style.display = 'block';
-        toast('⚠️ تعذر تحميل بعض البيانات', true); 
-    }
-});
+        window.addEventListener('offline', () => {
+            setSyncStatus(false);
+            showToast('⚠️ انقطع الاتصال - استخدام البيانات المحلية', true);
+        });
 
-console.log('🚀 لوحة الطبيب - نظام المجمعات الطبية المتعددة');
-console.log('☁️ التخزين سحابي بالكامل (Firebase Realtime Database)');
-console.log('💰 تكلفة محسّنة مع حدود قصوى للبيانات');
-console.log('🔍 البحث الذكي: ترتيب حسب بداية النص أولاً');
-console.log('💊 الشكل الصيدلي: يُحفظ في الروشتة فقط للصيدلي');
-console.log('⭐ المفضلات: تخزين سحابي مع حد أقصى 50 دواء و30 جرعة');
-console.log('🔒 كل طبيب يشوف كشوفاته هو فقط في مجمعه');
-console.log('🪟 نظام مراقبة: نافذة منزلقة 15 يوم');
-console.log('🏥 سجل موحد: يظهر وصفات المريض من كل المجمعات');
-console.log('💾 الجلسات المعلقة: تخزين سحابي بدلاً من IndexedDB');
+        // ============ ✅ بدء التشغيل ============
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                clearLoginSessionOnly();
+                window.location.href = 'index.html';
+                return;
+            }
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const tenantFromUrl = urlParams.get('tenant');
+            
+            if (tenantFromUrl) {
+                currentTenantId = tenantFromUrl;
+                console.log(`✅ تم استلام معرف المجمع من الرابط: ${currentTenantId}`);
+            } else {
+                try {
+                    const encrypted = localStorage.getItem('shifa_secure_session');
+                    if (encrypted) {
+                        const decoded = atob(encrypted);
+                        const match = decoded.match(/"tenantId":"([^"]+)"/);
+                        if (match) {
+                            currentTenantId = match[1];
+                            console.log(`📦 تم استخراج معرف المجمع من الجلسة: ${currentTenantId}`);
+                        }
+                    }
+                } catch (e) {
+                    console.warn('تعذر فك تشفير الجلسة:', e.message);
+                }
+                
+                if (!currentTenantId) {
+                    const oldSession = localStorage.getItem('shifa_session');
+                    if (oldSession) {
+                        try {
+                            const parsed = JSON.parse(oldSession);
+                            currentTenantId = parsed.tenantId || user.uid;
+                        } catch (e) {
+                            currentTenantId = user.uid;
+                        }
+                    } else {
+                        currentTenantId = user.uid;
+                    }
+                    console.log(`📦 تم تحديد المجمع من الجلسة القديمة: ${currentTenantId}`);
+                }
+            }
+
+            sessionStorage.setItem('userUid', user.uid);
+            sessionStorage.setItem('userRole', 'nurse');
+
+            if (!state.currentUser) {
+                state.currentUser = { uid: user.uid };
+                state.currentDate = getToday();
+                $('#filterDate').value = state.currentDate;
+
+                // ✅ تحميل الكاش المحلي للمرضى
+                loadPatientsCacheFromLocal();
+
+                // ✅ تهيئة البحث بالقرية
+                setupVillageSearch();
+
+                const localBookings = loadBookingsFromLocal(state.selectedDoctorId || '', state.currentDate);
+                if (localBookings && localBookings.length > 0) {
+                    state.allBookings = localBookings;
+                    updateCounts();
+                    renderTable();
+                }
+
+                $('#authLoader').style.display = 'none';
+                $('#mainContainer').style.display = 'block';
+
+                const success = await loadNurseData(user.uid);
+                if (!success) {
+                    showToast('⚠️ تعذر تحميل بعض البيانات', true);
+                }
+            }
+        });
+
+        console.log('🚀 لوحة الممرض - Firestore + تخزين محلي ذكي');
+        console.log('🔒 كل ممرض يشوف فقط كشوفات الدكتور المرتبط بيه في مجمعه');
+        console.log('💾 وضع الحفظ: يمسح جلسة الدخول فقط - يحتفظ ببيانات المجمع والكاش');
+        console.log('📦 الكاش المحلي: يخزن المرضى اللي الممرض شافهم فقط (حد أقصى 100 مريض)');
+        console.log('🔍 البحث: محلي أولاً ← سحابي (مع علامة 📦 للمحلي و ☁️ للسحابي)');
+        console.log('💰 توفير: تقليل استهلاك القراءة من Firestore بنسبة كبيرة');
+    </script>
+</body>
+</html>
