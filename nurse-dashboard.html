@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
@@ -1127,30 +1127,12 @@
         import { firebaseConfig } from './firebase-config.js';
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-        // ✅ استخدام Firestore بدل Realtime Database
-        import { 
-            getFirestore, 
-            collection, doc, setDoc, updateDoc, getDoc, getDocs, deleteDoc,
-            onSnapshot, query, where, 
-            enableIndexedDbPersistence,
-            serverTimestamp, addDoc
-        } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getDatabase, ref, onValue, set, push, update, get, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
         // ============ تهيئة Firebase ============
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
-        const db = getFirestore(app); // ✅ Firestore
-
-        // ✅ تفعيل التخزين المحلي IndexedDB
-        enableIndexedDbPersistence(db)
-            .then(() => console.log('✅ تم تفعيل التخزين المحلي IndexedDB'))
-            .catch((err) => {
-                if (err.code === 'failed-precondition') {
-                    console.warn('⚠️ التخزين المحلي معطل - علامات تبويب متعددة');
-                } else if (err.code === 'unimplemented') {
-                    console.warn('⚠️ المتصفح لا يدعم التخزين المحلي');
-                }
-            });
+        const db = getDatabase(app);
 
         // ============ ✅ ثوابت التخزين المحلي ============
         const STORAGE_PREFIX = 'shifa_tenant_';
@@ -1180,9 +1162,7 @@
             selectedPatientId: null,
             unsubscribeBookings: null,
             unsubscribeNotifications: null,
-            idMode: 'phone',
-            // ✅ كاش محلي ذكي للمرضى (اللي الممرض شافهم فقط)
-            localPatientsCache: {},
+            idMode: 'phone', // ✅ 'phone' أو 'village'
         };
 
         // ============ دوال مساعدة ============
@@ -1213,82 +1193,6 @@
             }, 2500);
         };
 
-        // ============ ✅ تخزين محلي ذكي للمرضى ============
-        const getLocalPatientsCacheKey = () => getTenantStorageKey('nurse_patients_cache');
-
-        const loadPatientsCacheFromLocal = () => {
-            if (!currentTenantId) return;
-            try {
-                const key = getLocalPatientsCacheKey();
-                const cached = localStorage.getItem(key);
-                if (cached) {
-                    state.localPatientsCache = JSON.parse(cached);
-                    console.log(`📦 تم تحميل ${Object.keys(state.localPatientsCache).length} مريض من الكاش المحلي`);
-                }
-            } catch (e) {
-                console.warn('تعذر تحميل كاش المرضى:', e.message);
-                state.localPatientsCache = {};
-            }
-        };
-
-        const savePatientToLocalCache = (patientId, patientData) => {
-            if (!currentTenantId || !patientId) return;
-            try {
-                state.localPatientsCache[patientId] = {
-                    ...patientData,
-                    _cachedAt: Date.now()
-                };
-                
-                // نحتفظ بآخر 100 مريض فقط
-                const entries = Object.entries(state.localPatientsCache);
-                if (entries.length > 100) {
-                    entries.sort((a, b) => (a[1]._cachedAt || 0) - (b[1]._cachedAt || 0));
-                    const toRemove = entries.slice(0, entries.length - 100);
-                    toRemove.forEach(([id]) => delete state.localPatientsCache[id]);
-                }
-                
-                const key = getLocalPatientsCacheKey();
-                localStorage.setItem(key, JSON.stringify(state.localPatientsCache));
-            } catch (e) {
-                console.warn('تعذر حفظ المريض في الكاش المحلي:', e.message);
-            }
-        };
-
-        const searchInLocalCache = (searchTerm, searchType = 'phone') => {
-            if (!currentTenantId || !searchTerm) return [];
-            
-            const t = searchTerm.trim().toLowerCase();
-            const results = [];
-            
-            Object.entries(state.localPatientsCache).forEach(([id, p]) => {
-                if (searchType === 'phone') {
-                    if (p.phone && p.phone.includes(t)) {
-                        results.push({ id, ...p, _source: 'local' });
-                    }
-                }
-            });
-            
-            return results;
-        };
-
-        const searchInLocalCacheByVillage = (fatherName, familyName, villageName) => {
-            if (!currentTenantId) return [];
-            
-            const results = [];
-            
-            Object.entries(state.localPatientsCache).forEach(([id, p]) => {
-                const matchFather = !fatherName || (p.father_name && p.father_name.includes(fatherName));
-                const matchFamily = !familyName || (p.family_name && p.family_name.includes(familyName));
-                const matchVillage = !villageName || (p.village_name && p.village_name.includes(villageName));
-                
-                if (matchFather && matchFamily && matchVillage && (fatherName || familyName || villageName)) {
-                    results.push({ id, ...p, _source: 'local' });
-                }
-            });
-            
-            return results;
-        };
-
         // ============ ✅ مسح بيانات الجلسة فقط ============
         const clearLoginSessionOnly = () => {
             try {
@@ -1308,27 +1212,45 @@
                 sessionStorage.clear();
                 
                 console.log(`✅ تم مسح ${LOGIN_STORAGE_KEYS.length + sessionKeysToRemove.length} مفتاح جلسة`);
-                console.log('💾 تم الإبقاء على بيانات المجمع المحلية والكاش');
+                console.log('💾 تم الإبقاء على بيانات المجمع المحلية');
             } catch (e) {
                 console.warn('تعذر مسح بيانات الجلسة:', e.message);
             }
         };
 
-        // ============ إدارة التخزين المحلي للكشوفات والأطباء ============
+        // ============ إدارة التخزين المحلي لكل مجمع ============
+        
         const getLocalBookingsKey = () => getTenantStorageKey('nurse_bookings');
         const getLocalDoctorsKey = () => getTenantStorageKey('nurse_doctors');
+        const getLocalPatientsKey = () => getTenantStorageKey('nurse_patients');
         
         const saveBookingsToLocal = (bookings) => {
             if (!currentTenantId) return;
             try {
                 const key = getLocalBookingsKey();
                 const data = {
-                    bookings: bookings.map(b => ({ ...b })),
+                    bookings: bookings.map(b => ({ ...b, _cachedAt: Date.now() })),
                     lastUpdated: Date.now()
                 };
                 localStorage.setItem(key, JSON.stringify(data));
             } catch (e) {
                 console.warn('تعذر حفظ الكشوفات محلياً:', e.message);
+            }
+        };
+
+        const savePatientToLocal = (patientId, patientData) => {
+            if (!currentTenantId) return;
+            try {
+                const key = getLocalPatientsKey();
+                const cached = JSON.parse(localStorage.getItem(key) || '{}');
+                if (!cached.patients) cached.patients = {};
+                cached.patients[patientId] = {
+                    ...patientData,
+                    _cachedAt: Date.now()
+                };
+                localStorage.setItem(key, JSON.stringify(cached));
+            } catch (e) {
+                console.warn('تعذر حفظ المريض محلياً:', e.message);
             }
         };
 
@@ -1342,14 +1264,71 @@
                 const data = JSON.parse(cached);
                 if (!data.bookings) return null;
                 
+                const now = Date.now();
+                const expiryMs = 50 * 24 * 60 * 60 * 1000;
+                
                 const filtered = data.bookings.filter(b => {
-                    return b.doctor_id === doctorId && b.date === date;
+                    const isFresh = (now - b._cachedAt) < expiryMs;
+                    return b.doctor_id === doctorId && b.date === date && isFresh;
                 });
                 
                 return filtered.length > 0 ? filtered : null;
             } catch (e) {
                 console.warn('تعذر تحميل الكشوفات المحلية:', e.message);
                 return null;
+            }
+        };
+
+        const searchPatientsLocal = (phone) => {
+            if (!currentTenantId) return [];
+            try {
+                const key = getLocalPatientsKey();
+                const cached = localStorage.getItem(key);
+                if (!cached) return [];
+                
+                const data = JSON.parse(cached);
+                if (!data.patients) return [];
+                
+                const now = Date.now();
+                const expiryMs = 50 * 24 * 60 * 60 * 1000;
+                const t = phone.trim();
+                
+                return Object.entries(data.patients)
+                    .filter(([id, p]) => {
+                        const isFresh = (now - p._cachedAt) < expiryMs;
+                        return isFresh && p.phone && p.phone.includes(t);
+                    })
+                    .map(([id, p]) => ({ id, ...p }));
+            } catch (e) {
+                return [];
+            }
+        };
+
+        // ✅ البحث المحلي ببيانات القرية
+        const searchPatientsLocalByVillage = (fatherName, familyName, villageName) => {
+            if (!currentTenantId) return [];
+            try {
+                const key = getLocalPatientsKey();
+                const cached = localStorage.getItem(key);
+                if (!cached) return [];
+                
+                const data = JSON.parse(cached);
+                if (!data.patients) return [];
+                
+                const now = Date.now();
+                const expiryMs = 50 * 24 * 60 * 60 * 1000;
+                
+                return Object.entries(data.patients)
+                    .filter(([id, p]) => {
+                        const isFresh = (now - p._cachedAt) < expiryMs;
+                        const matchFather = !fatherName || (p.father_name && p.father_name.includes(fatherName));
+                        const matchFamily = !familyName || (p.family_name && p.family_name.includes(familyName));
+                        const matchVillage = !villageName || (p.village_name && p.village_name.includes(villageName));
+                        return isFresh && matchFather && matchFamily && matchVillage;
+                    })
+                    .map(([id, p]) => ({ id, ...p }));
+            } catch (e) {
+                return [];
             }
         };
 
@@ -1396,7 +1375,7 @@
             }
         };
 
-        // ============ ✅ تبديل وضع الهوية ============
+        // ============ ✅ تبديل وضع الهوية (رقم الهاتف / بيانات القرية) ============
         const toggleIdMode = (mode) => {
             state.idMode = mode;
             const phoneSection = $('#phoneSection');
@@ -1407,6 +1386,7 @@
                 phoneSection.style.display = 'none';
                 phoneSearchSection.style.display = 'none';
                 villageSection.style.display = 'block';
+                // مسح قيم الهاتف والبحث
                 $('#patientPhone').value = '';
                 $('#patientSearch').value = '';
                 $('#searchResults').style.display = 'none';
@@ -1414,6 +1394,7 @@
                 phoneSection.style.display = 'block';
                 phoneSearchSection.style.display = 'block';
                 villageSection.style.display = 'none';
+                // مسح قيم القرية
                 $('#fatherName').value = '';
                 $('#familyName').value = '';
                 $('#villageName').value = '';
@@ -1422,7 +1403,7 @@
             }
         };
 
-        // ============ ✅ البحث الذكي بالقرية (محلي أولاً ← سحابي) ============
+        // ============ ✅ البحث بقاعدة البيانات باستخدام بيانات القرية ============
         let villageSearchTimer;
         const setupVillageSearch = () => {
             const fatherInput = $('#fatherName');
@@ -1434,6 +1415,7 @@
                 const family = familyInput.value.trim();
                 const village = villageInput.value.trim();
                 
+                // لا نبحث إلا إذا امتلأت الخانات
                 if (!father && !family && !village) {
                     $('#villageSearchResults').style.display = 'none';
                     return;
@@ -1443,30 +1425,24 @@
                 villageSearchTimer = setTimeout(async () => {
                     let results = [];
                     
-                    // ✅ 1. البحث في الكاش المحلي أولاً
-                    const localResults = searchInLocalCacheByVillage(father, family, village);
+                    // 1. البحث المحلي أولاً
+                    const localResults = searchPatientsLocalByVillage(father, family, village);
                     if (localResults.length > 0) {
                         results = localResults;
-                        console.log(`📦 وجد ${localResults.length} مريض في الكاش المحلي`);
                     }
                     
-                    // ✅ 2. البحث في السحابة
+                    // 2. البحث في السحابة
                     try {
-                        const patientsRef = collection(db, 'patients');
-                        const snapshot = await getDocs(patientsRef);
-                        snapshot.forEach(doc => {
-                            const p = doc.data();
+                        const snap = await get(ref(db, 'patients'));
+                        snap.forEach(child => {
+                            const p = child.val();
                             const matchFather = !father || (p.father_name && p.father_name.includes(father));
                             const matchFamily = !family || (p.family_name && p.family_name.includes(family));
                             const matchVillage = !village || (p.village_name && p.village_name.includes(village));
                             
                             if (matchFather && matchFamily && matchVillage && (father || family || village)) {
-                                const exists = results.find(r => r.id === doc.id);
-                                if (!exists) {
-                                    const patientData = { id: doc.id, ...p, _source: 'cloud' };
-                                    results.push(patientData);
-                                    // ✅ نخزن في الكاش المحلي تلقائياً
-                                    savePatientToLocalCache(doc.id, p);
+                                if (!results.find(r => r.id === child.key)) {
+                                    results.push({ id: child.key, ...p });
                                 }
                             }
                         });
@@ -1481,10 +1457,7 @@
                         container.innerHTML = results.map(p => `
                             <div class="search-item" data-id="${p.id}">
                                 <b>${escapeHtml(p.name)}</b>
-                                <small style="color:var(--text-sec);">
-                                    ${escapeHtml(p.father_name || '')} - ${escapeHtml(p.family_name || '')} - ${escapeHtml(p.village_name || '')}
-                                    ${p._source === 'local' ? '📦' : '☁️'}
-                                </small>
+                                <small style="color:var(--text-sec);">${escapeHtml(p.father_name || '')} - ${escapeHtml(p.family_name || '')} - ${escapeHtml(p.village_name || '')}</small>
                             </div>
                         `).join('');
 
@@ -1503,6 +1476,7 @@
             familyInput.addEventListener('input', performVillageSearch);
             villageInput.addEventListener('input', performVillageSearch);
             
+            // إخفاء النتائج عند النقر خارج المنطقة
             document.addEventListener('click', (e) => {
                 const villageSection = $('#villageSection');
                 const searchResults = $('#villageSearchResults');
@@ -1540,20 +1514,19 @@
             window.location.href = 'nurse-settings.html';
         });
 
-        // ============ ✅ تحميل الإشعارات (Firestore) ============
+        // ============ ✅ تحميل الإشعارات ============
         const loadNotifications = () => {
             if (!currentTenantId) return;
 
-            const bookingsRef = collection(db, 'tenants', currentTenantId, 'appointments');
-            const q = query(bookingsRef);
+            const bookingsRef = ref(db, `tenants/${currentTenantId}/appointments`);
             
-            state.unsubscribeNotifications = onSnapshot(q, (snapshot) => {
+            state.unsubscribeNotifications = onValue(bookingsRef, (snap) => {
                 const notifications = [];
-                snapshot.forEach(doc => {
-                    const booking = doc.data();
+                snap.forEach(child => {
+                    const booking = child.val();
                     if (booking.created_by !== state.currentUser?.uid) {
                         notifications.push({
-                            id: doc.id,
+                            id: child.key,
                             ...booking
                         });
                     }
@@ -1613,6 +1586,7 @@
                     `;
                 }).join('');
 
+                // ✅ أحداث أزرار التأكيد والتجاهل
                 body.querySelectorAll('.btn-confirm').forEach(btn => {
                     btn.addEventListener('click', () => confirmBooking(btn.dataset.notificationId));
                 });
@@ -1640,6 +1614,7 @@
                     return;
                 }
 
+                // فتح مودال الكشف مع بيانات المريض
                 $('#editId').value = '';
                 $('#modalTitle').innerHTML = '<i class="fas fa-calendar-plus"></i> كشف جديد';
                 $('#doctorSelect').value = booking.doctor_id || state.selectedDoctorId;
@@ -1650,6 +1625,7 @@
                 $('#apptDate').value = booking.date || state.currentDate;
                 state.selectedPatientId = booking.patient_id || null;
                 
+                // ✅ استعادة وضع الهوية إن كان محفوظاً
                 if (booking.father_name || booking.family_name || booking.village_name) {
                     toggleIdMode('village');
                     $('#fatherName').value = booking.father_name || '';
@@ -1659,10 +1635,12 @@
                     toggleIdMode('phone');
                 }
 
+                // إغلاق مودال الإشعارات وفتح مودال الكشف
                 closeNotificationsModal();
                 $('#bookingModal').style.display = 'flex';
                 
-                await deleteDoc(doc(db, 'tenants', currentTenantId, 'appointments', bookingId));
+                // حذف الإشعار من القائمة
+                await set(ref(db, `tenants/${currentTenantId}/appointments/${bookingId}`), null);
                 
                 showToast('✅ تم نقل بيانات المريض لنموذج الكشف');
             } catch (err) {
@@ -1672,25 +1650,25 @@
 
         const dismissNotification = async (bookingId) => {
             try {
-                await deleteDoc(doc(db, 'tenants', currentTenantId, 'appointments', bookingId));
+                await set(ref(db, `tenants/${currentTenantId}/appointments/${bookingId}`), null);
                 showToast('تم تجاهل الإشعار');
             } catch (err) {
                 showToast('خطأ في التجاهل: ' + err.message, true);
             }
         };
 
-        // ============ ✅ تحميل بيانات الممرض (Firestore) ============
+        // ============ ✅ تحميل بيانات الممرض من مسار المجمع ============
         const loadNurseData = async (uid) => {
             try {
-                const nurseDoc = await getDoc(doc(db, 'tenants', currentTenantId, 'users', uid));
+                const nurseSnap = await get(ref(db, `tenants/${currentTenantId}/users/${uid}`));
                 
                 let nurseData = null;
-                if (nurseDoc.exists()) {
-                    nurseData = { id: uid, ...nurseDoc.data() };
+                if (nurseSnap.exists()) {
+                    nurseData = { id: uid, ...nurseSnap.val() };
                 } else {
-                    const oldDoc = await getDoc(doc(db, 'users', uid));
-                    if (oldDoc.exists() && oldDoc.data().role === 'nurse') {
-                        nurseData = { id: uid, ...oldDoc.data() };
+                    const oldSnap = await get(ref(db, `users/${uid}`));
+                    if (oldSnap.exists() && oldSnap.val().role === 'nurse') {
+                        nurseData = { id: uid, ...oldSnap.val() };
                     }
                 }
                 
@@ -1705,9 +1683,8 @@
                 const tenantName = nurseData.tenantName || 'المجمع الطبي';
                 $('#tenantName').textContent = tenantName;
 
-                // ✅ تحميل الروابط (الأطباء المرتبطين)
-                const linksDoc = await getDoc(doc(db, 'tenants', currentTenantId, 'links', uid));
-                const doctorIds = linksDoc.exists() ? Object.keys(linksDoc.data()) : [];
+                const linksSnap = await get(ref(db, `tenants/${currentTenantId}/links/${uid}`));
+                const doctorIds = linksSnap.exists() ? Object.keys(linksSnap.val()) : [];
 
                 if (doctorIds.length === 0) {
                     const localDoctors = loadDoctorsFromLocal();
@@ -1735,12 +1712,12 @@
                 }
 
                 const doctorPromises = doctorIds.map(async (docId) => {
-                    const snap = await getDoc(doc(db, 'tenants', currentTenantId, 'users', docId));
+                    const snap = await get(ref(db, `tenants/${currentTenantId}/users/${docId}`));
                     if (snap.exists()) {
-                        return { id: docId, name: snap.data().name || 'دكتور' };
+                        return { id: docId, name: snap.val().name || 'دكتور' };
                     }
-                    const oldSnap = await getDoc(doc(db, 'users', docId));
-                    return { id: docId, name: oldSnap.exists() ? oldSnap.data().name : 'دكتور' };
+                    const oldSnap = await get(ref(db, `users/${docId}`));
+                    return { id: docId, name: oldSnap.exists() ? oldSnap.val().name : 'دكتور' };
                 });
                 state.assignedDoctors = await Promise.all(doctorPromises);
                 
@@ -1809,22 +1786,22 @@
             ).join('');
         };
 
-        // ============ ✅ تحميل الكشوفات (Firestore) ============
+        // ============ ✅ تحميل الكشوفات من مسار المجمع ============
         const loadBookings = () => {
             if (state.unsubscribeBookings) state.unsubscribeBookings();
             if (!state.selectedDoctorId || !currentTenantId) return;
 
-            const bookingsRef = collection(db, 'tenants', currentTenantId, 'appointments');
-            const q = query(bookingsRef, 
-                where('doctor_id', '==', state.selectedDoctorId),
-                where('date', '==', state.currentDate)
-            );
+            const bookingsRef = ref(db, `tenants/${currentTenantId}/appointments`);
             
-            state.unsubscribeBookings = onSnapshot(q, (snapshot) => {
+            state.unsubscribeBookings = onValue(bookingsRef, (snap) => {
                 const bookings = [];
-                snapshot.forEach(doc => {
-                    bookings.push({ id: doc.id, ...doc.data() });
+                snap.forEach(child => {
+                    const apt = child.val();
+                    if (apt.doctor_id === state.selectedDoctorId && apt.date === state.currentDate) {
+                        bookings.push({ id: child.key, ...apt });
+                    }
                 });
+                // ✅ ترتيب حسب اسم المريض بدلاً من الوقت (لعدم وجود وقت)
                 bookings.sort((a, b) => (a.patient_name || '').localeCompare(b.patient_name || ''));
                 state.allBookings = bookings;
                 
@@ -1919,7 +1896,7 @@
 
         const cancelBooking = async (id) => {
             try {
-                await updateDoc(doc(db, 'tenants', currentTenantId, 'appointments', id), { status: 'ملغي' });
+                await update(ref(db, `tenants/${currentTenantId}/appointments/${id}`), { status: 'ملغي' });
                 showToast('تم إلغاء الكشف');
             } catch (err) {
                 showToast('خطأ في الإلغاء: ' + err.message, true);
@@ -1935,7 +1912,7 @@
             $('#editId').value = '';
             $('#modalTitle').innerHTML = '<i class="fas fa-calendar-plus"></i> كشف جديد';
             resetForm();
-            toggleIdMode('phone');
+            toggleIdMode('phone'); // ✅ الوضع الافتراضي: رقم الهاتف
             $('#bookingModal').style.display = 'flex';
         };
 
@@ -1950,6 +1927,7 @@
             $('#apptDate').value = booking.date || state.currentDate;
             state.selectedPatientId = booking.patient_id || null;
             
+            // ✅ استعادة وضع الهوية
             if (booking.father_name || booking.family_name || booking.village_name) {
                 toggleIdMode('village');
                 $('#fatherName').value = booking.father_name || '';
@@ -1979,7 +1957,7 @@
             toggleIdMode('phone');
         };
 
-        // ============ ✅ البحث الذكي برقم الهاتف (محلي أولاً ← سحابي) ============
+        // ============ ✅ البحث عن المرضى برقم الهاتف فقط ============
         let searchTimer;
         $('#patientSearch').addEventListener('input', (e) => {
             const phone = e.target.value.trim();
@@ -1991,26 +1969,20 @@
             searchTimer = setTimeout(async () => {
                 let results = [];
                 
-                // ✅ 1. البحث في الكاش المحلي أولاً
-                const localResults = searchInLocalCache(phone, 'phone');
+                // 1. البحث المحلي أولاً برقم الهاتف
+                const localResults = searchPatientsLocal(phone);
                 if (localResults.length > 0) {
                     results = localResults;
-                    console.log(`📦 وجد ${localResults.length} مريض في الكاش المحلي`);
                 }
                 
-                // ✅ 2. البحث في السحابة
+                // 2. البحث في السحابة في المسار العام patients برقم الهاتف
                 try {
-                    const patientsRef = collection(db, 'patients');
-                    const snapshot = await getDocs(patientsRef);
-                    snapshot.forEach(doc => {
-                        const p = doc.data();
+                    const snap = await get(ref(db, 'patients'));
+                    snap.forEach(child => {
+                        const p = child.val();
                         if (p.phone && p.phone.includes(phone)) {
-                            const exists = results.find(r => r.id === doc.id);
-                            if (!exists) {
-                                const patientData = { id: doc.id, ...p, _source: 'cloud' };
-                                results.push(patientData);
-                                // ✅ نخزن في الكاش المحلي تلقائياً
-                                savePatientToLocalCache(doc.id, p);
+                            if (!results.find(r => r.id === child.key)) {
+                                results.push({ id: child.key, ...p });
                             }
                         }
                     });
@@ -2025,10 +1997,7 @@
                     container.innerHTML = results.map(p => `
                         <div class="search-item" data-id="${p.id}">
                             <b>${escapeHtml(p.name)}</b>
-                            <small style="color:var(--text-sec);">
-                                ${escapeHtml(p.phone || '')}
-                                ${p._source === 'local' ? '📦' : '☁️'}
-                            </small>
+                            <small style="color:var(--text-sec);">${escapeHtml(p.phone || '')}</small>
                         </div>
                     `).join('');
 
@@ -2051,6 +2020,7 @@
             $('#patientSearch').value = '';
             $('#searchResults').style.display = 'none';
             
+            // ✅ إذا كان المريض لديه بيانات قرية، نبدل الوضع تلقائياً
             if (patient.father_name || patient.family_name || patient.village_name) {
                 toggleIdMode('village');
                 $('#fatherName').value = patient.father_name || '';
@@ -2065,23 +2035,22 @@
             }
         });
 
-        // ============ ✅ التحقق من تكرار رقم الهاتف (محلي + سحابي) ============
+        // ============ ✅ التحقق من تكرار رقم الهاتف في المسار العام ============
         const checkPhoneUniqueness = async (phone, excludeId = null) => {
             if (!phone || phone.trim() === '') return null;
             
             // البحث المحلي أولاً
-            const localResults = searchInLocalCache(phone, 'phone');
+            const localResults = searchPatientsLocal(phone);
             const localDuplicate = localResults.find(p => p.phone === phone && p.id !== excludeId);
             if (localDuplicate) return localDuplicate;
 
             try {
-                const patientsRef = collection(db, 'patients');
-                const snapshot = await getDocs(patientsRef);
+                const snap = await get(ref(db, 'patients'));
                 let duplicate = null;
-                snapshot.forEach(doc => {
-                    const p = doc.data();
-                    if (p.phone === phone && doc.id !== excludeId && !duplicate) {
-                        duplicate = { id: doc.id, ...p };
+                snap.forEach(child => {
+                    const p = child.val();
+                    if (p.phone === phone && child.key !== excludeId && !duplicate) {
+                        duplicate = { id: child.key, ...p };
                     }
                 });
                 return duplicate;
@@ -2091,7 +2060,7 @@
             }
         };
 
-        // ============ ✅ حفظ الكشف مع إضافة المريض في المسار العام (Firestore) ============
+        // ============ ✅ حفظ الكشف مع إضافة المريض في المسار العام ============
         $('#bookingForm').addEventListener('submit', async (e) => {
             e.preventDefault();
 
@@ -2103,6 +2072,7 @@
             const visitType = $('#visitType').value;
             const date = $('#apptDate').value;
 
+            // ✅ بيانات القرية
             const fatherName = state.idMode === 'village' ? $('#fatherName').value.trim() : '';
             const familyName = state.idMode === 'village' ? $('#familyName').value.trim() : '';
             const villageName = state.idMode === 'village' ? $('#villageName').value.trim() : '';
@@ -2112,6 +2082,7 @@
                 return;
             }
 
+            // ✅ التحقق من تكرار رقم الهاتف (إذا كان في وضع الهاتف وتم إدخاله)
             if (state.idMode === 'phone' && phone) {
                 const existingPhone = await checkPhoneUniqueness(phone, state.selectedPatientId);
                 if (existingPhone && !state.selectedPatientId) {
@@ -2129,7 +2100,9 @@
                 let patientId = state.selectedPatientId;
 
                 if (!patientId) {
-                    // ✅ إضافة مريض جديد
+                    // ✅ إضافة المريض في المسار العام patients مع بيانات القرية إن وجدت
+                    const newRef = push(ref(db, 'patients'));
+                    patientId = newRef.key;
                     const patientData = {
                         name,
                         age: age || null,
@@ -2137,39 +2110,30 @@
                         father_name: fatherName || null,
                         family_name: familyName || null,
                         village_name: villageName || null,
-                        created_at: serverTimestamp()
+                        created_at: new Date().toISOString()
                     };
-                    
-                    const newRef = await addDoc(collection(db, 'patients'), patientData);
-                    patientId = newRef.id;
-                    
-                    // ✅ تخزين في الكاش المحلي
-                    savePatientToLocalCache(patientId, { ...patientData, created_at: new Date().toISOString() });
+                    await set(newRef, patientData);
+                    savePatientToLocal(patientId, patientData);
                 } else {
-                    // تحديث بيانات المريض
-                    const updateData = {
-                        name,
-                        age: age || null,
-                        updated_at: serverTimestamp()
-                    };
-                    
-                    if (state.idMode === 'phone') {
-                        updateData.phone = phone || null;
-                    } else {
-                        updateData.father_name = fatherName || null;
-                        updateData.family_name = familyName || null;
-                        updateData.village_name = villageName || null;
-                    }
-                    
+                    // تحديث بيانات المريض في المسار العام
                     try {
-                        await updateDoc(doc(db, 'patients', patientId), updateData);
-                        savePatientToLocalCache(patientId, { 
-                            ...state.localPatientsCache[patientId], 
-                            ...updateData,
-                            _cachedAt: Date.now()
-                        });
+                        const updateData = {
+                            name,
+                            age: age || null,
+                            updated_at: new Date().toISOString()
+                        };
+                        
+                        if (state.idMode === 'phone') {
+                            updateData.phone = phone || null;
+                        } else {
+                            updateData.father_name = fatherName || null;
+                            updateData.family_name = familyName || null;
+                            updateData.village_name = villageName || null;
+                        }
+                        
+                        await update(ref(db, `patients/${patientId}`), updateData);
                     } catch (updateErr) {
-                        console.warn('تعذر تحديث المريض:', updateErr.message);
+                        console.warn('تعذر تحديث المريض في المسار العام:', updateErr.message);
                     }
                 }
 
@@ -2190,12 +2154,12 @@
                 };
 
                 if (editId) {
-                    await updateDoc(doc(db, 'tenants', currentTenantId, 'appointments', editId), bookingData);
+                    await update(ref(db, `tenants/${currentTenantId}/appointments/${editId}`), bookingData);
                     showToast('تم تعديل الكشف بنجاح');
                 } else {
-                    bookingData.created_at = serverTimestamp();
+                    bookingData.created_at = new Date().toISOString();
                     bookingData.created_by = state.currentUser.uid;
-                    await addDoc(collection(db, 'tenants', currentTenantId, 'appointments'), bookingData);
+                    await set(ref(db, `tenants/${currentTenantId}/appointments/${push(ref(db, `tenants/${currentTenantId}/appointments`)).key}`), bookingData);
                     showToast('تم حجز الكشف بنجاح');
                 }
 
@@ -2298,7 +2262,7 @@
             showToast('⚠️ انقطع الاتصال - استخدام البيانات المحلية', true);
         });
 
-        // ============ ✅ بدء التشغيل ============
+        // ============ ✅ بدء التشغيل المبسط - بدون طرد للمستخدم ============
         onAuthStateChanged(auth, async (user) => {
             if (!user) {
                 clearLoginSessionOnly();
@@ -2351,9 +2315,6 @@
                 state.currentDate = getToday();
                 $('#filterDate').value = state.currentDate;
 
-                // ✅ تحميل الكاش المحلي للمرضى
-                loadPatientsCacheFromLocal();
-
                 // ✅ تهيئة البحث بالقرية
                 setupVillageSearch();
 
@@ -2374,12 +2335,15 @@
             }
         });
 
-        console.log('🚀 لوحة الممرض - Firestore + تخزين محلي ذكي');
+        console.log('🚀 لوحة الممرض - نظام المجمعات الطبية المتعددة');
         console.log('🔒 كل ممرض يشوف فقط كشوفات الدكتور المرتبط بيه في مجمعه');
-        console.log('💾 وضع الحفظ: يمسح جلسة الدخول فقط - يحتفظ ببيانات المجمع والكاش');
-        console.log('📦 الكاش المحلي: يخزن المرضى اللي الممرض شافهم فقط (حد أقصى 100 مريض)');
-        console.log('🔍 البحث: محلي أولاً ← سحابي (مع علامة 📦 للمحلي و ☁️ للسحابي)');
-        console.log('💰 توفير: تقليل استهلاك القراءة من Firestore بنسبة كبيرة');
+        console.log('💾 وضع الحفظ: يمسح جلسة الدخول فقط - يحتفظ ببيانات المجمع');
+        console.log('⚙️ زر الإعدادات: ينقل إلى صفحة nurse-settings.html');
+        console.log('🔔 زر الإشعارات: يعرض الحجوزات الجديدة من صفحة المرضى');
+        console.log('📂 المرضى يضافون في المسار العام patients بدون ربط بدكتور أو مجمع');
+        console.log('🔍 البحث برقم الهاتف أو بيانات القرية (اسم الأب - العائلة - القرية)');
+        console.log('🛡️ منع تكرار رقم الهاتف في الوقت الفعلي');
+        console.log('🌳 وضع القرية: يخفي الهاتف والبحث ويظهر 3 خانات للبحث بالهوية البديلة');
     </script>
 </body>
 </html>
