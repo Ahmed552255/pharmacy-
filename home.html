@@ -638,7 +638,7 @@
         import { firebaseConfig } from './firebase-config.js';
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
         // ============ نظام التشفير البسيط ============
         const ENCRYPTION_KEY = 'ShifaSecure2024!@#Key';
@@ -679,7 +679,7 @@
         // ============ تهيئة Firebase ============
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
-        const db = getFirestore(app);
+        const db = getDatabase(app);
 
         // ============ عناصر DOM ============
         const dom = {
@@ -706,24 +706,71 @@
         // ============ محتوى الزر الافتراضي ============
         const defaultBtnContent = dom.btnContent.innerHTML;
 
-        // ============ ✅ جلب بيانات المستخدم من Firestore ============
-        const fetchUserDataFromFirestore = async (uid) => {
+        // ============ ✅ جلب بيانات المستخدم من مسار المجمع (يبحث في كل المجمعات) ============
+        const fetchUserData = async (uid) => {
             try {
-                // البحث في مجموعة users مباشرة
-                const userDocRef = doc(db, 'users', uid);
-                const userDocSnap = await getDoc(userDocRef);
+                // 1️⃣ نجيب كل المجمعات الموجودة
+                const tenantsSnap = await get(ref(db, 'tenants'));
                 
-                if (userDocSnap.exists()) {
-                    console.log('✅ تم العثور على بيانات المستخدم في Firestore');
-                    return userDocSnap.data();
+                if (tenantsSnap.exists()) {
+                    const tenants = tenantsSnap.val();
+                    
+                    // 2️⃣ ندور على المستخدم في كل مجمع
+                    for (const tenantId of Object.keys(tenants)) {
+                        const tenantUserSnap = await get(ref(db, `tenants/${tenantId}/users/${uid}`));
+                        
+                        if (tenantUserSnap.exists()) {
+                            // ✅ لقينا المستخدم في المجمع ده
+                            const userData = tenantUserSnap.val();
+                            
+                            // لو معندوش tenantId، نضيفه
+                            if (!userData.tenantId) {
+                                userData.tenantId = tenantId;
+                            }
+                            
+                            // نجيب اسم المجمع لو موجود
+                            const tenantName = tenants[tenantId]?.name || tenants[tenantId]?.tenantName || 
+                                              (tenants[tenantId]?.users?.[tenantId]?.name) || 'المجمع الطبي';
+                            userData.tenantName = userData.tenantName || tenantName;
+                            
+                            console.log(`✅ تم العثور على المستخدم في مجمع: ${tenantId}`);
+                            return userData;
+                        }
+                    }
                 }
                 
-                // إذا لم يتم العثور على المستخدم في المسار المباشر
-                console.log('ℹ️ المستخدم غير موجود في Firestore');
+                // 3️⃣ لو ملقتش في المجمعات، جرب المسار العام (للتوافق مع البيانات القديمة)
+                const publicSnap = await get(ref(db, `users/${uid}`));
+                if (publicSnap.exists()) {
+                    const userData = publicSnap.val();
+                    
+                    // لو معندوش tenantId، نخليه هو uid بتاعه
+                    if (!userData.tenantId) {
+                        userData.tenantId = uid;
+                    }
+                    
+                    console.log(`⚠️ تم العثور على المستخدم في المسار العام (قديم)`);
+                    return userData;
+                }
+                
+                // 4️⃣ المستخدم مش موجود خالص
                 return null;
                 
             } catch (error) {
-                console.error("❌ خطأ في جلب بيانات المستخدم من Firestore:", error);
+                console.error("❌ خطأ في جلب بيانات المستخدم:", error);
+                
+                // في حالة الخطأ، جرب المسار العام كآخر محاولة
+                try {
+                    const publicSnap = await get(ref(db, `users/${uid}`));
+                    if (publicSnap.exists()) {
+                        const userData = publicSnap.val();
+                        userData.tenantId = userData.tenantId || uid;
+                        return userData;
+                    }
+                } catch (e) {
+                    // تجاهل
+                }
+                
                 return null;
             }
         };
@@ -731,7 +778,7 @@
         // ============ إدارة الجلسة المشفرة ============
         
         /**
-         * ✅ حفظ الجلسة في localStorage مع تشفير
+         * ✅ حفظ الجلسة في localStorage مع تشفير - متوافقة مع نظام المجمعات
          */
         const saveEncryptedSession = (userData) => {
             try {
@@ -740,7 +787,7 @@
                     email: userData.email,
                     role: userData.role,
                     name: userData.name,
-                    tenantId: userData.tenantId || null,
+                    tenantId: userData.tenantId || null,  // ✅ معرف المجمع
                     timestamp: Date.now()
                 };
                 
@@ -936,55 +983,45 @@
             setLoading(true);
 
             try {
-                // ✅ 1. تسجيل الدخول في Firebase Authentication
                 const userCredential = await signInWithEmailAndPassword(auth, email, password);
                 const user = userCredential.user;
-                
-                console.log('✅ تم تسجيل الدخول في Authentication:', user.uid);
 
-                // ✅ 2. البحث عن بيانات المستخدم في Firestore
-                const userData = await fetchUserDataFromFirestore(user.uid);
+                // ✅ جلب بيانات المستخدم من مسار المجمع (يبحث في كل المجمعات)
+                const userData = await fetchUserData(user.uid);
 
-                if (userData && userData.role) {
-                    // ✅ المستخدم موجود في Firestore وله دور - توجيه مباشر لصفحته
-                    console.log('✅ مستخدم Firestore له دور:', userData.role);
-                    
-                    const displayName = userData.name || email.split('@')[0];
-                    const tenantId = userData.tenantId || null;
-
-                    // حفظ الجلسة مشفرة
-                    saveEncryptedSession({
-                        uid: user.uid,
-                        email: email,
-                        role: userData.role,
-                        name: displayName,
-                        tenantId: tenantId
-                    });
-
-                    // توجيه المستخدم لصفحته حسب دوره
-                    redirectUser(userData.role, displayName, tenantId);
-                    
-                } else if (!userData || !userData.role) {
-                    // ✅ المستخدم غير موجود في Firestore أو بدون دور = مدير نظام
-                    console.log('👑 المستخدم غير موجود في Firestore - معاملة كمدير نظام');
-                    
-                    const displayName = email.split('@')[0];
-
-                    // حفظ الجلسة كمدير
-                    saveEncryptedSession({
-                        uid: user.uid,
-                        email: email,
-                        role: 'admin',
-                        name: displayName,
-                        tenantId: null
-                    });
-
-                    // توجيه مباشر لصفحة الإدارة
-                    redirectUser('admin', displayName, null);
+                if (!userData || !userData.role) {
+                    showError('❌ هذا الحساب غير مفعل أو لا يملك صلاحيات. تواصل مع المسؤول.');
+                    setLoading(false);
+                    return;
                 }
 
+                if (userData.status === 'blocked') {
+                    showError('🚫 هذا الحساب محظور. تواصل مع المسؤول.');
+                    setLoading(false);
+                    return;
+                }
+
+                const displayName = userData.name || email.split('@')[0];
+                const tenantId = userData.tenantId || null;
+
+                // ✅ حفظ الجلسة مشفرة مع tenantId
+                const saved = saveEncryptedSession({
+                    uid: user.uid,
+                    email: email,
+                    role: userData.role,
+                    name: displayName,
+                    tenantId: tenantId
+                });
+
+                if (!saved) {
+                    console.warn('⚠️ تعذر حفظ الجلسة محلياً');
+                }
+
+                // ✅ توجيه المستخدم مع تمرير tenantId
+                redirectUser(userData.role, displayName, tenantId);
+
             } catch (error) {
-                console.error("❌ خطأ تسجيل الدخول:", error);
+                console.error("خطأ تسجيل الدخول:", error);
                 
                 const errorMessages = {
                     'auth/invalid-credential': '❌ البريد الإلكتروني أو كلمة المرور غير صحيحة',
@@ -1072,10 +1109,8 @@
                     
                     if (user && user.uid !== localSession.uid) {
                         console.log('⚠️ تغير المستخدم، جلب بيانات جديدة...');
-                        const userData = await fetchUserDataFromFirestore(user.uid);
-                        
+                        const userData = await fetchUserData(user.uid);
                         if (userData && userData.role) {
-                            // مستخدم Firestore له دور
                             const displayName = userData.name || user.email.split('@')[0];
                             const tenantId = userData.tenantId || null;
                             
@@ -1088,20 +1123,6 @@
                             });
                             
                             redirectUser(userData.role, displayName, tenantId);
-                            return;
-                        } else {
-                            // مستخدم Authentication فقط = مدير
-                            const displayName = user.email.split('@')[0];
-                            
-                            saveEncryptedSession({
-                                uid: user.uid,
-                                email: user.email,
-                                role: 'admin',
-                                name: displayName,
-                                tenantId: null
-                            });
-                            
-                            redirectUser('admin', displayName, null);
                             return;
                         }
                     }
@@ -1140,38 +1161,25 @@
                     const localSession = getEncryptedSession();
                     
                     if (!localSession || localSession.uid !== user.uid) {
-                        // البحث في Firestore أولاً
-                        const userData = await fetchUserDataFromFirestore(user.uid);
-                        
-                        if (userData && userData.role) {
-                            // مستخدم Firestore له دور
-                            const displayName = userData.name || user.email.split('@')[0];
-                            const tenantId = userData.tenantId || null;
-                            
-                            saveEncryptedSession({
-                                uid: user.uid,
-                                email: user.email,
-                                role: userData.role,
-                                name: displayName,
-                                tenantId: tenantId
-                            });
-                            
-                            redirectUser(userData.role, displayName, tenantId);
-                            return;
-                        } else {
-                            // مستخدم Authentication فقط = مدير
-                            const displayName = user.email.split('@')[0];
-                            
-                            saveEncryptedSession({
-                                uid: user.uid,
-                                email: user.email,
-                                role: 'admin',
-                                name: displayName,
-                                tenantId: null
-                            });
-                            
-                            redirectUser('admin', displayName, null);
-                            return;
+                        try {
+                            const userData = await fetchUserData(user.uid);
+                            if (userData && userData.role) {
+                                const displayName = userData.name || user.email.split('@')[0];
+                                const tenantId = userData.tenantId || null;
+                                
+                                saveEncryptedSession({
+                                    uid: user.uid,
+                                    email: user.email,
+                                    role: userData.role,
+                                    name: displayName,
+                                    tenantId: tenantId
+                                });
+                                
+                                redirectUser(userData.role, displayName, tenantId);
+                                return;
+                            }
+                        } catch (error) {
+                            console.error('خطأ في جلب بيانات المستخدم:', error);
                         }
                     } else if (localSession) {
                         redirectUser(localSession.role, localSession.name, localSession.tenantId);
@@ -1198,4 +1206,4 @@
         initApp();
     </script>
 </body>
-</html>
+</html> 
