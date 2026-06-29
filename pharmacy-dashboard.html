@@ -49,7 +49,7 @@
         }
 
         html {
-            font-size: clamp(13px, 2.8vw, 16px);
+            font-size: 16px;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
             -webkit-text-size-adjust: 100%;
@@ -62,9 +62,9 @@
             color: var(--ink);
             min-height: 100vh;
             min-height: 100dvh;
-            padding: clamp(6px, 1.5vw, 12px);
-            padding-bottom: calc(clamp(6px, 1.5vw, 12px) + var(--safe-bottom) + 45vh);
-            padding-top: calc(clamp(6px, 1.5vw, 12px) + var(--safe-top));
+            padding: 12px;
+            padding-bottom: calc(12px + var(--safe-bottom));
+            padding-top: calc(12px + var(--safe-top));
             overflow-x: hidden;
             -webkit-backface-visibility: hidden;
             backface-visibility: hidden;
@@ -83,7 +83,7 @@
         }
 
         .container { 
-            max-width: min(1400px, 98vw); 
+            max-width: 1400px; 
             margin: 0 auto; 
         }
 
@@ -99,12 +99,12 @@
             justify-content: center;
             z-index: 3000;
             flex-direction: column;
-            gap: clamp(12px, 2vw, 16px);
+            gap: 16px;
         }
         
         .loader-circle {
-            width: clamp(36px, 8vw, 44px);
-            height: clamp(36px, 8vw, 44px);
+            width: 44px;
+            height: 44px;
             border: 3px solid var(--primary-light);
             border-top-color: var(--primary);
             border-radius: 50%;
@@ -116,7 +116,7 @@
         }
         
         .loader-text {
-            font-size: clamp(0.9rem, 2.5vw, 1rem);
+            font-size: 1rem;
             font-weight: 600;
             color: var(--primary-dark);
         }
@@ -130,26 +130,26 @@
             backdrop-filter: blur(16px) saturate(180%);
             -webkit-backdrop-filter: blur(16px) saturate(180%);
             border-radius: var(--radius-lg);
-            padding: clamp(8px, 2vw, 10px) clamp(12px, 3vw, 18px);
-            margin-bottom: clamp(8px, 2vw, 14px);
+            padding: 10px 18px;
+            margin-bottom: 14px;
             border: 1px solid rgba(255,255,255,0.9);
             box-shadow: var(--shadow-sm);
             flex-wrap: wrap;
-            gap: clamp(6px, 1.5vw, 10px);
+            gap: 10px;
             position: sticky;
-            top: clamp(4px, 1vw, 6px);
+            top: 6px;
             z-index: 100;
         }
 
         .logo { 
             display: flex; 
             align-items: center; 
-            gap: clamp(4px, 1vw, 6px); 
+            gap: 6px; 
             flex-shrink: 0; 
         }
         
         .logo h2 {
-            font-size: clamp(1.1rem, 3.5vw, 1.4rem);
+            font-size: 1.4rem;
             font-weight: 900;
             background: linear-gradient(135deg, #008080, #00AEEF);
             -webkit-background-clip: text;
@@ -160,21 +160,21 @@
         
         .logo i { 
             color: var(--primary); 
-            font-size: clamp(0.9rem, 2.5vw, 1.1rem); 
+            font-size: 1.1rem; 
         }
 
         .header-actions {
             display: flex;
-            gap: clamp(4px, 1vw, 8px);
+            gap: 8px;
             align-items: center;
             flex-wrap: wrap;
         }
 
         .tenant-badge {
             background: var(--primary-light);
-            padding: clamp(3px, 0.8vw, 4px) clamp(8px, 2vw, 10px);
+            padding: 4px 10px;
             border-radius: var(--radius-xl);
-            font-size: clamp(0.68rem, 1.8vw, 0.75rem);
+            font-size: 0.75rem;
             font-weight: 600;
             color: var(--primary-dark);
             display: flex;
@@ -185,16 +185,13 @@
 
         #welcomeMsg {
             font-weight: 600;
-            font-size: clamp(0.78rem, 2vw, 0.88rem);
+            font-size: 0.88rem;
             color: var(--text-sec);
             white-space: nowrap;
-            max-width: clamp(80px, 20vw, 150px);
-            overflow: hidden;
-            text-overflow: ellipsis;
         }
 
         .btn {
-            padding: clamp(7px, 1.5vw, 9px) clamp(12px, 2.5vw, 16px);
+            padding: 10px 18px;
             border-radius: var(--radius-xl);
             border: none;
             font-weight: 700;
@@ -202,14 +199,16 @@
             cursor: pointer;
             display: inline-flex;
             align-items: center;
-            gap: clamp(4px, 1vw, 6px);
-            font-size: clamp(0.75rem, 2vw, 0.85rem);
+            justify-content: center;
+            gap: 6px;
+            font-size: 0.85rem;
             white-space: nowrap;
             touch-action: manipulation;
             user-select: none;
             -webkit-user-select: none;
             transition: all 0.15s ease;
-            min-height: clamp(32px, 8vw, 40px);
+            min-height: 44px;
+            min-width: 44px;
             text-decoration: none;
         }
         
@@ -227,20 +226,20 @@
         .btn-outline { 
             background: rgba(255,255,255,0.9); 
             color: var(--ink); 
-            border: 1.5px solid var(--border); 
+            border: 2px solid var(--border); 
         }
         
         .btn-sm { 
-            padding: clamp(5px, 1vw, 6px) clamp(8px, 2vw, 12px); 
-            font-size: clamp(0.7rem, 1.8vw, 0.8rem); 
-            min-height: clamp(28px, 7vw, 34px);
+            padding: 8px 14px; 
+            font-size: 0.8rem; 
+            min-height: 38px;
             border-radius: var(--radius-sm); 
         }
 
         .sync-dot {
             display: inline-block;
-            width: clamp(6px, 1.5vw, 8px);
-            height: clamp(6px, 1.5vw, 8px);
+            width: 8px;
+            height: 8px;
             border-radius: 50%;
             margin-left: 4px;
             vertical-align: middle;
@@ -257,21 +256,21 @@
         .doctors-strip {
             background: var(--white);
             border-radius: var(--radius-xl);
-            padding: clamp(4px, 1vw, 6px);
+            padding: 6px;
             border: 1px solid var(--border);
             box-shadow: var(--shadow-sm);
-            margin-bottom: clamp(8px, 2vw, 14px);
+            margin-bottom: 14px;
             overflow: hidden;
         }
         
         .doctors-strip .strip-scroll {
             display: flex;
-            gap: clamp(4px, 1vw, 6px);
+            gap: 6px;
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
             scroll-behavior: smooth;
             scroll-snap-type: x proximity;
-            padding: clamp(3px, 0.8vw, 4px);
+            padding: 4px;
             scrollbar-width: none;
             -ms-overflow-style: none;
         }
@@ -283,20 +282,20 @@
         .doctor-pill {
             display: flex;
             align-items: center;
-            gap: clamp(6px, 1.5vw, 8px);
-            padding: clamp(8px, 2vw, 10px) clamp(12px, 2.5vw, 16px);
+            gap: 8px;
+            padding: 10px 16px;
             background: var(--white);
             border-radius: var(--radius-xl);
-            border: 1.5px solid var(--border);
+            border: 2px solid var(--border);
             cursor: pointer;
             white-space: nowrap;
             flex-shrink: 0;
             scroll-snap-align: start;
             transition: all 0.2s ease;
             font-weight: 600;
-            font-size: clamp(0.78rem, 2vw, 0.88rem);
+            font-size: 0.88rem;
             touch-action: manipulation;
-            min-height: clamp(36px, 9vw, 44px);
+            min-height: 44px;
         }
         
         .doctor-pill:active { 
@@ -312,15 +311,15 @@
         }
         
         .doctor-pill .pill-avatar {
-            width: clamp(26px, 6vw, 30px);
-            height: clamp(26px, 6vw, 30px);
-            min-width: clamp(26px, 6vw, 30px);
+            width: 30px;
+            height: 30px;
+            min-width: 30px;
             background: var(--primary-light);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: clamp(0.7rem, 1.8vw, 0.8rem);
+            font-size: 0.8rem;
             color: var(--primary-dark);
             font-weight: 700;
         }
@@ -335,7 +334,7 @@
             color: white;
             border-radius: 20px;
             padding: 2px 8px;
-            font-size: clamp(0.65rem, 1.6vw, 0.72rem);
+            font-size: 0.72rem;
             font-weight: 700;
         }
         
@@ -346,12 +345,12 @@
         /* ============ تبويبات الحالة ============ */
         .status-tabs {
             display: flex;
-            gap: clamp(3px, 0.8vw, 6px);
-            margin-bottom: clamp(8px, 2vw, 14px);
+            gap: 6px;
+            margin-bottom: 14px;
             flex-wrap: wrap;
             background: var(--white);
             border-radius: var(--radius-xl);
-            padding: clamp(3px, 0.8vw, 5px);
+            padding: 5px;
             border: 1px solid var(--border);
             box-shadow: var(--shadow-sm);
         }
@@ -359,28 +358,29 @@
         .status-tab {
             background: transparent;
             border: none;
-            padding: clamp(7px, 1.5vw, 9px) clamp(10px, 2.5vw, 16px);
+            padding: 10px 18px;
             border-radius: var(--radius-xl);
             font-weight: 600;
             font-family: 'Cairo', system-ui, sans-serif;
             cursor: pointer;
             display: flex;
             align-items: center;
-            gap: clamp(4px, 1vw, 6px);
-            font-size: clamp(0.75rem, 2vw, 0.85rem);
+            gap: 6px;
+            font-size: 0.85rem;
             color: var(--text-sec);
             flex: 1;
             justify-content: center;
-            min-width: clamp(60px, 15vw, 80px);
+            min-width: 80px;
             touch-action: manipulation;
             transition: all 0.2s ease;
+            min-height: 44px;
         }
         
         .status-tab .badge {
             background: rgba(0,0,0,0.05);
             border-radius: 30px;
             padding: 2px 9px;
-            font-size: clamp(0.7rem, 1.6vw, 0.75rem);
+            font-size: 0.75rem;
             font-weight: 700;
             transition: all 0.2s ease;
         }
@@ -398,13 +398,14 @@
         
         .status-tab:active:not(.active) {
             background: rgba(255,255,255,0.6);
+            transform: scale(0.96);
         }
 
         /* ============ شبكة البطاقات ============ */
         .rx-cards-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr));
-            gap: clamp(10px, 2.5vw, 16px);
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 16px;
         }
 
         .rx-card {
@@ -458,23 +459,23 @@
 
         /* رأس البطاقة */
         .rx-card-header {
-            padding: clamp(12px, 2.5vw, 16px) clamp(14px, 3vw, 18px);
+            padding: 16px 18px;
             display: flex;
             align-items: center;
-            gap: clamp(10px, 2vw, 14px);
+            gap: 14px;
             border-bottom: 1px solid var(--border);
             background: #FAFDFE;
         }
         
         .rx-card-avatar {
-            width: clamp(44px, 10vw, 52px);
-            height: clamp(44px, 10vw, 52px);
-            min-width: clamp(44px, 10vw, 52px);
+            width: 52px;
+            height: 52px;
+            min-width: 52px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: clamp(1.1rem, 2.5vw, 1.3rem);
+            font-size: 1.3rem;
             font-weight: 800;
             color: white;
             flex-shrink: 0;
@@ -499,7 +500,7 @@
         }
         
         .rx-card-patient-name {
-            font-size: clamp(0.95rem, 2.5vw, 1.1rem);
+            font-size: 1.1rem;
             font-weight: 800;
             color: var(--ink);
             white-space: nowrap;
@@ -508,7 +509,7 @@
         }
         
         .rx-card-doctor-name {
-            font-size: clamp(0.72rem, 1.8vw, 0.8rem);
+            font-size: 0.8rem;
             color: var(--primary);
             font-weight: 600;
             white-space: nowrap;
@@ -517,8 +518,8 @@
         }
         
         .rx-card-status-dot {
-            width: clamp(10px, 2.5vw, 12px);
-            height: clamp(10px, 2.5vw, 12px);
+            width: 12px;
+            height: 12px;
             border-radius: 50%;
             flex-shrink: 0;
             border: 2px solid white;
@@ -531,27 +532,27 @@
 
         /* جسم البطاقة */
         .rx-card-body {
-            padding: clamp(10px, 2.5vw, 14px) clamp(14px, 3vw, 18px);
+            padding: 14px 18px;
             flex: 1;
             display: flex;
             flex-direction: column;
-            gap: clamp(6px, 1.5vw, 10px);
+            gap: 10px;
         }
         
         .rx-card-info-row {
             display: flex;
             align-items: center;
-            gap: clamp(6px, 1.5vw, 10px);
-            font-size: clamp(0.78rem, 2vw, 0.85rem);
+            gap: 10px;
+            font-size: 0.85rem;
             color: var(--ink);
         }
         
         .rx-card-info-row i {
             color: var(--primary);
-            width: clamp(18px, 4vw, 22px);
+            width: 22px;
             text-align: center;
             flex-shrink: 0;
-            font-size: clamp(0.8rem, 1.8vw, 0.9rem);
+            font-size: 0.9rem;
         }
         
         .rx-card-info-row span {
@@ -567,8 +568,8 @@
         .rx-card-diagnosis {
             background: #F5FAFC;
             border-radius: var(--radius-sm);
-            padding: clamp(8px, 2vw, 10px) clamp(10px, 2.5vw, 12px);
-            font-size: clamp(0.75rem, 1.8vw, 0.82rem);
+            padding: 10px 12px;
+            font-size: 0.82rem;
             color: var(--text-sec);
             border-right: 3px solid var(--primary-light);
             line-height: 1.5;
@@ -586,18 +587,18 @@
 
         /* تذييل البطاقة */
         .rx-card-footer {
-            padding: clamp(8px, 2vw, 12px) clamp(14px, 3vw, 18px);
+            padding: 12px 18px;
             border-top: 1px solid var(--border);
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: clamp(6px, 1.5vw, 10px);
+            gap: 10px;
             flex-wrap: wrap;
             background: #FAFDFE;
         }
         
         .rx-card-date {
-            font-size: clamp(0.7rem, 1.6vw, 0.75rem);
+            font-size: 0.75rem;
             color: var(--text-sec);
             display: flex;
             align-items: center;
@@ -606,9 +607,9 @@
         
         .rx-card-items-count {
             background: var(--primary-light);
-            padding: clamp(3px, 0.8vw, 4px) clamp(8px, 2vw, 10px);
+            padding: 4px 10px;
             border-radius: var(--radius-xl);
-            font-size: clamp(0.7rem, 1.6vw, 0.75rem);
+            font-size: 0.75rem;
             font-weight: 700;
             color: var(--primary-dark);
             display: flex;
@@ -621,10 +622,10 @@
             color: white;
             border: none;
             border-radius: var(--radius-xl);
-            padding: clamp(6px, 1.5vw, 8px) clamp(12px, 2.5vw, 16px);
+            padding: 8px 16px;
             font-family: 'Cairo', system-ui, sans-serif;
             font-weight: 700;
-            font-size: clamp(0.72rem, 1.8vw, 0.8rem);
+            font-size: 0.8rem;
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -632,6 +633,7 @@
             transition: all 0.15s ease;
             touch-action: manipulation;
             white-space: nowrap;
+            min-height: 40px;
         }
         
         .rx-card-action-btn:active {
@@ -647,25 +649,25 @@
         .empty-state {
             grid-column: 1 / -1;
             text-align: center;
-            padding: clamp(40px, 10vw, 60px) clamp(16px, 4vw, 20px);
+            padding: 60px 20px;
             color: var(--text-sec);
         }
         
         .empty-state i {
-            font-size: clamp(2.5rem, 8vw, 3.5rem);
+            font-size: 3.5rem;
             opacity: 0.2;
-            margin-bottom: clamp(10px, 2vw, 14px);
+            margin-bottom: 14px;
             display: block;
         }
         
         .empty-state h3 {
-            font-size: clamp(1rem, 2.5vw, 1.15rem);
+            font-size: 1.15rem;
             margin-bottom: 6px;
             color: var(--ink);
         }
         
         .empty-state p {
-            font-size: clamp(0.8rem, 2vw, 0.88rem);
+            font-size: 0.88rem;
         }
 
         /* ============ المودال ============ */
@@ -673,13 +675,13 @@
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(26,60,74,0.15);
-            backdrop-filter: blur(4px);
-            -webkit-backdrop-filter: blur(4px);
+            background: rgba(26,60,74,0.25);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
             align-items: center;
             justify-content: center;
             z-index: 2000;
-            padding: clamp(8px, 2vw, 16px);
+            padding: 16px;
             animation: fadeIn 0.2s ease;
         }
         
@@ -694,7 +696,7 @@
             -webkit-backdrop-filter: blur(16px) saturate(180%);
             border-radius: var(--radius-lg);
             width: 100%;
-            max-width: min(550px, 95vw);
+            max-width: 550px;
             max-height: 85vh;
             max-height: 85dvh;
             overflow-y: auto;
@@ -711,7 +713,7 @@
         }
         
         .modal-header {
-            padding: clamp(12px, 2.5vw, 16px) clamp(16px, 3vw, 20px);
+            padding: 16px 20px;
             background: #F5FAFC;
             border-bottom: 1px solid var(--border);
             border-radius: var(--radius-lg) var(--radius-lg) 0 0;
@@ -724,17 +726,17 @@
         }
         
         .modal-header h3 { 
-            font-size: clamp(0.95rem, 2.5vw, 1.1rem); 
+            font-size: 1.1rem; 
             font-weight: 800; 
         }
         
         .close-btn {
             background: rgba(0,0,0,0.04);
             border: none;
-            width: clamp(30px, 7vw, 36px);
-            height: clamp(30px, 7vw, 36px);
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
-            font-size: clamp(18px, 4vw, 22px);
+            font-size: 22px;
             color: var(--text-sec);
             cursor: pointer;
             display: flex;
@@ -750,34 +752,35 @@
         }
         
         .modal-body { 
-            padding: clamp(14px, 3vw, 20px);
-            padding-bottom: clamp(40vh, 50vh, 55vh);
+            padding: 20px;
+            padding-bottom: 40px;
         }
 
         .form-group { 
-            margin-bottom: clamp(10px, 2.5vw, 14px); 
+            margin-bottom: 16px; 
         }
         
         .form-group label {
             display: block;
-            margin-bottom: 5px;
+            margin-bottom: 6px;
             font-weight: 700;
-            font-size: clamp(0.8rem, 2vw, 0.88rem);
+            font-size: 0.9rem;
             color: var(--ink);
         }
         
         .form-control {
             width: 100%;
-            padding: clamp(8px, 2vw, 10px) clamp(12px, 2.5vw, 14px);
+            padding: 12px 16px;
             border-radius: var(--radius-sm);
-            border: 1.5px solid var(--border);
+            border: 2px solid var(--border);
             background: #F5FAFC;
             font-family: 'Cairo', system-ui, sans-serif;
-            font-size: clamp(0.8rem, 2vw, 0.88rem);
+            font-size: 0.88rem;
             color: var(--ink);
             -webkit-appearance: none;
             appearance: none;
             transition: all 0.15s ease;
+            min-height: 48px;
         }
         
         .form-control:focus {
@@ -789,30 +792,31 @@
         
         textarea.form-control {
             resize: vertical;
-            min-height: clamp(60px, 15vw, 80px);
+            min-height: 80px;
         }
 
         .rx-detail-item {
             display: flex;
             align-items: center;
-            gap: clamp(6px, 1.5vw, 10px);
-            padding: clamp(8px, 2vw, 10px) clamp(10px, 2.5vw, 14px);
+            gap: 10px;
+            padding: 12px 14px;
             background: #F5FAFC;
             border-radius: var(--radius-sm);
-            margin-bottom: 6px;
+            margin-bottom: 8px;
             border: 1px solid var(--border);
             transition: all 0.15s ease;
+            min-height: 52px;
         }
         
         .rx-detail-item .drug-icon {
-            width: clamp(28px, 7vw, 36px);
-            height: clamp(28px, 7vw, 36px);
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
             background: var(--primary-light);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: clamp(0.8rem, 2vw, 1rem);
+            font-size: 1rem;
             flex-shrink: 0;
             aspect-ratio: 1;
         }
@@ -831,7 +835,7 @@
             border: 1px solid var(--border);
             border-radius: var(--radius-sm);
             margin-top: 4px;
-            max-height: clamp(150px, 40vh, 200px);
+            max-height: 200px;
             overflow-y: auto;
             display: none;
             z-index: 20;
@@ -840,12 +844,12 @@
         }
         
         .search-item {
-            padding: clamp(8px, 2vw, 10px) clamp(10px, 2.5vw, 14px);
+            padding: 12px 14px;
             cursor: pointer;
             border-bottom: 1px solid var(--border);
-            font-size: clamp(0.78rem, 2vw, 0.85rem);
+            font-size: 0.85rem;
             transition: background 0.15s ease;
-            min-height: clamp(36px, 8vw, 44px);
+            min-height: 48px;
             display: flex;
             align-items: center;
         }
@@ -861,13 +865,13 @@
         /* ============ التوست ============ */
         .toast-container {
             position: fixed;
-            bottom: max(16px, 3vw);
+            bottom: 24px;
             left: 50%;
             transform: translateX(-50%);
             z-index: 4000;
             display: flex;
             flex-direction: column;
-            gap: clamp(4px, 1vw, 6px);
+            gap: 8px;
             pointer-events: none;
             padding-bottom: var(--safe-bottom);
             max-width: 90vw;
@@ -876,16 +880,16 @@
         .toast {
             background: #1A3C4A;
             color: white;
-            padding: clamp(8px, 2vw, 12px) clamp(14px, 3vw, 22px);
+            padding: 14px 24px;
             border-radius: var(--radius-xl);
             font-weight: 700;
-            font-size: clamp(0.78rem, 2vw, 0.85rem);
+            font-size: 0.88rem;
             box-shadow: 0 8px 24px rgba(0,0,0,0.2);
             animation: toastIn 0.3s ease, toastOut 0.3s ease 2.2s forwards;
             white-space: nowrap;
             display: flex;
             align-items: center;
-            gap: clamp(6px, 1.5vw, 8px);
+            gap: 8px;
         }
         
         .toast.err { 
@@ -909,59 +913,361 @@
             opacity: 0;
         }
 
-        /* ============ ميديا كويريز ============ */
-        @media (min-width: 769px) and (max-width: 1024px) {
-            html { font-size: clamp(13px, 1.8vw, 15px); }
-            .rx-cards-grid { grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr)); }
+        /* ============ RESPONSIVE - TABLET (769px - 1024px) ============ */
+        @media (max-width: 1024px) {
+            .rx-cards-grid { 
+                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+                gap: 12px;
+            }
+            
+            .app-header {
+                padding: 8px 14px;
+            }
+            
+            .btn {
+                padding: 8px 14px;
+                font-size: 0.82rem;
+                min-height: 42px;
+            }
         }
 
+        /* ============ RESPONSIVE - MOBILE (up to 768px) ============ */
         @media (max-width: 768px) {
-            html { font-size: clamp(13px, 3.5vw, 14px); }
+            html { 
+                font-size: 15px; 
+            }
             
             body { 
-                padding: 4px; 
-                padding-bottom: calc(4px + var(--safe-bottom) + 55vh); 
+                padding: 8px; 
+                padding-bottom: calc(8px + var(--safe-bottom));
             }
             
+            /* Header - Stacked Layout */
             .app-header { 
-                padding: 6px 10px; 
-                top: 3px; 
+                padding: 10px 14px 14px; 
+                top: 4px; 
                 border-radius: var(--radius-md); 
-                gap: 6px;
+                gap: 10px;
+                flex-direction: column;
+                align-items: stretch;
             }
             
-            .logo h2 { font-size: clamp(1rem, 4vw, 1.2rem); }
-            .header-actions { gap: 4px; }
-            .btn { padding: 5px 8px; font-size: 0.72rem; min-height: clamp(28px, 7vw, 32px); }
-            .btn-sm { padding: 4px 7px; font-size: 0.68rem; }
-            .doctor-pill { padding: 6px 10px; font-size: 0.75rem; min-height: clamp(32px, 8vw, 38px); }
-            .status-tab { padding: 6px 8px; font-size: 0.72rem; min-width: 50px; }
-            .status-tab .badge { font-size: 0.65rem; padding: 1px 6px; }
-            .rx-cards-grid { grid-template-columns: 1fr; gap: 10px; }
-            .rx-card-header { padding: 10px 12px; }
-            .rx-card-body { padding: 10px 12px; }
-            .rx-card-footer { padding: 8px 12px; }
-            .rx-card-avatar { width: 40px; height: 40px; min-width: 40px; }
-            .modal-card { max-width: 100%; border-radius: var(--radius-md); max-height: 90vh; }
-            .modal-body { padding: 12px; padding-bottom: 55vh; }
-            .hide-mobile { display: none; }
-            #welcomeMsg { max-width: 80px; }
+            .logo {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                width: 100%;
+            }
+            
+            .logo h2 { 
+                font-size: 1.2rem; 
+            }
+            
+            .header-actions {
+                width: 100%;
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
+            }
+            
+            .tenant-badge {
+                grid-column: 1 / -1;
+                justify-content: center;
+                font-size: 0.75rem;
+                padding: 5px 12px;
+            }
+            
+            #welcomeMsg {
+                grid-column: 1 / -1;
+                text-align: center;
+                font-size: 0.82rem;
+            }
+            
+            .btn { 
+                padding: 10px 12px; 
+                font-size: 0.8rem; 
+                min-height: 46px;
+                border-radius: 24px;
+            }
+            
+            .btn-sm { 
+                padding: 8px 12px; 
+                font-size: 0.78rem; 
+            }
+            
+            /* Doctor Pills - Scrollable */
+            .doctor-pill { 
+                padding: 8px 14px; 
+                font-size: 0.82rem; 
+                min-height: 42px;
+                border-radius: 24px;
+            }
+            
+            .doctor-pill .pill-avatar {
+                width: 28px;
+                height: 28px;
+                min-width: 28px;
+                font-size: 0.75rem;
+            }
+            
+            /* Status Tabs */
+            .status-tab { 
+                padding: 10px 12px; 
+                font-size: 0.8rem; 
+                min-width: 60px;
+                min-height: 44px;
+            }
+            
+            .status-tab .badge { 
+                font-size: 0.72rem; 
+                padding: 2px 8px;
+            }
+            
+            /* Cards Grid - Single Column */
+            .rx-cards-grid { 
+                grid-template-columns: 1fr; 
+                gap: 12px; 
+            }
+            
+            .rx-card-header { 
+                padding: 14px; 
+                gap: 12px;
+            }
+            
+            .rx-card-body { 
+                padding: 12px 14px; 
+                gap: 8px;
+            }
+            
+            .rx-card-footer { 
+                padding: 10px 14px; 
+            }
+            
+            .rx-card-avatar { 
+                width: 44px; 
+                height: 44px; 
+                min-width: 44px;
+                font-size: 1.1rem;
+            }
+            
+            .rx-card-patient-name {
+                font-size: 1rem;
+            }
+            
+            .rx-card-doctor-name {
+                font-size: 0.78rem;
+            }
+            
+            /* Modal - Bottom Sheet Style */
+            .modal {
+                padding: 0;
+                align-items: flex-end;
+            }
+            
+            .modal-card { 
+                max-width: 100%; 
+                border-radius: 24px 24px 0 0;
+                max-height: 90vh;
+                max-height: 90dvh;
+            }
+            
+            .modal-header {
+                border-radius: 24px 24px 0 0;
+            }
+            
+            .modal-body { 
+                padding: 16px;
+                padding-bottom: 40px;
+            }
+            
+            /* Form Controls */
+            .form-control {
+                padding: 12px 14px;
+                font-size: 0.85rem;
+                min-height: 48px;
+                border-radius: 12px;
+            }
+            
+            /* Search Items */
+            .search-item {
+                padding: 12px 14px;
+                min-height: 48px;
+                font-size: 0.85rem;
+            }
+            
+            /* Rx Detail Items */
+            .rx-detail-item {
+                padding: 10px 12px;
+                min-height: 48px;
+            }
+            
+            .rx-detail-item .drug-icon {
+                width: 36px;
+                height: 36px;
+                font-size: 0.9rem;
+            }
+            
+            /* Action Buttons */
+            .rx-card-action-btn {
+                padding: 8px 14px;
+                font-size: 0.78rem;
+                min-height: 40px;
+                border-radius: 22px;
+            }
+            
+            /* Card Footer */
+            .rx-card-footer {
+                flex-direction: row;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+            
+            .rx-card-date {
+                font-size: 0.72rem;
+            }
+            
+            .rx-card-items-count {
+                font-size: 0.72rem;
+                padding: 3px 8px;
+            }
+            
+            /* Hide mobile elements */
+            .hide-mobile { 
+                display: none; 
+            }
+            
+            /* Toast */
+            .toast {
+                padding: 12px 20px;
+                font-size: 0.85rem;
+                border-radius: 24px;
+            }
         }
 
+        /* ============ RESPONSIVE - SMALL PHONES (up to 400px) ============ */
         @media (max-width: 400px) {
-            html { font-size: clamp(12px, 4vw, 13px); }
-            body { padding: 2px; padding-bottom: calc(2px + var(--safe-bottom) + 65vh); }
-            .status-tabs { flex-direction: column; gap: 2px; }
-            .status-tab { justify-content: space-between; text-align: right; }
-            .modal-body { padding-bottom: 65vh; }
+            html { 
+                font-size: 14px; 
+            }
+            
+            body { 
+                padding: 6px; 
+                padding-bottom: calc(6px + var(--safe-bottom));
+            }
+            
+            .app-header {
+                padding: 8px 10px 12px;
+                top: 3px;
+                border-radius: 20px;
+            }
+            
+            .logo h2 {
+                font-size: 1.1rem;
+            }
+            
+            .btn {
+                padding: 10px 10px;
+                font-size: 0.78rem;
+                min-height: 44px;
+                border-radius: 22px;
+            }
+            
+            .status-tabs { 
+                flex-direction: column; 
+                gap: 4px; 
+            }
+            
+            .status-tab { 
+                justify-content: space-between; 
+                text-align: right;
+                padding: 10px 14px;
+                font-size: 0.78rem;
+                min-height: 44px;
+            }
+            
+            .doctor-pill {
+                padding: 8px 12px;
+                font-size: 0.78rem;
+                min-height: 40px;
+            }
+            
+            .rx-cards-grid {
+                gap: 10px;
+            }
+            
+            .rx-card-header {
+                padding: 12px;
+                gap: 10px;
+            }
+            
+            .rx-card-body {
+                padding: 10px 12px;
+            }
+            
+            .rx-card-footer {
+                padding: 8px 12px;
+            }
+            
+            .rx-card-avatar {
+                width: 40px;
+                height: 40px;
+                min-width: 40px;
+                font-size: 1rem;
+            }
+            
+            .modal-card {
+                border-radius: 20px 20px 0 0;
+            }
+            
+            .modal-header {
+                border-radius: 20px 20px 0 0;
+                padding: 12px 14px;
+            }
+            
+            .modal-body {
+                padding: 14px;
+                padding-bottom: 35px;
+            }
+            
+            .form-control {
+                padding: 10px 12px;
+                font-size: 0.82rem;
+                min-height: 44px;
+            }
+            
+            .rx-detail-item {
+                padding: 8px 10px;
+                min-height: 44px;
+            }
+            
+            .rx-detail-item .drug-icon {
+                width: 32px;
+                height: 32px;
+                font-size: 0.85rem;
+            }
+            
+            .toast {
+                padding: 10px 16px;
+                font-size: 0.8rem;
+            }
         }
 
+        /* ============ DESKTOP LARGE (1400px+) ============ */
         @media (min-width: 1400px) {
-            html { font-size: clamp(15px, 1.2vw, 17px); }
-            .container { max-width: 1300px; }
-            .rx-cards-grid { grid-template-columns: repeat(auto-fill, minmax(min(350px, 100%), 1fr)); }
+            html { 
+                font-size: 17px; 
+            }
+            
+            .container { 
+                max-width: 1300px; 
+            }
+            
+            .rx-cards-grid { 
+                grid-template-columns: repeat(auto-fill, minmax(370px, 1fr)); 
+            }
         }
 
+        /* ============ ACCESSIBILITY ============ */
         @media (prefers-reduced-motion: reduce) {
             *, *::before, *::after {
                 animation-duration: 0.001ms !important;
