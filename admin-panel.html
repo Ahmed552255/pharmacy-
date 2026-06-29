@@ -22,23 +22,25 @@
             --text-sec: #5A7D8A;
             --danger: #E57373;
             --success: #26A69A;
+            --warning: #FFB74D;
             --border: #E0E0E0;
             --shadow-sm: 0 4px 12px rgba(0,0,0,0.05);
             --shadow-md: 0 8px 24px rgba(0,0,0,0.08);
             --shadow-lg: 0 15px 40px rgba(0,0,0,0.12);
+            --radius-xs: 8px;
             --radius-sm: 14px;
             --radius-md: 20px;
             --radius-lg: 28px;
             --radius-xl: 50px;
         }
         
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         
         html {
             font-size: 15px;
-            -webkit-tap-highlight-color: transparent;
             -webkit-font-smoothing: antialiased;
             -webkit-text-size-adjust: 100%;
+            text-rendering: optimizeSpeed;
         }
         
         body {
@@ -151,6 +153,7 @@
         .btn-icon { width: 42px; height: 42px; padding: 0; justify-content: center; border-radius: 50%; }
         .btn-danger { background: var(--danger); color: white; }
         .btn-success { background: var(--success); color: white; }
+        .btn-sm { padding: 6px 12px; font-size: 0.78rem; }
         
         .stats-bar { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
         
@@ -312,6 +315,7 @@
             justify-content: center;
             z-index: 1000;
             padding: 16px;
+            backdrop-filter: blur(4px);
         }
         
         .modal-card {
@@ -325,6 +329,12 @@
             border: 1px solid var(--border);
             -webkit-overflow-scrolling: touch;
             overscroll-behavior: contain;
+            animation: slideUp 0.3s ease;
+        }
+        
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         
         .modal-header {
@@ -426,21 +436,6 @@
         .checkmark-icon { color: var(--primary); font-size: 0.85rem; margin-right: auto; }
         .field-hint { font-size: 0.75rem; color: var(--text-sec); margin-top: 5px; padding-right: 4px; }
         
-        .password-section { position: relative; }
-        
-        .password-toggle {
-            position: absolute;
-            left: 12px;
-            top: 40px;
-            cursor: pointer;
-            color: var(--text-sec);
-            background: none;
-            border: none;
-            font-size: 1.1rem;
-            padding: 6px;
-            touch-action: manipulation;
-        }
-        
         .row-buttons { display: flex; gap: 8px; margin-top: 20px; flex-wrap: wrap; }
         .action-btns { display: flex; gap: 8px; flex-wrap: wrap; }
         
@@ -453,20 +448,6 @@
         }
         
         .detail-row i { width: 22px; color: var(--primary); text-align: center; }
-        
-        .password-display {
-            background: #F5FAFC;
-            padding: 6px 10px;
-            border-radius: 10px;
-            font-family: monospace;
-            letter-spacing: 2px;
-            cursor: pointer;
-            border: 1px solid var(--border);
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 0.85rem;
-        }
         
         .keyboard-scroll-spacer { height: 1px; width: 100%; pointer-events: none; opacity: 0; }
         
@@ -521,10 +502,7 @@
         .sync-indicator.synced { background: var(--success); }
         .sync-indicator.syncing { background: #FFB74D; animation: pulse 1s infinite; }
         
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.3; }
-        }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
         
         .tenant-info {
             background: var(--primary-light);
@@ -538,7 +516,6 @@
             gap: 6px;
         }
 
-        /* ============ أنماط إعدادات المجمع ============ */
         .settings-note {
             background: #FFF8E1;
             border-right: 4px solid #FFB74D;
@@ -550,10 +527,7 @@
             line-height: 1.6;
         }
         
-        .settings-note i {
-            color: #F57C00;
-            margin-left: 6px;
-        }
+        .settings-note i { color: #F57C00; margin-left: 6px; }
         
         @media (max-width: 768px) {
             body { padding: 8px; }
@@ -583,11 +557,6 @@
                 transition-duration: 0.001ms !important;
             }
         }
-        
-        .modal-card::-webkit-scrollbar { width: 5px; }
-        .modal-card::-webkit-scrollbar-thumb { background: #D0D0D0; border-radius: 10px; }
-        .multi-select::-webkit-scrollbar { width: 4px; }
-        .multi-select::-webkit-scrollbar-thumb { background: #D0D0D0; border-radius: 10px; }
     </style>
 </head>
 <body>
@@ -633,48 +602,25 @@
 
         <div class="stats-bar" id="statsBar">
             <div class="stat-card">
-                <div class="stat-icon" style="background:#E3F2FD;">
-                    <i class="fas fa-users" style="color:#1565C0;"></i>
-                </div>
-                <div class="stat-info">
-                    <h4 id="statTotal">0</h4>
-                    <span>إجمالي المستخدمين</span>
-                </div>
+                <div class="stat-icon" style="background:#E3F2FD;"><i class="fas fa-users" style="color:#1565C0;"></i></div>
+                <div class="stat-info"><h4 id="statTotal">0</h4><span>إجمالي المستخدمين</span></div>
             </div>
             <div class="stat-card">
-                <div class="stat-icon" style="background:#E8F5E9;">
-                    <i class="fas fa-user-md" style="color:#2E7D32;"></i>
-                </div>
-                <div class="stat-info">
-                    <h4 id="statDoctors">0</h4>
-                    <span>طبيب</span>
-                </div>
+                <div class="stat-icon" style="background:#E8F5E9;"><i class="fas fa-user-md" style="color:#2E7D32;"></i></div>
+                <div class="stat-info"><h4 id="statDoctors">0</h4><span>طبيب</span></div>
             </div>
             <div class="stat-card">
-                <div class="stat-icon" style="background:#FCE4EC;">
-                    <i class="fas fa-user-nurse" style="color:#C62828;"></i>
-                </div>
-                <div class="stat-info">
-                    <h4 id="statNurses">0</h4>
-                    <span>ممرض/ة</span>
-                </div>
+                <div class="stat-icon" style="background:#FCE4EC;"><i class="fas fa-user-nurse" style="color:#C62828;"></i></div>
+                <div class="stat-info"><h4 id="statNurses">0</h4><span>ممرض/ة</span></div>
             </div>
             <div class="stat-card">
-                <div class="stat-icon" style="background:#FFF3E0;">
-                    <i class="fas fa-prescription" style="color:#E65100;"></i>
-                </div>
-                <div class="stat-info">
-                    <h4 id="statPharmacists">0</h4>
-                    <span>صيدلي</span>
-                </div>
+                <div class="stat-icon" style="background:#FFF3E0;"><i class="fas fa-prescription" style="color:#E65100;"></i></div>
+                <div class="stat-info"><h4 id="statPharmacists">0</h4><span>صيدلي</span></div>
             </div>
         </div>
 
         <div id="usersGrid" class="users-grid">
-            <div class="empty-state">
-                <i class="fas fa-spinner fa-spin"></i>
-                <h3>جاري التحميل...</h3>
-            </div>
+            <div class="empty-state"><i class="fas fa-spinner fa-spin"></i><h3>جاري التحميل...</h3></div>
         </div>
     </div>
 
@@ -706,14 +652,6 @@
                     </div>
                     <div class="detail-row"><i class="fas fa-id-card"></i> <span id="detailUid"></span></div>
                     <div class="detail-row"><i class="fas fa-circle"></i> الحالة: <span id="detailStatusSpan"></span></div>
-                    <div class="detail-row" id="detailPasswordRow">
-                        <i class="fas fa-key"></i> 
-                        <span>كلمة المرور:</span>
-                        <span class="password-display" id="detailPassword" title="اضغط للنسخ">
-                            <span id="passwordText">••••••••</span>
-                            <i class="fas fa-copy" style="font-size:0.75rem;"></i>
-                        </span>
-                    </div>
                 </div>
                 
                 <div id="detailAssignedDoctorsSection" style="display:none; background:#F5FAFC; padding:12px; border-radius:var(--radius-sm); margin-bottom:14px;">
@@ -779,12 +717,9 @@
                     <label>لمحة سريعة</label>
                     <textarea id="quickBlurb" rows="2" placeholder="خبرة، ملاحظات إضافية..."></textarea>
                 </div>
-                <div class="form-group password-section" id="passwordFieldGroup">
+                <div class="form-group" id="passwordFieldGroup">
                     <label>كلمة المرور *</label>
                     <input type="password" id="userPassword" placeholder="••••••••" required>
-                    <button type="button" class="password-toggle" id="togglePassword" title="إظهار/إخفاء">
-                        <i class="far fa-eye"></i>
-                    </button>
                     <div class="field-hint" id="passwordHint">أدخل كلمة مرور قوية (6 أحرف على الأقل)</div>
                 </div>
                 <div class="form-group">
@@ -803,7 +738,7 @@
         </div>
     </div>
 
-    <!-- ============ مودال إعدادات المجمع ============ -->
+    <!-- مودال إعدادات المجمع -->
     <div id="settingsModal" class="modal">
         <div class="modal-card">
             <div class="modal-header">
@@ -813,7 +748,7 @@
             <div class="modal-body">
                 <div class="settings-note">
                     <i class="fas fa-info-circle"></i>
-                    <strong>مطلوب:</strong> يجب تحديد اسم المجمع وعنوانه قبل متابعة استخدام النظام. هذه المعلومات ستظهر للمرضى والأطباء.
+                    <strong>مطلوب:</strong> يجب تحديد اسم المجمع وعنوانه قبل متابعة استخدام النظام.
                 </div>
                 
                 <div class="form-group">
@@ -856,47 +791,43 @@
     <script type="module">
         import { firebaseConfig } from './firebase-config.js';
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getDatabase, ref, onValue, set, update, get, remove } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        
+        // ✅ Firestore بدل Realtime Database
+        import { 
+            getFirestore, 
+            collection, 
+            doc, 
+            setDoc, 
+            updateDoc, 
+            deleteDoc, 
+            getDoc, 
+            getDocs, 
+            onSnapshot,
+            query,
+            where,
+            serverTimestamp
+        } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
         // ============ تهيئة Firebase ============
         const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
         const auth = getAuth(app);
-        const API_KEY = firebaseConfig.apiKey;
-        const SIGN_UP_URL = `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${API_KEY}`;
-        const DELETE_URL = `https://identitytoolkit.googleapis.com/v1/accounts:delete?key=${API_KEY}`;
+        const db = getFirestore(app);
 
         // ============ مراكز المحافظات ============
         const GOVERNORATE_CITIES = {
-            'المنيا': [
-                'المنيا', 'أبو قرقاص', 'العدوة', 'بني مزار', 'دير مواس', 
-                'سمالوط', 'مطاي', 'ملوي', 'مغاغة', 'المنيا الجديدة'
-            ],
-            'أسيوط': [
-                'أسيوط', 'أبنوب', 'أبو تيج', 'البداري', 'الفتح', 
-                'القوصية', 'ديروط', 'ساحل سليم', 'صدفا', 'منفلوط', 'أسيوط الجديدة'
-            ],
-            'القاهرة': [
-                'وسط البلد', 'مدينة نصر', 'مصر الجديدة', 'المعادي', 'حلوان',
-                'الزمالك', 'المهندسين', 'الدقي', 'العباسية', 'شبرا', 'المقطم'
-            ],
-            'الجيزة': [
-                'الجيزة', 'الدقي', 'الهرم', 'فيصل', 'العجوزة', 
-                'المهندسين', 'أكتوبر', 'الشيخ زايد', 'الحوامدية', 'البدرشين'
-            ]
+            'المنيا': ['المنيا', 'أبو قرقاص', 'العدوة', 'بني مزار', 'دير مواس', 'سمالوط', 'مطاي', 'ملوي', 'مغاغة', 'المنيا الجديدة'],
+            'أسيوط': ['أسيوط', 'أبنوب', 'أبو تيج', 'البداري', 'الفتح', 'القوصية', 'ديروط', 'ساحل سليم', 'صدفا', 'منفلوط', 'أسيوط الجديدة'],
+            'القاهرة': ['وسط البلد', 'مدينة نصر', 'مصر الجديدة', 'المعادي', 'حلوان', 'الزمالك', 'المهندسين', 'الدقي', 'العباسية', 'شبرا', 'المقطم'],
+            'الجيزة': ['الجيزة', 'الدقي', 'الهرم', 'فيصل', 'العجوزة', 'المهندسين', 'أكتوبر', 'الشيخ زايد', 'الحوامدية', 'البدرشين']
         };
-
-        // ============ متغيرات المجمع ============
-        let currentAdminId = null;
-        let currentTenantId = null;
-        
-        // ============ مراجع Firebase ============
-        let tenantUsersRef = null;
-        let tenantLinksRef = null;
 
         // ============ ثوابت التخزين المحلي ============
         const STORAGE_PREFIX = 'shifa_tenant_';
+        const LOGIN_STORAGE_KEYS = ['shifa_session', 'shifa_remember', 'shifa_last_login', 'shifa_secure_session'];
+
+        let currentAdminId = null;
+        let currentTenantId = null;
 
         // ============ المتغيرات العامة ============
         let allUsers = [];
@@ -904,11 +835,9 @@
         let linksMap = {};
         let currentEditId = null;
         let currentViewId = null;
-        let currentUserPassword = null;
         let unsubscribeUsers = null;
         let unsubscribeLinks = null;
         let searchTimer = null;
-        let isOnline = navigator.onLine;
         let tenantSettings = null;
 
         // ============ دوال مساعدة ============
@@ -946,14 +875,28 @@
             }
         };
 
-        // ============ دوال إعدادات المجمع ============
+        const clearLoginSessionOnly = () => {
+            try {
+                LOGIN_STORAGE_KEYS.forEach(key => localStorage.removeItem(key));
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key && (key.startsWith('shifa_session') || key.startsWith('shifa_secure'))) {
+                        localStorage.removeItem(key);
+                    }
+                }
+                sessionStorage.clear();
+            } catch (e) {}
+        };
+
+        // ============ ✅ دوال Firestore (مسار موحد) ============
         
         const loadTenantSettings = async () => {
             if (!currentTenantId) return null;
             try {
-                const snap = await get(ref(db, `tenants/${currentTenantId}/settings`));
+                const settingsDocRef = doc(db, 'tenants', currentTenantId, 'settings', 'main');
+                const snap = await getDoc(settingsDocRef);
                 if (snap.exists()) {
-                    tenantSettings = snap.val();
+                    tenantSettings = snap.data();
                     return tenantSettings;
                 }
                 return null;
@@ -1024,27 +967,8 @@
             const city = $('#citySelect').value;
             const address = $('#addressInput').value.trim();
             
-            if (!name) {
-                showToast('اسم المجمع مطلوب', true);
-                $('#tenantNameInput').focus();
-                return;
-            }
-            
-            if (!governorate) {
-                showToast('المحافظة مطلوبة', true);
-                $('#governorateSelect').focus();
-                return;
-            }
-            
-            if (!city) {
-                showToast('المركز مطلوب', true);
-                $('#citySelect').focus();
-                return;
-            }
-            
-            if (!address) {
-                showToast('العنوان التفصيلي مطلوب', true);
-                $('#addressInput').focus();
+            if (!name || !governorate || !city || !address) {
+                showToast('جميع الحقول مطلوبة', true);
                 return;
             }
             
@@ -1059,14 +983,15 @@
                     updatedBy: currentAdminId
                 };
                 
-                await set(ref(db, `tenants/${currentTenantId}/settings`), settingsData);
+                const settingsDocRef = doc(db, 'tenants', currentTenantId, 'settings', 'main');
+                await setDoc(settingsDocRef, settingsData);
                 
                 tenantSettings = settingsData;
                 $('#tenantIdDisplay').textContent = name;
                 
-                await update(ref(db, `tenants/${currentTenantId}/users/${currentAdminId}`), {
-                    tenantName: name
-                });
+                // تحديث اسم المجمع في بيانات الأدمن
+                const adminDocRef = doc(db, 'tenants', currentTenantId, 'users', currentAdminId);
+                await updateDoc(adminDocRef, { tenantName: name });
                 
                 showToast('✅ تم حفظ إعدادات المجمع بنجاح');
                 $('#settingsModal').style.display = 'none';
@@ -1077,83 +1002,61 @@
             }
         };
 
-        // ============ دوال التخزين المحلي ============
+        // ============ ✅ بدء المستمعين (Firestore) ============
         
-        const saveToLocalDB = () => {
+        const startListeners = () => {
             if (!currentTenantId) return;
-            try {
-                const usersData = {};
-                allUsers.forEach(u => {
-                    usersData[u.id] = { ...u };
-                    delete usersData[u.id]._linkedDoctorIds;
+            
+            if (unsubscribeUsers) unsubscribeUsers();
+            if (unsubscribeLinks) unsubscribeLinks();
+
+            // ✅ مستمع للمستخدمين في المجمع
+            const usersRef = collection(db, 'tenants', currentTenantId, 'users');
+            
+            unsubscribeUsers = onSnapshot(usersRef, (snapshot) => {
+                allUsers = [];
+                snapshot.forEach(docSnap => {
+                    allUsers.push({ id: docSnap.id, ...docSnap.data() });
                 });
-                localStorage.setItem(getTenantStorageKey('users'), JSON.stringify(usersData));
-                localStorage.setItem(getTenantStorageKey('links'), JSON.stringify(linksMap));
-            } catch (e) {
-                console.warn('تعذر الحفظ في التخزين المحلي:', e.message);
-            }
+                combineAndRender();
+                setSyncStatus('synced');
+            }, (error) => {
+                console.warn('خطأ في تحميل المستخدمين:', error.message);
+                setSyncStatus('syncing');
+            });
+
+            // ✅ مستمع للروابط
+            const linksDocRef = doc(db, 'tenants', currentTenantId, 'links', 'nurses');
+            
+            unsubscribeLinks = onSnapshot(linksDocRef, (snap) => {
+                linksMap = snap.exists() ? snap.data() : {};
+                if (allUsers.length) combineAndRender();
+            }, (error) => {
+                console.warn('خطأ في تحميل الروابط:', error.message);
+            });
         };
 
-        const loadFromLocalDB = () => {
-            if (!currentTenantId) return false;
-            try {
-                const usersData = localStorage.getItem(getTenantStorageKey('users'));
-                const linksData = localStorage.getItem(getTenantStorageKey('links'));
-                
-                if (usersData) {
-                    const parsed = JSON.parse(usersData);
-                    allUsers = Object.keys(parsed).map(id => ({
-                        id,
-                        ...parsed[id]
-                    }));
-                }
-                
-                if (linksData) {
-                    linksMap = JSON.parse(linksData);
-                }
-                
-                return allUsers.length > 0;
-            } catch (e) {
-                console.warn('تعذر تحميل التخزين المحلي:', e.message);
-                return false;
-            }
-        };
-
-        const savePasswordLocally = (uid, password) => {
-            if (!currentTenantId) return;
-            try {
-                const storageKey = getTenantStorageKey('passwords');
-                const passwords = JSON.parse(localStorage.getItem(storageKey) || '{}');
-                passwords[uid] = password;
-                localStorage.setItem(storageKey, JSON.stringify(passwords));
-            } catch (e) {
-                console.warn('تعذر حفظ كلمة المرور محلياً:', e.message);
-            }
-        };
-
-        const getPasswordLocally = (uid) => {
-            if (!currentTenantId) return null;
-            try {
-                const storageKey = getTenantStorageKey('passwords');
-                const passwords = JSON.parse(localStorage.getItem(storageKey) || '{}');
-                return passwords[uid] || null;
-            } catch (e) {
-                return null;
-            }
-        };
-
-        const removePasswordLocally = (uid) => {
-            if (!currentTenantId) return;
-            try {
-                const storageKey = getTenantStorageKey('passwords');
-                const passwords = JSON.parse(localStorage.getItem(storageKey) || '{}');
-                delete passwords[uid];
-                localStorage.setItem(storageKey, JSON.stringify(passwords));
-            } catch (e) {}
-        };
-
-        // ============ مزامنة البيانات ============
+        // ============ دمج البيانات وعرضها ============
         
+        const combineAndRender = () => {
+            const arr = [];
+            doctorsList = [];
+            
+            allUsers.forEach(user => {
+                const u = { ...user };
+                if (u.role === 'nurse') {
+                    u._linkedDoctorIds = linksMap[u.id] ? Object.keys(linksMap[u.id]) : [];
+                }
+                arr.push(u);
+                if (u.role === 'doctor') doctorsList.push(u);
+            });
+            
+            allUsers = arr;
+            updateStats();
+            renderGrid();
+            populateDoctorsCheckboxes();
+        };
+
         const updateStats = () => {
             const total = allUsers.length;
             const doctors = allUsers.filter(u => u.role === 'doctor').length;
@@ -1167,59 +1070,6 @@
             if (el('statPharmacists')) el('statPharmacists').textContent = pharmacists;
         };
 
-        const combineAndRender = () => {
-            const arr = [];
-            doctorsList = [];
-            
-            allUsers.forEach(user => {
-                const u = { ...user };
-                if (u.role === 'nurse') {
-                    u._linkedDoctorIds = Object.keys(linksMap[u.id] || {});
-                }
-                arr.push(u);
-                if (u.role === 'doctor') doctorsList.push(u);
-            });
-            
-            allUsers = arr;
-            updateStats();
-            renderGrid();
-            populateDoctorsCheckboxes();
-            saveToLocalDB();
-        };
-
-        const startListeners = () => {
-            if (!tenantUsersRef || !tenantLinksRef) return;
-            
-            if (unsubscribeUsers) unsubscribeUsers();
-            if (unsubscribeLinks) unsubscribeLinks();
-
-            unsubscribeUsers = onValue(tenantUsersRef, (snap) => {
-                const usersArray = [];
-                snap.forEach(child => {
-                    usersArray.push({ id: child.key, ...child.val() });
-                });
-                allUsers = usersArray;
-                combineAndRender();
-                setSyncStatus('synced');
-            }, (error) => {
-                console.warn('خطأ في الاتصال بـ Firebase، استخدام البيانات المحلية:', error.message);
-                setSyncStatus('syncing');
-                if (allUsers.length === 0) {
-                    loadFromLocalDB();
-                    combineAndRender();
-                }
-            });
-
-            unsubscribeLinks = onValue(tenantLinksRef, (snap) => {
-                linksMap = snap.val() || {};
-                if (allUsers.length) combineAndRender();
-            }, (error) => {
-                console.warn('خطأ في تحميل الروابط:', error.message);
-            });
-        };
-
-        // ============ القوائم المنسدلة للأطباء ============
-        
         const populateDoctorsCheckboxes = () => {
             const container = $('#assignedDoctorsCheckboxGroup');
             if (!container) return;
@@ -1257,8 +1107,6 @@
             });
         };
 
-        // ============ عرض الشبكة ============
-        
         const renderGrid = () => {
             const term = $('#searchInput')?.value.toLowerCase() || '';
             const filtered = allUsers.filter(u =>
@@ -1335,9 +1183,6 @@
             if (!user) return;
             currentViewId = id;
             
-            const savedPassword = getPasswordLocally(id);
-            currentUserPassword = savedPassword || 'غير معروفة';
-            
             $('#detailNameTitle').textContent = user.name || 'تفاصيل';
             $('#detailName').textContent = user.name || '-';
             $('#detailEmail').textContent = user.email || '-';
@@ -1352,7 +1197,6 @@
                 : '<span style="color:#C62828;">⛔ محظور</span>';
             
             $('#quickBlurbDisplay').textContent = user.quickBlurb || 'لا توجد لمحة';
-            $('#passwordText').textContent = currentUserPassword;
             
             let avatarIcon = 'fa-user';
             if (user.role === 'doctor') avatarIcon = 'fa-user-md';
@@ -1391,12 +1235,10 @@
         const closeDetailModal = () => {
             $('#detailModal').style.display = 'none';
             currentViewId = null;
-            currentUserPassword = null;
         };
 
         const openAddModal = () => {
             currentEditId = null;
-            currentUserPassword = null;
             $('#formModalTitle').innerHTML = '<i class="fas fa-user-plus"></i> إضافة مستخدم';
             $('#userName').value = '';
             $('#userEmail').value = '';
@@ -1437,6 +1279,7 @@
             $('#quickBlurb').value = user.quickBlurb || '';
             $('#userStatus').value = user.status || 'active';
             
+            // ✅ إخفاء حقل كلمة المرور في وضع التعديل
             $('#passwordFieldGroup').style.display = 'none';
             $('#userPassword').required = false;
             $('#userPassword').value = '';
@@ -1480,34 +1323,11 @@
         });
 
         $('#governorateSelect').addEventListener('change', (e) => {
-            const governorate = e.target.value;
-            populateCities(governorate);
+            populateCities(e.target.value);
             $('#citySelect').value = '';
         });
 
-        $('#togglePassword').addEventListener('click', function() {
-            const pwdField = $('#userPassword');
-            const icon = this.querySelector('i');
-            if (pwdField.type === 'password') {
-                pwdField.type = 'text';
-                icon.className = 'far fa-eye-slash';
-            } else {
-                pwdField.type = 'password';
-                icon.className = 'far fa-eye';
-            }
-        });
-
-        $('#detailPassword').addEventListener('click', () => {
-            if (currentUserPassword && currentUserPassword !== 'غير معروفة') {
-                navigator.clipboard.writeText(currentUserPassword).then(() => {
-                    showToast('📋 تم نسخ كلمة المرور');
-                }).catch(() => {
-                    showToast('فشل النسخ', true);
-                });
-            }
-        });
-
-        // ============ عمليات الحفظ ============
+        // ============ ✅ حفظ المستخدم (Firestore) ============
         
         const saveUser = async () => {
             const name = $('#userName').value.trim();
@@ -1524,6 +1344,18 @@
                 return;
             }
 
+            // ✅ في حالة الإضافة: كلمة المرور مطلوبة
+            if (!currentEditId) {
+                if (!password) {
+                    showToast('كلمة المرور مطلوبة', true);
+                    return;
+                }
+                if (password.length < 6) {
+                    showToast('كلمة المرور يجب أن تكون 6 أحرف على الأقل', true);
+                    return;
+                }
+            }
+
             const userData = {
                 name,
                 email,
@@ -1533,7 +1365,7 @@
                 quickBlurb,
                 status,
                 tenantId: currentTenantId,
-                createdBy: currentAdminId
+                updatedAt: new Date().toISOString()
             };
 
             let selectedDoctorIds = [];
@@ -1548,7 +1380,9 @@
 
             try {
                 if (currentEditId) {
-                    await update(ref(db, `tenants/${currentTenantId}/users/${currentEditId}`), userData);
+                    // ✅ تعديل مستخدم موجود في Firestore
+                    const userDocRef = doc(db, 'tenants', currentTenantId, 'users', currentEditId);
+                    await updateDoc(userDocRef, userData);
                     
                     if (role === 'nurse') {
                         await saveNurseDoctorLinks(currentEditId, selectedDoctorIds);
@@ -1557,16 +1391,11 @@
                     showToast('✅ تم التعديل بنجاح');
                     closeFormModal();
                 } else {
-                    if (!password) {
-                        showToast('كلمة المرور مطلوبة', true);
-                        return;
-                    }
-                    if (password.length < 6) {
-                        showToast('كلمة المرور يجب أن تكون 6 أحرف على الأقل', true);
-                        return;
-                    }
-
+                    // ✅ إضافة مستخدم جديد عبر Firebase Auth REST API
                     setSyncStatus('syncing');
+                    
+                    const API_KEY = firebaseConfig.apiKey;
+                    const SIGN_UP_URL = `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${API_KEY}`;
                     
                     const signUpRes = await fetch(SIGN_UP_URL, {
                         method: 'POST',
@@ -1583,11 +1412,12 @@
                     }
                     
                     const uid = signUpData.localId;
-                    userData.created_at = new Date().toISOString();
+                    userData.createdAt = new Date().toISOString();
+                    userData.createdBy = currentAdminId;
                     
-                    await set(ref(db, `tenants/${currentTenantId}/users/${uid}`), userData);
-                    
-                    savePasswordLocally(uid, password);
+                    // ✅ حفظ بيانات المستخدم في Firestore (المجمع)
+                    const userDocRef = doc(db, 'tenants', currentTenantId, 'users', uid);
+                    await setDoc(userDocRef, userData);
                     
                     if (role === 'nurse') {
                         await saveNurseDoctorLinks(uid, selectedDoctorIds);
@@ -1603,21 +1433,29 @@
             }
         };
 
+        // ✅ حفظ روابط الممرض بالأطباء في Firestore
         const saveNurseDoctorLinks = async (nurseId, doctorIds) => {
-            const linkRef = ref(db, `tenants/${currentTenantId}/links/${nurseId}`);
-            await set(linkRef, null);
-            if (doctorIds.length === 0) return;
-            const updates = {};
-            doctorIds.forEach(docId => { updates[docId] = true; });
-            await set(linkRef, updates);
+            const linksDocRef = doc(db, 'tenants', currentTenantId, 'links', nurseId);
+            
+            if (doctorIds.length === 0) {
+                await deleteDoc(linksDocRef);
+                return;
+            }
+            
+            const linksData = {};
+            doctorIds.forEach(docId => { linksData[docId] = true; });
+            await setDoc(linksDocRef, linksData);
         };
 
+        // ✅ حظر / إلغاء حظر مستخدم
         const toggleBlockUser = async (id, newStatus) => {
-            await update(ref(db, `tenants/${currentTenantId}/users/${id}`), { status: newStatus });
+            const userDocRef = doc(db, 'tenants', currentTenantId, 'users', id);
+            await updateDoc(userDocRef, { status: newStatus });
             showToast(newStatus === 'blocked' ? '🔒 تم الحظر' : '🔓 تم إلغاء الحظر');
             closeDetailModal();
         };
 
+        // ✅ حذف مستخدم
         const deleteUserAccount = async (id) => {
             const user = allUsers.find(u => u.id === id);
             if (!user) {
@@ -1629,36 +1467,21 @@
                 `⚠️ هل أنت متأكد من حذف المستخدم "${user.name || 'بدون اسم'}"؟\n\n` +
                 `البريد: ${user.email}\n` +
                 `الدور: ${user.role}\n\n` +
-                `سيتم حذف الحساب نهائياً من Authentication وقاعدة البيانات!`
+                `سيتم حذف الحساب من قاعدة البيانات!`
             );
 
             if (!confirmed) return;
 
             try {
+                // حذف الروابط إذا كان ممرض
                 if (user.role === 'nurse') {
-                    await remove(ref(db, `tenants/${currentTenantId}/links/${id}`));
+                    const linksDocRef = doc(db, 'tenants', currentTenantId, 'links', id);
+                    await deleteDoc(linksDocRef);
                 }
 
-                await remove(ref(db, `tenants/${currentTenantId}/users/${id}`));
-
-                removePasswordLocally(id);
-
-                try {
-                    const currentUser = auth.currentUser;
-                    if (currentUser) {
-                        const idToken = await currentUser.getIdToken();
-                        await fetch(DELETE_URL, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ 
-                                idToken: idToken,
-                                localId: id 
-                            })
-                        });
-                    }
-                } catch (authError) {
-                    console.warn('لم يتم حذف حساب Authentication:', authError);
-                }
+                // حذف المستخدم من Firestore
+                const userDocRef = doc(db, 'tenants', currentTenantId, 'users', id);
+                await deleteDoc(userDocRef);
 
                 showToast('🗑️ تم حذف المستخدم بنجاح');
                 closeDetailModal();
@@ -1674,20 +1497,10 @@
             try {
                 showToast('👋 جاري تسجيل الخروج...');
                 
-                if (unsubscribeUsers) {
-                    unsubscribeUsers();
-                    unsubscribeUsers = null;
-                }
-                if (unsubscribeLinks) {
-                    unsubscribeLinks();
-                    unsubscribeLinks = null;
-                }
+                if (unsubscribeUsers) { unsubscribeUsers(); unsubscribeUsers = null; }
+                if (unsubscribeLinks) { unsubscribeLinks(); unsubscribeLinks = null; }
                 
-                // مسح جلسة تسجيل الدخول فقط
-                try {
-                    localStorage.removeItem('shifa_secure_session');
-                    localStorage.removeItem('shifa_session');
-                } catch (e) {}
+                clearLoginSessionOnly();
                 
                 allUsers = [];
                 doctorsList = [];
@@ -1697,54 +1510,67 @@
                 tenantSettings = null;
                 
                 await signOut(auth);
-                
                 window.location.href = 'index.html';
-                
             } catch (error) {
                 console.error('خطأ أثناء تسجيل الخروج:', error);
-                try {
-                    localStorage.removeItem('shifa_secure_session');
-                    localStorage.removeItem('shifa_session');
-                } catch (e) {}
+                clearLoginSessionOnly();
                 window.location.href = 'index.html';
             }
         };
 
-        // ============ ✅ التحقق المبسط - بدون فحص الصلاحيات ============
+        // ============ ✅ بدء التشغيل (مسار موحد) ============
         
         const initAdminPanel = () => {
             onAuthStateChanged(auth, async (user) => {
                 if (!user) {
-                    // لا يوجد مستخدم مسجل - توجيه لصفحة تسجيل الدخول
                     window.location.href = 'index.html';
                     return;
                 }
                 
-                // ✅ تم تسجيل الدخول - تشغيل اللوحة مباشرة بدون فحص الصلاحيات
                 currentAdminId = user.uid;
-                currentTenantId = user.uid;
                 
-                tenantUsersRef = ref(db, `tenants/${currentTenantId}/users`);
-                tenantLinksRef = ref(db, `tenants/${currentTenantId}/links`);
+                // ✅ استخراج المجمع (نفس آلية باقي النظام)
+                const urlParams = new URLSearchParams(window.location.search);
+                const tenantFromUrl = urlParams.get('tenant');
+                
+                if (tenantFromUrl) {
+                    currentTenantId = tenantFromUrl;
+                } else {
+                    try {
+                        const encrypted = localStorage.getItem('shifa_secure_session');
+                        if (encrypted) {
+                            const decoded = atob(encrypted);
+                            const match = decoded.match(/"tenantId":"([^"]+)"/);
+                            if (match) currentTenantId = match[1];
+                        }
+                    } catch (e) {}
+                    
+                    if (!currentTenantId) {
+                        const oldSession = localStorage.getItem('shifa_session');
+                        if (oldSession) {
+                            try {
+                                const parsed = JSON.parse(oldSession);
+                                currentTenantId = parsed.tenantId || user.uid;
+                            } catch (e) { currentTenantId = user.uid; }
+                        } else {
+                            currentTenantId = user.uid;
+                        }
+                    }
+                }
+                
+                console.log(`✅ المجمع: ${currentTenantId}`);
                 
                 // تحميل إعدادات المجمع
                 await loadTenantSettings();
                 
-                // عرض اسم المجمع
                 const tenantDisplay = tenantSettings?.name || user.email?.split('@')[0] || 'مجمع طبي';
                 $('#tenantIdDisplay').textContent = tenantDisplay;
                 
-                // لو الإعدادات مش كاملة، افتح مودال الإعدادات
+                // لو الإعدادات مش كاملة
                 if (!hasCompleteSettings()) {
                     $('#authCheckLoader').style.display = 'none';
                     $('#mainContainer').style.display = 'block';
                     openSettingsModal(true);
-                }
-                
-                // تحميل البيانات المحلية
-                loadFromLocalDB();
-                if (allUsers.length > 0) {
-                    combineAndRender();
                 }
                 
                 // إظهار الواجهة
@@ -1754,7 +1580,7 @@
                 // بدء المستمعين
                 startListeners();
                 
-                console.log('🚀 لوحة الإدارة جاهزة - تم تجاوز التحقق من الصلاحيات');
+                console.log('🚀 لوحة الإدارة جاهزة - Firestore');
             });
         };
 
@@ -1819,29 +1645,16 @@
             });
             
             window.addEventListener('online', () => {
-                isOnline = true;
                 setSyncStatus('syncing');
                 showToast('📡 تم استعادة الاتصال - جاري المزامنة');
-                if (unsubscribeUsers) {
-                    unsubscribeUsers();
-                    unsubscribeUsers = null;
-                }
-                if (unsubscribeLinks) {
-                    unsubscribeLinks();
-                    unsubscribeLinks = null;
-                }
+                if (unsubscribeUsers) { unsubscribeUsers(); unsubscribeUsers = null; }
+                if (unsubscribeLinks) { unsubscribeLinks(); unsubscribeLinks = null; }
                 startListeners();
             });
             
             window.addEventListener('offline', () => {
-                isOnline = false;
                 setSyncStatus('syncing');
-                showToast('⚠️ انقطع الاتصال - استخدام البيانات المحلية', true);
-            });
-            
-            window.addEventListener('beforeunload', () => {
-                if (unsubscribeUsers) unsubscribeUsers();
-                if (unsubscribeLinks) unsubscribeLinks();
+                showToast('⚠️ انقطع الاتصال', true);
             });
         };
 
@@ -1849,8 +1662,12 @@
         initEvents();
         initAdminPanel();
         
-        console.log('🚀 لوحة إدارة شفاء - وضع المسؤول المباشر');
-        console.log('✅ تم إزالة التحقق من الصلاحيات - أي مستخدم مسجل دخول يمكنه الوصول');
+        console.log('🚀 لوحة إدارة شفاء - Firestore (مسارات موحدة)');
+        console.log('✅ المستخدمين: /tenants/{tenantId}/users/{userId}');
+        console.log('✅ الروابط: /tenants/{tenantId}/links/{nurseId}');
+        console.log('✅ الإعدادات: /tenants/{tenantId}/settings/main');
+        console.log('🔒 أي مسؤول يمكنه الوصول');
+        console.log('🔑 كلمة المرور تظهر فقط عند الإضافة - لا تخزين محلي');
     </script>
 </body>
 </html>
