@@ -40,8 +40,6 @@
             -webkit-font-smoothing: antialiased;
             -webkit-text-size-adjust: 100%;
             text-rendering: optimizeSpeed;
-            height: 100%;
-            overflow: hidden;
         }
         
         body {
@@ -49,7 +47,6 @@
             color: var(--ink);
             min-height: 100vh;
             min-height: 100dvh;
-            min-height: -webkit-fill-available;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -57,13 +54,12 @@
             background: var(--bg);
             position: relative;
             overflow-x: hidden;
-            overflow-y: auto;
             contain: layout style paint;
             -webkit-backface-visibility: hidden;
             backface-visibility: hidden;
-            -webkit-overflow-scrolling: touch;
         }
         
+        /* شاشة التحميل الأولية */
         .splash-screen {
             position: fixed;
             inset: 0;
@@ -172,26 +168,13 @@
             100% { transform: translate(15px, 15px); }
         }
         
-        .main-container {
-            width: 100%;
-            max-width: 420px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 1rem;
-            transition: transform 0.3s ease-out;
-        }
-        
-        .main-container.keyboard-open {
-            transform: translateY(-10vh);
-        }
-        
         .glass-card {
             background: var(--white);
             border: 1px solid var(--border-light);
             border-radius: 28px;
             box-shadow: var(--shadow);
             width: 100%;
+            max-width: 420px;
             padding: 2.2rem 1.8rem;
             text-align: center;
             z-index: 1;
@@ -200,7 +183,6 @@
             contain: layout style;
             -webkit-backface-visibility: hidden;
             backface-visibility: hidden;
-            position: relative;
         }
         
         @keyframes cardIn {
@@ -220,12 +202,6 @@
             box-shadow: 0 8px 20px rgba(0, 174, 239, 0.2);
             position: relative;
             contain: strict;
-            transition: transform 0.3s ease;
-        }
-        
-        .logo-icon.small {
-            transform: scale(0.8);
-            margin-bottom: 0.8rem;
         }
         
         .logo-icon svg {
@@ -240,11 +216,6 @@
             color: var(--primary-dark);
             letter-spacing: -0.3px;
             margin-bottom: 0.3rem;
-            transition: font-size 0.3s ease;
-        }
-        
-        .card-header h1.small {
-            font-size: 1.5rem;
         }
         
         .card-header p {
@@ -252,11 +223,6 @@
             color: var(--text-sec);
             font-weight: 500;
             margin-bottom: 0.5rem;
-            transition: font-size 0.3s ease;
-        }
-        
-        .card-header p.small {
-            font-size: 0.8rem;
         }
         
         .secure-badge {
@@ -271,16 +237,6 @@
             font-weight: 600;
             margin-bottom: 1.6rem;
             border: 1px solid rgba(38, 166, 154, 0.15);
-            transition: all 0.3s ease;
-        }
-        
-        .secure-badge.hidden-mobile {
-            opacity: 0;
-            max-height: 0;
-            margin-bottom: 0.5rem;
-            padding: 0;
-            border: none;
-            overflow: hidden;
         }
         
         .secure-badge svg {
@@ -332,7 +288,6 @@
             -webkit-appearance: none;
             appearance: none;
             touch-action: manipulation;
-            font-size: 16px;
         }
         
         .input-group input:focus {
@@ -348,32 +303,6 @@
         .input-group input::placeholder {
             color: #B0C8D0;
             font-weight: 400;
-        }
-        
-        .password-visible-indicator {
-            position: absolute;
-            top: -25px;
-            left: 0;
-            right: 0;
-            text-align: center;
-            background: rgba(0, 174, 239, 0.9);
-            color: white;
-            padding: 4px 12px;
-            border-radius: 8px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            opacity: 0;
-            transform: translateY(5px);
-            transition: all 0.2s ease;
-            pointer-events: none;
-            z-index: 10;
-            letter-spacing: 2px;
-            direction: ltr;
-        }
-        
-        .password-visible-indicator.show {
-            opacity: 1;
-            transform: translateY(0);
         }
         
         .password-toggle {
@@ -395,7 +324,6 @@
             min-height: 44px;
             touch-action: manipulation;
             -webkit-tap-highlight-color: transparent;
-            z-index: 2;
         }
         
         .password-toggle:active {
@@ -447,7 +375,6 @@
             user-select: none;
             -webkit-user-select: none;
             contain: layout style;
-            min-height: 50px;
         }
         
         .btn-login:active:not(:disabled) {
@@ -556,29 +483,9 @@
             opacity: 0;
         }
         
-        @media (max-width: 768px) {
-            body {
-                align-items: flex-start;
-                padding-top: 2rem;
-            }
-            
-            .main-container {
-                align-items: flex-start;
-            }
-            
-            .main-container.keyboard-open {
-                transform: translateY(-15vh);
-            }
-        }
-        
         @media (max-width: 480px) {
-            body {
-                padding: 1rem;
-                padding-top: 1.5rem;
-            }
-            
             .glass-card {
-                padding: 1.5rem 1.2rem;
+                padding: 1.8rem 1.3rem;
                 border-radius: 24px;
             }
             
@@ -588,31 +495,18 @@
             
             .input-group input {
                 padding: 0.75rem 2.5rem;
-                font-size: 16px;
+                font-size: 0.9rem;
             }
             
             .bg-pattern::before,
             .bg-pattern::after {
                 animation-duration: 45s;
             }
-            
-            .input-wrapper {
-                margin-bottom: 1rem;
-            }
-            
-            .btn-login {
-                margin-top: 0.5rem;
-            }
         }
         
         @media (max-width: 360px) {
-            body {
-                padding: 0.75rem;
-                padding-top: 1rem;
-            }
-            
             .glass-card {
-                padding: 1.3rem 0.9rem;
+                padding: 1.5rem 1rem;
                 border-radius: 20px;
             }
             
@@ -623,52 +517,6 @@
             .btn-login {
                 padding: 0.85rem;
                 font-size: 1rem;
-            }
-        }
-        
-        @media (max-height: 600px) {
-            body {
-                align-items: flex-start;
-                padding-top: 0.5rem;
-            }
-            
-            .glass-card {
-                padding: 1rem 1.2rem;
-            }
-            
-            .logo-icon {
-                width: 45px;
-                height: 45px;
-                margin-bottom: 0.8rem;
-            }
-            
-            .logo-icon svg {
-                width: 26px;
-                height: 26px;
-            }
-            
-            .card-header h1 {
-                font-size: 1.4rem;
-                margin-bottom: 0.1rem;
-            }
-            
-            .card-header p {
-                font-size: 0.8rem;
-                margin-bottom: 0.2rem;
-            }
-            
-            .secure-badge {
-                margin-bottom: 0.8rem;
-                font-size: 0.7rem;
-                padding: 3px 10px;
-            }
-            
-            .input-wrapper {
-                margin-bottom: 0.8rem;
-            }
-            
-            .input-group input {
-                padding: 0.65rem 2.3rem;
             }
         }
         
@@ -706,97 +554,94 @@
     <div class="loading-bar" id="loadingBar" aria-hidden="true"></div>
     <div class="toast" id="toast" aria-live="polite"></div>
     
-    <div class="main-container" id="mainContainer">
-        <main class="glass-card" id="mainCard" style="display: none;">
-            <div class="logo-icon" id="logoIcon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/>
-                    <path d="M12 8v4l3 3"/>
-                </svg>
+    <main class="glass-card" id="mainCard" style="display: none;">
+        <div class="logo-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/>
+                <path d="M12 8v4l3 3"/>
+            </svg>
+        </div>
+        
+        <header class="card-header">
+            <h1>شفاء</h1>
+            <p>منصة إدارة العيادات والصيدليات</p>
+        </header>
+        
+        <div class="secure-badge" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            اتصال آمن ومشفر
+        </div>
+        
+        <form id="loginForm" novalidate autocomplete="on">
+            <div class="input-wrapper">
+                <label class="input-label" for="emailInput">البريد الإلكتروني</label>
+                <div class="input-group">
+                    <svg class="input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <rect x="2" y="4" width="20" height="16" rx="2"/>
+                        <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+                    </svg>
+                    <input 
+                        type="email" 
+                        id="emailInput" 
+                        placeholder="example@domain.com" 
+                        required 
+                        autocomplete="email"
+                        inputmode="email"
+                        dir="ltr"
+                    >
+                </div>
             </div>
             
-            <header class="card-header">
-                <h1 id="mainTitle">شفاء</h1>
-                <p id="subTitle">منصة إدارة العيادات والصيدليات</p>
-            </header>
-            
-            <div class="secure-badge" id="secureBadge" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                </svg>
-                اتصال آمن ومشفر
+            <div class="input-wrapper">
+                <label class="input-label" for="passwordInput">كلمة المرور</label>
+                <div class="input-group">
+                    <svg class="input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                    </svg>
+                    <input 
+                        type="password" 
+                        id="passwordInput" 
+                        placeholder="••••••••" 
+                        required 
+                        autocomplete="current-password"
+                    >
+                    <button type="button" class="password-toggle" id="togglePasswordBtn" aria-label="إظهار/إخفاء كلمة المرور" tabindex="-1">
+                        <svg id="eyeIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                    </button>
+                </div>
             </div>
             
-            <form id="loginForm" novalidate autocomplete="on">
-                <div class="input-wrapper">
-                    <label class="input-label" for="emailInput">البريد الإلكتروني</label>
-                    <div class="input-group">
-                        <svg class="input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                            <rect x="2" y="4" width="20" height="16" rx="2"/>
-                            <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
-                        </svg>
-                        <input 
-                            type="email" 
-                            id="emailInput" 
-                            placeholder="example@domain.com" 
-                            required 
-                            autocomplete="email"
-                            inputmode="email"
-                            dir="ltr"
-                        >
-                    </div>
-                </div>
-                
-                <div class="input-wrapper">
-                    <label class="input-label" for="passwordInput">كلمة المرور</label>
-                    <div class="input-group">
-                        <svg class="input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                        </svg>
-                        <input 
-                            type="password" 
-                            id="passwordInput" 
-                            placeholder="••••••••" 
-                            required 
-                            autocomplete="current-password"
-                        >
-                        <div class="password-visible-indicator" id="passwordIndicator"></div>
-                        <button type="button" class="password-toggle" id="togglePasswordBtn" aria-label="إظهار/إخفاء كلمة المرور" tabindex="-1">
-                            <svg id="eyeIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                                <circle cx="12" cy="12" r="3"/>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="error-message" id="errorMessage" role="alert" aria-live="assertive"></div>
-                
-                <button type="submit" class="btn-login" id="loginButton">
-                    <span class="btn-content" id="btnContent">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
-                            <polyline points="10 17 15 12 10 7"/>
-                            <line x1="15" y1="12" x2="3" y2="12"/>
-                        </svg>
-                        تسجيل الدخول
-                    </span>
-                </button>
-            </form>
-        </main>
-    </div>
+            <div class="error-message" id="errorMessage" role="alert" aria-live="assertive"></div>
+            
+            <button type="submit" class="btn-login" id="loginButton">
+                <span class="btn-content" id="btnContent">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+                        <polyline points="10 17 15 12 10 7"/>
+                        <line x1="15" y1="12" x2="3" y2="12"/>
+                    </svg>
+                    تسجيل الدخول
+                </span>
+            </button>
+        </form>
+    </main>
 
     <script type="module">
-        // ============ استيراد Firebase مع Firestore ============
+        // ============ استيراد Firebase ============
         import { firebaseConfig } from './firebase-config.js';
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-        // ============ نظام التشفير للتخزين المحلي ============
-        const ENCRYPTION_KEY = 'ShifaSecure2024!@#Key_v2';
+        // ============ نظام التشفير البسيط ============
+        const ENCRYPTION_KEY = 'ShifaSecure2024!@#Key';
         
         const encryptData = (data) => {
             try {
@@ -828,27 +673,8 @@
             }
         };
 
-        // ============ ثوابت التخزين المحلي للجلسة ============
-        const SESSION_STORAGE_KEY = 'shifa_firestore_session_v2';
-        const TENANT_PREFIX_KEY = 'shifa_tenant_id';
-        const USER_ROLE_KEY = 'shifa_user_role';
-        const SESSION_MAX_AGE = 24 * 60 * 60 * 1000; // 24 ساعة
-
-        // ============ صفحات الأدوار ============
-        const ROLE_PAGES = {
-            'admin': 'admin-panel.html',
-            'doctor': 'doctor-dashboard.html',
-            'nurse': 'nurse-dashboard.html',
-            'pharmacist': 'pharmacist-dashboard.html'
-        };
-
-        // ============ أسماء الأدوار بالعربية ============
-        const ROLE_NAMES = {
-            'admin': 'مدير النظام',
-            'doctor': 'طبيب',
-            'nurse': 'ممرض/ة',
-            'pharmacist': 'صيدلي'
-        };
+        // ============ ثوابت التخزين المحلي ============
+        const STORAGE_KEY = 'shifa_secure_session';
 
         // ============ تهيئة Firebase ============
         const app = initializeApp(firebaseConfig);
@@ -858,7 +684,6 @@
         // ============ عناصر DOM ============
         const dom = {
             splashScreen: document.getElementById('splashScreen'),
-            mainContainer: document.getElementById('mainContainer'),
             mainCard: document.getElementById('mainCard'),
             emailInput: document.getElementById('emailInput'),
             passwordInput: document.getElementById('passwordInput'),
@@ -870,11 +695,6 @@
             errorMessage: document.getElementById('errorMessage'),
             toast: document.getElementById('toast'),
             loadingBar: document.getElementById('loadingBar'),
-            passwordIndicator: document.getElementById('passwordIndicator'),
-            logoIcon: document.getElementById('logoIcon'),
-            mainTitle: document.getElementById('mainTitle'),
-            subTitle: document.getElementById('subTitle'),
-            secureBadge: document.getElementById('secureBadge'),
         };
 
         // ============ أيقونات العين SVG ============
@@ -886,153 +706,47 @@
         // ============ محتوى الزر الافتراضي ============
         const defaultBtnContent = dom.btnContent.innerHTML;
 
-        // ============ متغيرات حالة لوحة المفاتيح ============
-        let isPasswordVisible = false;
-        let keyboardOpen = false;
-        let passwordRevealTimer = null;
-        let isMobile = /Android|iPhone|iPad|iPod|webOS/i.test(navigator.userAgent);
-        
-        const updateDeviceType = () => {
-            isMobile = /Android|iPhone|iPad|iPod|webOS/i.test(navigator.userAgent) || 
-                       ('ontouchstart' in window && window.innerWidth < 768);
-        };
-        updateDeviceType();
-        
-        window.addEventListener('resize', updateDeviceType);
-
-        // ============ إظهار آخر حرف من كلمة المرور ============
-        const showLastPasswordChar = () => {
-            if (keyboardOpen && !isPasswordVisible && dom.passwordInput.type === 'password') {
-                const value = dom.passwordInput.value;
-                if (value.length > 0) {
-                    const lastChar = value[value.length - 1];
-                    dom.passwordIndicator.textContent = lastChar;
-                    dom.passwordIndicator.classList.add('show');
-                    
-                    clearTimeout(passwordRevealTimer);
-                    passwordRevealTimer = setTimeout(() => {
-                        dom.passwordIndicator.classList.remove('show');
-                    }, 1000);
-                }
-            }
-        };
-
-        // ============ اكتشاف فتح/إغلاق لوحة المفاتيح ============
-        const detectKeyboard = () => {
-            const initialHeight = window.innerHeight;
-            
-            if (window.visualViewport) {
-                window.visualViewport.addEventListener('resize', () => {
-                    const currentHeight = window.visualViewport.height;
-                    const heightDiff = initialHeight - currentHeight;
-                    
-                    if (heightDiff > 150) {
-                        if (!keyboardOpen) {
-                            keyboardOpen = true;
-                            dom.mainContainer.classList.add('keyboard-open');
-                            handleKeyboardOpen();
-                        }
-                    } else {
-                        if (keyboardOpen) {
-                            keyboardOpen = false;
-                            dom.mainContainer.classList.remove('keyboard-open');
-                            handleKeyboardClose();
-                        }
-                    }
-                });
-            } else {
-                window.addEventListener('resize', () => {
-                    const currentHeight = window.innerHeight;
-                    const heightDiff = initialHeight - currentHeight;
-                    
-                    if (heightDiff > 150) {
-                        if (!keyboardOpen) {
-                            keyboardOpen = true;
-                            dom.mainContainer.classList.add('keyboard-open');
-                            handleKeyboardOpen();
-                        }
-                    } else {
-                        if (keyboardOpen) {
-                            keyboardOpen = false;
-                            dom.mainContainer.classList.remove('keyboard-open');
-                            handleKeyboardClose();
-                        }
-                    }
-                });
-            }
-        };
-
-        const handleKeyboardOpen = () => {
-            if (isMobile) {
-                dom.logoIcon.classList.add('small');
-                dom.mainTitle.classList.add('small');
-                dom.subTitle.classList.add('small');
-                dom.secureBadge.classList.add('hidden-mobile');
+        // ============ ✅ جلب بيانات المستخدم من Firestore ============
+        const fetchUserDataFromFirestore = async (uid) => {
+            try {
+                // البحث في مجموعة users مباشرة
+                const userDocRef = doc(db, 'users', uid);
+                const userDocSnap = await getDoc(userDocRef);
                 
-                setTimeout(() => {
-                    if (document.activeElement === dom.passwordInput) {
-                        dom.passwordInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    }
-                }, 300);
+                if (userDocSnap.exists()) {
+                    console.log('✅ تم العثور على بيانات المستخدم في Firestore');
+                    return userDocSnap.data();
+                }
+                
+                // إذا لم يتم العثور على المستخدم في المسار المباشر
+                console.log('ℹ️ المستخدم غير موجود في Firestore');
+                return null;
+                
+            } catch (error) {
+                console.error("❌ خطأ في جلب بيانات المستخدم من Firestore:", error);
+                return null;
             }
         };
-        
-        const handleKeyboardClose = () => {
-            dom.logoIcon.classList.remove('small');
-            dom.mainTitle.classList.remove('small');
-            dom.subTitle.classList.remove('small');
-            dom.secureBadge.classList.remove('hidden-mobile');
-            dom.passwordIndicator.classList.remove('show');
-        };
-
-        dom.passwordInput.addEventListener('focus', () => {
-            if (isMobile) {
-                handleKeyboardOpen();
-                setTimeout(() => {
-                    dom.passwordInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }, 350);
-            }
-        });
-        
-        dom.passwordInput.addEventListener('blur', () => {
-            keyboardOpen = false;
-            dom.mainContainer.classList.remove('keyboard-open');
-            handleKeyboardClose();
-        });
-
-        dom.emailInput.addEventListener('focus', () => {
-            if (isMobile) {
-                setTimeout(() => {
-                    dom.emailInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }, 350);
-            }
-        });
-
-        dom.passwordInput.addEventListener('input', showLastPasswordChar);
 
         // ============ إدارة الجلسة المشفرة ============
+        
+        /**
+         * ✅ حفظ الجلسة في localStorage مع تشفير
+         */
         const saveEncryptedSession = (userData) => {
             try {
                 const sessionData = {
                     uid: userData.uid,
                     email: userData.email,
-                    name: userData.name,
                     role: userData.role,
-                    tenantId: userData.tenantId,
-                    timestamp: Date.now(),
-                    version: 'v3'
+                    name: userData.name,
+                    tenantId: userData.tenantId || null,
+                    timestamp: Date.now()
                 };
                 
                 const encrypted = encryptData(sessionData);
                 if (encrypted) {
-                    localStorage.setItem(SESSION_STORAGE_KEY, encrypted);
-                    // حفظ بيانات إضافية للاستخدام السريع
-                    if (userData.tenantId) {
-                        localStorage.setItem(TENANT_PREFIX_KEY, userData.tenantId);
-                    }
-                    if (userData.role) {
-                        localStorage.setItem(USER_ROLE_KEY, userData.role);
-                    }
+                    localStorage.setItem(STORAGE_KEY, encrypted);
                     return true;
                 }
                 return false;
@@ -1042,18 +756,23 @@
             }
         };
 
+        /**
+         * استرجاع الجلسة من localStorage مع فك التشفير
+         */
         const getEncryptedSession = () => {
             try {
-                const encrypted = localStorage.getItem(SESSION_STORAGE_KEY);
+                const encrypted = localStorage.getItem(STORAGE_KEY);
                 if (!encrypted) return null;
                 
                 const session = decryptData(encrypted);
-                if (!session || !session.uid || !session.version) {
+                if (!session || !session.uid || !session.role) {
                     clearSession();
                     return null;
                 }
                 
-                if (Date.now() - session.timestamp > SESSION_MAX_AGE) {
+                // التحقق من صلاحية الجلسة (24 ساعة)
+                const MAX_SESSION_AGE = 24 * 60 * 60 * 1000;
+                if (Date.now() - session.timestamp > MAX_SESSION_AGE) {
                     console.log('🕐 انتهت صلاحية الجلسة');
                     clearSession();
                     return null;
@@ -1067,17 +786,19 @@
             }
         };
 
+        /**
+         * مسح الجلسة
+         */
         const clearSession = () => {
             try {
-                localStorage.removeItem(SESSION_STORAGE_KEY);
-                localStorage.removeItem(TENANT_PREFIX_KEY);
-                localStorage.removeItem(USER_ROLE_KEY);
+                localStorage.removeItem(STORAGE_KEY);
             } catch (error) {
                 console.error('خطأ في مسح الجلسة:', error);
             }
         };
 
         // ============ دوال مساعدة ============
+        
         const showError = (msg) => {
             if (!msg) {
                 dom.errorMessage.classList.remove('show');
@@ -1146,152 +867,36 @@
 
         dom.loginButton.addEventListener('click', addRippleEffect);
 
-        // ============ تبديل إظهار/إخفاء كلمة المرور ============
+        // تبديل إظهار/إخفاء كلمة المرور
         dom.togglePasswordBtn.addEventListener('click', (e) => {
             e.preventDefault();
-            togglePasswordVisibility();
+            const isPassword = dom.passwordInput.type === 'password';
+            dom.passwordInput.type = isPassword ? 'text' : 'password';
+            dom.eyeIcon.innerHTML = isPassword ? ICONS.eyeOff : ICONS.eyeOpen;
+            dom.passwordInput.focus();
         });
 
-        const togglePasswordVisibility = () => {
-            isPasswordVisible = !isPasswordVisible;
-            
-            if (isPasswordVisible) {
-                dom.passwordInput.type = 'text';
-                dom.eyeIcon.innerHTML = ICONS.eyeOff;
-                dom.passwordIndicator.classList.remove('show');
-                clearTimeout(passwordRevealTimer);
-                passwordRevealTimer = setTimeout(() => {
-                    if (isPasswordVisible && !dom.passwordInput.matches(':focus')) {
-                        hidePassword();
-                    }
-                }, 3000);
-            } else {
-                hidePassword();
-            }
-        };
-        
-        const hidePassword = () => {
-            isPasswordVisible = false;
-            dom.passwordInput.type = 'password';
-            dom.eyeIcon.innerHTML = ICONS.eyeOpen;
-            dom.passwordIndicator.classList.remove('show');
-        };
-
-        // ============ الضغط المطول لإظهار كلمة المرور ============
-        let longPressTimer;
-        
-        const startLongPress = () => {
-            longPressTimer = setTimeout(() => {
-                if (!isPasswordVisible) {
-                    dom.passwordInput.type = 'text';
-                    dom.eyeIcon.innerHTML = ICONS.eyeOff;
-                    dom.passwordIndicator.classList.remove('show');
-                }
-            }, 400);
-        };
-        
-        const endLongPress = () => {
-            clearTimeout(longPressTimer);
-            if (!isPasswordVisible) {
-                dom.passwordInput.type = 'password';
-                dom.eyeIcon.innerHTML = ICONS.eyeOpen;
-            }
-        };
-        
-        dom.togglePasswordBtn.addEventListener('mousedown', startLongPress);
-        dom.togglePasswordBtn.addEventListener('mouseup', endLongPress);
-        dom.togglePasswordBtn.addEventListener('mouseleave', endLongPress);
-        dom.togglePasswordBtn.addEventListener('touchstart', startLongPress, { passive: true });
-        dom.togglePasswordBtn.addEventListener('touchend', endLongPress);
-        dom.togglePasswordBtn.addEventListener('touchcancel', endLongPress);
-
-        // ============ ✅ البحث عن المستخدم في Firestore وتحديد دوره ============
-        const findUserInFirestore = async (uid) => {
-            const searchPaths = [
-                // 1. البحث في tenants/{tenantId}/users/{uid}
-                { collection: 'tenants', useDynamicTenant: true },
-                // 2. البحث في users/{uid} (المسار القديم)
-                { collection: 'users', useDynamicTenant: false }
-            ];
-
-            for (const pathConfig of searchPaths) {
-                try {
-                    if (pathConfig.useDynamicTenant) {
-                        // البحث في كل المجمعات المحتملة
-                        const possibleTenants = [
-                            uid, // المجمع الخاص به
-                            localStorage.getItem(TENANT_PREFIX_KEY), // المجمع المحفوظ
-                            '4RROMWEh48MuINo4PtijRixhyEq2' // المجمع الافتراضي
-                        ].filter(Boolean);
-
-                        for (const tenantId of [...new Set(possibleTenants)]) {
-                            const userDoc = doc(db, pathConfig.collection, tenantId, 'users', uid);
-                            const userSnap = await getDoc(userDoc);
-                            
-                            if (userSnap.exists()) {
-                                const userData = userSnap.data();
-                                console.log(`✅ تم العثور على المستخدم في ${pathConfig.collection}/${tenantId}/users/${uid}`);
-                                return {
-                                    ...userData,
-                                    uid: uid,
-                                    tenantId: tenantId,
-                                    role: userData.role || 'doctor' // دور افتراضي
-                                };
-                            }
-                        }
-                    } else {
-                        const userDoc = doc(db, pathConfig.collection, uid);
-                        const userSnap = await getDoc(userDoc);
-                        
-                        if (userSnap.exists()) {
-                            const userData = userSnap.data();
-                            console.log(`✅ تم العثور على المستخدم في ${pathConfig.collection}/${uid}`);
-                            return {
-                                ...userData,
-                                uid: uid,
-                                tenantId: userData.tenantId || uid,
-                                role: userData.role || 'doctor'
-                            };
-                        }
-                    }
-                } catch (error) {
-                    console.warn(`⚠️ خطأ في البحث في ${pathConfig.collection}:`, error.message);
-                }
-            }
-
-            return null;
-        };
-
-        // ============ ✅ توجيه المستخدم حسب دوره ============
-        const redirectByRole = (userData) => {
-            const role = userData.role || 'doctor';
-            const roleName = ROLE_NAMES[role] || 'مستخدم';
-            const targetPage = ROLE_PAGES[role];
-            
-            console.log(`🎯 توجيه ${roleName} إلى ${targetPage}`);
-            
-            // رسالة ترحيب مخصصة حسب الدور
-            const welcomeMessages = {
-                'admin': `👋 مرحباً مدير النظام ${userData.name}!`,
-                'doctor': `👨‍⚕️ مرحباً دكتور ${userData.name}!`,
-                'nurse': `👩‍⚕️ مرحباً ${userData.name}!`,
-                'pharmacist': `💊 مرحباً دكتور ${userData.name}!`
+        // ============ ✅ توجيه المستخدم حسب الصلاحية - مع تمرير tenantId ============
+        const redirectUser = (role, name, tenantId = null) => {
+            const pages = {
+                admin: 'admin-panel.html',
+                doctor: 'doctor-dashboard.html',
+                nurse: 'nurse-dashboard.html',
+                pharmacist: 'pharmacy-dashboard.html',
             };
             
-            showToast(welcomeMessages[role] || `👋 مرحباً ${userData.name}!`, 'success');
+            let redirectUrl = pages[role] || 'dashboard.html';
             
-            // حفظ بيانات إضافية للاستخدام في الصفحات
-            localStorage.setItem('shifa_current_tenant', userData.tenantId);
-            localStorage.setItem('shifa_user_role', role);
-            localStorage.setItem('shifa_user_name', userData.name || '');
+            // ✅ تمرير tenantId في الرابط للصفحات اللي محتاجاه
+            if (tenantId) {
+                const separator = redirectUrl.includes('?') ? '&' : '?';
+                redirectUrl += `${separator}tenant=${encodeURIComponent(tenantId)}`;
+            }
+            
+            showToast(`👋 مرحباً ${name}!`, 'success');
             
             setTimeout(() => {
-                if (targetPage && targetPage !== window.location.pathname.split('/').pop()) {
-                    window.location.href = targetPage;
-                } else {
-                    // لو نفس الصفحة، نعرض رسالة
-                    showToast(`⚠️ صفحة ${roleName} غير متاحة حالياً`, 'error');
-                }
+                window.location.href = redirectUrl;
             }, 800);
         };
 
@@ -1331,52 +936,52 @@
             setLoading(true);
 
             try {
-                // 1. تسجيل الدخول عبر Firebase Auth
+                // ✅ 1. تسجيل الدخول في Firebase Authentication
                 const userCredential = await signInWithEmailAndPassword(auth, email, password);
                 const user = userCredential.user;
                 
-                console.log('🔍 البحث عن دور المستخدم في Firestore...');
-                
-                // 2. البحث عن المستخدم في Firestore لتحديد دوره
-                const userData = await findUserInFirestore(user.uid);
-                
-                if (!userData) {
-                    // ✅ لو المستخدم موجود في Authentication بس مش موجود في Firestore
-                    // معناه إنه مدير (اللي أنشأ الحساب)
-                    console.log('⚠️ المستخدم غير موجود في Firestore - معاملته كمدير');
+                console.log('✅ تم تسجيل الدخول في Authentication:', user.uid);
+
+                // ✅ 2. البحث عن بيانات المستخدم في Firestore
+                const userData = await fetchUserDataFromFirestore(user.uid);
+
+                if (userData && userData.role) {
+                    // ✅ المستخدم موجود في Firestore وله دور - توجيه مباشر لصفحته
+                    console.log('✅ مستخدم Firestore له دور:', userData.role);
                     
-                    const adminData = {
+                    const displayName = userData.name || email.split('@')[0];
+                    const tenantId = userData.tenantId || null;
+
+                    // حفظ الجلسة مشفرة
+                    saveEncryptedSession({
                         uid: user.uid,
                         email: email,
-                        name: email.split('@')[0],
+                        role: userData.role,
+                        name: displayName,
+                        tenantId: tenantId
+                    });
+
+                    // توجيه المستخدم لصفحته حسب دوره
+                    redirectUser(userData.role, displayName, tenantId);
+                    
+                } else if (!userData || !userData.role) {
+                    // ✅ المستخدم غير موجود في Firestore أو بدون دور = مدير نظام
+                    console.log('👑 المستخدم غير موجود في Firestore - معاملة كمدير نظام');
+                    
+                    const displayName = email.split('@')[0];
+
+                    // حفظ الجلسة كمدير
+                    saveEncryptedSession({
+                        uid: user.uid,
+                        email: email,
                         role: 'admin',
-                        tenantId: user.uid
-                    };
-                    
-                    // حفظ الجلسة
-                    saveEncryptedSession(adminData);
-                    
-                    // توجيه للوحة الإدارة
-                    redirectByRole(adminData);
-                    return;
+                        name: displayName,
+                        tenantId: null
+                    });
+
+                    // توجيه مباشر لصفحة الإدارة
+                    redirectUser('admin', displayName, null);
                 }
-                
-                // 3. المستخدم موجود في Firestore - توجيه حسب دوره
-                const fullUserData = {
-                    uid: user.uid,
-                    email: email,
-                    name: userData.name || email.split('@')[0],
-                    role: userData.role || 'doctor',
-                    tenantId: userData.tenantId || user.uid
-                };
-                
-                console.log(`👤 الدور المحدد: ${fullUserData.role}`);
-                
-                // حفظ الجلسة المشفرة
-                saveEncryptedSession(fullUserData);
-                
-                // توجيه المستخدم حسب دوره
-                redirectByRole(fullUserData);
 
             } catch (error) {
                 console.error("❌ خطأ تسجيل الدخول:", error);
@@ -1403,11 +1008,36 @@
         };
 
         // ============ مستمعي الأحداث ============
+        
         dom.loginForm.addEventListener('submit', handleLogin);
 
         dom.emailInput.addEventListener('input', hideError);
         dom.passwordInput.addEventListener('input', hideError);
 
+        // إظهار كلمة المرور مؤقتاً بالضغط المطول
+        let longPressTimer;
+        
+        const startLongPress = () => {
+            longPressTimer = setTimeout(() => {
+                dom.passwordInput.type = 'text';
+                dom.eyeIcon.innerHTML = ICONS.eyeOff;
+            }, 400);
+        };
+        
+        const endLongPress = () => {
+            clearTimeout(longPressTimer);
+            dom.passwordInput.type = 'password';
+            dom.eyeIcon.innerHTML = ICONS.eyeOpen;
+        };
+        
+        dom.togglePasswordBtn.addEventListener('mousedown', startLongPress);
+        dom.togglePasswordBtn.addEventListener('mouseup', endLongPress);
+        dom.togglePasswordBtn.addEventListener('mouseleave', endLongPress);
+        dom.togglePasswordBtn.addEventListener('touchstart', startLongPress, { passive: true });
+        dom.togglePasswordBtn.addEventListener('touchend', endLongPress);
+        dom.togglePasswordBtn.addEventListener('touchcancel', endLongPress);
+
+        // اختصار Ctrl+Enter لتسجيل الدخول
         document.addEventListener('keydown', (e) => {
             if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
                 e.preventDefault();
@@ -1416,39 +1046,71 @@
         });
 
         // ============ تحسينات إضافية ============
+        
         document.addEventListener('gesturestart', (e) => {
             if (document.activeElement.tagName === 'INPUT') {
                 e.preventDefault();
             }
         }, { passive: false });
 
-        document.addEventListener('touchstart', (e) => {
-            if (e.target.tagName === 'INPUT') {
-                e.target.style.fontSize = '16px';
-            }
-        }, { passive: true });
-
         // ============ التوجيه التلقائي عند فتح الصفحة ============
         const checkSessionAndRedirect = async () => {
+            // 1️⃣ التحقق من وجود جلسة محلية مشفرة
             const localSession = getEncryptedSession();
             
-            if (localSession && localSession.role) {
-                console.log(`✅ جلسة محلية موجودة - الدور: ${localSession.role}`);
+            if (localSession) {
+                console.log('✅ تم العثور على جلسة محلية، جاري التحقق...');
                 
                 try {
                     const user = auth.currentUser;
                     
                     if (user && user.uid === localSession.uid) {
                         console.log('✅ الجلسة صالحة، جاري التوجيه...');
-                        redirectByRole(localSession);
+                        redirectUser(localSession.role, localSession.name, localSession.tenantId);
                         return;
+                    }
+                    
+                    if (user && user.uid !== localSession.uid) {
+                        console.log('⚠️ تغير المستخدم، جلب بيانات جديدة...');
+                        const userData = await fetchUserDataFromFirestore(user.uid);
+                        
+                        if (userData && userData.role) {
+                            // مستخدم Firestore له دور
+                            const displayName = userData.name || user.email.split('@')[0];
+                            const tenantId = userData.tenantId || null;
+                            
+                            saveEncryptedSession({
+                                uid: user.uid,
+                                email: user.email,
+                                role: userData.role,
+                                name: displayName,
+                                tenantId: tenantId
+                            });
+                            
+                            redirectUser(userData.role, displayName, tenantId);
+                            return;
+                        } else {
+                            // مستخدم Authentication فقط = مدير
+                            const displayName = user.email.split('@')[0];
+                            
+                            saveEncryptedSession({
+                                uid: user.uid,
+                                email: user.email,
+                                role: 'admin',
+                                name: displayName,
+                                tenantId: null
+                            });
+                            
+                            redirectUser('admin', displayName, null);
+                            return;
+                        }
                     }
                 } catch (error) {
                     console.warn('⚠️ خطأ في التحقق من الجلسة:', error);
                 }
             }
             
-            console.log('🔍 جاري إظهار نموذج تسجيل الدخول...');
+            console.log('🔍 في انتظار حالة المصادقة من Firebase...');
             showLoginForm();
         };
 
@@ -1469,10 +1131,7 @@
 
         // ============ بدء التشغيل ============
         const initApp = async () => {
-            console.log('🚀 نظام شفاء — توجيه ذكي حسب الدور');
-            console.log('📋 الأدوار المتاحة:', Object.keys(ROLE_PAGES).join(', '));
-            
-            detectKeyboard();
+            console.log('🚀 نظام شفاء — جاري التحقق من الجلسة...');
             
             onAuthStateChanged(auth, async (user) => {
                 if (user) {
@@ -1480,8 +1139,42 @@
                     
                     const localSession = getEncryptedSession();
                     
-                    if (localSession && localSession.uid === user.uid && localSession.role) {
-                        redirectByRole(localSession);
+                    if (!localSession || localSession.uid !== user.uid) {
+                        // البحث في Firestore أولاً
+                        const userData = await fetchUserDataFromFirestore(user.uid);
+                        
+                        if (userData && userData.role) {
+                            // مستخدم Firestore له دور
+                            const displayName = userData.name || user.email.split('@')[0];
+                            const tenantId = userData.tenantId || null;
+                            
+                            saveEncryptedSession({
+                                uid: user.uid,
+                                email: user.email,
+                                role: userData.role,
+                                name: displayName,
+                                tenantId: tenantId
+                            });
+                            
+                            redirectUser(userData.role, displayName, tenantId);
+                            return;
+                        } else {
+                            // مستخدم Authentication فقط = مدير
+                            const displayName = user.email.split('@')[0];
+                            
+                            saveEncryptedSession({
+                                uid: user.uid,
+                                email: user.email,
+                                role: 'admin',
+                                name: displayName,
+                                tenantId: null
+                            });
+                            
+                            redirectUser('admin', displayName, null);
+                            return;
+                        }
+                    } else if (localSession) {
+                        redirectUser(localSession.role, localSession.name, localSession.tenantId);
                         return;
                     }
                 }
@@ -1499,7 +1192,6 @@
             clearTimeout(dom._errorTimeout);
             clearTimeout(dom._toastTimeout);
             clearTimeout(longPressTimer);
-            clearTimeout(passwordRevealTimer);
         });
 
         // تشغيل التطبيق
