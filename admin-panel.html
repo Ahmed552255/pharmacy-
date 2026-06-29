@@ -142,15 +142,17 @@
             touch-action: manipulation;
             user-select: none;
             -webkit-user-select: none;
-            transition: opacity 0.15s;
+            transition: all 0.15s;
         }
         
-        .btn:active { opacity: 0.8; }
+        .btn:active { transform: scale(0.96); }
         .btn-primary { background: var(--primary); color: white; box-shadow: 0 3px 10px rgba(0, 174, 239, 0.2); }
         .btn-outline { background: var(--white); color: var(--ink); border: 1.5px solid var(--border); }
         .btn-icon { width: 42px; height: 42px; padding: 0; justify-content: center; border-radius: 50%; }
         .btn-danger { background: var(--danger); color: white; }
         .btn-success { background: var(--success); color: white; }
+        .btn-logout { background: #FF5252; color: white; box-shadow: 0 3px 10px rgba(229, 115, 115, 0.25); }
+        .btn-logout:hover { background: #E53935; }
         
         .stats-bar { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
         
@@ -554,6 +556,53 @@
             margin-left: 6px;
         }
         
+        /* ============ أنماط زرار الخروج ============ */
+        .logout-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.3);
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            padding: 16px;
+        }
+        
+        .logout-dialog {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            text-align: center;
+            max-width: 380px;
+            width: 100%;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+            border: 1px solid var(--border);
+        }
+        
+        .logout-dialog .icon {
+            font-size: 3rem;
+            color: #FF5252;
+            margin-bottom: 12px;
+        }
+        
+        .logout-dialog h3 {
+            font-size: 1.2rem;
+            margin-bottom: 8px;
+            color: var(--ink);
+        }
+        
+        .logout-dialog p {
+            color: var(--text-sec);
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+        }
+        
+        .logout-dialog .btns {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        
         @media (max-width: 768px) {
             body { padding: 8px; }
             .app-header { padding: 10px 14px; border-radius: var(--radius-md); top: 4px; }
@@ -623,6 +672,9 @@
                 </button>
                 <button class="btn btn-outline btn-icon" id="refreshBtn" title="تحديث">
                     <i class="fas fa-sync-alt"></i>
+                </button>
+                <button class="btn btn-logout" id="logoutBtn" title="تسجيل الخروج">
+                    <i class="fas fa-sign-out-alt"></i> خروج
                 </button>
             </div>
         </header>
@@ -849,6 +901,23 @@
         </div>
     </div>
 
+    <!-- ✅ مودال تأكيد تسجيل الخروج -->
+    <div id="logoutModal" class="logout-modal">
+        <div class="logout-dialog">
+            <div class="icon">
+                <i class="fas fa-sign-out-alt"></i>
+            </div>
+            <h3>تسجيل الخروج</h3>
+            <p>هل أنت متأكد من تسجيل الخروج؟ سيتم مسح بيانات الجلسة.</p>
+            <div class="btns">
+                <button class="btn btn-outline" id="cancelLogoutBtn">إلغاء</button>
+                <button class="btn btn-danger" id="confirmLogoutBtn">
+                    <i class="fas fa-sign-out-alt"></i> تأكيد الخروج
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script type="module">
         import { firebaseConfig } from './firebase-config.js';
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
@@ -962,7 +1031,6 @@
                     })
                 };
                 localStorage.setItem(getTenantStorageKey('users_cache'), JSON.stringify(cacheData));
-                console.log(`💾 تم حفظ ${usersArray.length} مستخدم في التخزين المحلي`);
             } catch (e) {
                 console.warn('تعذر حفظ المستخدمين في التخزين المحلي:', e.message);
             }
@@ -975,12 +1043,8 @@
                 if (!cacheJson) return [];
                 
                 const cacheData = JSON.parse(cacheJson);
-                if (cacheData.version !== LOCAL_CACHE_VERSION) {
-                    console.log('🔄 إصدار الكاش قديم، سيتم التحديث من السحابة');
-                    return [];
-                }
+                if (cacheData.version !== LOCAL_CACHE_VERSION) return [];
                 
-                console.log(`📦 تم تحميل ${cacheData.users.length} مستخدم من التخزين المحلي`);
                 return cacheData.users || [];
             } catch (e) {
                 console.warn('تعذر تحميل المستخدمين من التخزين المحلي:', e.message);
@@ -1539,12 +1603,14 @@
                 tenantSettings = settingsData;
                 $('#tenantIdDisplay').textContent = name;
                 
-                // تحديث اسم المجمع في بيانات المستخدم الحالي
                 const userDoc = doc(db, 'tenants', currentTenantId, 'users', ADMIN_ID);
                 await updateDoc(userDoc, { tenantName: name });
                 
                 showToast('✅ تم حفظ إعدادات المجمع بنجاح');
-                $('#settingsModal').style.display = 'none';
+                // ✅ إغلاق المودال تلقائياً بعد الحفظ
+                setTimeout(() => {
+                    $('#settingsModal').style.display = 'none';
+                }, 500);
                 
             } catch (err) {
                 console.error('خطأ في حفظ الإعدادات:', err);
@@ -1601,6 +1667,7 @@
                     }
                     
                     showToast('✅ تم التعديل بنجاح');
+                    // ✅ إغلاق المودال تلقائياً بعد التعديل
                     closeFormModal();
                 } else {
                     if (!password) {
@@ -1642,6 +1709,7 @@
                     
                     setSyncStatus('synced');
                     showToast('🎉 تم إضافة المستخدم بنجاح');
+                    // ✅ إغلاق المودال تلقائياً بعد الإضافة
                     closeFormModal();
                 }
             } catch (err) {
@@ -1665,6 +1733,7 @@
             const userDoc = doc(db, 'tenants', currentTenantId, 'users', id);
             await updateDoc(userDoc, { status: newStatus });
             showToast(newStatus === 'blocked' ? '🔒 تم الحظر' : '🔓 تم إلغاء الحظر');
+            // ✅ إغلاق مودال التفاصيل بعد الحظر/إلغاء الحظر
             closeDetailModal();
         };
 
@@ -1712,6 +1781,7 @@
                 }
 
                 showToast('🗑️ تم حذف المستخدم بنجاح');
+                // ✅ إغلاق مودال التفاصيل بعد الحذف
                 closeDetailModal();
             } catch (err) {
                 console.error('خطأ في حذف المستخدم:', err);
@@ -1739,24 +1809,80 @@
             }
         };
 
+        // ============ ✅ دوال تسجيل الخروج ============
+        
+        const openLogoutModal = () => {
+            $('#logoutModal').style.display = 'flex';
+        };
+
+        const closeLogoutModal = () => {
+            $('#logoutModal').style.display = 'none';
+        };
+
+        const performLogout = async () => {
+            try {
+                showToast('👋 جاري تسجيل الخروج...');
+                
+                // إيقاف المستمعين
+                if (unsubscribeUsers) {
+                    unsubscribeUsers();
+                    unsubscribeUsers = null;
+                }
+                if (unsubscribeLinks) {
+                    unsubscribeLinks();
+                    unsubscribeLinks = null;
+                }
+                
+                // مسح بيانات الجلسة
+                const sessionKeysToRemove = [];
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key && (key.startsWith('shifa_') || key.startsWith('firebase:'))) {
+                        sessionKeysToRemove.push(key);
+                    }
+                }
+                sessionKeysToRemove.forEach(key => localStorage.removeItem(key));
+                
+                // مسح sessionStorage
+                sessionStorage.clear();
+                
+                // إعادة تعيين المتغيرات
+                allUsers = [];
+                doctorsList = [];
+                linksMap = {};
+                currentEditId = null;
+                currentViewId = null;
+                currentTenantId = null;
+                tenantSettings = null;
+                
+                // إغلاق مودال الخروج
+                closeLogoutModal();
+                
+                // توجيه لصفحة تسجيل الدخول
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 500);
+                
+            } catch (error) {
+                console.error('خطأ أثناء تسجيل الخروج:', error);
+                window.location.href = 'index.html';
+            }
+        };
+
         // ============ بدء التطبيق مباشرة ============
         const initApp = async () => {
             try {
-                // تحميل إعدادات المجمع
                 await loadTenantSettings();
                 
-                // عرض اسم المجمع
                 const tenantDisplay = tenantSettings?.name || 'مجمع طبي';
                 $('#tenantIdDisplay').textContent = tenantDisplay;
                 
-                // لو الإعدادات مش كاملة، افتح مودال الإعدادات إجباري
                 if (!hasCompleteSettings()) {
                     $('#authCheckLoader').style.display = 'none';
                     $('#mainContainer').style.display = 'block';
                     openSettingsModal(true);
                 }
                 
-                // تحميل البيانات من التخزين المحلي أولاً للعرض الفوري
                 const cachedUsers = loadUsersFromLocalCache();
                 if (cachedUsers.length > 0) {
                     allUsers = cachedUsers;
@@ -1768,13 +1894,10 @@
                 $('#authCheckLoader').style.display = 'none';
                 $('#mainContainer').style.display = 'block';
                 
-                // بدء المستمعين للتحديثات الحية
                 startFirestoreListeners();
                 
-                console.log('🚀 لوحة إدارة شفاء - Firestore + تخزين محلي متقدم');
+                console.log('🚀 لوحة إدارة شفاء - Firestore + تخزين محلي + إغلاق تلقائي');
                 console.log('👤 الأدمن:', ADMIN_EMAIL);
-                console.log('💾 التخزين المحلي: يحتفظ بالبيانات للعرض الفوري');
-                console.log('☁️ Firestore: مزامنة حية مع دعم Offline Persistence');
                 
             } catch (err) {
                 console.error('خطأ في بدء التطبيق:', err);
@@ -1822,6 +1945,18 @@
                 setTimeout(() => setSyncStatus('synced'), 1500);
             };
 
+            // ✅ أحداث تسجيل الخروج
+            $('#logoutBtn').onclick = openLogoutModal;
+            $('#confirmLogoutBtn').onclick = performLogout;
+            $('#cancelLogoutBtn').onclick = closeLogoutModal;
+            
+            // ✅ إغلاق مودال الخروج بالنقر خارجه
+            window.addEventListener('click', (e) => {
+                if (e.target === $('#logoutModal')) {
+                    closeLogoutModal();
+                }
+            });
+
             $('#saveFormBtn').onclick = saveUser;
             $('#closeFormBtn').onclick = closeFormModal;
             $('#closeDetailBtn').onclick = closeDetailModal;
@@ -1843,6 +1978,10 @@
 
             document.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape') {
+                    if ($('#logoutModal').style.display === 'flex') {
+                        closeLogoutModal();
+                        return;
+                    }
                     if ($('#detailModal').style.display === 'flex') closeDetailModal();
                     if ($('#formModal').style.display === 'flex') closeFormModal();
                     if ($('#settingsModal').style.display === 'flex' && $('#settingsModal').dataset.required !== 'true') {
@@ -1883,4 +2022,4 @@
         initApp();
     </script>
 </body>
-    </html>
+</html>
