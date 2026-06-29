@@ -40,7 +40,6 @@
             -webkit-font-smoothing: antialiased;
             -webkit-text-size-adjust: 100%;
             text-rendering: optimizeSpeed;
-            /* تحسين للوحة المفاتيح على الموبايل */
             height: 100%;
             overflow: hidden;
         }
@@ -62,11 +61,9 @@
             contain: layout style paint;
             -webkit-backface-visibility: hidden;
             backface-visibility: hidden;
-            /* تحسين للوحة المفاتيح */
             -webkit-overflow-scrolling: touch;
         }
         
-        /* شاشة التحميل الأولية */
         .splash-screen {
             position: fixed;
             inset: 0;
@@ -175,7 +172,6 @@
             100% { transform: translate(15px, 15px); }
         }
         
-        /* ✅ تحسين التمركز عند فتح لوحة المفاتيح */
         .main-container {
             width: 100%;
             max-width: 420px;
@@ -183,7 +179,6 @@
             align-items: center;
             justify-content: center;
             padding: 1rem;
-            /* تحريك البطاقة للأعلى عند فتح لوحة المفاتيح */
             transition: transform 0.3s ease-out;
         }
         
@@ -205,7 +200,6 @@
             contain: layout style;
             -webkit-backface-visibility: hidden;
             backface-visibility: hidden;
-            /* تحسين للبطاقة */
             position: relative;
         }
         
@@ -226,7 +220,6 @@
             box-shadow: 0 8px 20px rgba(0, 174, 239, 0.2);
             position: relative;
             contain: strict;
-            /* تصغير الأيقونة في الشاشات الصغيرة */
             transition: transform 0.3s ease;
         }
         
@@ -339,8 +332,7 @@
             -webkit-appearance: none;
             appearance: none;
             touch-action: manipulation;
-            /* ✅ تحسين التركيز على الموبايل */
-            font-size: 16px; /* منع التكبير التلقائي على iOS */
+            font-size: 16px;
         }
         
         .input-group input:focus {
@@ -358,7 +350,6 @@
             font-weight: 400;
         }
         
-        /* ✅ عرض كلمة المرور بشكل مؤقت أثناء الكتابة */
         .password-visible-indicator {
             position: absolute;
             top: -25px;
@@ -456,7 +447,6 @@
             user-select: none;
             -webkit-user-select: none;
             contain: layout style;
-            /* ✅ زر أكبر على الموبايل */
             min-height: 50px;
         }
         
@@ -566,7 +556,6 @@
             opacity: 0;
         }
         
-        /* ✅ تحسينات خاصة للموبايل */
         @media (max-width: 768px) {
             body {
                 align-items: flex-start;
@@ -599,7 +588,7 @@
             
             .input-group input {
                 padding: 0.75rem 2.5rem;
-                font-size: 16px; /* منع التكبير على iOS */
+                font-size: 16px;
             }
             
             .bg-pattern::before,
@@ -607,7 +596,6 @@
                 animation-duration: 45s;
             }
             
-            /* ✅ تحسين المسافات للموبايل */
             .input-wrapper {
                 margin-bottom: 1rem;
             }
@@ -638,7 +626,6 @@
             }
         }
         
-        /* ✅ تحسين للشاشات الصغيرة جداً */
         @media (max-height: 600px) {
             body {
                 align-items: flex-start;
@@ -719,7 +706,6 @@
     <div class="loading-bar" id="loadingBar" aria-hidden="true"></div>
     <div class="toast" id="toast" aria-live="polite"></div>
     
-    <!-- ✅ تغليف البطاقة في حاوية للتحكم في التمركز -->
     <div class="main-container" id="mainContainer">
         <main class="glass-card" id="mainCard" style="display: none;">
             <div class="logo-icon" id="logoIcon" aria-hidden="true">
@@ -776,7 +762,6 @@
                             required 
                             autocomplete="current-password"
                         >
-                        <!-- ✅ مؤشر إظهار كلمة المرور أثناء الكتابة -->
                         <div class="password-visible-indicator" id="passwordIndicator"></div>
                         <button type="button" class="password-toggle" id="togglePasswordBtn" aria-label="إظهار/إخفاء كلمة المرور" tabindex="-1">
                             <svg id="eyeIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -804,13 +789,14 @@
     </div>
 
     <script type="module">
-        // ============ استيراد Firebase ============
+        // ============ استيراد Firebase مع Firestore ============
         import { firebaseConfig } from './firebase-config.js';
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-        // ============ نظام التشفير البسيط ============
-        const ENCRYPTION_KEY = 'ShifaSecure2024!@#Key';
+        // ============ نظام التشفير للتخزين المحلي ============
+        const ENCRYPTION_KEY = 'ShifaSecure2024!@#Key_v2';
         
         const encryptData = (data) => {
             try {
@@ -842,12 +828,15 @@
             }
         };
 
-        // ============ ثوابت التخزين المحلي ============
-        const STORAGE_KEY = 'shifa_secure_session';
+        // ============ ثوابت التخزين المحلي للجلسة ============
+        const SESSION_STORAGE_KEY = 'shifa_firestore_session_v2';
+        const TENANT_PREFIX_KEY = 'shifa_tenant_id';
+        const SESSION_MAX_AGE = 24 * 60 * 60 * 1000; // 24 ساعة
 
         // ============ تهيئة Firebase ============
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
+        const db = getFirestore(app);
 
         // ============ عناصر DOM ============
         const dom = {
@@ -880,13 +869,12 @@
         // ============ محتوى الزر الافتراضي ============
         const defaultBtnContent = dom.btnContent.innerHTML;
 
-        // ============ ✅ تحسين التعامل مع لوحة المفاتيح على الموبايل ============
+        // ============ متغيرات حالة لوحة المفاتيح ============
         let isPasswordVisible = false;
         let keyboardOpen = false;
         let passwordRevealTimer = null;
         let isMobile = /Android|iPhone|iPad|iPod|webOS/i.test(navigator.userAgent);
         
-        // تحديث حالة الجهاز
         const updateDeviceType = () => {
             isMobile = /Android|iPhone|iPad|iPod|webOS/i.test(navigator.userAgent) || 
                        ('ontouchstart' in window && window.innerWidth < 768);
@@ -895,7 +883,7 @@
         
         window.addEventListener('resize', updateDeviceType);
 
-        // ✅ إظهار آخر حرف مكتوب من كلمة المرور
+        // ============ إظهار آخر حرف من كلمة المرور ============
         const showLastPasswordChar = () => {
             if (keyboardOpen && !isPasswordVisible && dom.passwordInput.type === 'password') {
                 const value = dom.passwordInput.value;
@@ -904,7 +892,6 @@
                     dom.passwordIndicator.textContent = lastChar;
                     dom.passwordIndicator.classList.add('show');
                     
-                    // إخفاء المؤشر بعد ثانية واحدة
                     clearTimeout(passwordRevealTimer);
                     passwordRevealTimer = setTimeout(() => {
                         dom.passwordIndicator.classList.remove('show');
@@ -913,25 +900,22 @@
             }
         };
 
-        // ✅ اكتشاف فتح/إغلاق لوحة المفاتيح
+        // ============ اكتشاف فتح/إغلاق لوحة المفاتيح ============
         const detectKeyboard = () => {
             const initialHeight = window.innerHeight;
             
-            // استخدام VisualViewport API إذا كان متاحاً
             if (window.visualViewport) {
                 window.visualViewport.addEventListener('resize', () => {
                     const currentHeight = window.visualViewport.height;
                     const heightDiff = initialHeight - currentHeight;
                     
                     if (heightDiff > 150) {
-                        // لوحة المفاتيح مفتوحة
                         if (!keyboardOpen) {
                             keyboardOpen = true;
                             dom.mainContainer.classList.add('keyboard-open');
                             handleKeyboardOpen();
                         }
                     } else {
-                        // لوحة المفاتيح مغلقة
                         if (keyboardOpen) {
                             keyboardOpen = false;
                             dom.mainContainer.classList.remove('keyboard-open');
@@ -940,7 +924,6 @@
                     }
                 });
             } else {
-                // احتياطي للمتصفحات القديمة
                 window.addEventListener('resize', () => {
                     const currentHeight = window.innerHeight;
                     const heightDiff = initialHeight - currentHeight;
@@ -962,16 +945,13 @@
             }
         };
 
-        // ✅ تصغير العناصر عند فتح لوحة المفاتيح
         const handleKeyboardOpen = () => {
             if (isMobile) {
-                // تصغير الأيقونة والعناوين لتوفير مساحة
                 dom.logoIcon.classList.add('small');
                 dom.mainTitle.classList.add('small');
                 dom.subTitle.classList.add('small');
                 dom.secureBadge.classList.add('hidden-mobile');
                 
-                // تمرير الحقل للعرض
                 setTimeout(() => {
                     if (document.activeElement === dom.passwordInput) {
                         dom.passwordInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -981,21 +961,16 @@
         };
         
         const handleKeyboardClose = () => {
-            // إعادة العناصر لحجمها الطبيعي
             dom.logoIcon.classList.remove('small');
             dom.mainTitle.classList.remove('small');
             dom.subTitle.classList.remove('small');
             dom.secureBadge.classList.remove('hidden-mobile');
-            
-            // إخفاء مؤشر كلمة المرور
             dom.passwordIndicator.classList.remove('show');
         };
 
-        // ✅ مستمعين لحقول الإدخال لتحسين تجربة الموبايل
         dom.passwordInput.addEventListener('focus', () => {
             if (isMobile) {
                 handleKeyboardOpen();
-                // تأخير التمرير للسماح بفتح لوحة المفاتيح
                 setTimeout(() => {
                     dom.passwordInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }, 350);
@@ -1016,22 +991,27 @@
             }
         });
 
-        // ✅ إظهار الحرف الأخير أثناء الكتابة في كلمة المرور
         dom.passwordInput.addEventListener('input', showLastPasswordChar);
 
-        // ============ إدارة الجلسة المشفرة ============
+        // ============ إدارة الجلسة المشفرة (متوافقة مع Firestore) ============
         const saveEncryptedSession = (userData) => {
             try {
                 const sessionData = {
                     uid: userData.uid,
                     email: userData.email,
                     name: userData.name,
-                    timestamp: Date.now()
+                    tenantId: userData.tenantId,
+                    timestamp: Date.now(),
+                    version: 'v2'
                 };
                 
                 const encrypted = encryptData(sessionData);
                 if (encrypted) {
-                    localStorage.setItem(STORAGE_KEY, encrypted);
+                    localStorage.setItem(SESSION_STORAGE_KEY, encrypted);
+                    // حفظ معرف المجمع بشكل منفصل للاستخدام السريع
+                    if (userData.tenantId) {
+                        localStorage.setItem(TENANT_PREFIX_KEY, userData.tenantId);
+                    }
                     return true;
                 }
                 return false;
@@ -1043,17 +1023,16 @@
 
         const getEncryptedSession = () => {
             try {
-                const encrypted = localStorage.getItem(STORAGE_KEY);
+                const encrypted = localStorage.getItem(SESSION_STORAGE_KEY);
                 if (!encrypted) return null;
                 
                 const session = decryptData(encrypted);
-                if (!session || !session.uid) {
+                if (!session || !session.uid || session.version !== 'v2') {
                     clearSession();
                     return null;
                 }
                 
-                const MAX_SESSION_AGE = 24 * 60 * 60 * 1000;
-                if (Date.now() - session.timestamp > MAX_SESSION_AGE) {
+                if (Date.now() - session.timestamp > SESSION_MAX_AGE) {
                     console.log('🕐 انتهت صلاحية الجلسة');
                     clearSession();
                     return null;
@@ -1069,7 +1048,8 @@
 
         const clearSession = () => {
             try {
-                localStorage.removeItem(STORAGE_KEY);
+                localStorage.removeItem(SESSION_STORAGE_KEY);
+                localStorage.removeItem(TENANT_PREFIX_KEY);
             } catch (error) {
                 console.error('خطأ في مسح الجلسة:', error);
             }
@@ -1144,7 +1124,7 @@
 
         dom.loginButton.addEventListener('click', addRippleEffect);
 
-        // ✅ تحسين تبديل إظهار/إخفاء كلمة المرور
+        // ============ تبديل إظهار/إخفاء كلمة المرور ============
         dom.togglePasswordBtn.addEventListener('click', (e) => {
             e.preventDefault();
             togglePasswordVisibility();
@@ -1157,7 +1137,6 @@
                 dom.passwordInput.type = 'text';
                 dom.eyeIcon.innerHTML = ICONS.eyeOff;
                 dom.passwordIndicator.classList.remove('show');
-                // إبقاء كلمة المرور مرئية لمدة محدودة
                 clearTimeout(passwordRevealTimer);
                 passwordRevealTimer = setTimeout(() => {
                     if (isPasswordVisible && !dom.passwordInput.matches(':focus')) {
@@ -1176,7 +1155,7 @@
             dom.passwordIndicator.classList.remove('show');
         };
 
-        // ✅ إظهار كلمة المرور مؤقتاً بالضغط المطول
+        // ============ الضغط المطول لإظهار كلمة المرور ============
         let longPressTimer;
         
         const startLongPress = () => {
@@ -1204,16 +1183,59 @@
         dom.togglePasswordBtn.addEventListener('touchend', endLongPress);
         dom.togglePasswordBtn.addEventListener('touchcancel', endLongPress);
 
-        // ============ توجيه المدير مباشرة إلى لوحة التحكم ============
-        const redirectToAdmin = (name) => {
-            showToast(`👋 مرحباً ${name}!`, 'success');
+        // ============ التحقق من بيانات المستخدم في Firestore ============
+        const getUserDataFromFirestore = async (uid) => {
+            try {
+                // البحث في tenants/{uid}/users/{uid}
+                const tenantUserDoc = doc(db, 'tenants', uid, 'users', uid);
+                const tenantUserSnap = await getDoc(tenantUserDoc);
+                
+                if (tenantUserSnap.exists()) {
+                    return {
+                        ...tenantUserSnap.data(),
+                        uid: uid,
+                        tenantId: uid,
+                        source: 'tenant'
+                    };
+                }
+                
+                // البحث في المسار القديم users/{uid}
+                const userDoc = doc(db, 'users', uid);
+                const userSnap = await getDoc(userDoc);
+                
+                if (userSnap.exists()) {
+                    return {
+                        ...userSnap.data(),
+                        uid: uid,
+                        tenantId: uid,
+                        source: 'users'
+                    };
+                }
+                
+                return null;
+            } catch (error) {
+                console.error('خطأ في جلب بيانات المستخدم من Firestore:', error);
+                return null;
+            }
+        };
+
+        // ============ توجيه المستخدم للوحة التحكم ============
+        const redirectToDashboard = (userData) => {
+            const displayName = userData.name || userData.email?.split('@')[0] || 'مستخدم';
+            showToast(`👋 مرحباً ${displayName}!`, 'success');
+            
+            const tenantId = userData.tenantId || userData.uid;
+            
+            // حفظ معرف المجمع للاستخدام في الصفحات الأخرى
+            localStorage.setItem('shifa_current_tenant', tenantId);
             
             setTimeout(() => {
+                // توجيه للوحة الإدارة الجديدة
                 window.location.href = 'admin-panel.html';
             }, 800);
         };
 
-        // ============ معالجة تسجيل الدخول - بدون التحقق من الصلاحيات ============
+        // ============ معالجة تسجيل الدخول ============
         const handleLogin = async (e) => {
             e.preventDefault();
             
@@ -1249,21 +1271,39 @@
             setLoading(true);
 
             try {
+                // تسجيل الدخول عبر Firebase Auth
                 const userCredential = await signInWithEmailAndPassword(auth, email, password);
                 const user = userCredential.user;
-                const displayName = email.split('@')[0];
+                
+                // جلب بيانات المستخدم من Firestore
+                const userData = await getUserDataFromFirestore(user.uid);
+                
+                if (!userData) {
+                    console.warn('⚠️ المستخدم موجود في Auth لكن ليس في Firestore');
+                    // نسمح بالدخول حتى بدون بيانات في Firestore
+                }
 
+                const displayName = userData?.name || email.split('@')[0];
+                const tenantId = userData?.tenantId || user.uid;
+
+                // حفظ الجلسة المشفرة محلياً
                 const saved = saveEncryptedSession({
                     uid: user.uid,
                     email: email,
-                    name: displayName
+                    name: displayName,
+                    tenantId: tenantId
                 });
 
                 if (!saved) {
                     console.warn('⚠️ تعذر حفظ الجلسة محلياً');
                 }
 
-                redirectToAdmin(displayName);
+                redirectToDashboard({
+                    name: displayName,
+                    email: email,
+                    uid: user.uid,
+                    tenantId: tenantId
+                });
 
             } catch (error) {
                 console.error("خطأ تسجيل الدخول:", error);
@@ -1295,7 +1335,6 @@
         dom.emailInput.addEventListener('input', hideError);
         dom.passwordInput.addEventListener('input', hideError);
 
-        // اختصار Ctrl+Enter لتسجيل الدخول
         document.addEventListener('keydown', (e) => {
             if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
                 e.preventDefault();
@@ -1310,7 +1349,6 @@
             }
         }, { passive: false });
 
-        // ✅ منع التكبير التلقائي على iOS عند الضغط على الحقول
         document.addEventListener('touchstart', (e) => {
             if (e.target.tagName === 'INPUT') {
                 e.target.style.fontSize = '16px';
@@ -1329,7 +1367,7 @@
                     
                     if (user && user.uid === localSession.uid) {
                         console.log('✅ الجلسة صالحة، جاري التوجيه...');
-                        redirectToAdmin(localSession.name);
+                        redirectToDashboard(localSession);
                         return;
                     }
                 } catch (error) {
@@ -1358,9 +1396,8 @@
 
         // ============ بدء التشغيل ============
         const initApp = async () => {
-            console.log('🚀 نظام شفاء — جاري التحقق من الجلسة...');
+            console.log('🚀 نظام شفاء — Firestore + تخزين محلي');
             
-            // ✅ بدء اكتشاف لوحة المفاتيح
             detectKeyboard();
             
             onAuthStateChanged(auth, async (user) => {
@@ -1370,7 +1407,7 @@
                     const localSession = getEncryptedSession();
                     
                     if (localSession && localSession.uid === user.uid) {
-                        redirectToAdmin(localSession.name);
+                        redirectToDashboard(localSession);
                         return;
                     }
                 }
@@ -1395,4 +1432,4 @@
         initApp();
     </script>
 </body>
-</html>
+    </html>
