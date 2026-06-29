@@ -142,17 +142,15 @@
             touch-action: manipulation;
             user-select: none;
             -webkit-user-select: none;
-            transition: all 0.15s;
+            transition: opacity 0.15s;
         }
         
-        .btn:active { transform: scale(0.96); }
+        .btn:active { opacity: 0.8; }
         .btn-primary { background: var(--primary); color: white; box-shadow: 0 3px 10px rgba(0, 174, 239, 0.2); }
         .btn-outline { background: var(--white); color: var(--ink); border: 1.5px solid var(--border); }
         .btn-icon { width: 42px; height: 42px; padding: 0; justify-content: center; border-radius: 50%; }
         .btn-danger { background: var(--danger); color: white; }
         .btn-success { background: var(--success); color: white; }
-        .btn-logout { background: #FF5252; color: white; box-shadow: 0 3px 10px rgba(229, 115, 115, 0.25); }
-        .btn-logout:hover { background: #E53935; }
         
         .stats-bar { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
         
@@ -540,6 +538,7 @@
             gap: 6px;
         }
 
+        /* ============ أنماط إعدادات المجمع ============ */
         .settings-note {
             background: #FFF8E1;
             border-right: 4px solid #FFB74D;
@@ -554,53 +553,6 @@
         .settings-note i {
             color: #F57C00;
             margin-left: 6px;
-        }
-        
-        /* ============ أنماط زرار الخروج ============ */
-        .logout-modal {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.3);
-            align-items: center;
-            justify-content: center;
-            z-index: 2000;
-            padding: 16px;
-        }
-        
-        .logout-dialog {
-            background: var(--white);
-            border-radius: var(--radius-lg);
-            padding: 24px;
-            text-align: center;
-            max-width: 380px;
-            width: 100%;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.15);
-            border: 1px solid var(--border);
-        }
-        
-        .logout-dialog .icon {
-            font-size: 3rem;
-            color: #FF5252;
-            margin-bottom: 12px;
-        }
-        
-        .logout-dialog h3 {
-            font-size: 1.2rem;
-            margin-bottom: 8px;
-            color: var(--ink);
-        }
-        
-        .logout-dialog p {
-            color: var(--text-sec);
-            font-size: 0.9rem;
-            margin-bottom: 20px;
-        }
-        
-        .logout-dialog .btns {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
         }
         
         @media (max-width: 768px) {
@@ -673,7 +625,7 @@
                 <button class="btn btn-outline btn-icon" id="refreshBtn" title="تحديث">
                     <i class="fas fa-sync-alt"></i>
                 </button>
-                <button class="btn btn-logout" id="logoutBtn" title="تسجيل الخروج">
+                <button class="btn btn-outline" id="logoutBtn">
                     <i class="fas fa-sign-out-alt"></i> خروج
                 </button>
             </div>
@@ -851,7 +803,7 @@
         </div>
     </div>
 
-    <!-- مودال إعدادات المجمع -->
+    <!-- ============ مودال إعدادات المجمع ============ -->
     <div id="settingsModal" class="modal">
         <div class="modal-card">
             <div class="modal-header">
@@ -901,45 +853,21 @@
         </div>
     </div>
 
-    <!-- ✅ مودال تأكيد تسجيل الخروج -->
-    <div id="logoutModal" class="logout-modal">
-        <div class="logout-dialog">
-            <div class="icon">
-                <i class="fas fa-sign-out-alt"></i>
-            </div>
-            <h3>تسجيل الخروج</h3>
-            <p>هل أنت متأكد من تسجيل الخروج؟ سيتم مسح بيانات الجلسة.</p>
-            <div class="btns">
-                <button class="btn btn-outline" id="cancelLogoutBtn">إلغاء</button>
-                <button class="btn btn-danger" id="confirmLogoutBtn">
-                    <i class="fas fa-sign-out-alt"></i> تأكيد الخروج
-                </button>
-            </div>
-        </div>
-    </div>
-
     <script type="module">
         import { firebaseConfig } from './firebase-config.js';
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getFirestore, collection, doc, setDoc, updateDoc, getDoc, deleteDoc, onSnapshot, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getDatabase, ref, onValue, set, update, get, remove } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
         // ============ تهيئة Firebase ============
         const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+        const db = getDatabase(app);
+        const auth = getAuth(app);
         const API_KEY = firebaseConfig.apiKey;
         const SIGN_UP_URL = `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${API_KEY}`;
         const DELETE_URL = `https://identitytoolkit.googleapis.com/v1/accounts:delete?key=${API_KEY}`;
 
-        // ============ تمكين التخزين المؤقت المحلي (Offline Persistence) ============
-        enableIndexedDbPersistence(db).catch((err) => {
-            if (err.code === 'failed-precondition') {
-                console.warn('⚠️ التخزين المؤقت المحلي غير متاح بسبب عدة علامات تبويب مفتوحة');
-            } else if (err.code === 'unimplemented') {
-                console.warn('⚠️ المتصفح لا يدعم التخزين المؤقت المحلي');
-            }
-        });
-
-        // ============ ✅ مراكز المحافظات ============
+        // ============ مراكز المحافظات ============
         const GOVERNORATE_CITIES = {
             'المنيا': [
                 'المنيا', 'أبو قرقاص', 'العدوة', 'بني مزار', 'دير مواس', 
@@ -959,16 +887,18 @@
             ]
         };
 
-        // ============ معرف الأدمن الثابت ============
-        const ADMIN_ID = '4RROMWEh48MuINo4PtijRixhyEq2';
-        const ADMIN_EMAIL = 'anasabuzaid555@gmail.com';
+        // ============ متغيرات المجمع ============
+        let currentAdminId = null;
+        let currentTenantId = null;
         
+        // ============ مراجع Firebase ============
+        let tenantUsersRef = null;
+        let tenantLinksRef = null;
+
         // ============ ثوابت التخزين المحلي ============
-        const STORAGE_PREFIX = 'shifa_firestore_tenant_';
-        const LOCAL_CACHE_VERSION = 'v2';
+        const STORAGE_PREFIX = 'shifa_tenant_';
 
         // ============ المتغيرات العامة ============
-        let currentTenantId = ADMIN_ID;
         let allUsers = [];
         let doctorsList = [];
         let linksMap = {};
@@ -1005,7 +935,7 @@
         };
 
         const getTenantStorageKey = (baseKey) => {
-            return currentTenantId ? `${STORAGE_PREFIX}${currentTenantId}_${LOCAL_CACHE_VERSION}_${baseKey}` : baseKey;
+            return currentTenantId ? `${STORAGE_PREFIX}${currentTenantId}_${baseKey}` : baseKey;
         };
 
         const setSyncStatus = (status) => {
@@ -1016,69 +946,176 @@
             }
         };
 
-        // ============ دوال التخزين المحلي المتقدم ============
+        // ============ دوال إعدادات المجمع ============
         
-        const saveUsersToLocalCache = (usersArray) => {
+        const loadTenantSettings = async () => {
+            if (!currentTenantId) return null;
+            try {
+                const snap = await get(ref(db, `tenants/${currentTenantId}/settings`));
+                if (snap.exists()) {
+                    tenantSettings = snap.val();
+                    return tenantSettings;
+                }
+                return null;
+            } catch (e) {
+                console.warn('تعذر تحميل إعدادات المجمع:', e.message);
+                return null;
+            }
+        };
+
+        const hasCompleteSettings = () => {
+            return tenantSettings && 
+                   tenantSettings.name && 
+                   tenantSettings.governorate && 
+                   tenantSettings.city && 
+                   tenantSettings.address;
+        };
+
+        const openSettingsModal = (isRequired = false) => {
+            if (tenantSettings) {
+                $('#tenantNameInput').value = tenantSettings.name || '';
+                if (tenantSettings.governorate) {
+                    $('#governorateSelect').value = tenantSettings.governorate;
+                    populateCities(tenantSettings.governorate);
+                    if (tenantSettings.city) {
+                        $('#citySelect').value = tenantSettings.city;
+                    }
+                }
+                $('#addressInput').value = tenantSettings.address || '';
+            }
+            
+            if (isRequired) {
+                $('#settingsModal').querySelector('.close-btn').style.display = 'none';
+                $('#settingsModal').dataset.required = 'true';
+            } else {
+                $('#settingsModal').querySelector('.close-btn').style.display = 'flex';
+                $('#settingsModal').dataset.required = 'false';
+            }
+            
+            $('#settingsModal').style.display = 'flex';
+        };
+
+        const closeSettingsModal = () => {
+            if ($('#settingsModal').dataset.required === 'true') {
+                showToast('يجب إكمال إعدادات المجمع أولاً', true);
+                return;
+            }
+            $('#settingsModal').style.display = 'none';
+        };
+
+        const populateCities = (governorate) => {
+            const citySelect = $('#citySelect');
+            citySelect.innerHTML = '<option value="">-- اختر المركز --</option>';
+            citySelect.disabled = !governorate;
+            
+            if (governorate && GOVERNORATE_CITIES[governorate]) {
+                GOVERNORATE_CITIES[governorate].forEach(city => {
+                    const option = document.createElement('option');
+                    option.value = city;
+                    option.textContent = city;
+                    citySelect.appendChild(option);
+                });
+            }
+        };
+
+        const saveTenantSettings = async () => {
+            const name = $('#tenantNameInput').value.trim();
+            const governorate = $('#governorateSelect').value;
+            const city = $('#citySelect').value;
+            const address = $('#addressInput').value.trim();
+            
+            if (!name) {
+                showToast('اسم المجمع مطلوب', true);
+                $('#tenantNameInput').focus();
+                return;
+            }
+            
+            if (!governorate) {
+                showToast('المحافظة مطلوبة', true);
+                $('#governorateSelect').focus();
+                return;
+            }
+            
+            if (!city) {
+                showToast('المركز مطلوب', true);
+                $('#citySelect').focus();
+                return;
+            }
+            
+            if (!address) {
+                showToast('العنوان التفصيلي مطلوب', true);
+                $('#addressInput').focus();
+                return;
+            }
+            
+            try {
+                const settingsData = {
+                    name,
+                    governorate,
+                    city,
+                    address,
+                    fullAddress: `${address}، ${city}، ${governorate}`,
+                    updatedAt: new Date().toISOString(),
+                    updatedBy: currentAdminId
+                };
+                
+                await set(ref(db, `tenants/${currentTenantId}/settings`), settingsData);
+                
+                tenantSettings = settingsData;
+                $('#tenantIdDisplay').textContent = name;
+                
+                await update(ref(db, `tenants/${currentTenantId}/users/${currentAdminId}`), {
+                    tenantName: name
+                });
+                
+                showToast('✅ تم حفظ إعدادات المجمع بنجاح');
+                $('#settingsModal').style.display = 'none';
+                
+            } catch (err) {
+                console.error('خطأ في حفظ الإعدادات:', err);
+                showToast('❌ فشل حفظ الإعدادات: ' + err.message, true);
+            }
+        };
+
+        // ============ دوال التخزين المحلي ============
+        
+        const saveToLocalDB = () => {
             if (!currentTenantId) return;
             try {
-                const cacheData = {
-                    version: LOCAL_CACHE_VERSION,
-                    timestamp: Date.now(),
-                    users: usersArray.map(u => {
-                        const cleanUser = { ...u };
-                        delete cleanUser._linkedDoctorIds;
-                        return cleanUser;
-                    })
-                };
-                localStorage.setItem(getTenantStorageKey('users_cache'), JSON.stringify(cacheData));
+                const usersData = {};
+                allUsers.forEach(u => {
+                    usersData[u.id] = { ...u };
+                    delete usersData[u.id]._linkedDoctorIds;
+                });
+                localStorage.setItem(getTenantStorageKey('users'), JSON.stringify(usersData));
+                localStorage.setItem(getTenantStorageKey('links'), JSON.stringify(linksMap));
             } catch (e) {
-                console.warn('تعذر حفظ المستخدمين في التخزين المحلي:', e.message);
+                console.warn('تعذر الحفظ في التخزين المحلي:', e.message);
             }
         };
 
-        const loadUsersFromLocalCache = () => {
-            if (!currentTenantId) return [];
+        const loadFromLocalDB = () => {
+            if (!currentTenantId) return false;
             try {
-                const cacheJson = localStorage.getItem(getTenantStorageKey('users_cache'));
-                if (!cacheJson) return [];
+                const usersData = localStorage.getItem(getTenantStorageKey('users'));
+                const linksData = localStorage.getItem(getTenantStorageKey('links'));
                 
-                const cacheData = JSON.parse(cacheJson);
-                if (cacheData.version !== LOCAL_CACHE_VERSION) return [];
+                if (usersData) {
+                    const parsed = JSON.parse(usersData);
+                    allUsers = Object.keys(parsed).map(id => ({
+                        id,
+                        ...parsed[id]
+                    }));
+                }
                 
-                return cacheData.users || [];
+                if (linksData) {
+                    linksMap = JSON.parse(linksData);
+                }
+                
+                return allUsers.length > 0;
             } catch (e) {
-                console.warn('تعذر تحميل المستخدمين من التخزين المحلي:', e.message);
-                return [];
-            }
-        };
-
-        const saveLinksToLocalCache = (linksObject) => {
-            if (!currentTenantId) return;
-            try {
-                const cacheData = {
-                    version: LOCAL_CACHE_VERSION,
-                    timestamp: Date.now(),
-                    links: linksObject
-                };
-                localStorage.setItem(getTenantStorageKey('links_cache'), JSON.stringify(cacheData));
-            } catch (e) {
-                console.warn('تعذر حفظ الروابط في التخزين المحلي:', e.message);
-            }
-        };
-
-        const loadLinksFromLocalCache = () => {
-            if (!currentTenantId) return {};
-            try {
-                const cacheJson = localStorage.getItem(getTenantStorageKey('links_cache'));
-                if (!cacheJson) return {};
-                
-                const cacheData = JSON.parse(cacheJson);
-                if (cacheData.version !== LOCAL_CACHE_VERSION) return {};
-                
-                return cacheData.links || {};
-            } catch (e) {
-                console.warn('تعذر تحميل الروابط من التخزين المحلي:', e.message);
-                return {};
+                console.warn('تعذر تحميل التخزين المحلي:', e.message);
+                return false;
             }
         };
 
@@ -1147,50 +1184,37 @@
             updateStats();
             renderGrid();
             populateDoctorsCheckboxes();
-            saveUsersToLocalCache(allUsers);
+            saveToLocalDB();
         };
 
-        const startFirestoreListeners = () => {
-            if (!currentTenantId) return;
+        const startListeners = () => {
+            if (!tenantUsersRef || !tenantLinksRef) return;
             
             if (unsubscribeUsers) unsubscribeUsers();
             if (unsubscribeLinks) unsubscribeLinks();
 
-            const usersCollection = collection(db, 'tenants', currentTenantId, 'users');
-            const linksCollection = collection(db, 'tenants', currentTenantId, 'links');
-
-            unsubscribeUsers = onSnapshot(usersCollection, (snapshot) => {
+            unsubscribeUsers = onValue(tenantUsersRef, (snap) => {
                 const usersArray = [];
-                snapshot.forEach(doc => {
-                    usersArray.push({ id: doc.id, ...doc.data() });
+                snap.forEach(child => {
+                    usersArray.push({ id: child.key, ...child.val() });
                 });
                 allUsers = usersArray;
                 combineAndRender();
                 setSyncStatus('synced');
-                console.log(`☁️ تم استلام ${usersArray.length} مستخدم من Firestore`);
             }, (error) => {
-                console.warn('خطأ في الاتصال بـ Firestore، استخدام البيانات المحلية:', error.message);
+                console.warn('خطأ في الاتصال بـ Firebase، استخدام البيانات المحلية:', error.message);
                 setSyncStatus('syncing');
                 if (allUsers.length === 0) {
-                    allUsers = loadUsersFromLocalCache();
-                    linksMap = loadLinksFromLocalCache();
+                    loadFromLocalDB();
                     combineAndRender();
                 }
             });
 
-            unsubscribeLinks = onSnapshot(linksCollection, (snapshot) => {
-                linksMap = {};
-                snapshot.forEach(doc => {
-                    linksMap[doc.id] = doc.data();
-                });
-                saveLinksToLocalCache(linksMap);
+            unsubscribeLinks = onValue(tenantLinksRef, (snap) => {
+                linksMap = snap.val() || {};
                 if (allUsers.length) combineAndRender();
             }, (error) => {
-                console.warn('خطأ في تحميل الروابط من Firestore:', error.message);
-                if (Object.keys(linksMap).length === 0) {
-                    linksMap = loadLinksFromLocalCache();
-                    if (allUsers.length) combineAndRender();
-                }
+                console.warn('خطأ في تحميل الروابط:', error.message);
             });
         };
 
@@ -1483,141 +1507,6 @@
             }
         });
 
-        // ============ دوال إعدادات المجمع ============
-        
-        const loadTenantSettings = async () => {
-            if (!currentTenantId) return null;
-            try {
-                const settingsDoc = doc(db, 'tenants', currentTenantId, 'settings', 'main');
-                const settingsSnap = await getDoc(settingsDoc);
-                if (settingsSnap.exists()) {
-                    tenantSettings = settingsSnap.data();
-                    return tenantSettings;
-                }
-                return null;
-            } catch (e) {
-                console.warn('تعذر تحميل إعدادات المجمع:', e.message);
-                return null;
-            }
-        };
-
-        const hasCompleteSettings = () => {
-            return tenantSettings && 
-                   tenantSettings.name && 
-                   tenantSettings.governorate && 
-                   tenantSettings.city && 
-                   tenantSettings.address;
-        };
-
-        const openSettingsModal = (isRequired = false) => {
-            if (tenantSettings) {
-                $('#tenantNameInput').value = tenantSettings.name || '';
-                if (tenantSettings.governorate) {
-                    $('#governorateSelect').value = tenantSettings.governorate;
-                    populateCities(tenantSettings.governorate);
-                    if (tenantSettings.city) {
-                        $('#citySelect').value = tenantSettings.city;
-                    }
-                }
-                $('#addressInput').value = tenantSettings.address || '';
-            }
-            
-            if (isRequired) {
-                $('#settingsModal').querySelector('.close-btn').style.display = 'none';
-                $('#settingsModal').dataset.required = 'true';
-            } else {
-                $('#settingsModal').querySelector('.close-btn').style.display = 'flex';
-                $('#settingsModal').dataset.required = 'false';
-            }
-            
-            $('#settingsModal').style.display = 'flex';
-        };
-
-        const closeSettingsModal = () => {
-            if ($('#settingsModal').dataset.required === 'true') {
-                showToast('يجب إكمال إعدادات المجمع أولاً', true);
-                return;
-            }
-            $('#settingsModal').style.display = 'none';
-        };
-
-        const populateCities = (governorate) => {
-            const citySelect = $('#citySelect');
-            citySelect.innerHTML = '<option value="">-- اختر المركز --</option>';
-            citySelect.disabled = !governorate;
-            
-            if (governorate && GOVERNORATE_CITIES[governorate]) {
-                GOVERNORATE_CITIES[governorate].forEach(city => {
-                    const option = document.createElement('option');
-                    option.value = city;
-                    option.textContent = city;
-                    citySelect.appendChild(option);
-                });
-            }
-        };
-
-        const saveTenantSettings = async () => {
-            const name = $('#tenantNameInput').value.trim();
-            const governorate = $('#governorateSelect').value;
-            const city = $('#citySelect').value;
-            const address = $('#addressInput').value.trim();
-            
-            if (!name) {
-                showToast('اسم المجمع مطلوب', true);
-                $('#tenantNameInput').focus();
-                return;
-            }
-            
-            if (!governorate) {
-                showToast('المحافظة مطلوبة', true);
-                $('#governorateSelect').focus();
-                return;
-            }
-            
-            if (!city) {
-                showToast('المركز مطلوب', true);
-                $('#citySelect').focus();
-                return;
-            }
-            
-            if (!address) {
-                showToast('العنوان التفصيلي مطلوب', true);
-                $('#addressInput').focus();
-                return;
-            }
-            
-            try {
-                const settingsData = {
-                    name,
-                    governorate,
-                    city,
-                    address,
-                    fullAddress: `${address}، ${city}، ${governorate}`,
-                    updatedAt: new Date().toISOString(),
-                    updatedBy: ADMIN_ID
-                };
-                
-                const settingsDoc = doc(db, 'tenants', currentTenantId, 'settings', 'main');
-                await setDoc(settingsDoc, settingsData);
-                
-                tenantSettings = settingsData;
-                $('#tenantIdDisplay').textContent = name;
-                
-                const userDoc = doc(db, 'tenants', currentTenantId, 'users', ADMIN_ID);
-                await updateDoc(userDoc, { tenantName: name });
-                
-                showToast('✅ تم حفظ إعدادات المجمع بنجاح');
-                // ✅ إغلاق المودال تلقائياً بعد الحفظ
-                setTimeout(() => {
-                    $('#settingsModal').style.display = 'none';
-                }, 500);
-                
-            } catch (err) {
-                console.error('خطأ في حفظ الإعدادات:', err);
-                showToast('❌ فشل حفظ الإعدادات: ' + err.message, true);
-            }
-        };
-
         // ============ عمليات الحفظ ============
         
         const saveUser = async () => {
@@ -1644,7 +1533,7 @@
                 quickBlurb,
                 status,
                 tenantId: currentTenantId,
-                createdBy: ADMIN_ID
+                createdBy: currentAdminId
             };
 
             let selectedDoctorIds = [];
@@ -1659,15 +1548,13 @@
 
             try {
                 if (currentEditId) {
-                    const userDoc = doc(db, 'tenants', currentTenantId, 'users', currentEditId);
-                    await updateDoc(userDoc, userData);
+                    await update(ref(db, `tenants/${currentTenantId}/users/${currentEditId}`), userData);
                     
                     if (role === 'nurse') {
                         await saveNurseDoctorLinks(currentEditId, selectedDoctorIds);
                     }
                     
                     showToast('✅ تم التعديل بنجاح');
-                    // ✅ إغلاق المودال تلقائياً بعد التعديل
                     closeFormModal();
                 } else {
                     if (!password) {
@@ -1698,8 +1585,7 @@
                     const uid = signUpData.localId;
                     userData.created_at = new Date().toISOString();
                     
-                    const userDoc = doc(db, 'tenants', currentTenantId, 'users', uid);
-                    await setDoc(userDoc, userData);
+                    await set(ref(db, `tenants/${currentTenantId}/users/${uid}`), userData);
                     
                     savePasswordLocally(uid, password);
                     
@@ -1709,7 +1595,6 @@
                     
                     setSyncStatus('synced');
                     showToast('🎉 تم إضافة المستخدم بنجاح');
-                    // ✅ إغلاق المودال تلقائياً بعد الإضافة
                     closeFormModal();
                 }
             } catch (err) {
@@ -1719,21 +1604,17 @@
         };
 
         const saveNurseDoctorLinks = async (nurseId, doctorIds) => {
-            const linkDoc = doc(db, 'tenants', currentTenantId, 'links', nurseId);
-            if (doctorIds.length === 0) {
-                await deleteDoc(linkDoc).catch(() => {});
-                return;
-            }
+            const linkRef = ref(db, `tenants/${currentTenantId}/links/${nurseId}`);
+            await set(linkRef, null);
+            if (doctorIds.length === 0) return;
             const updates = {};
             doctorIds.forEach(docId => { updates[docId] = true; });
-            await setDoc(linkDoc, updates);
+            await set(linkRef, updates);
         };
 
         const toggleBlockUser = async (id, newStatus) => {
-            const userDoc = doc(db, 'tenants', currentTenantId, 'users', id);
-            await updateDoc(userDoc, { status: newStatus });
+            await update(ref(db, `tenants/${currentTenantId}/users/${id}`), { status: newStatus });
             showToast(newStatus === 'blocked' ? '🔒 تم الحظر' : '🔓 تم إلغاء الحظر');
-            // ✅ إغلاق مودال التفاصيل بعد الحظر/إلغاء الحظر
             closeDetailModal();
         };
 
@@ -1755,18 +1636,17 @@
 
             try {
                 if (user.role === 'nurse') {
-                    const linkDoc = doc(db, 'tenants', currentTenantId, 'links', id);
-                    await deleteDoc(linkDoc).catch(() => {});
+                    await remove(ref(db, `tenants/${currentTenantId}/links/${id}`));
                 }
 
-                const userDoc = doc(db, 'tenants', currentTenantId, 'users', id);
-                await deleteDoc(userDoc);
+                await remove(ref(db, `tenants/${currentTenantId}/users/${id}`));
 
                 removePasswordLocally(id);
 
                 try {
-                    const idToken = await getAdminIdToken();
-                    if (idToken) {
+                    const currentUser = auth.currentUser;
+                    if (currentUser) {
+                        const idToken = await currentUser.getIdToken();
                         await fetch(DELETE_URL, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
@@ -1781,7 +1661,6 @@
                 }
 
                 showToast('🗑️ تم حذف المستخدم بنجاح');
-                // ✅ إغلاق مودال التفاصيل بعد الحذف
                 closeDetailModal();
             } catch (err) {
                 console.error('خطأ في حذف المستخدم:', err);
@@ -1789,41 +1668,12 @@
             }
         };
 
-        // ============ الحصول على ID Token للأدمن ============
-        const getAdminIdToken = async () => {
-            try {
-                const response = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${API_KEY}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        email: ADMIN_EMAIL,
-                        password: 'Aa131216@',
-                        returnSecureToken: true
-                    })
-                });
-                const data = await response.json();
-                return data.idToken || null;
-            } catch (e) {
-                console.warn('تعذر الحصول على idToken:', e.message);
-                return null;
-            }
-        };
-
-        // ============ ✅ دوال تسجيل الخروج ============
+        // ============ تسجيل الخروج ============
         
-        const openLogoutModal = () => {
-            $('#logoutModal').style.display = 'flex';
-        };
-
-        const closeLogoutModal = () => {
-            $('#logoutModal').style.display = 'none';
-        };
-
-        const performLogout = async () => {
+        const logout = async () => {
             try {
                 showToast('👋 جاري تسجيل الخروج...');
                 
-                // إيقاف المستمعين
                 if (unsubscribeUsers) {
                     unsubscribeUsers();
                     unsubscribeUsers = null;
@@ -1833,81 +1683,83 @@
                     unsubscribeLinks = null;
                 }
                 
-                // مسح بيانات الجلسة
-                const sessionKeysToRemove = [];
-                for (let i = 0; i < localStorage.length; i++) {
-                    const key = localStorage.key(i);
-                    if (key && (key.startsWith('shifa_') || key.startsWith('firebase:'))) {
-                        sessionKeysToRemove.push(key);
-                    }
-                }
-                sessionKeysToRemove.forEach(key => localStorage.removeItem(key));
+                // مسح جلسة تسجيل الدخول فقط
+                try {
+                    localStorage.removeItem('shifa_secure_session');
+                    localStorage.removeItem('shifa_session');
+                } catch (e) {}
                 
-                // مسح sessionStorage
-                sessionStorage.clear();
-                
-                // إعادة تعيين المتغيرات
                 allUsers = [];
                 doctorsList = [];
                 linksMap = {};
-                currentEditId = null;
-                currentViewId = null;
+                currentAdminId = null;
                 currentTenantId = null;
                 tenantSettings = null;
                 
-                // إغلاق مودال الخروج
-                closeLogoutModal();
+                await signOut(auth);
                 
-                // توجيه لصفحة تسجيل الدخول
-                setTimeout(() => {
-                    window.location.href = 'index.html';
-                }, 500);
+                window.location.href = 'index.html';
                 
             } catch (error) {
                 console.error('خطأ أثناء تسجيل الخروج:', error);
+                try {
+                    localStorage.removeItem('shifa_secure_session');
+                    localStorage.removeItem('shifa_session');
+                } catch (e) {}
                 window.location.href = 'index.html';
             }
         };
 
-        // ============ بدء التطبيق مباشرة ============
-        const initApp = async () => {
-            try {
+        // ============ ✅ التحقق المبسط - بدون فحص الصلاحيات ============
+        
+        const initAdminPanel = () => {
+            onAuthStateChanged(auth, async (user) => {
+                if (!user) {
+                    // لا يوجد مستخدم مسجل - توجيه لصفحة تسجيل الدخول
+                    window.location.href = 'index.html';
+                    return;
+                }
+                
+                // ✅ تم تسجيل الدخول - تشغيل اللوحة مباشرة بدون فحص الصلاحيات
+                currentAdminId = user.uid;
+                currentTenantId = user.uid;
+                
+                tenantUsersRef = ref(db, `tenants/${currentTenantId}/users`);
+                tenantLinksRef = ref(db, `tenants/${currentTenantId}/links`);
+                
+                // تحميل إعدادات المجمع
                 await loadTenantSettings();
                 
-                const tenantDisplay = tenantSettings?.name || 'مجمع طبي';
+                // عرض اسم المجمع
+                const tenantDisplay = tenantSettings?.name || user.email?.split('@')[0] || 'مجمع طبي';
                 $('#tenantIdDisplay').textContent = tenantDisplay;
                 
+                // لو الإعدادات مش كاملة، افتح مودال الإعدادات
                 if (!hasCompleteSettings()) {
                     $('#authCheckLoader').style.display = 'none';
                     $('#mainContainer').style.display = 'block';
                     openSettingsModal(true);
                 }
                 
-                const cachedUsers = loadUsersFromLocalCache();
-                if (cachedUsers.length > 0) {
-                    allUsers = cachedUsers;
-                    linksMap = loadLinksFromLocalCache();
+                // تحميل البيانات المحلية
+                loadFromLocalDB();
+                if (allUsers.length > 0) {
                     combineAndRender();
-                    console.log('⚡ تم عرض البيانات من التخزين المحلي');
                 }
                 
+                // إظهار الواجهة
                 $('#authCheckLoader').style.display = 'none';
                 $('#mainContainer').style.display = 'block';
                 
-                startFirestoreListeners();
+                // بدء المستمعين
+                startListeners();
                 
-                console.log('🚀 لوحة إدارة شفاء - Firestore + تخزين محلي + إغلاق تلقائي');
-                console.log('👤 الأدمن:', ADMIN_EMAIL);
-                
-            } catch (err) {
-                console.error('خطأ في بدء التطبيق:', err);
-                showToast('❌ فشل تحميل لوحة الإدارة', true);
-                $('#authCheckLoader').style.display = 'none';
-                $('#mainContainer').style.display = 'block';
-            }
+                console.log('🚀 لوحة الإدارة جاهزة - تم تجاوز التحقق من الصلاحيات');
+            });
         };
 
         // ============ تهيئة الأحداث ============
+        
         const initEvents = () => {
             $('#searchInput')?.addEventListener('input', () => {
                 clearTimeout(searchTimer);
@@ -1933,29 +1785,9 @@
             $('#refreshBtn').onclick = () => {
                 setSyncStatus('syncing');
                 showToast('🔄 جاري تحديث البيانات...');
-                if (unsubscribeUsers) {
-                    unsubscribeUsers();
-                    unsubscribeUsers = null;
-                }
-                if (unsubscribeLinks) {
-                    unsubscribeLinks();
-                    unsubscribeLinks = null;
-                }
-                startFirestoreListeners();
                 setTimeout(() => setSyncStatus('synced'), 1500);
             };
-
-            // ✅ أحداث تسجيل الخروج
-            $('#logoutBtn').onclick = openLogoutModal;
-            $('#confirmLogoutBtn').onclick = performLogout;
-            $('#cancelLogoutBtn').onclick = closeLogoutModal;
-            
-            // ✅ إغلاق مودال الخروج بالنقر خارجه
-            window.addEventListener('click', (e) => {
-                if (e.target === $('#logoutModal')) {
-                    closeLogoutModal();
-                }
-            });
+            $('#logoutBtn').onclick = logout;
 
             $('#saveFormBtn').onclick = saveUser;
             $('#closeFormBtn').onclick = closeFormModal;
@@ -1978,10 +1810,6 @@
 
             document.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape') {
-                    if ($('#logoutModal').style.display === 'flex') {
-                        closeLogoutModal();
-                        return;
-                    }
                     if ($('#detailModal').style.display === 'flex') closeDetailModal();
                     if ($('#formModal').style.display === 'flex') closeFormModal();
                     if ($('#settingsModal').style.display === 'flex' && $('#settingsModal').dataset.required !== 'true') {
@@ -2002,7 +1830,7 @@
                     unsubscribeLinks();
                     unsubscribeLinks = null;
                 }
-                startFirestoreListeners();
+                startListeners();
             });
             
             window.addEventListener('offline', () => {
@@ -2019,7 +1847,10 @@
 
         // ============ بدء التشغيل ============
         initEvents();
-        initApp();
+        initAdminPanel();
+        
+        console.log('🚀 لوحة إدارة شفاء - وضع المسؤول المباشر');
+        console.log('✅ تم إزالة التحقق من الصلاحيات - أي مستخدم مسجل دخول يمكنه الوصول');
     </script>
 </body>
 </html>
