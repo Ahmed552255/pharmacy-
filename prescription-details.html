@@ -32,6 +32,7 @@
             --radius-md: 20px;
             --radius-lg: 26px;
             --radius-xl: 50px;
+            --safe-bottom: env(safe-area-inset-bottom, 16px);
         }
 
         * { 
@@ -42,7 +43,7 @@
         }
 
         html {
-            font-size: 15px;
+            font-size: 16px;
             -webkit-font-smoothing: antialiased;
             -webkit-text-size-adjust: 100%;
             text-rendering: optimizeSpeed;
@@ -54,7 +55,8 @@
             color: var(--ink);
             min-height: 100vh;
             min-height: 100dvh;
-            padding: 12px;
+            padding: 16px;
+            padding-bottom: calc(16px + var(--safe-bottom));
             overflow-x: hidden;
             -webkit-backface-visibility: hidden;
             backface-visibility: hidden;
@@ -75,8 +77,8 @@
         }
         
         .loader-circle {
-            width: 40px;
-            height: 40px;
+            width: 44px;
+            height: 44px;
             border: 3px solid #E0E0E0;
             border-top-color: var(--primary);
             border-radius: 50%;
@@ -85,29 +87,30 @@
         
         @keyframes spin { to { transform: rotate(360deg); } }
 
+        /* ============ HEADER ============ */
         .app-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
             background: var(--white);
             border-radius: var(--radius-lg);
-            padding: 10px 18px;
-            margin-bottom: 14px;
+            padding: 12px 20px;
+            margin-bottom: 16px;
             border: 1px solid var(--border);
             box-shadow: var(--shadow-sm);
             flex-wrap: wrap;
-            gap: 10px;
+            gap: 12px;
             position: sticky;
-            top: 6px;
+            top: 8px;
             z-index: 100;
         }
         
         .logo h2 { font-size: 1.3rem; font-weight: 800; color: var(--primary-dark); white-space: nowrap; }
         .logo i { color: var(--primary); }
-        .header-actions { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+        .header-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 
         .btn {
-            padding: 8px 14px;
+            padding: 12px 18px;
             border-radius: var(--radius-xl);
             border: none;
             font-weight: 700;
@@ -115,52 +118,54 @@
             cursor: pointer;
             display: inline-flex;
             align-items: center;
-            gap: 5px;
-            font-size: 0.83rem;
+            justify-content: center;
+            gap: 6px;
+            font-size: 0.88rem;
             white-space: nowrap;
             touch-action: manipulation;
             user-select: none;
             -webkit-user-select: none;
-            transition: opacity 0.15s;
-            min-height: 36px;
+            transition: all 0.15s ease;
+            min-height: 44px;
             text-decoration: none;
         }
         
-        .btn:active { opacity: 0.8; }
+        .btn:active { transform: scale(0.96); opacity: 0.85; }
         .btn-primary { background: var(--primary); color: white; box-shadow: 0 3px 10px rgba(0,174,239,0.2); }
-        .btn-outline { background: var(--white); color: var(--ink); border: 1.5px solid var(--border); }
+        .btn-outline { background: var(--white); color: var(--ink); border: 2px solid var(--border); }
         .btn-success { background: var(--success); color: white; box-shadow: 0 3px 10px rgba(38,166,154,0.2); }
         .btn-danger { background: var(--danger); color: white; }
-        .btn-sm { padding: 6px 12px; font-size: 0.78rem; min-height: 32px; }
-        .btn-info { background: #E3F2FD; color: #1565C0; border: 1px solid #90CAF9; }
+        .btn-sm { padding: 8px 14px; font-size: 0.82rem; min-height: 40px; }
+        .btn-info { background: #E3F2FD; color: #1565C0; border: 2px solid #90CAF9; }
 
+        /* ============ CARDS ============ */
         .card {
             background: var(--white);
             border-radius: var(--radius-lg);
-            padding: 16px 18px;
+            padding: 20px 22px;
             border: 1px solid var(--border);
             box-shadow: var(--shadow-sm);
-            margin-bottom: 12px;
+            margin-bottom: 16px;
         }
         
         .card-header {
             display: flex;
             align-items: center;
-            gap: 10px;
-            margin-bottom: 14px;
-            padding-bottom: 12px;
+            gap: 12px;
+            margin-bottom: 16px;
+            padding-bottom: 14px;
             border-bottom: 1px solid var(--border);
         }
-        .card-header h3 { font-size: 1rem; font-weight: 800; }
+        .card-header h3 { font-size: 1.05rem; font-weight: 800; }
         
         .icon-circle {
-            width: 40px;
-            height: 40px;
+            width: 44px;
+            height: 44px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1rem;
+            font-size: 1.1rem;
             flex-shrink: 0;
         }
         .icon-cyan { background: var(--primary-light); color: var(--primary-dark); }
@@ -169,84 +174,96 @@
 
         .info-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 10px;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 12px;
         }
         
-        .info-item { display: flex; align-items: flex-start; gap: 8px; font-size: 0.85rem; }
-        .info-item i { color: var(--primary); width: 18px; margin-top: 3px; text-align: center; flex-shrink: 0; }
-        .info-item strong { display: block; font-size: 0.73rem; color: var(--text-sec); margin-bottom: 2px; }
-        .info-item .clickable { color: var(--primary); cursor: pointer; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+        .info-item { display: flex; align-items: flex-start; gap: 10px; font-size: 0.88rem; }
+        .info-item i { color: var(--primary); width: 20px; margin-top: 3px; text-align: center; flex-shrink: 0; }
+        .info-item strong { display: block; font-size: 0.75rem; color: var(--text-sec); margin-bottom: 2px; }
+        .info-item .clickable { 
+            color: var(--primary); cursor: pointer; font-weight: 700; 
+            text-decoration: underline; text-underline-offset: 4px; 
+            transition: color 0.2s;
+        }
+        .info-item .clickable:hover { color: var(--primary-dark); }
 
         .status-badge {
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            padding: 5px 12px;
+            padding: 6px 14px;
             border-radius: 30px;
             font-weight: 700;
-            font-size: 0.8rem;
+            font-size: 0.85rem;
         }
         .status-pending { background: #FFF3E0; color: #E65100; }
         .status-dispensed { background: #E8F5E9; color: #00695C; }
 
         .tenant-badge {
             background: var(--primary-light);
-            padding: 4px 10px;
+            padding: 5px 12px;
             border-radius: var(--radius-xl);
-            font-size: 0.72rem;
+            font-size: 0.78rem;
             font-weight: 600;
             color: var(--primary-dark);
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 6px;
         }
 
         .sync-dot {
             display: inline-block;
-            width: 7px;
-            height: 7px;
+            width: 8px;
+            height: 8px;
             border-radius: 50%;
-            margin-left: 5px;
+            margin-left: 6px;
             vertical-align: middle;
         }
         .sync-dot.on { background: var(--success); }
         .sync-dot.off { background: #FFB74D; }
 
+        /* ============ TABLE ============ */
         .rx-table-wrap {
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
-            margin: 0 -18px;
-            padding: 0 18px;
+            margin: 0 -22px;
+            padding: 0 22px;
+            overscroll-behavior-x: contain;
         }
         
         .rx-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 0.85rem;
+            font-size: 0.88rem;
             min-width: 350px;
         }
         
         .rx-table th {
             background: #F5FAFC;
-            padding: 10px 8px;
-            font-weight: 700;
-            font-size: 0.75rem;
+            padding: 12px 10px;
+            font-weight: 800;
+            font-size: 0.78rem;
             color: var(--ink);
             border-bottom: 2px solid var(--primary-light);
             white-space: nowrap;
             text-align: center;
         }
         
-        .rx-table td { padding: 10px 8px; border-bottom: 1px solid var(--border); vertical-align: middle; text-align: center; }
+        .rx-table td { 
+            padding: 12px 10px; 
+            border-bottom: 1px solid var(--border); 
+            vertical-align: middle; 
+            text-align: center; 
+        }
         .rx-table tbody tr:last-child td { border-bottom: none; }
         
         .drug-form-badge {
             display: inline-block;
-            padding: 3px 10px;
+            padding: 4px 12px;
             border-radius: 20px;
-            font-size: 0.72rem;
-            font-weight: 600;
+            font-size: 0.78rem;
+            font-weight: 700;
             background: var(--primary-light);
             color: var(--primary-dark);
             white-space: nowrap;
@@ -256,21 +273,21 @@
             font-weight: 700;
             color: var(--primary-dark);
             background: rgba(0,174,239,0.06);
-            padding: 3px 10px;
+            padding: 4px 12px;
             border-radius: 20px;
             white-space: nowrap;
         }
 
         .form-control {
             width: 100%;
-            padding: 10px 14px;
+            padding: 12px 16px;
             border-radius: var(--radius-sm);
-            border: 1.5px solid var(--border);
+            border: 2px solid var(--border);
             font-family: 'Cairo', sans-serif;
-            font-size: 0.85rem;
+            font-size: 0.88rem;
             background: #F5FAFC;
             resize: vertical;
-            min-height: 60px;
+            min-height: 70px;
         }
         
         .form-control:focus { outline: none; border-color: var(--primary); background: white; }
@@ -280,40 +297,41 @@
         .dispensed-info {
             background: #E8F5E9;
             border-radius: var(--radius-sm);
-            padding: 12px 16px;
+            padding: 14px 18px;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
             font-weight: 600;
             color: #00695C;
-            font-size: 0.82rem;
+            font-size: 0.85rem;
             flex-wrap: wrap;
         }
         
         .pharmacist-notes-display {
             background: #FFF8E1;
             border-radius: var(--radius-sm);
-            padding: 12px 16px;
+            padding: 14px 18px;
             border-right: 3px solid var(--warning);
-            font-size: 0.82rem;
+            font-size: 0.85rem;
             color: #5D4037;
-            margin-top: 10px;
+            margin-top: 12px;
         }
 
-        .action-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+        .action-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
 
-        /* ============ مودال سجل المريض ============ */
+        /* ============ MODAL ============ */
         .modal-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.5);
+            background: rgba(0,0,0,0.4);
             z-index: 1500;
             display: none;
-            align-items: flex-start;
+            align-items: center;
             justify-content: center;
             padding: 20px;
             overflow-y: auto;
-            backdrop-filter: blur(2px);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
         }
         
         .modal-overlay.active { display: flex; }
@@ -324,10 +342,11 @@
             width: 100%;
             max-width: 700px;
             margin: 20px 0;
-            box-shadow: var(--shadow-md);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
             display: flex;
             flex-direction: column;
             max-height: 85vh;
+            max-height: 85dvh;
         }
         
         .modal-header {
@@ -352,77 +371,89 @@
         }
         
         .modal-close {
-            width: 36px;
-            height: 36px;
+            width: 38px;
+            height: 38px;
             border-radius: 50%;
             border: none;
             background: #F5F5F5;
             cursor: pointer;
-            font-size: 1.2rem;
+            font-size: 1.3rem;
             display: flex;
             align-items: center;
             justify-content: center;
             transition: background 0.2s;
+            touch-action: manipulation;
         }
         
+        .modal-close:active { background: #E0E0E0; }
         .modal-close:hover { background: #E0E0E0; }
         
         .modal-body {
-            padding: 16px 20px;
+            padding: 20px;
             overflow-y: auto;
             flex: 1;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
         }
 
+        /* ============ PATIENT HISTORY ============ */
         .prescription-history-item {
-            border: 1px solid var(--border);
+            border: 2px solid var(--border);
             border-radius: var(--radius-sm);
-            padding: 12px 14px;
-            margin-bottom: 10px;
-            transition: box-shadow 0.2s;
+            padding: 14px 16px;
+            margin-bottom: 12px;
+            transition: box-shadow 0.2s, border-color 0.2s;
+            background: #FAFBFC;
         }
         
-        .prescription-history-item:hover { box-shadow: var(--shadow-sm); }
+        .prescription-history-item:hover { 
+            box-shadow: var(--shadow-sm); 
+            border-color: var(--primary-light);
+        }
         
         .prescription-history-header {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
             flex-wrap: wrap;
-            gap: 10px;
-            margin-bottom: 8px;
+            gap: 12px;
+            margin-bottom: 10px;
         }
         
         .prescription-history-drugs {
             display: flex;
             flex-wrap: wrap;
-            gap: 6px;
-            margin-top: 8px;
+            gap: 8px;
+            margin-top: 10px;
         }
         
         .drug-mini-tag {
             background: #F5FAFC;
-            padding: 4px 10px;
+            padding: 5px 12px;
             border-radius: 20px;
-            font-size: 0.75rem;
+            font-size: 0.78rem;
             font-weight: 600;
             display: inline-flex;
             align-items: center;
-            gap: 4px;
+            gap: 5px;
             border: 1px solid var(--border);
         }
         
         .tag-dose {
             color: var(--primary-dark);
-            font-size: 0.7rem;
+            font-size: 0.72rem;
+            background: rgba(0,174,239,0.06);
+            padding: 2px 6px;
+            border-radius: 10px;
         }
         
         .prescription-status-badge {
             display: inline-flex;
             align-items: center;
             gap: 4px;
-            padding: 3px 10px;
+            padding: 4px 12px;
             border-radius: 20px;
-            font-size: 0.72rem;
+            font-size: 0.75rem;
             font-weight: 700;
         }
         .status-pending-rx { background: #FFF3E0; color: #E65100; }
@@ -431,57 +462,269 @@
 
         .toast-container {
             position: fixed;
-            bottom: 20px;
+            bottom: 24px;
             left: 50%;
             transform: translateX(-50%);
             z-index: 3000;
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 8px;
             pointer-events: none;
+            max-width: 90vw;
+            padding-bottom: var(--safe-bottom);
         }
         
         .toast {
             background: #1A3C4A;
             color: white;
-            padding: 10px 18px;
+            padding: 14px 24px;
             border-radius: var(--radius-xl);
-            font-weight: 600;
-            font-size: 0.82rem;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.18);
+            font-weight: 700;
+            font-size: 0.88rem;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
             white-space: nowrap;
             display: flex;
             align-items: center;
-            gap: 7px;
+            gap: 8px;
         }
         .toast.err { background: #C62828; }
-        .toast.removing { opacity: 0; transform: translateY(-10px); transition: all 0.3s ease; }
+        .toast.removing { opacity: 0; transform: translateY(-12px); transition: all 0.3s ease; }
         
-        .empty-state { text-align: center; padding: 40px 15px; color: var(--text-sec); }
-        .empty-state i { font-size: 2.5rem; opacity: 0.2; margin-bottom: 10px; display: block; }
+        .empty-state { text-align: center; padding: 50px 20px; color: var(--text-sec); }
+        .empty-state i { font-size: 3rem; opacity: 0.2; margin-bottom: 12px; display: block; }
 
-        @media (max-width: 600px) {
-            body { padding: 8px; }
-            .app-header { padding: 8px 12px; top: 4px; border-radius: var(--radius-md); }
-            .logo h2 { font-size: 1.15rem; }
-            .card { padding: 12px 14px; border-radius: var(--radius-md); }
-            .info-grid { grid-template-columns: 1fr; }
-            .btn { padding: 6px 10px; font-size: 0.75rem; gap: 4px; min-height: 30px; }
-            .rx-table { font-size: 0.78rem; }
-            .rx-table th, .rx-table td { padding: 8px 5px; }
-            .rx-table-wrap { margin: 0 -14px; padding: 0 14px; }
-            .action-row { flex-direction: column; }
-            .action-row .btn { width: 100%; justify-content: center; }
-            .modal-overlay { padding: 10px; }
-            .modal-container { margin: 10px 0; max-height: 90vh; }
-            .modal-header { padding: 12px 14px; }
-            .modal-body { padding: 12px 14px; }
+        /* ============ RESPONSIVE - TABLET ============ */
+        @media (max-width: 1024px) {
+            .app-header {
+                padding: 10px 16px;
+            }
+            
+            .btn {
+                padding: 10px 14px;
+                font-size: 0.85rem;
+                min-height: 42px;
+            }
+            
+            .card {
+                padding: 16px 18px;
+            }
         }
 
-        @media (max-width: 360px) {
-            html { font-size: 13px; }
-            .btn { padding: 5px 8px; font-size: 0.7rem; min-height: 28px; }
-            .card { padding: 10px 12px; }
+        /* ============ RESPONSIVE - MOBILE ============ */
+        @media (max-width: 768px) {
+            html {
+                font-size: 15px;
+            }
+            
+            body { 
+                padding: 8px; 
+                padding-bottom: calc(8px + var(--safe-bottom));
+            }
+            
+            .app-header { 
+                padding: 10px 14px 14px; 
+                top: 4px; 
+                border-radius: var(--radius-md);
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+            }
+            
+            .logo {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                width: 100%;
+            }
+            
+            .logo h2 { 
+                font-size: 1.15rem; 
+            }
+            
+            .header-actions {
+                width: 100%;
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
+            }
+            
+            .btn { 
+                padding: 10px 14px; 
+                font-size: 0.82rem; 
+                min-height: 46px;
+                border-radius: 24px;
+            }
+            
+            .btn-sm { 
+                padding: 8px 12px; 
+                font-size: 0.78rem; 
+                min-height: 40px;
+            }
+            
+            .card { 
+                padding: 14px 16px; 
+                border-radius: var(--radius-md); 
+            }
+            
+            .info-grid { 
+                grid-template-columns: 1fr; 
+                gap: 10px;
+            }
+            
+            .rx-table { 
+                font-size: 0.82rem; 
+            }
+            
+            .rx-table th, .rx-table td { 
+                padding: 10px 8px; 
+            }
+            
+            .rx-table-wrap { 
+                margin: 0 -16px; 
+                padding: 0 16px; 
+            }
+            
+            .action-row { 
+                flex-direction: column; 
+                gap: 8px;
+            }
+            
+            .action-row .btn { 
+                width: 100%; 
+                justify-content: center; 
+            }
+            
+            /* Modal - Bottom Sheet */
+            .modal-overlay { 
+                padding: 0;
+                align-items: flex-end;
+            }
+            
+            .modal-container { 
+                margin: 0;
+                max-height: 90vh;
+                max-height: 90dvh;
+                border-radius: 24px 24px 0 0;
+            }
+            
+            .modal-header { 
+                padding: 14px 18px;
+                border-radius: 24px 24px 0 0;
+            }
+            
+            .modal-body { 
+                padding: 16px; 
+            }
+            
+            /* Form Controls */
+            .form-control {
+                padding: 12px 14px;
+                font-size: 0.85rem;
+                min-height: 60px;
+                border-radius: 12px;
+            }
+            
+            /* Patient History Items */
+            .prescription-history-item {
+                padding: 12px 14px;
+                border-radius: 12px;
+            }
+            
+            .prescription-history-header {
+                flex-direction: column;
+                gap: 8px;
+            }
+            
+            /* Status Badge */
+            .status-badge {
+                font-size: 0.8rem;
+                padding: 5px 12px;
+            }
+            
+            .tenant-badge {
+                font-size: 0.72rem;
+                padding: 4px 10px;
+            }
+            
+            .info-item {
+                font-size: 0.85rem;
+            }
+            
+            .info-item strong {
+                font-size: 0.72rem;
+            }
+            
+            /* Toast */
+            .toast {
+                padding: 12px 20px;
+                font-size: 0.85rem;
+                border-radius: 24px;
+            }
+        }
+
+        /* ============ RESPONSIVE - SMALL PHONES ============ */
+        @media (max-width: 400px) {
+            html { 
+                font-size: 14px; 
+            }
+            
+            body {
+                padding: 6px;
+                padding-bottom: calc(6px + var(--safe-bottom));
+            }
+            
+            .app-header {
+                padding: 8px 10px 12px;
+                top: 3px;
+                border-radius: 20px;
+            }
+            
+            .logo h2 {
+                font-size: 1.05rem;
+            }
+            
+            .btn { 
+                padding: 10px 10px; 
+                font-size: 0.78rem; 
+                min-height: 44px;
+                border-radius: 22px;
+            }
+            
+            .card { 
+                padding: 12px 14px; 
+                border-radius: 18px;
+            }
+            
+            .rx-table { 
+                font-size: 0.78rem; 
+            }
+            
+            .rx-table th, .rx-table td { 
+                padding: 8px 5px; 
+            }
+            
+            .rx-table-wrap { 
+                margin: 0 -14px; 
+                padding: 0 14px; 
+            }
+            
+            .modal-container {
+                border-radius: 20px 20px 0 0;
+            }
+            
+            .modal-header {
+                padding: 12px 14px;
+                border-radius: 20px 20px 0 0;
+            }
+            
+            .modal-body {
+                padding: 14px;
+            }
+            
+            .toast {
+                padding: 10px 16px;
+                font-size: 0.8rem;
+            }
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -622,7 +865,7 @@
             } catch (e) { console.warn('تعذر حذف الملاحظات:', e.message); }
         }
 
-        // ============ ✅ دالة فتح سجل المريض داخل المودال ============
+        // ============ ✅ دالة فتح سجل المريض داخل المودال - للمجمع الحالي فقط ============
         async function openPatientFile(patientId, patientName) {
             if (!patientId) {
                 toast('لا يوجد معرف للمريض', true);
@@ -637,7 +880,7 @@
             content.innerHTML = '<div style="text-align:center;padding:30px;"><div class="loader-circle"></div><p style="margin-top:10px;color:var(--text-sec);">جارٍ تحميل سجل المريض...</p></div>';
             
             try {
-                // جلب بيانات المريض الأساسية من المجمع الحالي
+                // ✅ جلب بيانات المريض الأساسية من المجمع الحالي فقط
                 let patientInfo = { name: patientName || 'غير معروف' };
                 try {
                     const patientSnap = await get(ref(db, getDataPath(`patients/${patientId}`)));
@@ -648,29 +891,21 @@
                 
                 const displayName = patientInfo.name || patientName || 'غير معروف';
                 
-                // جلب كل المجمعات
-                const tenantsSnap = await get(ref(db, 'tenants'));
-                const tenants = tenantsSnap.exists() ? Object.keys(tenantsSnap.val()) : [];
-                
-                // تجميع الوصفات من كل المجمعات
+                // ✅ تجميع الوصفات من المجمع الحالي فقط
                 const allPrescriptions = [];
                 const doctorsCache = {};
                 
-                for (const tenantId of tenants) {
-                    try {
-                        const prescriptionsSnap = await get(ref(db, `tenants/${tenantId}/prescriptions`));
-                        if (!prescriptionsSnap.exists()) continue;
-                        
+                try {
+                    const prescriptionsSnap = await get(ref(db, getDataPath('prescriptions')));
+                    if (prescriptionsSnap.exists()) {
                         const rxPromises = [];
                         
                         prescriptionsSnap.forEach(child => {
                             const rx = child.val();
                             if (String(rx.patient_id) === String(patientId)) {
-                                const isSameTenant = (tenantId === currentTenantId);
-                                
                                 rxPromises.push((async () => {
                                     // جلب الأدوية
-                                    const itemsSnap = await get(ref(db, `tenants/${tenantId}/prescription_items/${child.key}`));
+                                    const itemsSnap = await get(ref(db, getDataPath(`prescription_items/${child.key}`)));
                                     let items = [];
                                     if (itemsSnap.exists()) {
                                         items = Object.values(itemsSnap.val()).map(it => ({
@@ -681,29 +916,22 @@
                                     }
                                     
                                     // تحديد اسم الدكتور
-                                    let doctorDisplayName = 'طبيب';
-                                    if (isSameTenant) {
-                                        doctorDisplayName = rx.doctor_name || 'طبيب';
-                                        
-                                        if (rx.doctor_id && (!rx.doctor_name || rx.doctor_name === 'طبيب')) {
-                                            if (!doctorsCache[rx.doctor_id]) {
-                                                try {
-                                                    const docSnap = await get(ref(db, `tenants/${tenantId}/users/${rx.doctor_id}`));
-                                                    doctorsCache[rx.doctor_id] = docSnap.exists() ? (docSnap.val().name || 'طبيب') : 'طبيب';
-                                                } catch(e) { doctorsCache[rx.doctor_id] = 'طبيب'; }
-                                            }
-                                            doctorDisplayName = doctorsCache[rx.doctor_id];
+                                    let doctorDisplayName = rx.doctor_name || 'طبيب';
+                                    
+                                    if (rx.doctor_id && (!rx.doctor_name || rx.doctor_name === 'طبيب')) {
+                                        if (!doctorsCache[rx.doctor_id]) {
+                                            try {
+                                                const docSnap = await get(ref(db, getDataPath(`users/${rx.doctor_id}`)));
+                                                doctorsCache[rx.doctor_id] = docSnap.exists() ? (docSnap.val().name || 'طبيب') : 'طبيب';
+                                            } catch(e) { doctorsCache[rx.doctor_id] = 'طبيب'; }
                                         }
-                                    } else {
-                                        doctorDisplayName = null; // مجمع آخر
+                                        doctorDisplayName = doctorsCache[rx.doctor_id];
                                     }
                                     
                                     allPrescriptions.push({
                                         id: child.key,
-                                        tenantId,
                                         data: rx,
                                         items,
-                                        isSameTenant,
                                         doctorDisplayName
                                     });
                                 })());
@@ -711,9 +939,9 @@
                         });
                         
                         await Promise.all(rxPromises);
-                    } catch(e) {
-                        console.warn(`تعذر قراءة وصفات من المجمع ${tenantId}:`, e.message);
                     }
+                } catch(e) {
+                    console.warn('تعذر قراءة وصفات المجمع:', e.message);
                 }
                 
                 // ترتيب الوصفات من الأحدث للأقدم
@@ -721,6 +949,7 @@
                 
                 // بناء HTML العرض
                 const totalRx = allPrescriptions.length;
+                const tenantName = $('#tenantName')?.textContent || 'المجمع الطبي';
                 
                 let html = `
                     <div style="margin-bottom:20px;">
@@ -728,16 +957,16 @@
                             <i class="fas fa-user-circle" style="color:var(--primary);font-size:1.3rem;"></i>
                             ${esc(displayName)}
                             <span style="font-size:0.75rem;color:var(--text-sec);font-weight:400;">
-                                · ${totalRx} وصفة (كل المجمعات)
+                                · ${totalRx} وصفة
                             </span>
                         </h4>
                         <div style="font-size:0.75rem;color:var(--text-sec);margin-top:6px;">
-                            🏥 السجل موحد من كل الفروع | 👨‍⚕️ اسم الدكتور يظهر فقط من نفس المجمع
+                            🏥 ${esc(tenantName)} | 📋 السجل من هذا المجمع فقط
                         </div>
                     </div>`;
                 
                 if (totalRx === 0) {
-                    html += '<div class="empty-state"><i class="fas fa-file-medical-alt"></i><p>لا توجد وصفات مسجلة لهذا المريض</p></div>';
+                    html += '<div class="empty-state"><i class="fas fa-file-medical-alt"></i><p>لا توجد وصفات مسجلة لهذا المريض في هذا المجمع</p></div>';
                 } else {
                     const formLabels = {
                         'tablet': 'أقراص', 'capsule': 'كبسولات', 'syrup': 'شراب',
@@ -768,9 +997,9 @@
                             statusBadge = '<span class="prescription-status-badge status-pending-rx">⏳ لم تصرف</span>';
                         }
                         
-                        const doctorInfo = r.isSameTenant && r.doctorDisplayName
+                        const doctorInfo = r.doctorDisplayName
                             ? `<span style="color:var(--primary-dark);font-weight:600;">👨‍⚕️ د. ${esc(r.doctorDisplayName)}</span>`
-                            : `<span style="color:var(--text-sec);font-style:italic;">👨‍⚕️ مجمع آخر</span>`;
+                            : `<span style="color:var(--text-sec);">👨‍⚕️ طبيب</span>`;
                         
                         let drugsHtml = '';
                         if (r.items && r.items.length > 0) {
@@ -801,13 +1030,9 @@
                                             ${diagnosisPreview}
                                         </div>
                                     </div>
-                                    ${r.isSameTenant ? `
-                                    <button class="btn btn-info btn-sm view-rx-btn" data-rx-id="${r.id}" data-tenant="${r.tenantId}" style="white-space:nowrap;">
+                                    <button class="btn btn-info btn-sm view-rx-btn" data-rx-id="${r.id}" style="white-space:nowrap;">
                                         <i class="fas fa-external-link-alt"></i> عرض
                                     </button>
-                                    ` : `
-                                    <span style="font-size:0.7rem;color:var(--text-sec);">🔒 للعرض فقط</span>
-                                    `}
                                 </div>
                                 ${drugsHtml}
                             </div>
@@ -821,11 +1046,10 @@
                 content.querySelectorAll('.view-rx-btn').forEach(btn => {
                     btn.addEventListener('click', () => {
                         const rxId = btn.dataset.rxId;
-                        const rxTenant = btn.dataset.tenant;
                         // بناء رابط جديد بنفس الصفحة مع معرف الوصفة والمجمع
                         const url = new URL(window.location.href);
                         url.searchParams.set('id', rxId);
-                        url.searchParams.set('tenant', rxTenant);
+                        url.searchParams.set('tenant', currentTenantId);
                         window.location.href = url.toString();
                     });
                 });
@@ -1296,9 +1520,9 @@
             await loadPrescription();
         });
 
-        console.log('🚀 صفحة تفاصيل الروشتة - سجل مريض مدمج');
+        console.log('🚀 صفحة تفاصيل الروشتة - سجل مريض للمجمع الحالي فقط');
         console.log('📂 سجل المريض يُعرض داخل مودال بنفس الصفحة');
-        console.log('🏥 السجل موحد من كل المجمعات مع خصوصية الدكاترة');
+        console.log('🏥 السجل يعرض فقط وصفات المجمع الحالي وليس كل المجمعات');
     </script>
 </body>
 </html>
