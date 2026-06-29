@@ -1,13 +1,21 @@
 // firebase-config.js
 // إعدادات Firebase لمشروع "شفاء"
 
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
+import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-analytics.js";
+import { getDatabase } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-database.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-auth.js";
+import { getStorage } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-storage.js";
+
+// إعدادات Firebase
 export const firebaseConfig = {
-    apiKey: "AIzaSyBwU26WBqYZ728pV4sBdQa09OOpP4GYMsE",
-    authDomain: "shifa-51011.firebaseapp.com",
-    databaseURL: "https://shifa-51011-default-rtdb.europe-west1.firebasedatabase.app",
-    projectId: "shifa-51011",
-    storageBucket: "shifa-51011.firebasestorage.app",
-    messagingSenderId: "184548486784",
-    appId: "1:184548486784:web:c9941b183af58b9eca8065",
-    measurementId: "G-1NJH9YQT4G"
+    apiKey: "AIzaSyAfYqB_0OcQcnYvxP6C0J4cuViY6EmLE8U",
+    authDomain: "fast-sokon.firebaseapp.com",
+    databaseURL: "https://fast-sokon-default-rtdb.firebaseio.com",
+    projectId: "fast-sokon",
+    storageBucket: "fast-sokon.firebasestorage.app",
+    messagingSenderId: "45959507911",
+    appId: "1:45959507911:web:e78de78f4a928062dff3e2",
+    measurementId: "G-2R52W7Q4CE"
 };
+
