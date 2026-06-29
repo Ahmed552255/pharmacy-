@@ -398,28 +398,56 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         
-        // ✅ تم التغيير من Realtime Database إلى Firestore
         import { 
             getFirestore, 
-            collection, 
             doc, 
             setDoc, 
             updateDoc, 
             deleteDoc, 
-            getDoc, 
-            getDocs
+            getDoc
         } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
+        // ============ تهيئة Firebase ============
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
-        const db = getFirestore(app); // ✅ استخدام Firestore
+        const db = getFirestore(app);
 
-        // ============ ثوابت التخزين المحلي ============
+        // ============ ✅ استخراج المجمع (نفس آلية الطبيب والممرض والصيدلي) ============
         const LOGIN_STORAGE_KEYS = ['shifa_session', 'shifa_remember', 'shifa_last_login', 'shifa_secure_session'];
 
         const urlParams = new URLSearchParams(window.location.search);
+        let currentTenantId = urlParams.get('tenant');
+        
+        if (!currentTenantId) {
+            try {
+                const encrypted = localStorage.getItem('shifa_secure_session');
+                if (encrypted) {
+                    const decoded = atob(encrypted);
+                    const match = decoded.match(/"tenantId":"([^"]+)"/);
+                    if (match) {
+                        currentTenantId = match[1];
+                        console.log(`📦 تم استخراج معرف المجمع من الجلسة المشفرة: ${currentTenantId}`);
+                    }
+                }
+            } catch (e) {
+                console.warn('تعذر فك تشفير الجلسة:', e.message);
+            }
+        }
+        
+        if (!currentTenantId) {
+            const oldSession = localStorage.getItem('shifa_session');
+            if (oldSession) {
+                try {
+                    const parsed = JSON.parse(oldSession);
+                    currentTenantId = parsed.tenantId;
+                    if (currentTenantId) {
+                        console.log(`📦 تم استخراج معرف المجمع من الجلسة القديمة: ${currentTenantId}`);
+                    }
+                } catch (e) {}
+            }
+        }
+
         const prescriptionId = urlParams.get('id');
-        const currentTenantId = urlParams.get('tenant');
         const patientIdFromUrl = urlParams.get('patientId');
         const patientNameFromUrl = urlParams.get('patientName');
         const doctorIdFromUrl = urlParams.get('doctorId');
@@ -428,16 +456,25 @@
         let pharmacistData = null;
         let isPharmacist = false;
 
+        // ============ دوال مساعدة ============
         const $ = (sel) => document.querySelector(sel);
-        const esc = (s) => { if (!s) return ''; const div = document.createElement('div'); div.textContent = String(s); return div.innerHTML; };
+        const esc = (s) => { 
+            if (!s) return ''; 
+            const div = document.createElement('div'); 
+            div.textContent = String(s); 
+            return div.innerHTML; 
+        };
         
-        const toast = (msg, err=false) => {
+        const toast = (msg, err = false) => {
             const container = $('#toastContainer');
             const t = document.createElement('div');
-            t.className = `toast ${err?'err':''}`;
-            t.innerHTML = `<i class="fas ${err?'fa-exclamation-circle':'fa-check-circle'}"></i> ${msg}`;
+            t.className = `toast ${err ? 'err' : ''}`;
+            t.innerHTML = `<i class="fas ${err ? 'fa-exclamation-circle' : 'fa-check-circle'}"></i> ${msg}`;
             container.appendChild(t);
-            setTimeout(() => { t.classList.add('removing'); setTimeout(() => t.remove(), 300); }, 2500);
+            setTimeout(() => { 
+                t.classList.add('removing'); 
+                setTimeout(() => t.remove(), 300); 
+            }, 2500);
         };
 
         const clearLoginSessionOnly = () => {
@@ -445,47 +482,41 @@
                 LOGIN_STORAGE_KEYS.forEach(key => localStorage.removeItem(key));
                 for (let i = 0; i < localStorage.length; i++) {
                     const key = localStorage.key(i);
-                    if (key && (key.startsWith('shifa_session') || key.startsWith('shifa_secure'))) localStorage.removeItem(key);
+                    if (key && (key.startsWith('shifa_session') || key.startsWith('shifa_secure'))) {
+                        localStorage.removeItem(key);
+                    }
                 }
                 sessionStorage.clear();
-            } catch (e) { console.warn('تعذر مسح بيانات الجلسة:', e.message); }
+                console.log('✅ تم مسح بيانات الجلسة');
+            } catch (e) { 
+                console.warn('تعذر مسح بيانات الجلسة:', e.message); 
+            }
         };
 
         const setSyncStatus = (online) => {
             const dot = $('#syncDot');
-            if (dot) { dot.className = `sync-dot ${online?'on':'off'}`; dot.title = online ? 'متصل بالسحابة' : 'غير متصل'; }
+            if (dot) { 
+                dot.className = `sync-dot ${online ? 'on' : 'off'}`; 
+                dot.title = online ? 'متصل بالسحابة' : 'غير متصل'; 
+            }
         };
 
-        // ✅ دالة مساعدة: جلب المستند من المسار الصحيح (المجمع أو العام)
-        async function getDocSafe(collectionPath, docId) {
-            // نحاول المسار مع المجمع أولاً
-            if (currentTenantId) {
-                const docRef = doc(db, 'tenants', currentTenantId, collectionPath, docId);
-                const snap = await getDoc(docRef);
-                if (snap.exists()) return snap;
-            }
-            // نحاول المسار العام
-            const docRef = doc(db, collectionPath, docId);
-            return await getDoc(docRef);
-        }
-
-        // ============ ✅ تحميل ملاحظات الصيدلي من Firestore ============
+        // ============ ✅ دوال Firestore (مسار موحد - المجمع فقط) ============
+        
+        // ✅ تحميل ملاحظات الصيدلي
         async function loadPharmacistNotes(prescriptionId) {
             if (!currentTenantId || !currentUser) return '';
             try {
                 const noteDocRef = doc(db, 'tenants', currentTenantId, 'pharmacist_notes', currentUser.uid, 'notes', prescriptionId);
                 const snap = await getDoc(noteDocRef);
-                if (snap.exists()) {
-                    return snap.data().note || '';
-                }
-                return '';
+                return snap.exists() ? (snap.data().note || '') : '';
             } catch (e) {
                 console.warn('تعذر تحميل الملاحظات:', e.message);
                 return '';
             }
         }
 
-        // ============ ✅ حفظ ملاحظات الصيدلي في Firestore ============
+        // ✅ حفظ ملاحظات الصيدلي
         async function savePharmacistNotes(prescriptionId, note) {
             if (!currentTenantId || !currentUser) return;
             try {
@@ -500,7 +531,7 @@
             }
         }
 
-        // ============ ✅ حذف ملاحظات الصيدلي من Firestore ============
+        // ✅ حذف ملاحظات الصيدلي
         async function deletePharmacistNotes(prescriptionId) {
             if (!currentTenantId || !currentUser) return;
             try {
@@ -511,25 +542,33 @@
             }
         }
 
+        // ============ ✅ تحميل الروشتة (مسار موحد - المجمع فقط) ============
         async function loadPrescription() {
             if (!prescriptionId) {
                 showErrorState('معرف الروشتة غير موجود');
                 return;
             }
 
+            if (!currentTenantId) {
+                showErrorState('معرف المجمع غير موجود - تأكد من فتح الرابط بشكل صحيح');
+                return;
+            }
+
             try {
-                // ✅ جلب الروشتة من Firestore
-                const presSnap = await getDocSafe('prescriptions', prescriptionId);
+                // ✅ جلب الروشتة من المجمع فقط
+                const rxDocRef = doc(db, 'tenants', currentTenantId, 'prescriptions', prescriptionId);
+                const presSnap = await getDoc(rxDocRef);
                 
                 if (!presSnap.exists()) { 
-                    showErrorState('الروشتة غير موجودة'); 
+                    showErrorState('الروشتة غير موجودة في هذا المجمع'); 
                     return; 
                 }
                 
                 const rx = { id: prescriptionId, ...presSnap.data() };
 
-                // ✅ جلب عناصر الروشتة من Firestore
-                const itemsSnap = await getDocSafe('prescription_items', prescriptionId);
+                // ✅ جلب عناصر الروشتة من المجمع فقط
+                const itemsDocRef = doc(db, 'tenants', currentTenantId, 'prescription_items', prescriptionId);
+                const itemsSnap = await getDoc(itemsDocRef);
                 
                 let items = [];
                 if (itemsSnap.exists()) {
@@ -542,40 +581,56 @@
                     }));
                 }
 
+                // ✅ جلب بيانات الطبيب من المجمع فقط
                 const doctorId = rx.doctor_id || doctorIdFromUrl;
                 let doctorName = '';
                 let doctorSpecialty = '';
                 
                 if (doctorId) {
                     try {
-                        const doctorSnap = await getDocSafe('users', doctorId);
+                        const doctorDocRef = doc(db, 'tenants', currentTenantId, 'users', doctorId);
+                        const doctorSnap = await getDoc(doctorDocRef);
                         if (doctorSnap.exists()) {
                             const doctorData = doctorSnap.data();
                             doctorName = doctorData.name || '';
                             doctorSpecialty = doctorData.specialty || '';
                         }
-                    } catch(e) { console.warn('تعذر جلب بيانات الطبيب:', e); }
+                    } catch(e) { 
+                        console.warn('تعذر جلب بيانات الطبيب:', e.message); 
+                    }
                 }
 
+                // ✅ جلب بيانات المريض من المجمع فقط
                 const patientId = rx.patient_id || patientIdFromUrl;
                 let patientName = patientNameFromUrl || rx.patient_name || 'غير معروف';
                 let patientPhone = rx.patient_phone || '';
                 
                 if (patientId && (!patientName || patientName === 'غير معروف')) {
                     try {
-                        const patientSnap = await getDocSafe('patients', patientId);
+                        const patientDocRef = doc(db, 'tenants', currentTenantId, 'patients', patientId);
+                        const patientSnap = await getDoc(patientDocRef);
                         if (patientSnap.exists()) {
                             const patientData = patientSnap.data();
                             patientName = patientData.name || patientName;
                             patientPhone = patientData.phone || patientPhone;
                         }
-                    } catch(e) { console.warn('تعذر جلب بيانات المريض:', e); }
+                    } catch(e) { 
+                        console.warn('تعذر جلب بيانات المريض:', e.message); 
+                    }
                 }
 
-                const dateStr = rx.created_at ? new Date(rx.created_at).toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' }) : '—';
-                const timeStr = rx.created_at ? new Date(rx.created_at).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }) : '';
+                const dateStr = rx.created_at 
+                    ? new Date(rx.created_at).toLocaleDateString('ar-EG', { 
+                        year: 'numeric', month: 'long', day: 'numeric' 
+                      }) 
+                    : '—';
+                const timeStr = rx.created_at 
+                    ? new Date(rx.created_at).toLocaleTimeString('ar-EG', { 
+                        hour: '2-digit', minute: '2-digit' 
+                      }) 
+                    : '';
 
-                // ✅ تحميل ملاحظات الصيدلي من Firestore
+                // ✅ تحميل ملاحظات الصيدلي من المجمع
                 const savedNotes = await loadPharmacistNotes(prescriptionId);
 
                 const data = {
@@ -648,7 +703,7 @@
                         <div>
                             <strong>تم صرف الروشتة</strong>
                             <div style="font-size:0.82rem;margin-top:4px;">
-                                الصيدلي: ${esc(data.pharmacist_name||'')} · 
+                                الصيدلي: ${esc(data.pharmacist_name || '')} · 
                                 ${data.dispensed_at ? new Date(data.dispensed_at).toLocaleString('ar-EG', {dateStyle:'medium',timeStyle:'short'}) : ''}
                             </div>
                         </div>
@@ -672,14 +727,11 @@
                     <div style="margin-bottom:12px;">
                         <label style="display:block;font-weight:700;margin-bottom:6px;font-size:0.85rem;">
                             <i class="fas fa-pen" style="color:var(--warning);margin-left:4px;"></i>
-                            ملاحظات الصيدلي <small style="font-weight:400;color:var(--text-sec);">(اختياري - تخزين سحابي)</small>
+                            ملاحظات الصيدلي <small style="font-weight:400;color:var(--text-sec);">(اختياري)</small>
                         </label>
                         <textarea id="pharmacistNotes" class="form-control" 
                             placeholder="مثال: تحذيرات، تعليمات إضافية للمريض، بدائل الأدوية..."
                             style="min-height:60px;">${esc(data._savedNotes || '')}</textarea>
-                        <div style="font-size:0.7rem;color:var(--text-sec);margin-top:4px;">
-                            هذه الملاحظات ستحفظ في السحابة وتظهر مع الروشتة
-                        </div>
                     </div>
                     
                     <p style="color:var(--text-sec);margin-bottom:12px;font-size:0.83rem;">
@@ -702,7 +754,7 @@
                         <i class="fas fa-user"></i>
                         <div>
                             <strong>المريض</strong>
-                            <span class="clickable" id="patientNameLink" data-patient-id="${esc(data._patientId||'')}" data-patient-name="${esc(data._patientName)}">
+                            <span class="clickable" id="patientNameLink" data-patient-id="${esc(data._patientId || '')}" data-patient-name="${esc(data._patientName)}">
                                 ${esc(data._patientName)}
                             </span>
                         </div>
@@ -758,7 +810,10 @@
 
             $('#dynamicContent').innerHTML = html;
 
+            // زر الطباعة
             $('#printBtn')?.addEventListener('click', () => window.print());
+            
+            // زر العودة
             $('#backBtn')?.addEventListener('click', () => {
                 if (document.referrer && document.referrer.includes(window.location.host)) {
                     window.history.back();
@@ -767,20 +822,26 @@
                 }
             });
 
+            // زر ملف المريض
             $('#patientFileBtn')?.addEventListener('click', () => {
                 const pid = data._patientId;
-                if (pid) window.open(`patient-file.html?patientId=${pid}&patientName=${encodeURIComponent(data._patientName)}&tenant=${currentTenantId||''}`, '_blank');
+                if (pid) {
+                    window.open(`patient-file.html?patientId=${pid}&patientName=${encodeURIComponent(data._patientName)}&tenant=${currentTenantId}`, '_blank');
+                }
             });
 
+            // رابط اسم المريض
             const patientNameLink = document.getElementById('patientNameLink');
             if (patientNameLink) {
                 patientNameLink.addEventListener('click', () => {
                     const pid = patientNameLink.dataset.patientId;
-                    if (pid) window.open(`patient-file.html?patientId=${pid}&patientName=${encodeURIComponent(data._patientName)}&tenant=${currentTenantId||''}`, '_blank');
+                    if (pid) {
+                        window.open(`patient-file.html?patientId=${pid}&patientName=${encodeURIComponent(data._patientName)}&tenant=${currentTenantId}`, '_blank');
+                    }
                 });
             }
 
-            // ✅ زر الصرف مع حفظ الملاحظات في Firestore
+            // ✅ زر الصرف (مسار موحد - المجمع فقط)
             const dispenseBtn = $('#dispenseBtn');
             if (dispenseBtn) {
                 dispenseBtn.addEventListener('click', async () => {
@@ -792,7 +853,7 @@
                     try {
                         const notes = $('#pharmacistNotes')?.value?.trim() || '';
                         
-                        // ✅ حفظ الملاحظات في Firestore
+                        // حفظ الملاحظات في المجمع
                         if (notes) {
                             await savePharmacistNotes(prescriptionId, notes);
                         } else {
@@ -807,14 +868,9 @@
                             dispensed_at: new Date().toISOString()
                         };
                         
-                        // ✅ تحديث الروشتة في Firestore
-                        if (currentTenantId) {
-                            const rxDocRef = doc(db, 'tenants', currentTenantId, 'prescriptions', prescriptionId);
-                            await updateDoc(rxDocRef, updateData);
-                        } else {
-                            const rxDocRef = doc(db, 'prescriptions', prescriptionId);
-                            await updateDoc(rxDocRef, updateData);
-                        }
+                        // ✅ تحديث الروشتة في المجمع فقط
+                        const rxDocRef = doc(db, 'tenants', currentTenantId, 'prescriptions', prescriptionId);
+                        await updateDoc(rxDocRef, updateData);
                         
                         toast('✅ تم صرف الروشتة بنجاح');
                         setTimeout(() => window.location.reload(), 1200);
@@ -827,7 +883,7 @@
                 });
             }
 
-            // ✅ زر إلغاء الصرف
+            // ✅ زر إلغاء الصرف (مسار موحد - المجمع فقط)
             const undoDispenseBtn = $('#undoDispenseBtn');
             if (undoDispenseBtn) {
                 undoDispenseBtn.addEventListener('click', async () => {
@@ -837,7 +893,7 @@
                     undoDispenseBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإلغاء...';
                     
                     try {
-                        // ✅ حذف الملاحظات من Firestore
+                        // حذف الملاحظات من المجمع
                         await deletePharmacistNotes(prescriptionId);
                         
                         const updateData = {
@@ -848,14 +904,9 @@
                             dispensed_at: null
                         };
                         
-                        // ✅ تحديث الروشتة في Firestore
-                        if (currentTenantId) {
-                            const rxDocRef = doc(db, 'tenants', currentTenantId, 'prescriptions', prescriptionId);
-                            await updateDoc(rxDocRef, updateData);
-                        } else {
-                            const rxDocRef = doc(db, 'prescriptions', prescriptionId);
-                            await updateDoc(rxDocRef, updateData);
-                        }
+                        // ✅ تحديث الروشتة في المجمع فقط
+                        const rxDocRef = doc(db, 'tenants', currentTenantId, 'prescriptions', prescriptionId);
+                        await updateDoc(rxDocRef, updateData);
                         
                         toast('✅ تم إلغاء صرف الروشتة');
                         setTimeout(() => window.location.reload(), 1200);
@@ -872,6 +923,7 @@
             $('#mainContent').style.display = 'block';
         }
 
+        // ============ إعداد تسجيل الخروج ============
         const setupLogout = () => {
             const logoutBtn = $('#logoutBtn');
             if (logoutBtn) {
@@ -890,48 +942,56 @@
             }
         };
 
+        // ============ مستمعي الاتصال ============
         window.addEventListener('online', () => setSyncStatus(true));
         window.addEventListener('offline', () => setSyncStatus(false));
 
-        // ✅ تم تعديل onAuthStateChanged لـ Firestore
+        // ============ ✅ بدء التشغيل ============
         onAuthStateChanged(auth, async (user) => {
-            if (!user) { clearLoginSessionOnly(); window.location.href = 'index.html'; return; }
+            if (!user) { 
+                clearLoginSessionOnly(); 
+                window.location.href = 'index.html'; 
+                return; 
+            }
             
             currentUser = user;
             
-            try {
-                let userSnap = null;
-                if (currentTenantId) {
+            // ✅ التحقق من بيانات المستخدم في المجمع
+            if (currentTenantId) {
+                try {
                     const userDocRef = doc(db, 'tenants', currentTenantId, 'users', user.uid);
-                    userSnap = await getDoc(userDocRef);
-                    if (!userSnap.exists()) {
-                        const publicDocRef = doc(db, 'users', user.uid);
-                        userSnap = await getDoc(publicDocRef);
+                    const userSnap = await getDoc(userDocRef);
+                    
+                    if (userSnap.exists()) {
+                        const userData = userSnap.data();
+                        
+                        if (userData.tenantName && $('#tenantName')) {
+                            $('#tenantName').textContent = userData.tenantName;
+                            $('#tenantBadge').style.display = 'flex';
+                        }
+                        
+                        if (userData.role === 'pharmacist') {
+                            isPharmacist = true;
+                            pharmacistData = { id: user.uid, ...userData };
+                            setupLogout();
+                        }
                     }
-                } else {
-                    const publicDocRef = doc(db, 'users', user.uid);
-                    userSnap = await getDoc(publicDocRef);
+                } catch(e) { 
+                    console.warn('تعذر التحقق من بيانات المستخدم:', e.message); 
                 }
-                
-                if (userSnap.exists()) {
-                    const userData = userSnap.data();
-                    if (userData.tenantName && $('#tenantName')) {
-                        $('#tenantName').textContent = userData.tenantName;
-                        $('#tenantBadge').style.display = 'flex';
-                    }
-                    if (userData.role === 'pharmacist') {
-                        isPharmacist = true;
-                        pharmacistData = { id: user.uid, ...userData };
-                        setupLogout();
-                    }
-                }
-            } catch(e) { console.warn('تعذر التحقق من بيانات المستخدم:', e); }
+            }
             
             await loadPrescription();
         });
 
-        console.log('🚀 صفحة تفاصيل الروشتة - Firestore');
-        console.log('☁️ ملاحظات الصيدلي تحفظ في Firestore بدلاً من Realtime Database');
+        console.log('🚀 صفحة تفاصيل الروشتة - مسارات موحدة');
+        console.log('✅ المجمع: من URL → مشفر → قديم');
+        console.log('✅ الروشتة: /tenants/{tenantId}/prescriptions/{rxId}');
+        console.log('✅ عناصر الروشتة: /tenants/{tenantId}/prescription_items/{rxId}');
+        console.log('✅ المريض: /tenants/{tenantId}/patients/{patientId}');
+        console.log('✅ الطبيب: /tenants/{tenantId}/users/{doctorId}');
+        console.log('✅ ملاحظات الصيدلي: /tenants/{tenantId}/pharmacist_notes/{uid}/notes/{rxId}');
+        console.log('☁️ جميع البيانات من المجمع فقط - بدون مسارات عامة');
     </script>
 </body>
 </html>
