@@ -831,7 +831,24 @@
         // ============ ثوابت التخزين المحلي للجلسة ============
         const SESSION_STORAGE_KEY = 'shifa_firestore_session_v2';
         const TENANT_PREFIX_KEY = 'shifa_tenant_id';
+        const USER_ROLE_KEY = 'shifa_user_role';
         const SESSION_MAX_AGE = 24 * 60 * 60 * 1000; // 24 ساعة
+
+        // ============ صفحات الأدوار ============
+        const ROLE_PAGES = {
+            'admin': 'admin-panel.html',
+            'doctor': 'doctor-dashboard.html',
+            'nurse': 'nurse-dashboard.html',
+            'pharmacist': 'pharmacist-dashboard.html'
+        };
+
+        // ============ أسماء الأدوار بالعربية ============
+        const ROLE_NAMES = {
+            'admin': 'مدير النظام',
+            'doctor': 'طبيب',
+            'nurse': 'ممرض/ة',
+            'pharmacist': 'صيدلي'
+        };
 
         // ============ تهيئة Firebase ============
         const app = initializeApp(firebaseConfig);
@@ -993,24 +1010,28 @@
 
         dom.passwordInput.addEventListener('input', showLastPasswordChar);
 
-        // ============ إدارة الجلسة المشفرة (متوافقة مع Firestore) ============
+        // ============ إدارة الجلسة المشفرة ============
         const saveEncryptedSession = (userData) => {
             try {
                 const sessionData = {
                     uid: userData.uid,
                     email: userData.email,
                     name: userData.name,
+                    role: userData.role,
                     tenantId: userData.tenantId,
                     timestamp: Date.now(),
-                    version: 'v2'
+                    version: 'v3'
                 };
                 
                 const encrypted = encryptData(sessionData);
                 if (encrypted) {
                     localStorage.setItem(SESSION_STORAGE_KEY, encrypted);
-                    // حفظ معرف المجمع بشكل منفصل للاستخدام السريع
+                    // حفظ بيانات إضافية للاستخدام السريع
                     if (userData.tenantId) {
                         localStorage.setItem(TENANT_PREFIX_KEY, userData.tenantId);
+                    }
+                    if (userData.role) {
+                        localStorage.setItem(USER_ROLE_KEY, userData.role);
                     }
                     return true;
                 }
@@ -1027,7 +1048,7 @@
                 if (!encrypted) return null;
                 
                 const session = decryptData(encrypted);
-                if (!session || !session.uid || session.version !== 'v2') {
+                if (!session || !session.uid || !session.version) {
                     clearSession();
                     return null;
                 }
@@ -1050,6 +1071,7 @@
             try {
                 localStorage.removeItem(SESSION_STORAGE_KEY);
                 localStorage.removeItem(TENANT_PREFIX_KEY);
+                localStorage.removeItem(USER_ROLE_KEY);
             } catch (error) {
                 console.error('خطأ في مسح الجلسة:', error);
             }
@@ -1183,55 +1205,93 @@
         dom.togglePasswordBtn.addEventListener('touchend', endLongPress);
         dom.togglePasswordBtn.addEventListener('touchcancel', endLongPress);
 
-        // ============ التحقق من بيانات المستخدم في Firestore ============
-        const getUserDataFromFirestore = async (uid) => {
-            try {
-                // البحث في tenants/{uid}/users/{uid}
-                const tenantUserDoc = doc(db, 'tenants', uid, 'users', uid);
-                const tenantUserSnap = await getDoc(tenantUserDoc);
-                
-                if (tenantUserSnap.exists()) {
-                    return {
-                        ...tenantUserSnap.data(),
-                        uid: uid,
-                        tenantId: uid,
-                        source: 'tenant'
-                    };
+        // ============ ✅ البحث عن المستخدم في Firestore وتحديد دوره ============
+        const findUserInFirestore = async (uid) => {
+            const searchPaths = [
+                // 1. البحث في tenants/{tenantId}/users/{uid}
+                { collection: 'tenants', useDynamicTenant: true },
+                // 2. البحث في users/{uid} (المسار القديم)
+                { collection: 'users', useDynamicTenant: false }
+            ];
+
+            for (const pathConfig of searchPaths) {
+                try {
+                    if (pathConfig.useDynamicTenant) {
+                        // البحث في كل المجمعات المحتملة
+                        const possibleTenants = [
+                            uid, // المجمع الخاص به
+                            localStorage.getItem(TENANT_PREFIX_KEY), // المجمع المحفوظ
+                            '4RROMWEh48MuINo4PtijRixhyEq2' // المجمع الافتراضي
+                        ].filter(Boolean);
+
+                        for (const tenantId of [...new Set(possibleTenants)]) {
+                            const userDoc = doc(db, pathConfig.collection, tenantId, 'users', uid);
+                            const userSnap = await getDoc(userDoc);
+                            
+                            if (userSnap.exists()) {
+                                const userData = userSnap.data();
+                                console.log(`✅ تم العثور على المستخدم في ${pathConfig.collection}/${tenantId}/users/${uid}`);
+                                return {
+                                    ...userData,
+                                    uid: uid,
+                                    tenantId: tenantId,
+                                    role: userData.role || 'doctor' // دور افتراضي
+                                };
+                            }
+                        }
+                    } else {
+                        const userDoc = doc(db, pathConfig.collection, uid);
+                        const userSnap = await getDoc(userDoc);
+                        
+                        if (userSnap.exists()) {
+                            const userData = userSnap.data();
+                            console.log(`✅ تم العثور على المستخدم في ${pathConfig.collection}/${uid}`);
+                            return {
+                                ...userData,
+                                uid: uid,
+                                tenantId: userData.tenantId || uid,
+                                role: userData.role || 'doctor'
+                            };
+                        }
+                    }
+                } catch (error) {
+                    console.warn(`⚠️ خطأ في البحث في ${pathConfig.collection}:`, error.message);
                 }
-                
-                // البحث في المسار القديم users/{uid}
-                const userDoc = doc(db, 'users', uid);
-                const userSnap = await getDoc(userDoc);
-                
-                if (userSnap.exists()) {
-                    return {
-                        ...userSnap.data(),
-                        uid: uid,
-                        tenantId: uid,
-                        source: 'users'
-                    };
-                }
-                
-                return null;
-            } catch (error) {
-                console.error('خطأ في جلب بيانات المستخدم من Firestore:', error);
-                return null;
             }
+
+            return null;
         };
 
-        // ============ توجيه المستخدم للوحة التحكم ============
-        const redirectToDashboard = (userData) => {
-            const displayName = userData.name || userData.email?.split('@')[0] || 'مستخدم';
-            showToast(`👋 مرحباً ${displayName}!`, 'success');
+        // ============ ✅ توجيه المستخدم حسب دوره ============
+        const redirectByRole = (userData) => {
+            const role = userData.role || 'doctor';
+            const roleName = ROLE_NAMES[role] || 'مستخدم';
+            const targetPage = ROLE_PAGES[role];
             
-            const tenantId = userData.tenantId || userData.uid;
+            console.log(`🎯 توجيه ${roleName} إلى ${targetPage}`);
             
-            // حفظ معرف المجمع للاستخدام في الصفحات الأخرى
-            localStorage.setItem('shifa_current_tenant', tenantId);
+            // رسالة ترحيب مخصصة حسب الدور
+            const welcomeMessages = {
+                'admin': `👋 مرحباً مدير النظام ${userData.name}!`,
+                'doctor': `👨‍⚕️ مرحباً دكتور ${userData.name}!`,
+                'nurse': `👩‍⚕️ مرحباً ${userData.name}!`,
+                'pharmacist': `💊 مرحباً دكتور ${userData.name}!`
+            };
+            
+            showToast(welcomeMessages[role] || `👋 مرحباً ${userData.name}!`, 'success');
+            
+            // حفظ بيانات إضافية للاستخدام في الصفحات
+            localStorage.setItem('shifa_current_tenant', userData.tenantId);
+            localStorage.setItem('shifa_user_role', role);
+            localStorage.setItem('shifa_user_name', userData.name || '');
             
             setTimeout(() => {
-                // توجيه للوحة الإدارة الجديدة
-                window.location.href = 'admin-panel.html';
+                if (targetPage && targetPage !== window.location.pathname.split('/').pop()) {
+                    window.location.href = targetPage;
+                } else {
+                    // لو نفس الصفحة، نعرض رسالة
+                    showToast(`⚠️ صفحة ${roleName} غير متاحة حالياً`, 'error');
+                }
             }, 800);
         };
 
@@ -1271,42 +1331,55 @@
             setLoading(true);
 
             try {
-                // تسجيل الدخول عبر Firebase Auth
+                // 1. تسجيل الدخول عبر Firebase Auth
                 const userCredential = await signInWithEmailAndPassword(auth, email, password);
                 const user = userCredential.user;
                 
-                // جلب بيانات المستخدم من Firestore
-                const userData = await getUserDataFromFirestore(user.uid);
+                console.log('🔍 البحث عن دور المستخدم في Firestore...');
+                
+                // 2. البحث عن المستخدم في Firestore لتحديد دوره
+                const userData = await findUserInFirestore(user.uid);
                 
                 if (!userData) {
-                    console.warn('⚠️ المستخدم موجود في Auth لكن ليس في Firestore');
-                    // نسمح بالدخول حتى بدون بيانات في Firestore
+                    // ✅ لو المستخدم موجود في Authentication بس مش موجود في Firestore
+                    // معناه إنه مدير (اللي أنشأ الحساب)
+                    console.log('⚠️ المستخدم غير موجود في Firestore - معاملته كمدير');
+                    
+                    const adminData = {
+                        uid: user.uid,
+                        email: email,
+                        name: email.split('@')[0],
+                        role: 'admin',
+                        tenantId: user.uid
+                    };
+                    
+                    // حفظ الجلسة
+                    saveEncryptedSession(adminData);
+                    
+                    // توجيه للوحة الإدارة
+                    redirectByRole(adminData);
+                    return;
                 }
-
-                const displayName = userData?.name || email.split('@')[0];
-                const tenantId = userData?.tenantId || user.uid;
-
-                // حفظ الجلسة المشفرة محلياً
-                const saved = saveEncryptedSession({
+                
+                // 3. المستخدم موجود في Firestore - توجيه حسب دوره
+                const fullUserData = {
                     uid: user.uid,
                     email: email,
-                    name: displayName,
-                    tenantId: tenantId
-                });
-
-                if (!saved) {
-                    console.warn('⚠️ تعذر حفظ الجلسة محلياً');
-                }
-
-                redirectToDashboard({
-                    name: displayName,
-                    email: email,
-                    uid: user.uid,
-                    tenantId: tenantId
-                });
+                    name: userData.name || email.split('@')[0],
+                    role: userData.role || 'doctor',
+                    tenantId: userData.tenantId || user.uid
+                };
+                
+                console.log(`👤 الدور المحدد: ${fullUserData.role}`);
+                
+                // حفظ الجلسة المشفرة
+                saveEncryptedSession(fullUserData);
+                
+                // توجيه المستخدم حسب دوره
+                redirectByRole(fullUserData);
 
             } catch (error) {
-                console.error("خطأ تسجيل الدخول:", error);
+                console.error("❌ خطأ تسجيل الدخول:", error);
                 
                 const errorMessages = {
                     'auth/invalid-credential': '❌ البريد الإلكتروني أو كلمة المرور غير صحيحة',
@@ -1359,15 +1432,15 @@
         const checkSessionAndRedirect = async () => {
             const localSession = getEncryptedSession();
             
-            if (localSession) {
-                console.log('✅ تم العثور على جلسة محلية، جاري التحقق...');
+            if (localSession && localSession.role) {
+                console.log(`✅ جلسة محلية موجودة - الدور: ${localSession.role}`);
                 
                 try {
                     const user = auth.currentUser;
                     
                     if (user && user.uid === localSession.uid) {
                         console.log('✅ الجلسة صالحة، جاري التوجيه...');
-                        redirectToDashboard(localSession);
+                        redirectByRole(localSession);
                         return;
                     }
                 } catch (error) {
@@ -1396,7 +1469,8 @@
 
         // ============ بدء التشغيل ============
         const initApp = async () => {
-            console.log('🚀 نظام شفاء — Firestore + تخزين محلي');
+            console.log('🚀 نظام شفاء — توجيه ذكي حسب الدور');
+            console.log('📋 الأدوار المتاحة:', Object.keys(ROLE_PAGES).join(', '));
             
             detectKeyboard();
             
@@ -1406,8 +1480,8 @@
                     
                     const localSession = getEncryptedSession();
                     
-                    if (localSession && localSession.uid === user.uid) {
-                        redirectToDashboard(localSession);
+                    if (localSession && localSession.uid === user.uid && localSession.role) {
+                        redirectByRole(localSession);
                         return;
                     }
                 }
@@ -1432,4 +1506,4 @@
         initApp();
     </script>
 </body>
-    </html>
+</html>
