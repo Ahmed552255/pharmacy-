@@ -30,7 +30,7 @@
 input, textarea, [contenteditable] { -webkit-user-select: text; user-select: text; }
 
 html {
-    font-size: clamp(13px, 2.5vw, 16px);
+    font-size: 16px;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     scroll-behavior: smooth;
@@ -43,8 +43,8 @@ body {
     color: var(--ink);
     min-height: 100vh;
     min-height: 100dvh;
-    padding: max(4px, 1vw);
-    padding-bottom: calc(max(4px, 1vw) + var(--safe-bottom));
+    padding: 16px;
+    padding-bottom: calc(16px + var(--safe-bottom));
     position: relative;
     overflow-x: hidden;
 }
@@ -58,14 +58,14 @@ body::before {
     z-index: -1;
 }
 
-.container { max-width: min(1300px, 95vw); margin: 0 auto; }
+.container { max-width: 1300px; margin: 0 auto; padding: 0 8px; }
 
 #appLoader {
     position: fixed; inset: 0; background: rgba(250,250,250,0.95); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-    display: flex; align-items: center; justify-content: center; z-index: 3000; flex-direction: column; gap: clamp(12px, 2vw, 16px);
+    display: flex; align-items: center; justify-content: center; z-index: 3000; flex-direction: column; gap: 16px;
 }
 .loader-circle {
-    width: clamp(36px, 8vw, 44px); height: clamp(36px, 8vw, 44px);
+    width: 44px; height: 44px;
     border: 3px solid var(--accent-soft); border-top-color: var(--accent); border-radius: 50%;
     animation: spin 0.7s linear infinite;
 }
@@ -74,18 +74,18 @@ body::before {
 .app-header {
     display: flex; align-items: center; justify-content: space-between;
     background: rgba(255,255,255,0.85); backdrop-filter: blur(16px) saturate(180%); -webkit-backdrop-filter: blur(16px) saturate(180%);
-    border-radius: var(--radius-xl); padding: clamp(6px, 1.5vw, 8px) clamp(10px, 3vw, 16px); margin-bottom: clamp(8px, 2vw, 12px);
-    border: 1px solid rgba(255,255,255,0.9); box-shadow: var(--shadow-sm); flex-wrap: wrap; gap: clamp(4px, 1.5vw, 8px);
-    position: sticky; top: max(4px, 1vw); z-index: 100;
+    border-radius: var(--radius-xl); padding: 8px 16px; margin-bottom: 12px;
+    border: 1px solid rgba(255,255,255,0.9); box-shadow: var(--shadow-sm); flex-wrap: wrap; gap: 8px;
+    position: sticky; top: 8px; z-index: 100;
 }
-.logo { display: flex; align-items: center; gap: clamp(4px, 1.5vw, 8px); flex-shrink: 0; }
-.logo h2 { font-size: clamp(1.1rem, 4vw, 1.4rem); font-weight: 900; background: linear-gradient(135deg, #008080, #00AEEF); -webkit-background-clip: text; background-clip: text; color: transparent; white-space: nowrap; }
+.logo { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.logo h2 { font-size: 1.4rem; font-weight: 900; background: linear-gradient(135deg, #008080, #00AEEF); -webkit-background-clip: text; background-clip: text; color: transparent; white-space: nowrap; }
 
 .tenant-badge {
     background: var(--primary-light);
-    padding: 4px 10px;
+    padding: 6px 12px;
     border-radius: var(--radius-xl);
-    font-size: 0.72rem;
+    font-size: 0.8rem;
     font-weight: 600;
     color: var(--primary-dark);
     display: flex;
@@ -95,181 +95,183 @@ body::before {
 }
 
 .queue-tabs {
-    display: flex; gap: 4px; background: rgba(0,0,0,0.03); border-radius: var(--radius-xl); padding: 3px;
-    margin-bottom: clamp(8px, 2vw, 12px);
+    display: flex; gap: 6px; background: rgba(0,0,0,0.03); border-radius: var(--radius-xl); padding: 4px;
+    margin-bottom: 12px;
 }
 .queue-tab {
-    padding: 6px 12px; border-radius: var(--radius-xl); border: none; cursor: pointer;
-    font-family: 'Cairo', sans-serif; font-weight: 700; font-size: 0.78rem; transition: all var(--transition);
+    padding: 10px 16px; border-radius: var(--radius-xl); border: none; cursor: pointer;
+    font-family: 'Cairo', sans-serif; font-weight: 700; font-size: 0.85rem; transition: all var(--transition);
     background: transparent; color: var(--text-sec); white-space: nowrap; position: relative;
     touch-action: manipulation; flex: 1; text-align: center;
 }
 .queue-tab.active { background: white; color: var(--accent); box-shadow: var(--shadow-xs); }
 .queue-tab .tab-count {
     display: inline-block; background: var(--primary-light); color: var(--accent); border-radius: 10px;
-    padding: 1px 7px; font-size: 0.7rem; margin-right: 4px; font-weight: 800;
+    padding: 2px 8px; font-size: 0.75rem; margin-right: 4px; font-weight: 800;
 }
 .queue-tab.active .tab-count { background: var(--accent); color: white; }
 
-.header-actions { display: flex; gap: clamp(4px, 1vw, 6px); align-items: center; flex-wrap: wrap; }
+.header-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 
 .btn {
-    padding: clamp(6px, 1.5vw, 8px) clamp(10px, 3vw, 16px); border-radius: var(--radius-xl); border: none;
+    padding: 10px 20px; border-radius: var(--radius-xl); border: none;
     font-weight: 700; font-family: 'Cairo', system-ui, sans-serif; cursor: pointer;
-    display: inline-flex; align-items: center; gap: clamp(4px, 1vw, 6px);
-    font-size: clamp(0.75rem, 2.2vw, 0.85rem); transition: all var(--transition);
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    font-size: 0.9rem; transition: all var(--transition);
     white-space: nowrap; position: relative; overflow: hidden;
-    touch-action: manipulation; min-height: clamp(32px, 8vw, 40px); min-width: clamp(32px, 8vw, 44px);
+    touch-action: manipulation; min-height: 48px; min-width: 48px;
+    letter-spacing: 0.01em;
 }
-.btn:active { transform: scale(0.95); }
+.btn:active { transform: scale(0.96); }
 .btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; box-shadow: 0 4px 12px rgba(0,174,239,0.25); }
-.btn-outline { background: rgba(255,255,255,0.9); color: var(--ink); border: 1.5px solid var(--border); }
+.btn-outline { background: rgba(255,255,255,0.95); color: var(--ink); border: 2px solid var(--border); }
 .btn-success { background: linear-gradient(135deg, #26A69A, #00897B); color: white; box-shadow: 0 4px 12px rgba(38,166,154,0.25); }
 .btn-warning { background: linear-gradient(135deg, #FFB74D, #F57C00); color: white; box-shadow: 0 4px 12px rgba(255,183,77,0.25); }
 .btn-info { background: linear-gradient(135deg, #5DADE2, #2E86C1); color: white; box-shadow: 0 4px 12px rgba(93,173,226,0.25); }
-.btn-sm { padding: clamp(4px, 1vw, 5px) clamp(8px, 2vw, 10px); font-size: clamp(0.72rem, 1.8vw, 0.78rem); border-radius: var(--radius-sm); min-height: clamp(28px, 7vw, 32px); }
+.btn-sm { padding: 8px 14px; font-size: 0.82rem; border-radius: var(--radius-sm); min-height: 40px; min-width: 40px; }
 
 .record-count-badge {
     display: inline-flex; align-items: center; justify-content: center;
     background: var(--success); color: white; border-radius: 50%;
-    width: 20px; height: 20px; font-size: 0.65rem; font-weight: 800;
-    margin-left: 2px; line-height: 1;
+    width: 22px; height: 22px; font-size: 0.7rem; font-weight: 800;
+    margin-left: 4px; line-height: 1;
 }
 
 .sync-dot {
     display: inline-block;
-    width: 7px;
-    height: 7px;
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
-    margin-left: 5px;
+    margin-left: 6px;
     vertical-align: middle;
 }
 .sync-dot.on { background: var(--success); }
 .sync-dot.off { background: #FFB74D; }
 
-.main-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(300px, 340px); gap: clamp(8px, 2vw, 12px); align-items: start; }
+.main-layout { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 16px; align-items: start; }
 
 .workspace {
     background: rgba(255,255,255,0.85); backdrop-filter: blur(12px) saturate(180%); -webkit-backdrop-filter: blur(12px) saturate(180%);
-    border-radius: var(--radius-lg); padding: clamp(12px, 3vw, 16px); border: 1px solid rgba(255,255,255,0.8);
+    border-radius: var(--radius-lg); padding: 20px; border: 1px solid rgba(255,255,255,0.8);
     box-shadow: var(--shadow-md); min-height: 50vh; min-height: 50dvh;
 }
 .workspace.editing-completed {
     border: 2px solid var(--warning);
     box-shadow: var(--shadow-md), 0 0 20px rgba(255,183,77,0.15);
 }
-.patient-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: clamp(10px, 2.5vw, 14px); flex-wrap: wrap; gap: clamp(6px, 1.5vw, 8px); }
-.patient-info { display: flex; align-items: center; gap: clamp(6px, 2vw, 10px); flex: 1; min-width: 0; }
+.patient-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 12px; }
+.patient-info { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
 .patient-avatar {
-    width: clamp(40px, 10vw, 48px); height: clamp(40px, 10vw, 48px); border-radius: 50%;
+    width: 52px; height: 52px; border-radius: 50%;
     background: linear-gradient(135deg, #B2EBF2, #00AEEF); display: flex; align-items: center; justify-content: center;
-    font-size: clamp(1.1rem, 3vw, 1.3rem); color: #004D40; font-weight: 800; border: 2px solid white;
+    font-size: 1.4rem; color: #004D40; font-weight: 800; border: 2px solid white;
     box-shadow: var(--shadow-xs); flex-shrink: 0; aspect-ratio: 1;
 }
 .patient-details { min-width: 0; flex: 1; }
-.patient-details h3 { font-size: clamp(0.95rem, 2.8vw, 1.1rem); font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.patient-details span { font-size: clamp(0.7rem, 1.8vw, 0.78rem); color: var(--text-sec); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.patient-details h3 { font-size: 1.15rem; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px; }
+.patient-details span { font-size: 0.82rem; color: var(--text-sec); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-.diagnosis-box { margin-bottom: clamp(10px, 2.5vw, 14px); }
-.diagnosis-box label { display: block; font-weight: 700; margin-bottom: clamp(4px, 1vw, 6px); font-size: clamp(0.82rem, 2.2vw, 0.9rem); }
+.diagnosis-box { margin-bottom: 16px; }
+.diagnosis-box label { display: block; font-weight: 700; margin-bottom: 8px; font-size: 0.95rem; }
 .diagnosis-box textarea {
-    width: 100%; padding: clamp(10px, 2vw, 12px) clamp(12px, 2.5vw, 14px); border-radius: var(--radius-sm);
-    border: 1.5px solid var(--border); font-family: 'Cairo', system-ui, sans-serif; font-size: clamp(0.82rem, 2.2vw, 0.88rem);
-    resize: vertical; min-height: 80px; background: #F5FAFC; transition: all var(--transition);
+    width: 100%; padding: 14px 16px; border-radius: var(--radius-sm);
+    border: 2px solid var(--border); font-family: 'Cairo', system-ui, sans-serif; font-size: 0.9rem;
+    resize: vertical; min-height: 90px; background: #F5FAFC; transition: all var(--transition);
+    line-height: 1.6;
 }
 .diagnosis-box textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,174,239,0.1); background: white; }
 
-.rx-section { margin-bottom: clamp(8px, 2vw, 12px); }
-.rx-section h4 { font-size: clamp(0.82rem, 2.2vw, 0.9rem); font-weight: 700; margin-bottom: clamp(6px, 1.5vw, 8px); display: flex; align-items: center; gap: clamp(4px, 1vw, 6px); }
-.rx-list-inline { display: flex; flex-wrap: wrap; gap: clamp(4px, 1vw, 6px); margin-bottom: clamp(8px, 2vw, 10px); min-height: 0; }
+.rx-section { margin-bottom: 16px; }
+.rx-section h4 { font-size: 0.95rem; font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+.rx-list-inline { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; min-height: 0; }
 .rx-chip {
-    display: inline-flex; align-items: center; gap: clamp(4px, 1vw, 6px); background: white; border: 1.5px solid var(--border);
-    border-radius: var(--radius-xl); padding: clamp(5px, 1vw, 6px) clamp(10px, 2vw, 12px) clamp(5px, 1vw, 6px) clamp(5px, 1vw, 6px);
-    font-size: clamp(0.75rem, 2vw, 0.82rem); transition: all var(--transition); box-shadow: var(--shadow-xs);
+    display: inline-flex; align-items: center; gap: 8px; background: white; border: 2px solid var(--border);
+    border-radius: var(--radius-xl); padding: 8px 14px 8px 8px;
+    font-size: 0.85rem; transition: all var(--transition); box-shadow: var(--shadow-xs);
     animation: popIn 0.2s ease; touch-action: manipulation;
 }
 @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 .rx-chip:active { transform: scale(0.95); }
-.rx-chip .drug-name { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px; }
-.rx-chip .drug-dose { background: var(--primary-light); padding: clamp(1px, 0.3vw, 2px) clamp(6px, 1.5vw, 8px); border-radius: 20px; font-size: clamp(0.7rem, 1.8vw, 0.75rem); font-weight: 600; white-space: nowrap; }
+.rx-chip .drug-name { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px; }
+.rx-chip .drug-dose { background: var(--primary-light); padding: 4px 10px; border-radius: 20px; font-size: 0.78rem; font-weight: 600; white-space: nowrap; }
 .rx-chip .remove-chip {
-    width: clamp(20px, 5vw, 22px); height: clamp(20px, 5vw, 22px); border-radius: 50%; border: none;
+    width: 26px; height: 26px; border-radius: 50%; border: none;
     background: rgba(0,0,0,0.05); cursor: pointer; display: flex; align-items: center; justify-content: center;
-    font-size: clamp(0.65rem, 1.6vw, 0.7rem); transition: all var(--transition); color: var(--text-sec);
+    font-size: 0.75rem; transition: all var(--transition); color: var(--text-sec);
     flex-shrink: 0; aspect-ratio: 1; touch-action: manipulation;
 }
 .rx-chip .remove-chip:active { background: var(--danger); color: white; }
 
 .quick-add-bar {
-    display: flex; gap: clamp(4px, 1vw, 6px); align-items: center; flex-wrap: wrap; background: #F5FAFC;
-    padding: clamp(8px, 2vw, 10px); border-radius: var(--radius-sm); border: 1px dashed var(--accent-soft); margin-bottom: clamp(8px, 2vw, 12px);
+    display: flex; gap: 10px; align-items: center; flex-wrap: wrap; background: #F5FAFC;
+    padding: 12px; border-radius: var(--radius-sm); border: 2px dashed var(--accent-soft); margin-bottom: 16px;
 }
 .quick-add-bar input {
-    flex: 1; min-width: min(140px, 100%); padding: clamp(7px, 1.5vw, 8px) clamp(10px, 2vw, 12px);
-    border-radius: var(--radius-xl); border: 1.5px solid var(--border); font-family: 'Cairo', system-ui, sans-serif;
-    font-size: clamp(0.8rem, 2vw, 0.85rem); background: white; transition: all var(--transition);
+    flex: 1; min-width: 160px; padding: 12px 16px;
+    border-radius: var(--radius-xl); border: 2px solid var(--border); font-family: 'Cairo', system-ui, sans-serif;
+    font-size: 0.9rem; background: white; transition: all var(--transition);
 }
 .quick-add-bar input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,174,239,0.08); }
 .quick-add-bar select {
-    padding: clamp(7px, 1.5vw, 8px) clamp(24px, 5vw, 28px) clamp(7px, 1.5vw, 8px) clamp(8px, 2vw, 10px);
-    border-radius: var(--radius-xl); border: 1.5px solid var(--border); font-family: 'Cairo', system-ui, sans-serif;
-    font-size: clamp(0.78rem, 1.9vw, 0.82rem); background: white; cursor: pointer;
+    padding: 12px 36px 12px 14px;
+    border-radius: var(--radius-xl); border: 2px solid var(--border); font-family: 'Cairo', system-ui, sans-serif;
+    font-size: 0.9rem; background: white; cursor: pointer;
     -webkit-appearance: none; appearance: none;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%235A7D8A' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
-    background-repeat: no-repeat; background-position: left 10px center; touch-action: manipulation;
+    background-repeat: no-repeat; background-position: left 14px center; touch-action: manipulation;
 }
-.quick-add-bar .dose-input { width: clamp(80px, 20vw, 100px); }
-.dose-suggestions { position: absolute; top: 100%; left: 0; right: 0; background: white; border-radius: var(--radius-sm); margin-top: 4px; box-shadow: var(--shadow-lg); z-index: 51; max-height: 180px; overflow-y: auto; display: none; border: 1px solid var(--border); }
-.dose-suggestion-item { padding: 8px 12px; cursor: pointer; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; font-size: 0.82rem; transition: background var(--transition); }
+.quick-add-bar .dose-input { width: 120px; }
+.dose-suggestions { position: absolute; top: 100%; left: 0; right: 0; background: white; border-radius: var(--radius-sm); margin-top: 6px; box-shadow: var(--shadow-lg); z-index: 51; max-height: 200px; overflow-y: auto; display: none; border: 1px solid var(--border); }
+.dose-suggestion-item { padding: 12px 14px; cursor: pointer; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; font-size: 0.88rem; transition: background var(--transition); min-height: 44px; }
 .dose-suggestion-item:active { background: var(--primary-light); }
-.dose-suggestion-item .freq-badge { font-size: 0.7rem; background: var(--primary-light); padding: 2px 8px; border-radius: 20px; color: var(--accent); }
+.dose-suggestion-item .freq-badge { font-size: 0.75rem; background: var(--primary-light); padding: 3px 10px; border-radius: 20px; color: var(--accent); }
 .dose-suggestion-item.favorite-dose { background: #FFFDE7; }
-.dose-suggestion-item.favorite-dose::before { content: '⭐'; margin-left: 6px; font-size: 0.7rem; }
+.dose-suggestion-item.favorite-dose::before { content: '⭐'; margin-left: 8px; font-size: 0.75rem; }
 
 .suggestions-dropdown {
-    position: absolute; top: 100%; left: 0; right: 0; background: white; border-radius: var(--radius-sm); margin-top: 4px;
-    box-shadow: var(--shadow-lg); z-index: 50; max-height: min(220px, 50vh); overflow-y: auto; display: none;
+    position: absolute; top: 100%; left: 0; right: 0; background: white; border-radius: var(--radius-sm); margin-top: 6px;
+    box-shadow: var(--shadow-lg); z-index: 50; max-height: 240px; overflow-y: auto; display: none;
     border: 1px solid var(--border); -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
 }
 .suggestion-item {
-    padding: clamp(8px, 2vw, 10px) clamp(12px, 2.5vw, 14px); cursor: pointer; border-bottom: 1px solid var(--border);
+    padding: 12px 16px; cursor: pointer; border-bottom: 1px solid var(--border);
     transition: background var(--transition); display: flex; align-items: center; justify-content: space-between;
-    font-size: clamp(0.8rem, 2vw, 0.85rem); position: relative; touch-action: manipulation; min-height: 40px;
+    font-size: 0.9rem; position: relative; touch-action: manipulation; min-height: 48px;
 }
 .suggestion-item:active { background: var(--primary-light); }
-.suggestion-item .usage-count { font-size: clamp(0.65rem, 1.6vw, 0.7rem); background: var(--primary-light); padding: 2px 8px; border-radius: 20px; color: var(--accent); white-space: nowrap; }
+.suggestion-item .usage-count { font-size: 0.75rem; background: var(--primary-light); padding: 3px 10px; border-radius: 20px; color: var(--accent); white-space: nowrap; }
 .suggestion-item .hide-suggestion-btn {
-    position: absolute; left: 8px; top: 50%; transform: translateY(-50%); width: clamp(20px, 5vw, 22px); height: clamp(20px, 5vw, 22px);
+    position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 28px; height: 28px;
     border-radius: 50%; border: none; background: rgba(0,0,0,0.05); cursor: pointer; display: flex; align-items: center; justify-content: center;
-    font-size: clamp(0.6rem, 1.5vw, 0.65rem); transition: all var(--transition); color: var(--text-sec); z-index: 2; touch-action: manipulation; aspect-ratio: 1;
+    font-size: 0.7rem; transition: all var(--transition); color: var(--text-sec); z-index: 2; touch-action: manipulation; aspect-ratio: 1;
 }
-.suggestion-item .suggestion-content { flex: 1; padding-left: 30px; min-width: 0; }
+.suggestion-item .suggestion-content { flex: 1; padding-left: 36px; min-width: 0; }
 
 .sidebar-panel {
     background: rgba(255,255,255,0.85); backdrop-filter: blur(12px) saturate(180%); -webkit-backdrop-filter: blur(12px) saturate(180%);
-    border-radius: var(--radius-lg); padding: clamp(10px, 2.5vw, 14px); border: 1px solid rgba(255,255,255,0.8);
+    border-radius: var(--radius-lg); padding: 16px; border: 1px solid rgba(255,255,255,0.8);
     box-shadow: var(--shadow-sm); max-height: 70vh; max-height: 70dvh; overflow-y: auto; position: sticky;
-    top: clamp(60px, 15vw, 80px); -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
+    top: 80px; -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
 }
-.sidebar-panel h4 { font-size: clamp(0.82rem, 2.2vw, 0.9rem); font-weight: 800; margin-bottom: clamp(8px, 2vw, 10px); display: flex; align-items: center; gap: clamp(4px, 1vw, 6px); }
+.sidebar-panel h4 { font-size: 0.95rem; font-weight: 800; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
 .mini-queue-item {
-    padding: clamp(8px, 2vw, 10px) clamp(10px, 2.5vw, 12px); border-radius: var(--radius-sm); margin-bottom: clamp(4px, 1vw, 6px);
-    cursor: pointer; border: 1.5px solid var(--border); transition: all var(--transition); background: white;
-    font-size: clamp(0.78rem, 2vw, 0.82rem); touch-action: manipulation; min-height: 44px;
+    padding: 12px 14px; border-radius: var(--radius-sm); margin-bottom: 8px;
+    cursor: pointer; border: 2px solid var(--border); transition: all var(--transition); background: white;
+    font-size: 0.85rem; touch-action: manipulation; min-height: 52px; display: flex; align-items: center; gap: 8px;
 }
 .mini-queue-item:active { transform: scale(0.98); }
 .mini-queue-item.current { border-color: var(--accent); background: var(--primary-light); box-shadow: var(--shadow-xs); }
-.mini-queue-item.done { opacity: 0.7; cursor: pointer; pointer-events: auto; }
+.mini-queue-item.done { opacity: 0.75; cursor: pointer; pointer-events: auto; }
 .mini-queue-item.done:hover { opacity: 1; border-color: var(--warning); background: #FFF8E1; }
-.mini-queue-item .patient-status-icon { font-size: 0.9rem; }
+.mini-queue-item .patient-status-icon { font-size: 1rem; }
 
 .tab-content { display: none; }
 .tab-content.active { display: block; }
 
-.empty-queue { text-align: center; padding: clamp(12px, 3vw, 16px); color: var(--text-sec); font-size: clamp(0.78rem, 2vw, 0.82rem); }
+.empty-queue { text-align: center; padding: 20px; color: var(--text-sec); font-size: 0.88rem; }
 
 .prescription-history-item {
-    background: white; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; margin-bottom: 8px;
+    background: white; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px; margin-bottom: 10px;
     transition: all var(--transition);
 }
 .prescription-history-item:hover { border-color: var(--accent); box-shadow: var(--shadow-sm); }
@@ -277,126 +279,462 @@ body::before {
     display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px;
 }
 .prescription-history-drugs {
-    display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px;
+    display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px;
 }
 .drug-mini-tag {
-    display: inline-flex; align-items: center; gap: 3px;
+    display: inline-flex; align-items: center; gap: 4px;
     background: #F5FAFC; border: 1px solid var(--border); border-radius: 15px;
-    padding: 2px 8px; font-size: 0.72rem;
+    padding: 4px 10px; font-size: 0.78rem;
 }
 .drug-mini-tag .tag-dose {
-    background: var(--primary-light); padding: 1px 5px; border-radius: 10px;
-    font-size: 0.65rem; font-weight: 600;
+    background: var(--primary-light); padding: 2px 6px; border-radius: 10px;
+    font-size: 0.7rem; font-weight: 600;
 }
 
 .editable-rx-chip {
-    display: inline-flex; align-items: center; gap: 6px; background: #F5FAFC; border: 1px solid var(--border);
-    border-radius: 20px; padding: 4px 10px; margin: 3px; font-size: 0.8rem;
+    display: inline-flex; align-items: center; gap: 8px; background: #F5FAFC; border: 2px solid var(--border);
+    border-radius: 20px; padding: 6px 12px; margin: 4px; font-size: 0.85rem;
 }
 .editable-rx-chip input, .editable-rx-chip select {
-    border: none; background: transparent; font-family: 'Cairo', sans-serif; font-size: 0.8rem; padding: 2px 4px;
-    outline: none; max-width: 100px;
+    border: none; background: transparent; font-family: 'Cairo', sans-serif; font-size: 0.85rem; padding: 4px 6px;
+    outline: none; max-width: 120px;
 }
 .editable-rx-chip select { cursor: pointer; }
 .editable-rx-chip .remove-edit-chip {
-    width: 18px; height: 18px; border-radius: 50%; border: none; background: rgba(0,0,0,0.08);
-    cursor: pointer; font-size: 0.65rem; display: flex; align-items: center; justify-content: center; color: var(--text-sec);
+    width: 24px; height: 24px; border-radius: 50%; border: none; background: rgba(0,0,0,0.08);
+    cursor: pointer; font-size: 0.7rem; display: flex; align-items: center; justify-content: center; color: var(--text-sec);
 }
 
 .drug-search-wrapper {
     position: relative;
     flex: 1;
-    min-width: min(140px, 100%);
+    min-width: 160px;
 }
 
 .drug-search-wrapper .search-icon {
     position: absolute;
-    right: 12px;
+    right: 14px;
     top: 50%;
     transform: translateY(-50%);
     color: var(--text-sec);
-    font-size: 0.9rem;
+    font-size: 1rem;
     pointer-events: none;
 }
 
 .drug-search-wrapper input {
-    padding-right: 35px !important;
+    padding-right: 40px !important;
     width: 100%;
 }
 
 .modal {
-    display: none; position: fixed; inset: 0; background: rgba(26,60,74,0.15); backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px); align-items: center; justify-content: center; z-index: 2000;
-    padding: clamp(8px, 2vw, 12px); animation: fadeIn 0.2s ease;
+    display: none; position: fixed; inset: 0; background: rgba(26,60,74,0.4); backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px); align-items: center; justify-content: center; z-index: 2000;
+    padding: 16px; animation: fadeIn 0.2s ease;
 }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 .modal-card {
     background: rgba(255,255,255,0.98); backdrop-filter: blur(16px) saturate(180%); -webkit-backdrop-filter: blur(16px) saturate(180%);
-    border-radius: var(--radius-lg); width: min(600px, 95%); max-height: 80vh; max-height: 80dvh; overflow-y: auto;
+    border-radius: var(--radius-lg); width: min(600px, 100%); max-height: 85vh; max-height: 85dvh; overflow-y: auto;
     box-shadow: var(--shadow-lg); border: 1px solid rgba(255,255,255,0.9); animation: slideUp 0.25s ease;
     -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
 }
 @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 .modal-header {
-    padding: clamp(12px, 2.5vw, 14px) clamp(16px, 3vw, 18px); background: #F5FAFC; border-bottom: 1px solid var(--border);
+    padding: 16px 20px; background: #F5FAFC; border-bottom: 1px solid var(--border);
     border-radius: var(--radius-lg) var(--radius-lg) 0 0; display: flex; justify-content: space-between; align-items: center;
     position: sticky; top: 0; z-index: 10;
 }
-.modal-header h3 { font-size: clamp(0.95rem, 2.5vw, 1.05rem); font-weight: 800; }
+.modal-header h3 { font-size: 1.1rem; font-weight: 800; }
 .close-btn {
-    background: rgba(0,0,0,0.04); border: none; width: clamp(28px, 7vw, 32px); height: clamp(28px, 7vw, 32px);
-    border-radius: 50%; font-size: 20px; color: var(--text-sec); cursor: pointer; display: flex; align-items: center;
+    background: rgba(0,0,0,0.04); border: none; width: 36px; height: 36px;
+    border-radius: 50%; font-size: 22px; color: var(--text-sec); cursor: pointer; display: flex; align-items: center;
     justify-content: center; transition: all var(--transition); touch-action: manipulation; aspect-ratio: 1;
 }
-.modal-body { padding: clamp(12px, 3vw, 16px); }
+.modal-body { padding: 20px; }
 .form-control {
-    width: 100%; padding: clamp(8px, 2vw, 10px) clamp(12px, 2.5vw, 14px); border-radius: var(--radius-sm);
-    border: 1.5px solid var(--border); font-family: 'Cairo', system-ui, sans-serif; font-size: clamp(0.82rem, 2.2vw, 0.88rem);
-    background: #F5FAFC; margin-bottom: clamp(8px, 2vw, 10px); transition: all var(--transition);
+    width: 100%; padding: 14px 16px; border-radius: var(--radius-sm);
+    border: 2px solid var(--border); font-family: 'Cairo', system-ui, sans-serif; font-size: 0.9rem;
+    background: #F5FAFC; margin-bottom: 12px; transition: all var(--transition);
 }
 .form-control:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,174,239,0.08); background: white; }
 
 .edit-mode-badge {
-    display: inline-flex; align-items: center; gap: 4px; background: #FFF3E0; color: #E65100;
-    padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700;
+    display: inline-flex; align-items: center; gap: 6px; background: #FFF3E0; color: #E65100;
+    padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 700;
     border: 1px solid #FFE0B2;
 }
 .prescription-status-badge {
-    display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 10px;
-    font-size: 0.7rem; font-weight: 700; margin-right: 8px;
+    display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 10px;
+    font-size: 0.75rem; font-weight: 700; margin-right: 8px;
 }
 .status-pending { background: #FFF3E0; color: #E65100; }
 .status-dispensed { background: #E8F5E9; color: #2E7D32; }
 .status-partial { background: #E3F2FD; color: #1565C0; }
 
 .toast-container {
-    position: fixed; bottom: max(16px, 3vw); left: 50%; transform: translateX(-50%); z-index: 4000;
-    display: flex; flex-direction: column; gap: clamp(4px, 1vw, 6px); pointer-events: none;
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 4000;
+    display: flex; flex-direction: column; gap: 8px; pointer-events: none;
     padding-bottom: var(--safe-bottom); max-width: 90vw;
 }
 .toast {
-    background: #1A3C4A; color: white; padding: clamp(8px, 2vw, 10px) clamp(16px, 4vw, 20px);
-    border-radius: var(--radius-xl); font-weight: 700; font-size: clamp(0.8rem, 2vw, 0.85rem);
+    background: #1A3C4A; color: white; padding: 14px 24px;
+    border-radius: var(--radius-xl); font-weight: 700; font-size: 0.9rem;
     box-shadow: 0 8px 24px rgba(0,0,0,0.2); animation: toastIn 0.3s ease, toastOut 0.3s ease 2.2s forwards;
-    white-space: nowrap; display: flex; align-items: center; gap: clamp(6px, 1.5vw, 8px);
+    white-space: nowrap; display: flex; align-items: center; gap: 10px;
 }
 .toast.err { background: #C62828; }
 @keyframes toastIn { from { transform: translateY(16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 @keyframes toastOut { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-16px); opacity: 0; } }
 
-@media (max-width: 1024px) { .main-layout { grid-template-columns: 1fr; gap: clamp(8px, 2vw, 10px); } .sidebar-panel { max-height: none; position: static; order: -1; } }
-@media (max-width: 768px) {
-    html { font-size: clamp(13px, 3.5vw, 14px); }
-    body { padding: 4px; padding-bottom: calc(4px + var(--safe-bottom)); }
-    .main-layout { grid-template-columns: 1fr; gap: 8px; }
-    .sidebar-panel { max-height: none; position: static; order: -1; border-radius: var(--radius-md); }
-    .workspace { padding: 12px; border-radius: var(--radius-md); }
-    .app-header { padding: 6px 10px; top: 4px; border-radius: var(--radius-lg); }
-    .quick-add-bar { flex-direction: column; align-items: stretch; }
-    .quick-add-bar input, .quick-add-bar select, .quick-add-bar .dose-input { width: 100%; min-width: unset; }
-    .modal-card { max-width: 100%; border-radius: var(--radius-md); max-height: 90vh; max-height: 90dvh; }
-    .hide-mobile { display: none; }
-    .queue-tabs { width: 100%; }
-    .queue-tab { flex: 1; text-align: center; font-size: 0.72rem; padding: 5px 8px; }
+/* ============ DESKTOP (1025px+) ============ */
+@media (min-width: 1025px) {
+    .main-layout { grid-template-columns: minmax(0, 1fr) 340px; gap: 16px; }
+    .sidebar-panel { max-height: 70vh; position: sticky; top: 80px; }
+    .quick-add-bar { flex-direction: row; }
 }
+
+/* ============ TABLET (769px - 1024px) ============ */
+@media (max-width: 1024px) {
+    .main-layout { grid-template-columns: 1fr; gap: 12px; }
+    .sidebar-panel { max-height: none; position: static; order: -1; }
+    .btn { min-height: 46px; }
+}
+
+/* ============ MOBILE (up to 768px) - Native App Feel ============ */
+@media (max-width: 768px) {
+    html { font-size: 15px; }
+    
+    body {
+        padding: 0;
+        padding-bottom: var(--safe-bottom);
+        background: var(--bg);
+    }
+    
+    /* Remove the radial background on mobile for cleaner look */
+    body::before { display: none; }
+    
+    .container { max-width: 100%; padding: 0; }
+    
+    /* Sticky Header - Full Width Native Style */
+    .app-header {
+        border-radius: 0 0 20px 20px;
+        padding: 10px 16px 12px;
+        margin-bottom: 0;
+        top: 0;
+        z-index: 100;
+        background: rgba(255,255,255,0.95);
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+    }
+    
+    .logo h2 { font-size: 1.2rem; }
+    .tenant-badge { font-size: 0.7rem; padding: 4px 8px; }
+    
+    .header-actions {
+        width: 100%;
+        justify-content: flex-end;
+        gap: 8px;
+    }
+    
+    .header-actions .btn {
+        flex: 1;
+        min-width: 0;
+        font-size: 0.8rem;
+        padding: 10px 8px;
+        min-height: 44px;
+    }
+    
+    /* Hide text on buttons, show icons only if needed */
+    .header-actions .btn span { font-size: 0.8rem; }
+    
+    /* Queue Tabs - Full Width Scrollable */
+    .queue-tabs {
+        margin: 8px 12px;
+        gap: 4px;
+        padding: 3px;
+        background: rgba(0,0,0,0.02);
+        border-radius: 25px;
+    }
+    
+    .queue-tab {
+        padding: 8px 10px;
+        font-size: 0.75rem;
+        min-height: 40px;
+        border-radius: 22px;
+    }
+    
+    .queue-tab .tab-count {
+        font-size: 0.7rem;
+        padding: 1px 6px;
+    }
+    
+    /* Main Layout - Single Column */
+    .main-layout {
+        grid-template-columns: 1fr;
+        gap: 0;
+        padding: 0 10px 20px;
+    }
+    
+    /* Sidebar - Above workspace on mobile */
+    .sidebar-panel {
+        order: -1;
+        margin: 10px 0;
+        border-radius: 16px;
+        padding: 12px;
+        max-height: none;
+        position: static;
+        background: white;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+    
+    .sidebar-panel h4 {
+        font-size: 0.9rem;
+        margin-bottom: 8px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid var(--border);
+    }
+    
+    /* Mini Queue Items - Larger Touch Targets */
+    .mini-queue-item {
+        padding: 12px 14px;
+        min-height: 50px;
+        border-radius: 14px;
+        font-size: 0.85rem;
+        margin-bottom: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: #FAFAFA;
+        border: 1.5px solid var(--border);
+    }
+    
+    .mini-queue-item.current {
+        background: #E0F7FA;
+        border-color: #00AEEF;
+    }
+    
+    /* Workspace Card */
+    .workspace {
+        border-radius: 20px;
+        padding: 16px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        background: white;
+        margin-bottom: 10px;
+    }
+    
+    /* Patient Header */
+    .patient-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+    
+    .patient-avatar {
+        width: 48px;
+        height: 48px;
+        font-size: 1.3rem;
+    }
+    
+    .patient-details h3 { font-size: 1rem; }
+    .patient-details span { font-size: 0.78rem; }
+    
+    /* Action Buttons in Patient Header */
+    .patient-header .header-actions {
+        width: 100%;
+        justify-content: stretch;
+    }
+    
+    .patient-header .header-actions .btn {
+        flex: 1;
+        min-height: 44px;
+        font-size: 0.82rem;
+        border-radius: 25px;
+    }
+    
+    /* Diagnosis Box */
+    .diagnosis-box textarea {
+        min-height: 80px;
+        padding: 12px;
+        font-size: 0.88rem;
+        border-radius: 14px;
+        border: 1.5px solid #E0E0E0;
+        background: #FAFBFC;
+    }
+    
+    /* Rx Chips */
+    .rx-chip {
+        padding: 8px 14px 8px 8px;
+        font-size: 0.85rem;
+        border-radius: 24px;
+        gap: 8px;
+    }
+    
+    .rx-chip .drug-name { max-width: 120px; }
+    .rx-chip .remove-chip {
+        width: 28px;
+        height: 28px;
+        font-size: 0.8rem;
+    }
+    
+    /* Quick Add Bar - Stack Vertically */
+    .quick-add-bar {
+        flex-direction: column;
+        gap: 8px;
+        padding: 10px;
+        border-radius: 14px;
+        background: #F8FAFB;
+        border: 1.5px dashed #B2EBF2;
+    }
+    
+    .quick-add-bar .drug-search-wrapper {
+        width: 100%;
+        min-width: unset;
+    }
+    
+    .quick-add-bar input,
+    .quick-add-bar select {
+        width: 100%;
+        min-width: unset;
+        padding: 12px 14px;
+        font-size: 0.88rem;
+        min-height: 46px;
+        border-radius: 22px;
+        border: 1.5px solid #E0E0E0;
+        background: white;
+    }
+    
+    .quick-add-bar .dose-input {
+        width: 100%;
+    }
+    
+    .quick-add-bar .btn {
+        width: 100%;
+        min-height: 46px;
+        border-radius: 22px;
+        font-size: 0.85rem;
+    }
+    
+    /* Drug Search Dropdown */
+    .suggestions-dropdown {
+        max-height: 200px;
+        border-radius: 14px;
+    }
+    
+    .suggestion-item {
+        padding: 12px 14px;
+        min-height: 46px;
+        font-size: 0.85rem;
+    }
+    
+    /* Modal - Full Screen on Mobile */
+    .modal {
+        padding: 0;
+        align-items: flex-end;
+    }
+    
+    .modal-card {
+        width: 100%;
+        max-width: 100%;
+        max-height: 90vh;
+        border-radius: 24px 24px 0 0;
+        margin-top: 10vh;
+    }
+    
+    .modal-header {
+        padding: 14px 18px;
+        border-radius: 24px 24px 0 0;
+    }
+    
+    .modal-body { padding: 16px; }
+    
+    .form-control {
+        padding: 12px 14px;
+        font-size: 0.88rem;
+        margin-bottom: 10px;
+        border-radius: 14px;
+        min-height: 46px;
+    }
+    
+    .close-btn {
+        width: 34px;
+        height: 34px;
+        font-size: 20px;
+    }
+    
+    /* Toast */
+    .toast-container { bottom: 20px; }
+    .toast {
+        padding: 12px 20px;
+        font-size: 0.85rem;
+        border-radius: 24px;
+    }
+    
+    /* Hide elements only on mobile */
+    .hide-mobile { display: none; }
+    
+    /* Buttons full width on mobile */
+    .btn {
+        min-height: 44px;
+        font-size: 0.85rem;
+        border-radius: 24px;
+    }
+    
+    .btn-sm {
+        min-height: 38px;
+        font-size: 0.8rem;
+    }
+    
+    /* Edit Mode Badge */
+    .edit-mode-badge {
+        font-size: 0.75rem;
+        padding: 4px 10px;
+    }
+    
+    /* Prescription History */
+    .prescription-history-item {
+        padding: 12px;
+        border-radius: 14px;
+    }
+    
+    .prescription-history-header {
+        flex-direction: column;
+        gap: 4px;
+    }
+}
+
+/* ============ Small Phones (up to 380px) ============ */
+@media (max-width: 380px) {
+    html { font-size: 14px; }
+    
+    .app-header { padding: 8px 10px 10px; }
+    .logo h2 { font-size: 1.1rem; }
+    .tenant-badge { font-size: 0.65rem; padding: 3px 6px; }
+    
+    .queue-tab { padding: 6px 8px; font-size: 0.7rem; }
+    .queue-tab .tab-count { font-size: 0.65rem; padding: 1px 5px; }
+    
+    .btn { min-height: 40px; font-size: 0.8rem; padding: 8px 12px; }
+    .btn-sm { min-height: 36px; font-size: 0.75rem; }
+    
+    .mini-queue-item { padding: 10px 12px; min-height: 44px; font-size: 0.8rem; }
+    
+    .workspace { padding: 12px; }
+    .patient-avatar { width: 42px; height: 42px; font-size: 1.1rem; }
+    
+    .rx-chip { padding: 6px 10px 6px 6px; font-size: 0.8rem; }
+    .rx-chip .drug-name { max-width: 100px; }
+    .rx-chip .remove-chip { width: 24px; height: 24px; }
+    
+    .quick-add-bar input,
+    .quick-add-bar select { padding: 10px 12px; font-size: 0.82rem; min-height: 42px; }
+    
+    .suggestion-item { padding: 10px 12px; min-height: 42px; font-size: 0.8rem; }
+    
+    .modal-card { border-radius: 20px 20px 0 0; }
+    .modal-header { padding: 12px 14px; border-radius: 20px 20px 0 0; }
+    .modal-body { padding: 12px; }
+    
+    .form-control { padding: 10px 12px; font-size: 0.82rem; min-height: 42px; }
+}
+
+/* Accessibility */
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
