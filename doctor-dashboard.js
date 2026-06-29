@@ -2,7 +2,7 @@ import { firebaseConfig } from './firebase-config.js';
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
-// ✅ تم التغيير من Realtime Database إلى Firestore
+// ✅ Firestore
 import { 
     getFirestore, 
     collection, 
@@ -17,12 +17,13 @@ import {
     where,
     orderBy,
     addDoc,
-    writeBatch
+    writeBatch,
+    arrayUnion
 } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const db = getFirestore(app); // ✅ استخدام Firestore
+const db = getFirestore(app);
 
 const STORAGE_PREFIX = 'shifa_tenant_';
 
@@ -39,6 +40,7 @@ const getTenantStorageKey = (baseKey) => {
     return currentTenantId ? `${STORAGE_PREFIX}${currentTenantId}_${baseKey}` : baseKey;
 };
 
+// ============ قواعد البيانات المحلية ============
 class SessionDB {
     constructor() { 
         this._dbName = null;
@@ -65,9 +67,33 @@ class SessionDB {
             req.onerror = (e) => reject(e.target.error); 
         }); 
     }
-    async save(session) { if (!this.db) await this.open(); return new Promise((resolve, reject) => { const tx = this.db.transaction(this.storeName, 'readwrite'); tx.objectStore(this.storeName).put(session); tx.oncomplete = resolve; tx.onerror = () => reject(tx.error); }); }
-    async getAll() { if (!this.db) await this.open(); return new Promise((resolve, reject) => { const tx = this.db.transaction(this.storeName, 'readonly'); const req = tx.objectStore(this.storeName).getAll(); req.onsuccess = () => resolve(req.result || []); req.onerror = () => reject(req.error); }); }
-    async delete(id) { if (!this.db) await this.open(); return new Promise((resolve, reject) => { const tx = this.db.transaction(this.storeName, 'readwrite'); tx.objectStore(this.storeName).delete(id); tx.oncomplete = resolve; tx.onerror = () => reject(tx.error); }); }
+    async save(session) { 
+        if (!this.db) await this.open(); 
+        return new Promise((resolve, reject) => { 
+            const tx = this.db.transaction(this.storeName, 'readwrite'); 
+            tx.objectStore(this.storeName).put(session); 
+            tx.oncomplete = resolve; 
+            tx.onerror = () => reject(tx.error); 
+        }); 
+    }
+    async getAll() { 
+        if (!this.db) await this.open(); 
+        return new Promise((resolve, reject) => { 
+            const tx = this.db.transaction(this.storeName, 'readonly'); 
+            const req = tx.objectStore(this.storeName).getAll(); 
+            req.onsuccess = () => resolve(req.result || []); 
+            req.onerror = () => reject(req.error); 
+        }); 
+    }
+    async delete(id) { 
+        if (!this.db) await this.open(); 
+        return new Promise((resolve, reject) => { 
+            const tx = this.db.transaction(this.storeName, 'readwrite'); 
+            tx.objectStore(this.storeName).delete(id); 
+            tx.oncomplete = resolve; 
+            tx.onerror = () => reject(tx.error); 
+        }); 
+    }
 }
 
 class FavoriteDrugsDB {
@@ -84,10 +110,61 @@ class FavoriteDrugsDB {
     get db() { return this._db; }
     set db(val) { this._db = val; }
     
-    async open() { if (this.db) return; return new Promise((resolve, reject) => { const req = indexedDB.open(this.dbName, 1); req.onupgradeneeded = (e) => { const db = e.target.result; if (!db.objectStoreNames.contains(this.storeName)) { const store = db.createObjectStore(this.storeName, { keyPath: 'fullName' }); store.createIndex('usageCount', 'usageCount', { unique: false }); } }; req.onsuccess = (e) => { this.db = e.target.result; resolve(); }; req.onerror = (e) => reject(e.target.error); }); }
-    async getAll() { if (!this.db) await this.open(); return new Promise((resolve, reject) => { const tx = this.db.transaction(this.storeName, 'readonly'); const req = tx.objectStore(this.storeName).getAll(); req.onsuccess = () => resolve(req.result || []); req.onerror = () => reject(req.error); }); }
-    async incrementAndSave(fullName, name, form, strength) { if (!this.db) await this.open(); const tx = this.db.transaction(this.storeName, 'readwrite'); const store = tx.objectStore(this.storeName); const req = store.get(fullName); req.onsuccess = () => { let drug = req.result; if (drug) { drug.usageCount = (drug.usageCount || 0) + 1; drug.lastUsed = new Date().toISOString(); } else { drug = { fullName, name, form, strength, usageCount: 1, hidden: false, firstUsed: new Date().toISOString(), lastUsed: new Date().toISOString() }; } store.put(drug); }; }
-    async hideDrug(fullName) { if (!this.db) await this.open(); return new Promise((resolve) => { const tx = this.db.transaction(this.storeName, 'readwrite'); const store = tx.objectStore(this.storeName); const req = store.get(fullName); req.onsuccess = () => { let drug = req.result || { fullName, usageCount: 0 }; drug.hidden = true; store.put(drug); resolve(); }; req.onerror = () => resolve(); }); }
+    async open() { 
+        if (this.db) return; 
+        return new Promise((resolve, reject) => { 
+            const req = indexedDB.open(this.dbName, 1); 
+            req.onupgradeneeded = (e) => { 
+                const db = e.target.result; 
+                if (!db.objectStoreNames.contains(this.storeName)) { 
+                    const store = db.createObjectStore(this.storeName, { keyPath: 'fullName' }); 
+                    store.createIndex('usageCount', 'usageCount', { unique: false }); 
+                } 
+            }; 
+            req.onsuccess = (e) => { this.db = e.target.result; resolve(); }; 
+            req.onerror = (e) => reject(e.target.error); 
+        }); 
+    }
+    async getAll() { 
+        if (!this.db) await this.open(); 
+        return new Promise((resolve, reject) => { 
+            const tx = this.db.transaction(this.storeName, 'readonly'); 
+            const req = tx.objectStore(this.storeName).getAll(); 
+            req.onsuccess = () => resolve(req.result || []); 
+            req.onerror = () => reject(req.error); 
+        }); 
+    }
+    async incrementAndSave(fullName, name, form, strength) { 
+        if (!this.db) await this.open(); 
+        const tx = this.db.transaction(this.storeName, 'readwrite'); 
+        const store = tx.objectStore(this.storeName); 
+        const req = store.get(fullName); 
+        req.onsuccess = () => { 
+            let drug = req.result; 
+            if (drug) { 
+                drug.usageCount = (drug.usageCount || 0) + 1; 
+                drug.lastUsed = new Date().toISOString(); 
+            } else { 
+                drug = { fullName, name, form, strength, usageCount: 1, hidden: false, firstUsed: new Date().toISOString(), lastUsed: new Date().toISOString() }; 
+            } 
+            store.put(drug); 
+        }; 
+    }
+    async hideDrug(fullName) { 
+        if (!this.db) await this.open(); 
+        return new Promise((resolve) => { 
+            const tx = this.db.transaction(this.storeName, 'readwrite'); 
+            const store = tx.objectStore(this.storeName); 
+            const req = store.get(fullName); 
+            req.onsuccess = () => { 
+                let drug = req.result || { fullName, usageCount: 0 }; 
+                drug.hidden = true; 
+                store.put(drug); 
+                resolve(); 
+            }; 
+            req.onerror = () => resolve(); 
+        }); 
+    }
     
     async search(term, formFilter = null, limit = 5) { 
         const all = await this.getAll(); 
@@ -121,16 +198,60 @@ class FavoriteDosesDB {
     get db() { return this._db; }
     set db(val) { this._db = val; }
     
-    async open() { if (this.db) return; return new Promise((resolve, reject) => { const req = indexedDB.open(this.dbName, 1); req.onupgradeneeded = (e) => { const db = e.target.result; if (!db.objectStoreNames.contains(this.storeName)) { const store = db.createObjectStore(this.storeName, { keyPath: 'id' }); store.createIndex('usageCount', 'usageCount', { unique: false }); } }; req.onsuccess = (e) => { this.db = e.target.result; resolve(); }; req.onerror = (e) => reject(e.target.error); }); }
-    async getAll() { if (!this.db) await this.open(); return new Promise((resolve, reject) => { const tx = this.db.transaction(this.storeName, 'readonly'); const req = tx.objectStore(this.storeName).getAll(); req.onsuccess = () => resolve(req.result || []); req.onerror = () => reject(req.error); }); }
-    async recordDose(drugName, form, dose, freqLabel) { if (!this.db) await this.open(); const id = `${drugName}_${form}_${dose}`; const tx = this.db.transaction(this.storeName, 'readwrite'); const store = tx.objectStore(this.storeName); const req = store.get(id); req.onsuccess = () => { let entry = req.result; if (entry) { entry.usageCount = (entry.usageCount || 0) + 1; entry.lastUsed = new Date().toISOString(); } else { entry = { id, drugName, form, dose, freqLabel, usageCount: 1, firstUsed: new Date().toISOString(), lastUsed: new Date().toISOString() }; } store.put(entry); }; }
-    async search(drugName, form, limit = 3) { const all = await this.getAll(); let results = all.filter(d => d.drugName === drugName && d.form === form); results.sort((a, b) => (b.usageCount || 0) - (a.usageCount || 0)); return results.slice(0, limit); }
+    async open() { 
+        if (this.db) return; 
+        return new Promise((resolve, reject) => { 
+            const req = indexedDB.open(this.dbName, 1); 
+            req.onupgradeneeded = (e) => { 
+                const db = e.target.result; 
+                if (!db.objectStoreNames.contains(this.storeName)) { 
+                    const store = db.createObjectStore(this.storeName, { keyPath: 'id' }); 
+                    store.createIndex('usageCount', 'usageCount', { unique: false }); 
+                } 
+            }; 
+            req.onsuccess = (e) => { this.db = e.target.result; resolve(); }; 
+            req.onerror = (e) => reject(e.target.error); 
+        }); 
+    }
+    async getAll() { 
+        if (!this.db) await this.open(); 
+        return new Promise((resolve, reject) => { 
+            const tx = this.db.transaction(this.storeName, 'readonly'); 
+            const req = tx.objectStore(this.storeName).getAll(); 
+            req.onsuccess = () => resolve(req.result || []); 
+            req.onerror = () => reject(req.error); 
+        }); 
+    }
+    async recordDose(drugName, form, dose, freqLabel) { 
+        if (!this.db) await this.open(); 
+        const id = `${drugName}_${form}_${dose}`; 
+        const tx = this.db.transaction(this.storeName, 'readwrite'); 
+        const store = tx.objectStore(this.storeName); 
+        const req = store.get(id); 
+        req.onsuccess = () => { 
+            let entry = req.result; 
+            if (entry) { 
+                entry.usageCount = (entry.usageCount || 0) + 1; 
+                entry.lastUsed = new Date().toISOString(); 
+            } else { 
+                entry = { id, drugName, form, dose, freqLabel, usageCount: 1, firstUsed: new Date().toISOString(), lastUsed: new Date().toISOString() }; 
+            } 
+            store.put(entry); 
+        }; 
+    }
+    async search(drugName, form, limit = 3) { 
+        const all = await this.getAll(); 
+        let results = all.filter(d => d.drugName === drugName && d.form === form); 
+        results.sort((a, b) => (b.usageCount || 0) - (a.usageCount || 0)); 
+        return results.slice(0, limit); 
+    }
 }
 
 const sessionDB = new SessionDB();
 const favoritesDB = new FavoriteDrugsDB();
 const favoriteDosesDB = new FavoriteDosesDB();
 
+// ============ الحالة العامة ============
 const state = {
     user: null, doctorData: null, appointments: [], currentAppointment: null,
     prescription: [], diagnosis: '', loadedTemplateId: null, loadedTemplateName: null,
@@ -140,28 +261,38 @@ const state = {
     previousRecordsCount: 0
 };
 
+// ============ دوال مساعدة ============
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => document.querySelectorAll(sel);
 const today = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
 const esc = (s) => { if (!s) return ''; const d = document.createElement('div'); d.textContent = String(s); return d.innerHTML; };
-const toast = (msg, err=false) => { const c = $('#toastContainer'); const t = document.createElement('div'); t.className = `toast ${err?'err':''}`; t.innerHTML = `<i class="fas ${err?'fa-exclamation-circle':'fa-check-circle'}"></i> ${msg}`; c.appendChild(t); setTimeout(() => { if (t.parentNode) t.remove(); }, 2500); };
+const toast = (msg, err=false) => { 
+    const c = $('#toastContainer'); 
+    const t = document.createElement('div'); 
+    t.className = `toast ${err?'err':''}`; 
+    t.innerHTML = `<i class="fas ${err?'fa-exclamation-circle':'fa-check-circle'}"></i> ${msg}`; 
+    c.appendChild(t); 
+    setTimeout(() => { if (t.parentNode) t.remove(); }, 2500); 
+};
 const getPatientName = (apt) => apt?.patient_name || apt?.patientName || 'غير معروف';
-const extractStrength = (text) => { const match = text.match(/(\d+(?:\.\d+)?\s*(?:gm|g|gram|mg|mcg|mcgm|IU|MU|ml|%|mcg\/ml|mg\/ml|mg\/5ml|mcg\/puff)(?:\/\d*\s*(?:ml|gm|g))?)/i); return match ? match[1] : ''; };
+const extractStrength = (text) => { 
+    const match = text.match(/(\d+(?:\.\d+)?\s*(?:gm|g|gram|mg|mcg|mcgm|IU|MU|ml|%|mcg\/ml|mg\/ml|mg\/5ml|mcg\/puff)(?:\/\d*\s*(?:ml|gm|g))?)/i); 
+    return match ? match[1] : ''; 
+};
 
-// ✅ دالة مساعدة: ترجع تاريخ قبل N يوم من تاريخ معين
 const getDateDaysAgo = (days, fromDate = null) => {
     const d = fromDate ? new Date(fromDate) : new Date();
     d.setDate(d.getDate() - days);
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 };
 
-// ✅ دالة مساعدة: ترجع تاريخ الأيام الـ 15 الأخيرة (من اليوم - 14 إلى اليوم)
 const getLast15DaysRange = () => {
     const startDate = getDateDaysAgo(14);
     const endDate = today();
     return { startDate, endDate };
 };
 
+// ============ مسح بيانات الجلسة ============
 const clearLoginSessionOnly = () => {
     try {
         LOGIN_STORAGE_KEYS.forEach(key => {
@@ -194,7 +325,7 @@ const setSyncStatus = (online) => {
     }
 };
 
-// ✅ تم تعديل fetchPreviousRecordsCount لـ Firestore
+// ============ ✅ دوال المرضى (مسار موحد) ============
 async function fetchPreviousRecordsCount(patientId) {
     if (!patientId || !currentTenantId) return 0;
     try {
@@ -207,7 +338,6 @@ async function fetchPreviousRecordsCount(patientId) {
     }
 }
 
-// ✅ تم تعديل restorePrescription لـ Firestore
 async function restorePrescription(rxId) {
     try {
         const rxDocRef = doc(db, 'tenants', currentTenantId, 'prescriptions', rxId);
@@ -249,6 +379,7 @@ async function restorePrescription(rxId) {
     }
 }
 
+// ============ مدير الجرعات ============
 const doseManager = {
     generateSuggestions(count, form) {
         const num = parseInt(count);
@@ -275,15 +406,26 @@ const doseManager = {
         const suggestions = [];
         const num = parseInt(countText);
         if (num && num >= 1) { const smart = this.generateSuggestions(num, form); smart.forEach(s => suggestions.push({ ...s, source: 'smart' })); }
-        if (drugName) { const favDoses = await favoriteDosesDB.search(drugName, form, 3); favDoses.forEach(fd => { const exists = suggestions.find(s => s.dose === fd.dose && s.freq === fd.freqLabel); if (!exists) { suggestions.unshift({ dose: fd.dose, freq: fd.freqLabel, label: `${fd.dose} - ${fd.freqLabel}`, source: 'favorite', usageCount: fd.usageCount }); } else { exists.source = 'favorite'; exists.usageCount = fd.usageCount; } }); }
+        if (drugName) { 
+            const favDoses = await favoriteDosesDB.search(drugName, form, 3); 
+            favDoses.forEach(fd => { 
+                const exists = suggestions.find(s => s.dose === fd.dose && s.freq === fd.freqLabel); 
+                if (!exists) { 
+                    suggestions.unshift({ dose: fd.dose, freq: fd.freqLabel, label: `${fd.dose} - ${fd.freqLabel}`, source: 'favorite', usageCount: fd.usageCount }); 
+                } else { 
+                    exists.source = 'favorite'; 
+                    exists.usageCount = fd.usageCount; 
+                } 
+            }); 
+        }
         return suggestions;
     },
-    async recordUsage(drugName, form, dose, freqLabel) { await favoriteDosesDB.recordDose(drugName, form, dose, freqLabel); }
+    async recordUsage(drugName, form, dose, freqLabel) { 
+        await favoriteDosesDB.recordDose(drugName, form, dose, freqLabel); 
+    }
 };
 
-// ============================================================
-// ✅✅✅ نظام المراقبة الذكي - نافذة منزلقة 15 يوم (معدل لـ Firestore) ✅✅✅
-// ============================================================
+// ============ نظام المراقبة الذكي - نافذة منزلقة 15 يوم ============
 const prescriptionTracker = {
     async trackDrugPrescription(drugName, doctorId, doctorName) {
         if (!currentTenantId || !doctorId) return;
@@ -305,10 +447,7 @@ const prescriptionTracker = {
                 if (existingToday) {
                     existingToday.count = (existingToday.count || 0) + 1;
                 } else {
-                    history.push({
-                        date: todayDate,
-                        count: 1
-                    });
+                    history.push({ date: todayDate, count: 1 });
                 }
                 
                 history.sort((a, b) => a.date.localeCompare(b.date));
@@ -404,7 +543,6 @@ const prescriptionTracker = {
             }
             
             results.sort((a, b) => b.total_count_15days - a.total_count_15days);
-            
             return results;
             
         } catch (err) {
@@ -414,9 +552,7 @@ const prescriptionTracker = {
     }
 };
 
-// ============================================================
-// ✅✅✅ drugManager مع ترتيب ذكي للاقتراحات (معدل لـ Firestore) ✅✅✅
-// ============================================================
+// ============ مدير الأدوية ============
 const drugManager = {
     _cachePromise: null,
     
@@ -604,12 +740,19 @@ const drugManager = {
     }
 };
 
-// ============ باقي الدوال بدون تغيير ============
-
+// ============ إدارة الجلسات المحلية ============
 async function saveSessionToDB() { 
     if (!state.currentAppointment) return; 
     if (state.isEditingCompleted) return;
-    const session = { id: state.currentAppointment.id, appointment: state.currentAppointment, prescription: state.prescription.slice(), diagnosis: $('#diagnosisInput')?.value || '', loadedTemplateId: state.loadedTemplateId, loadedTemplateName: state.loadedTemplateName, updatedAt: new Date().toISOString() }; 
+    const session = { 
+        id: state.currentAppointment.id, 
+        appointment: state.currentAppointment, 
+        prescription: state.prescription.slice(), 
+        diagnosis: $('#diagnosisInput')?.value || '', 
+        loadedTemplateId: state.loadedTemplateId, 
+        loadedTemplateName: state.loadedTemplateName, 
+        updatedAt: new Date().toISOString() 
+    }; 
     sessionDB.save(session).catch(() => {}); 
     state.activeSessionId = session.id; 
 }
@@ -635,6 +778,7 @@ async function deleteSession(id) {
     if (state.activeSessionId === id) state.activeSessionId = null; 
 }
 
+// ============ عرض القوائم الجانبية ============
 function renderSidebar() {
     const currentPatients = state.appointments.filter(a => a.status === 'قيد الكشف');
     const waitingPatients = state.appointments.filter(a => a.status === 'انتظار');
@@ -674,7 +818,7 @@ function updateQueueCount() {
     $('#doneCount').textContent = doneCount;
 }
 
-// ✅ تم تعديل selectPatient لـ Firestore
+// ============ ✅ اختيار مريض (مسار موحد) ============
 async function selectPatient(appointmentId) {
     const apt = state.appointments.find(a => a.id === appointmentId);
     if (!apt) return;
@@ -705,7 +849,6 @@ async function selectPatient(appointmentId) {
     await saveSessionToDB();
 }
 
-// ✅ تم تعديل openCompletedPrescriptionForEditing لـ Firestore
 async function openCompletedPrescriptionForEditing(apt) {
     try {
         const rxDocRef = doc(db, 'tenants', currentTenantId, 'prescriptions', apt.id);
@@ -754,7 +897,6 @@ async function openCompletedPrescriptionForEditing(apt) {
     }
 }
 
-// ✅ تم تعديل saveCompletedPrescriptionEdit لـ Firestore
 async function saveCompletedPrescriptionEdit() {
     if (!state.isEditingCompleted || !state.editingCompletedRxId) return;
     
@@ -897,24 +1039,32 @@ function renderRxList() {
     container.innerHTML = state.prescription.map((item, i) => `<span class="rx-chip"><span class="drug-name">${esc(item.drug)}</span><span style="font-size:0.7rem;color:var(--text-sec);">${esc(item.form==='tablet'?'أقراص':item.form==='syrup'?'شراب':item.form==='injection'?'حقن':item.form==='suppository'?'لبوس':'نقط')}</span><span class="drug-dose">${esc(item.dose)}</span><button class="remove-chip" data-index="${i}" title="حذف" aria-label="حذف الدواء">&times;</button></span>`).join('');
 }
 
+// ============ إضافة دواء سريعة ============
 const quickAdd = {
     addDrug() {
-        const drugInput = $('#drugSearchInput'); const drugName = drugInput.value.trim();
-        const form = $('#drugFormSelect').value; const doseInput = $('#doseInput'); const dose = doseInput.value.trim();
+        const drugInput = $('#drugSearchInput'); 
+        const drugName = drugInput.value.trim();
+        const form = $('#drugFormSelect').value; 
+        const doseInput = $('#doseInput'); 
+        const dose = doseInput.value.trim();
         if (!drugName) { toast('أدخل اسم الدواء', true); drugInput.focus(); return; }
         if (!dose) { toast('أدخل الجرعة', true); doseInput.focus(); return; }
-        const strength = extractStrength(drugName); const pureName = strength ? drugName.replace(strength, '').trim() : drugName;
-        const freqMatch = dose.match(/كل\s+(\d+)\s*ساعة|مرة\s*واحدة|يومياً|عند\s*اللزوم/); const freqLabel = freqMatch ? freqMatch[0] : '';
+        const strength = extractStrength(drugName); 
+        const pureName = strength ? drugName.replace(strength, '').trim() : drugName;
+        const freqMatch = dose.match(/كل\s+(\d+)\s*ساعة|مرة\s*واحدة|يومياً|عند\s*اللزوم/); 
+        const freqLabel = freqMatch ? freqMatch[0] : '';
         state.prescription.push({ drug: drugName, form: form, dose });
         drugManager.recordUsage(drugName, pureName, form, strength);
         if (freqLabel) doseManager.recordUsage(drugName, form, dose, freqLabel);
-        drugInput.value = ''; doseInput.value = ''; drugInput.focus();
+        drugInput.value = ''; 
+        doseInput.value = ''; 
+        drugInput.focus();
         renderRxList(); 
         saveSessionToDB();
     }
 };
 
-// ✅ تم تعديل checkTemplateNameExists لـ Firestore
+// ============ ✅ القوالب (مسار موحد) ============
 async function checkTemplateNameExists(name) {
     if (!state.user) return false;
     const templatesRef = collection(db, 'tenants', currentTenantId, 'prescription_templates', state.user.uid, 'templates');
@@ -933,7 +1083,6 @@ async function checkTemplateNameExists(name) {
     return exists;
 }
 
-// ✅ تم تعديل saveAsNewTemplate لـ Firestore
 async function saveAsNewTemplate() {
     const nameInput = $('#newTemplateNameInput');
     const nameError = $('#templateNameError');
@@ -1007,9 +1156,7 @@ function openSaveNewTemplateModal() {
     setTimeout(() => $('#newTemplateNameInput').focus(), 100);
 }
 
-// ============================================================
-// ✅✅✅ دالة فتح سجل المريض - عام لكل المجمعات (معدلة لـ Firestore) ✅✅✅
-// ============================================================
+// ============ ✅ سجل المريض الموحد (مسار موحد) ============
 async function openPatientFile() {
     const pid = state.currentAppointment?.patient_id || state.currentAppointment?.patientId;
     if (!pid) { toast('لا يوجد ملف للمريض', true); return; }
@@ -1020,6 +1167,7 @@ async function openPatientFile() {
     content.innerHTML = '<div style="text-align:center;padding:30px;"><div class="loader-circle"></div></div>';
     
     try {
+        // ✅ المسار الموحد: patients في مجمع الدكتور
         const patientDocRef = doc(db, 'tenants', currentTenantId, 'patients', pid);
         const patientSnap = await getDoc(patientDocRef);
         const patient = patientSnap.exists() ? patientSnap.data() : {}; 
@@ -1194,7 +1342,7 @@ async function openPatientFile() {
     }
 }
 
-// ✅ تم تعديل handleFinishSession لـ Firestore
+// ============ ✅ إنهاء الجلسة (مسار موحد) ============
 async function handleFinishSession() {
     if (!state.currentAppointment || state.isEditingCompleted) return;
     const diagnosis = $('#diagnosisInput').value.trim();
@@ -1245,7 +1393,6 @@ async function handleSkipSave() {
     $('#saveTemplateModal').style.display = 'none'; 
 }
 
-// ✅ تم تعديل handleTemplates لـ Firestore
 async function handleTemplates() {
     const templatesRef = collection(db, 'tenants', currentTenantId, 'prescription_templates', state.user.uid, 'templates');
     const snap = await getDocs(templatesRef); 
@@ -1274,9 +1421,11 @@ async function handleTemplates() {
 async function handleSessions() {
     const sessions = await sessionDB.getAll(); 
     const list = $('#sessionsList');
-    if (sessions.length === 0) { list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-sec);">لا توجد جلسات معلقة</div>'; }
-    else { 
+    if (sessions.length === 0) { 
+        list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-sec);">لا توجد جلسات معلقة</div>'; 
+    } else { 
         list.innerHTML = sessions.map(s => `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px;border-bottom:1px solid var(--border);"><div><b>${esc(getPatientName(s.appointment))}</b><div>${s.prescription.length} أدوية</div></div><div style="display:flex;gap:4px;"><button class="btn btn-primary btn-sm restore-session-btn" data-id="${s.id}">استكمال</button><button class="btn btn-outline btn-sm delete-session-btn" data-id="${s.id}"><i class="fas fa-trash"></i></button></div></div>`).join(''); 
+        
         list.querySelectorAll('.restore-session-btn').forEach(btn => {
             btn.addEventListener('click', async () => {
                 const sessionId = btn.dataset.id;
@@ -1300,6 +1449,7 @@ async function handleSessions() {
                 }
             });
         });
+        
         list.querySelectorAll('.delete-session-btn').forEach(btn => {
             btn.addEventListener('click', async () => {
                 const sessionId = btn.dataset.id;
@@ -1312,7 +1462,6 @@ async function handleSessions() {
     $('#sessionsModal').style.display = 'flex';
 }
 
-// ✅ تم تعديل loadTemplate لـ Firestore
 async function loadTemplate(templateId, templateName) {
     if (state.isEditingCompleted) {
         toast('لا يمكن تحميل قالب أثناء تعديل وصفة منتهية', true);
@@ -1348,7 +1497,7 @@ async function loadTemplate(templateId, templateName) {
     toast(`📋 تم تحميل القالب: ${templateName}`);
 }
 
-// ✅ تم تعديل finalizeSession لـ Firestore
+// ============ ✅ finalizeSession (مسار موحد) ============
 async function finalizeSession(saveTemplate, templateName, templateAction) {
     const apt = state.currentAppointment; 
     const diagnosis = $('#diagnosisInput').value.trim(); 
@@ -1388,6 +1537,7 @@ async function finalizeSession(saveTemplate, templateName, templateAction) {
             await setDoc(templateItemsDocRef, templateItemsData);
         }
         
+        // ✅ الروشتة في مجمع الدكتور
         const prescriptionData = { 
             patient_id: apt.patient_id || apt.patientId || '', 
             patient_name: getPatientName(apt), 
@@ -1414,12 +1564,13 @@ async function finalizeSession(saveTemplate, templateName, templateAction) {
         const rxItemsDocRef = doc(db, 'tenants', currentTenantId, 'prescription_items', prescriptionId);
         await setDoc(rxItemsDocRef, rxItemsData);
         
+        // ✅ تحديث حالة الكشف في مجمع الدكتور
         const aptDocRef = doc(db, 'tenants', currentTenantId, 'appointments', apt.id);
         await updateDoc(aptDocRef, { status: 'منتهي' });
         
         await deleteSession(apt.id);
         
-        // ✅ تتبع الأدوية الموصوفة في نظام المراقبة (النافذة المنزلقة)
+        // تتبع الأدوية في نظام المراقبة
         if (state.user && state.user.uid) {
             const doctorName = state.user.name || 'طبيب';
             const uniqueDrugs = [...new Set(state.prescription.map(p => p.drug))];
@@ -1452,6 +1603,7 @@ async function finalizeSession(saveTemplate, templateName, templateAction) {
     }
 }
 
+// ============ إعداد مستمعي الأحداث ============
 const setupEventListeners = () => {
     $('#queueTabs').addEventListener('click', (e) => {
         const tab = e.target.closest('.queue-tab');
@@ -1478,7 +1630,9 @@ const setupEventListeners = () => {
     });
     
     $('#addDrugBtn').addEventListener('click', () => quickAdd.addDrug());
-    $('#doseInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); quickAdd.addDrug(); } });
+    $('#doseInput').addEventListener('keydown', (e) => { 
+        if (e.key === 'Enter') { e.preventDefault(); quickAdd.addDrug(); } 
+    });
     
     $('#rxItemsContainer').addEventListener('click', (e) => {
         const removeBtn = e.target.closest('.remove-chip');
@@ -1564,7 +1718,6 @@ const setupEventListeners = () => {
     });
 
     $('#saveAsTemplateBtn').addEventListener('click', openSaveNewTemplateModal);
-    
     $('#closeSaveNewTemplateBtn').addEventListener('click', () => $('#saveNewTemplateModal').style.display = 'none');
     $('#cancelSaveNewTemplateBtn').addEventListener('click', () => $('#saveNewTemplateModal').style.display = 'none');
     $('#confirmSaveNewTemplateBtn').addEventListener('click', saveAsNewTemplate);
@@ -1574,7 +1727,6 @@ const setupEventListeners = () => {
             saveAsNewTemplate();
         }
     });
-    
     $('#newTemplateNameInput').addEventListener('input', () => {
         $('#templateNameError').style.display = 'none';
     });
@@ -1618,12 +1770,17 @@ const setupEventListeners = () => {
         }
     });
     
-    $$('.close-btn').forEach(b => b.addEventListener('click', () => { b.closest('.modal').style.display = 'none'; }));
+    $$('.close-btn').forEach(b => b.addEventListener('click', () => { 
+        b.closest('.modal').style.display = 'none'; 
+    }));
     window.addEventListener('click', (e) => { 
         if (e.target.classList.contains('modal')) e.target.style.display = 'none'; 
-        if (!$('#drugSearchInput').contains(e.target) && !$('#drugSuggestions').contains(e.target)) $('#drugSuggestions').style.display = 'none'; 
+        if (!$('#drugSearchInput').contains(e.target) && !$('#drugSuggestions').contains(e.target)) 
+            $('#drugSuggestions').style.display = 'none'; 
     });
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { $$('.modal').forEach(m => m.style.display = 'none'); } });
+    document.addEventListener('keydown', (e) => { 
+        if (e.key === 'Escape') { $$('.modal').forEach(m => m.style.display = 'none'); } 
+    });
 
     $('#closePatientFileBtn').addEventListener('click', () => $('#patientFileModal').style.display = 'none');
     $('#closeSaveTemplateBtn').addEventListener('click', () => $('#saveTemplateModal').style.display = 'none');
@@ -1639,15 +1796,13 @@ const setupEventListeners = () => {
     });
 };
 
-// ============================================================
-// ✅ تصدير الدوال للاستخدام من ملفات تانية (للصيدلي مثلاً)
-// ============================================================
+// ============ تصدير الدوال ============
 window.shifaDoctorTools = {
     getDrugStatsForAllDoctors: prescriptionTracker.getDrugStatsForAllDoctors.bind(prescriptionTracker),
     getCurrentTenantId: () => currentTenantId
 };
 
-// ✅ تم تعديل onAuthStateChanged لـ Firestore
+// ============ ✅ بدء التشغيل (مع مسارات موحدة) ============
 onAuthStateChanged(auth, async (user) => {
     if (!user) { 
         clearLoginSessionOnly();
@@ -1693,6 +1848,7 @@ onAuthStateChanged(auth, async (user) => {
     }
 
     try {
+        // ✅ بيانات المستخدم من المجمع
         const tenantUserDocRef = doc(db, 'tenants', currentTenantId, 'users', user.uid);
         const tenantUserSnap = await getDoc(tenantUserDocRef);
         
@@ -1715,7 +1871,7 @@ onAuthStateChanged(auth, async (user) => {
         await Promise.all([sessionDB.open(), favoritesDB.open(), favoriteDosesDB.open(), drugManager.loadCache()]);
         setupEventListeners();
         
-        // ✅ مستمع حي للكشوفات باستخدام Firestore
+        // ✅ مستمع حي للكشوفات
         const appointmentsRef = collection(db, 'tenants', currentTenantId, 'appointments');
         const q = query(appointmentsRef, where('doctor_id', '==', user.uid));
         
@@ -1757,11 +1913,15 @@ onAuthStateChanged(auth, async (user) => {
     }
 });
 
-console.log('🚀 لوحة الطبيب - Firestore');
+console.log('🚀 لوحة الطبيب - Firestore (مسارات موحدة)');
+console.log('✅ المرضى: /tenants/{tenantId}/patients/{patientId}');
+console.log('✅ الكشوفات: /tenants/{tenantId}/appointments/{appointmentId}');
+console.log('✅ الروشتات: /tenants/{tenantId}/prescriptions/{rxId}');
+console.log('✅ القوالب: /tenants/{tenantId}/prescription_templates/{userId}/templates/{templateId}');
 console.log('🔍 البحث الذكي: ترتيب حسب بداية النص أولاً');
 console.log('💊 الشكل الصيدلي: يُحفظ في الروشتة فقط للصيدلي');
 console.log('⭐ المفضلات: تبحث بشكل ذكي مع كل حرف يُكتب');
 console.log('🔒 كل طبيب يشوف كشوفاته هو فقط في مجمعه');
-console.log('🪟 نظام مراقبة: نافذة منزلقة 15 يوم (اليوم 16 يتمسح اليوم 1 فقط)');
-console.log('🏥 سجل موحد: يظهر وصفات المريض من كل المجمعات مع إخفاء اسم الدكتور من المجمعات الأخرى');
-console.log('💾 وضع الحفظ: يمسح جلسة الدخول فقط - يحتفظ ببيانات المجمع');
+console.log('🪟 نظام مراقبة: نافذة منزلقة 15 يوم');
+console.log('🏥 سجل موحد: يظهر وصفات المريض من كل المجمعات');
+console.log('💾 وضع الحفظ: يمسح جلسة الدخول فقط - يحتفظ ببيانات المجمع');ٍ
