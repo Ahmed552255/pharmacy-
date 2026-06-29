@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ذ<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
@@ -59,6 +59,7 @@
             backface-visibility: hidden;
         }
         
+        /* شاشة التحميل الأولية */
         .splash-screen {
             position: fixed;
             inset: 0;
@@ -637,17 +638,9 @@
         import { firebaseConfig } from './firebase-config.js';
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-        
-        // ✅ Firestore بدل Realtime Database
-        import { 
-            getFirestore, 
-            collection, 
-            doc, 
-            getDoc, 
-            getDocs 
-        } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
-        // ============ نظام التشفير ============
+        // ============ نظام التشفير البسيط ============
         const ENCRYPTION_KEY = 'ShifaSecure2024!@#Key';
         
         const encryptData = (data) => {
@@ -680,14 +673,13 @@
             }
         };
 
-        // ============ ثوابت التخزين ============
+        // ============ ثوابت التخزين المحلي ============
         const STORAGE_KEY = 'shifa_secure_session';
-        const LOGIN_STORAGE_KEYS = ['shifa_session', 'shifa_remember', 'shifa_last_login'];
 
         // ============ تهيئة Firebase ============
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
-        const db = getFirestore(app); // ✅ Firestore
+        const db = getDatabase(app);
 
         // ============ عناصر DOM ============
         const dom = {
@@ -705,84 +697,89 @@
             loadingBar: document.getElementById('loadingBar'),
         };
 
-        // ============ أيقونات العين ============
+        // ============ أيقونات العين SVG ============
         const ICONS = {
             eyeOpen: `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>`,
             eyeOff: `<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>`,
         };
 
+        // ============ محتوى الزر الافتراضي ============
         const defaultBtnContent = dom.btnContent.innerHTML;
 
-        // ============ ✅ جلب بيانات المستخدم من Firestore (مسار موحد) ============
+        // ============ ✅ جلب بيانات المستخدم من مسار المجمع (يبحث في كل المجمعات) ============
         const fetchUserData = async (uid) => {
             try {
-                // 1️⃣ نجيب كل المجمعات من Firestore
-                const tenantsSnap = await getDocs(collection(db, 'tenants'));
+                // 1️⃣ نجيب كل المجمعات الموجودة
+                const tenantsSnap = await get(ref(db, 'tenants'));
                 
-                // 2️⃣ ندور على المستخدم في كل مجمع
-                for (const tenantDoc of tenantsSnap.docs) {
-                    const tenantId = tenantDoc.id;
-                    const userDocRef = doc(db, 'tenants', tenantId, 'users', uid);
-                    const userSnap = await getDoc(userDocRef);
+                if (tenantsSnap.exists()) {
+                    const tenants = tenantsSnap.val();
                     
-                    if (userSnap.exists()) {
-                        const userData = userSnap.data();
-                        userData.uid = uid;
+                    // 2️⃣ ندور على المستخدم في كل مجمع
+                    for (const tenantId of Object.keys(tenants)) {
+                        const tenantUserSnap = await get(ref(db, `tenants/${tenantId}/users/${uid}`));
                         
-                        if (!userData.tenantId) {
-                            userData.tenantId = tenantId;
+                        if (tenantUserSnap.exists()) {
+                            // ✅ لقينا المستخدم في المجمع ده
+                            const userData = tenantUserSnap.val();
+                            
+                            // لو معندوش tenantId، نضيفه
+                            if (!userData.tenantId) {
+                                userData.tenantId = tenantId;
+                            }
+                            
+                            // نجيب اسم المجمع لو موجود
+                            const tenantName = tenants[tenantId]?.name || tenants[tenantId]?.tenantName || 
+                                              (tenants[tenantId]?.users?.[tenantId]?.name) || 'المجمع الطبي';
+                            userData.tenantName = userData.tenantName || tenantName;
+                            
+                            console.log(`✅ تم العثور على المستخدم في مجمع: ${tenantId}`);
+                            return userData;
                         }
-                        
-                        // نجيب اسم المجمع من الإعدادات أو من بيانات المجمع
-                        const tenantData = tenantDoc.data();
-                        const settingsRef = doc(db, 'tenants', tenantId, 'settings', 'main');
-                        const settingsSnap = await getDoc(settingsRef);
-                        
-                        userData.tenantName = userData.tenantName || 
-                                             (settingsSnap.exists() ? settingsSnap.data().name : null) ||
-                                             tenantData.name || 
-                                             tenantData.tenantName || 
-                                             'المجمع الطبي';
-                        
-                        console.log(`✅ تم العثور على المستخدم في مجمع: ${tenantId}`);
-                        return userData;
                     }
                 }
                 
                 // 3️⃣ لو ملقتش في المجمعات، جرب المسار العام (للتوافق مع البيانات القديمة)
-                const publicDocRef = doc(db, 'users', uid);
-                const publicSnap = await getDoc(publicDocRef);
-                
+                const publicSnap = await get(ref(db, `users/${uid}`));
                 if (publicSnap.exists()) {
-                    const userData = publicSnap.data();
-                    userData.uid = uid;
-                    userData.tenantId = userData.tenantId || uid;
+                    const userData = publicSnap.val();
+                    
+                    // لو معندوش tenantId، نخليه هو uid بتاعه
+                    if (!userData.tenantId) {
+                        userData.tenantId = uid;
+                    }
+                    
                     console.log(`⚠️ تم العثور على المستخدم في المسار العام (قديم)`);
                     return userData;
                 }
                 
+                // 4️⃣ المستخدم مش موجود خالص
                 return null;
                 
             } catch (error) {
                 console.error("❌ خطأ في جلب بيانات المستخدم:", error);
                 
-                // محاولة أخيرة في المسار العام
+                // في حالة الخطأ، جرب المسار العام كآخر محاولة
                 try {
-                    const publicDocRef = doc(db, 'users', uid);
-                    const publicSnap = await getDoc(publicDocRef);
+                    const publicSnap = await get(ref(db, `users/${uid}`));
                     if (publicSnap.exists()) {
-                        const userData = publicSnap.data();
-                        userData.uid = uid;
+                        const userData = publicSnap.val();
                         userData.tenantId = userData.tenantId || uid;
                         return userData;
                     }
-                } catch (e) {}
+                } catch (e) {
+                    // تجاهل
+                }
                 
                 return null;
             }
         };
 
         // ============ إدارة الجلسة المشفرة ============
+        
+        /**
+         * ✅ حفظ الجلسة في localStorage مع تشفير - متوافقة مع نظام المجمعات
+         */
         const saveEncryptedSession = (userData) => {
             try {
                 const sessionData = {
@@ -790,7 +787,7 @@
                     email: userData.email,
                     role: userData.role,
                     name: userData.name,
-                    tenantId: userData.tenantId || null,
+                    tenantId: userData.tenantId || null,  // ✅ معرف المجمع
                     timestamp: Date.now()
                 };
                 
@@ -806,6 +803,9 @@
             }
         };
 
+        /**
+         * استرجاع الجلسة من localStorage مع فك التشفير
+         */
         const getEncryptedSession = () => {
             try {
                 const encrypted = localStorage.getItem(STORAGE_KEY);
@@ -833,16 +833,19 @@
             }
         };
 
+        /**
+         * مسح الجلسة
+         */
         const clearSession = () => {
             try {
                 localStorage.removeItem(STORAGE_KEY);
-                LOGIN_STORAGE_KEYS.forEach(key => localStorage.removeItem(key));
             } catch (error) {
                 console.error('خطأ في مسح الجلسة:', error);
             }
         };
 
         // ============ دوال مساعدة ============
+        
         const showError = (msg) => {
             if (!msg) {
                 dom.errorMessage.classList.remove('show');
@@ -911,7 +914,7 @@
 
         dom.loginButton.addEventListener('click', addRippleEffect);
 
-        // تبديل كلمة المرور
+        // تبديل إظهار/إخفاء كلمة المرور
         dom.togglePasswordBtn.addEventListener('click', (e) => {
             e.preventDefault();
             const isPassword = dom.passwordInput.type === 'password';
@@ -920,7 +923,7 @@
             dom.passwordInput.focus();
         });
 
-        // ============ ✅ توجيه المستخدم مع تمرير tenantId ============
+        // ============ ✅ توجيه المستخدم حسب الصلاحية - مع تمرير tenantId ============
         const redirectUser = (role, name, tenantId = null) => {
             const pages = {
                 admin: 'admin-panel.html',
@@ -931,7 +934,7 @@
             
             let redirectUrl = pages[role] || 'dashboard.html';
             
-            // ✅ تمرير tenantId في الرابط
+            // ✅ تمرير tenantId في الرابط للصفحات اللي محتاجاه
             if (tenantId) {
                 const separator = redirectUrl.includes('?') ? '&' : '?';
                 redirectUrl += `${separator}tenant=${encodeURIComponent(tenantId)}`;
@@ -983,7 +986,7 @@
                 const userCredential = await signInWithEmailAndPassword(auth, email, password);
                 const user = userCredential.user;
 
-                // ✅ جلب بيانات المستخدم من Firestore
+                // ✅ جلب بيانات المستخدم من مسار المجمع (يبحث في كل المجمعات)
                 const userData = await fetchUserData(user.uid);
 
                 if (!userData || !userData.role) {
@@ -1001,7 +1004,7 @@
                 const displayName = userData.name || email.split('@')[0];
                 const tenantId = userData.tenantId || null;
 
-                // ✅ حفظ الجلسة مشفرة
+                // ✅ حفظ الجلسة مشفرة مع tenantId
                 const saved = saveEncryptedSession({
                     uid: user.uid,
                     email: email,
@@ -1014,7 +1017,7 @@
                     console.warn('⚠️ تعذر حفظ الجلسة محلياً');
                 }
 
-                // ✅ توجيه المستخدم
+                // ✅ توجيه المستخدم مع تمرير tenantId
                 redirectUser(userData.role, displayName, tenantId);
 
             } catch (error) {
@@ -1042,11 +1045,13 @@
         };
 
         // ============ مستمعي الأحداث ============
+        
         dom.loginForm.addEventListener('submit', handleLogin);
+
         dom.emailInput.addEventListener('input', hideError);
         dom.passwordInput.addEventListener('input', hideError);
 
-        // ضغط مطول لإظهار كلمة المرور
+        // إظهار كلمة المرور مؤقتاً بالضغط المطول
         let longPressTimer;
         
         const startLongPress = () => {
@@ -1069,7 +1074,7 @@
         dom.togglePasswordBtn.addEventListener('touchend', endLongPress);
         dom.togglePasswordBtn.addEventListener('touchcancel', endLongPress);
 
-        // Ctrl+Enter لتسجيل الدخول
+        // اختصار Ctrl+Enter لتسجيل الدخول
         document.addEventListener('keydown', (e) => {
             if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
                 e.preventDefault();
@@ -1077,8 +1082,17 @@
             }
         });
 
-        // ============ التوجيه التلقائي ============
+        // ============ تحسينات إضافية ============
+        
+        document.addEventListener('gesturestart', (e) => {
+            if (document.activeElement.tagName === 'INPUT') {
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        // ============ التوجيه التلقائي عند فتح الصفحة ============
         const checkSessionAndRedirect = async () => {
+            // 1️⃣ التحقق من وجود جلسة محلية مشفرة
             const localSession = getEncryptedSession();
             
             if (localSession) {
@@ -1117,9 +1131,11 @@
                 }
             }
             
+            console.log('🔍 في انتظار حالة المصادقة من Firebase...');
             showLoginForm();
         };
 
+        // ============ إظهار نموذج تسجيل الدخول ============
         const showLoginForm = () => {
             dom.splashScreen.classList.add('hidden');
             dom.mainCard.style.display = '';
@@ -1129,12 +1145,14 @@
                 if (oldSession && oldSession.email) {
                     dom.emailInput.value = oldSession.email;
                 }
-            } catch (e) {}
+            } catch (e) {
+                // تجاهل
+            }
         };
 
         // ============ بدء التشغيل ============
         const initApp = async () => {
-            console.log('🚀 نظام شفاء — Firestore');
+            console.log('🚀 نظام شفاء — جاري التحقق من الجلسة...');
             
             onAuthStateChanged(auth, async (user) => {
                 if (user) {
@@ -1177,7 +1195,7 @@
             await checkSessionAndRedirect();
         };
 
-        // تنظيف التايمرات
+        // ============ تنظيف التايمرات عند مغادرة الصفحة ============
         window.addEventListener('beforeunload', () => {
             clearTimeout(dom._errorTimeout);
             clearTimeout(dom._toastTimeout);
@@ -1186,10 +1204,7 @@
 
         // تشغيل التطبيق
         initApp();
-        
-        console.log('✅ صفحة تسجيل الدخول - Firestore (مسارات موحدة)');
-        console.log('🔍 البحث عن المستخدم: /tenants/{tenantId}/users/{uid}');
-        console.log('🔐 الجلسة مشفرة مع tenantId');
     </script>
 </body>
 </html>
+امسح منطق التحقق من الصلاحيه فى التسجيل الدخول للمدير بس لو سمحت بدون اى تعديل تانى
