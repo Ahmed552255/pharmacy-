@@ -821,7 +821,7 @@
             aspect-ratio: 1;
         }
 
-        /* ============ البحث عن مريض ============ */
+        /* ============ ✅ البحث عن مريض (مطابق للوحة الممرض) ============ */
         .search-box { 
             position: relative; 
         }
@@ -860,6 +860,43 @@
         
         .search-item:last-child { 
             border-bottom: none; 
+        }
+
+        /* ============ ✅ أزرار تبديل وضع الهوية ============ */
+        .toggle-id-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            gap: 10px;
+        }
+
+        .btn-toggle-id {
+            background: linear-gradient(135deg, #8D6E63, #A1887F);
+            color: white;
+            border: none;
+            border-radius: var(--radius-xl);
+            padding: 8px 16px;
+            font-family: 'Cairo', sans-serif;
+            font-size: 0.78rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+            touch-action: manipulation;
+            min-height: 40px;
+        }
+
+        .btn-toggle-id:hover {
+            background: linear-gradient(135deg, #6D4C41, #8D6E63);
+            box-shadow: 0 3px 8px rgba(109, 76, 65, 0.3);
+        }
+
+        .btn-toggle-id:active {
+            transform: scale(0.96);
         }
 
         /* ============ التوست ============ */
@@ -942,7 +979,6 @@
                 padding-bottom: calc(8px + var(--safe-bottom));
             }
             
-            /* Header - Stacked Layout */
             .app-header { 
                 padding: 10px 14px 14px; 
                 top: 4px; 
@@ -995,7 +1031,6 @@
                 font-size: 0.78rem; 
             }
             
-            /* Doctor Pills - Scrollable */
             .doctor-pill { 
                 padding: 8px 14px; 
                 font-size: 0.82rem; 
@@ -1010,7 +1045,6 @@
                 font-size: 0.75rem;
             }
             
-            /* Status Tabs */
             .status-tab { 
                 padding: 10px 12px; 
                 font-size: 0.8rem; 
@@ -1023,7 +1057,6 @@
                 padding: 2px 8px;
             }
             
-            /* Cards Grid - Single Column */
             .rx-cards-grid { 
                 grid-template-columns: 1fr; 
                 gap: 12px; 
@@ -1058,7 +1091,6 @@
                 font-size: 0.78rem;
             }
             
-            /* Modal - Bottom Sheet Style */
             .modal {
                 padding: 0;
                 align-items: flex-end;
@@ -1080,7 +1112,6 @@
                 padding-bottom: 40px;
             }
             
-            /* Form Controls */
             .form-control {
                 padding: 12px 14px;
                 font-size: 0.85rem;
@@ -1088,14 +1119,12 @@
                 border-radius: 12px;
             }
             
-            /* Search Items */
             .search-item {
                 padding: 12px 14px;
                 min-height: 48px;
                 font-size: 0.85rem;
             }
             
-            /* Rx Detail Items */
             .rx-detail-item {
                 padding: 10px 12px;
                 min-height: 48px;
@@ -1107,7 +1136,6 @@
                 font-size: 0.9rem;
             }
             
-            /* Action Buttons */
             .rx-card-action-btn {
                 padding: 8px 14px;
                 font-size: 0.78rem;
@@ -1115,7 +1143,6 @@
                 border-radius: 22px;
             }
             
-            /* Card Footer */
             .rx-card-footer {
                 flex-direction: row;
                 flex-wrap: wrap;
@@ -1131,16 +1158,20 @@
                 padding: 3px 8px;
             }
             
-            /* Hide mobile elements */
             .hide-mobile { 
                 display: none; 
             }
             
-            /* Toast */
             .toast {
                 padding: 12px 20px;
                 font-size: 0.85rem;
                 border-radius: 24px;
+            }
+
+            .btn-toggle-id {
+                padding: 6px 12px;
+                font-size: 0.72rem;
+                min-height: 36px;
             }
         }
 
@@ -1250,6 +1281,12 @@
                 padding: 10px 16px;
                 font-size: 0.8rem;
             }
+
+            .btn-toggle-id {
+                padding: 5px 10px;
+                font-size: 0.68rem;
+                min-height: 32px;
+            }
         }
 
         /* ============ DESKTOP LARGE (1400px+) ============ */
@@ -1280,7 +1317,12 @@
 
     <div class="toast-container" id="toastContainer"></div>
 
-    <div class="container" id="mainContainer">
+    <div id="appLoader">
+        <div class="loader-circle"></div>
+        <span class="loader-text">جارٍ تحميل لوحة الصيدلي...</span>
+    </div>
+
+    <div class="container" id="mainContainer" style="display:none;">
         <header class="app-header">
             <div class="logo">
                 <h2><i class="fas fa-heartbeat"></i> شفاء · الصيدلي <span class="sync-dot on" id="syncDot" title="حالة المزامنة"></span></h2>
@@ -1291,7 +1333,7 @@
                 </span>
                 <span id="welcomeMsg">مرحباً</span>
                 <button class="btn btn-outline btn-sm" id="searchPatientBtn">
-                    <i class="fas fa-search"></i> <span class="hide-mobile">بحث</span>
+                    <i class="fas fa-search"></i> <span class="hide-mobile">بحث عن مريض</span>
                 </button>
                 <button class="btn btn-outline btn-sm" id="logoutBtn">
                     <i class="fas fa-sign-out-alt"></i> <span class="hide-mobile">خروج</span>
@@ -1357,7 +1399,7 @@
         </div>
     </div>
 
-    <!-- مودال البحث عن مريض -->
+    <!-- ✅ مودال البحث عن مريض (مطابق للوحة الممرض) -->
     <div id="searchModal" class="modal">
         <div class="modal-card">
             <div class="modal-header">
@@ -1365,10 +1407,47 @@
                 <button class="close-btn" id="closeSearchBtn">&times;</button>
             </div>
             <div class="modal-body">
-                <div class="search-box">
-                    <input type="text" id="patientSearchInput" class="form-control" placeholder="اسم المريض أو رقم الهاتف..." autocomplete="off">
-                    <div id="searchResults" class="search-results"></div>
+                <!-- ✅ قسم البحث برقم الهاتف -->
+                <div id="phoneSearchSection">
+                    <div class="form-group search-box">
+                        <label>البحث عن مريض (برقم الهاتف)</label>
+                        <input type="text" id="patientSearchInput" class="form-control" placeholder="أدخل رقم الهاتف للبحث..." autocomplete="off" dir="ltr">
+                        <div id="searchResults" class="search-results"></div>
+                    </div>
                 </div>
+                
+                <!-- ✅ قسم البحث ببيانات القرية -->
+                <div id="villageSearchSection" style="display:none;">
+                    <div class="form-group">
+                        <div class="toggle-id-container">
+                            <label>بيانات القرية</label>
+                            <button type="button" class="btn-toggle-id" id="togglePhoneModeBtn">
+                                <i class="fas fa-mobile-alt"></i> استخدام رقم الهاتف
+                            </button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>اسم الأب</label>
+                        <input type="text" id="villageFatherName" class="form-control" placeholder="اسم الأب">
+                    </div>
+                    <div class="form-group">
+                        <label>اسم العائلة</label>
+                        <input type="text" id="villageFamilyName" class="form-control" placeholder="اسم العائلة">
+                    </div>
+                    <div class="form-group">
+                        <label>اسم القرية</label>
+                        <input type="text" id="villageNameInput" class="form-control" placeholder="اسم القرية">
+                    </div>
+                    <div id="villageSearchResults" class="search-results" style="position:relative;margin-top:8px;"></div>
+                </div>
+
+                <!-- ✅ زر التبديل بين الوضعين -->
+                <div class="form-group" style="margin-top:12px;">
+                    <button type="button" class="btn-toggle-id" id="toggleToVillageBtn" style="width:100%;">
+                        <i class="fas fa-tree"></i> استخدام بيانات القرية للبحث
+                    </button>
+                </div>
+
                 <div id="patientHistoryContainer" style="margin-top:14px;"></div>
                 <div class="keyboard-scroll-spacer"></div>
             </div>
@@ -1408,6 +1487,7 @@
             allPrescriptions: [],
             currentTab: 'لم تصرف بعد',
             unsubscribePrescriptions: null,
+            searchMode: 'phone', // ✅ 'phone' أو 'village'
         };
 
         const $ = (sel) => document.querySelector(sel);
@@ -1460,6 +1540,78 @@
             } catch (e) {}
         };
 
+        // ============ ✅ التخزين المحلي للمرضى (مطابق للوحة الممرض) ============
+        const getLocalPatientsKey = () => getTenantStorageKey('pharmacist_patients');
+        
+        const savePatientToLocal = (patientId, patientData) => {
+            if (!currentTenantId) return;
+            try {
+                const key = getLocalPatientsKey();
+                const cached = JSON.parse(localStorage.getItem(key) || '{}');
+                if (!cached.patients) cached.patients = {};
+                cached.patients[patientId] = {
+                    ...patientData,
+                    _cachedAt: Date.now()
+                };
+                localStorage.setItem(key, JSON.stringify(cached));
+            } catch (e) {
+                console.warn('تعذر حفظ المريض محلياً:', e.message);
+            }
+        };
+
+        const searchPatientsLocal = (phone) => {
+            if (!currentTenantId) return [];
+            try {
+                const key = getLocalPatientsKey();
+                const cached = localStorage.getItem(key);
+                if (!cached) return [];
+                
+                const data = JSON.parse(cached);
+                if (!data.patients) return [];
+                
+                const now = Date.now();
+                const expiryMs = 50 * 24 * 60 * 60 * 1000;
+                const t = phone.trim();
+                
+                return Object.entries(data.patients)
+                    .filter(([id, p]) => {
+                        const isFresh = (now - p._cachedAt) < expiryMs;
+                        return isFresh && p.phone && p.phone.includes(t);
+                    })
+                    .map(([id, p]) => ({ id, ...p }));
+            } catch (e) {
+                return [];
+            }
+        };
+
+        const searchPatientsLocalByVillage = (fatherName, familyName, villageName) => {
+            if (!currentTenantId) return [];
+            try {
+                const key = getLocalPatientsKey();
+                const cached = localStorage.getItem(key);
+                if (!cached) return [];
+                
+                const data = JSON.parse(cached);
+                if (!data.patients) return [];
+                
+                const now = Date.now();
+                const expiryMs = 50 * 24 * 60 * 60 * 1000;
+                
+                return Object.entries(data.patients)
+                    .filter(([id, p]) => {
+                        const isFresh = (now - p._cachedAt) < expiryMs;
+                        const matchFather = !fatherName || (p.father_name && p.father_name.includes(fatherName));
+                        const matchFamily = !familyName || (p.family_name && p.family_name.includes(familyName));
+                        const matchVillage = !villageName || (p.village_name && p.village_name.includes(villageName));
+                        return isFresh && matchFather && matchFamily && matchVillage;
+                    })
+                    .map(([id, p]) => ({ id, ...p }));
+            } catch (e) {
+                return [];
+            }
+        };
+
+        // ============ تحميل بيانات الصيدلي ============
         const loadPharmacistData = async (uid) => {
             try {
                 const tenantsSnap = await get(ref(db, 'tenants'));
@@ -1496,6 +1648,7 @@
             }
         };
 
+        // ============ تحميل الأطباء ============
         const loadDoctors = () => {
             if (!currentTenantId) return;
             const usersRef = ref(db, `tenants/${currentTenantId}/users`);
@@ -1518,6 +1671,7 @@
             });
         };
 
+        // ============ تحميل الوصفات ============
         const loadPrescriptions = () => {
             if (!currentTenantId) return;
             if (state.unsubscribePrescriptions) state.unsubscribePrescriptions();
@@ -1537,6 +1691,7 @@
             });
         };
 
+        // ============ عرض شريط الأطباء ============
         const renderDoctorsStrip = () => {
             const container = $('#doctorStripContainer');
             if (state.doctorsList.length === 0) {
@@ -1580,14 +1735,13 @@
             $('#countDispensed').textContent = dispensedCount;
         };
 
-        // ============ ✅ فتح صفحة التفاصيل مع تمرير كل البيانات ============
+        // ============ فتح صفحة التفاصيل ============
         const openPrescriptionDetails = (prescription) => {
             if (!prescription) return;
             
             const doctor = state.doctorsList.find(d => d.id === prescription.doctor_id);
             const doctorName = doctor ? doctor.name : '';
             
-            // بناء الرابط مع كل البيانات المطلوبة
             const params = new URLSearchParams();
             params.set('id', prescription.id);
             params.set('tenant', currentTenantId || '');
@@ -1737,7 +1891,7 @@
             }).join('');
         };
 
-        // ============ ✅ فتح مودال الصرف (للوصفات الجديدة فقط) ============
+        // ============ فتح مودال الصرف ============
         const openDispenseModal = async (prescriptionId) => {
             const prescription = state.allPrescriptions.find(p => p.id === prescriptionId);
             if (!prescription || prescription.status !== 'لم تصرف بعد') return;
@@ -1804,38 +1958,199 @@
             }
         };
 
+        // ============ ✅ وظيفة البحث عن مريض (مطابقة للوحة الممرض) ============
         let searchTimer;
-        const searchPatients = async (term) => {
-            if (!term || term.length < 2) { $('#searchResults').style.display = 'none'; return; }
-            const termLower = term.toLowerCase();
-            let results = [];
-            try {
-                const prescriptionsSnap = await get(ref(db, `tenants/${currentTenantId}/prescriptions`));
-                const seen = new Set();
-                if (prescriptionsSnap.exists()) {
-                    prescriptionsSnap.forEach(child => {
+        let villageSearchTimer;
+        
+        // ✅ البحث برقم الهاتف
+        const searchPatientsByPhone = async (phone) => {
+            if (!phone || phone.length < 1) {
+                $('#searchResults').style.display = 'none';
+                return;
+            }
+            
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(async () => {
+                let results = [];
+                
+                // 1. البحث المحلي أولاً
+                const localResults = searchPatientsLocal(phone);
+                if (localResults.length > 0) {
+                    results = localResults;
+                }
+                
+                // 2. البحث في السحابة
+                try {
+                    const snap = await get(ref(db, 'patients'));
+                    snap.forEach(child => {
                         const p = child.val();
-                        const patientId = p.patient_id;
-                        const patientName = (p.patient_name || '').toLowerCase();
-                        if (!seen.has(patientId) && (patientName.includes(termLower) || (p.phone && p.phone.includes(term)))) {
-                            seen.add(patientId);
-                            results.push({ id: patientId, name: p.patient_name || 'مريض', phone: p.phone || '' });
+                        if (p.phone && p.phone.includes(phone)) {
+                            if (!results.find(r => r.id === child.key)) {
+                                results.push({ id: child.key, ...p });
+                            }
                         }
                     });
+                } catch (err) {
+                    console.warn('تعذر البحث في السحابة:', err.message);
                 }
-            } catch (e) {}
-            
-            const container = $('#searchResults');
-            container.innerHTML = results.length === 0 
-                ? '<div class="search-item" style="color:var(--text-sec);">لا توجد نتائج</div>'
-                : results.slice(0, 10).map(p => `
-                    <div class="search-item" data-id="${p.id}">
-                        <b>${escapeHtml(p.name)}</b>
-                        <small style="color:var(--text-sec);margin-right:auto;">${escapeHtml(p.phone)}</small>
-                    </div>`).join('');
-            container.style.display = 'block';
+
+                const container = $('#searchResults');
+                if (results.length === 0) {
+                    container.innerHTML = '<div class="search-item" style="color:var(--text-sec);">لا توجد نتائج</div>';
+                } else {
+                    container.innerHTML = results.map(p => `
+                        <div class="search-item" data-id="${p.id}">
+                            <b>${escapeHtml(p.name)}</b>
+                            <small style="color:var(--text-sec);margin-right:auto;">${escapeHtml(p.phone || '')}</small>
+                        </div>
+                    `).join('');
+
+                    container.querySelectorAll('.search-item[data-id]').forEach(item => {
+                        item.addEventListener('click', () => {
+                            const patient = results.find(p => p.id === item.dataset.id);
+                            if (patient) showPatientHistory(patient);
+                        });
+                    });
+                }
+                container.style.display = 'block';
+            }, 250);
         };
 
+        // ✅ البحث ببيانات القرية
+        const setupVillageSearch = () => {
+            const fatherInput = $('#villageFatherName');
+            const familyInput = $('#villageFamilyName');
+            const villageInput = $('#villageNameInput');
+            
+            const performVillageSearch = () => {
+                const father = fatherInput.value.trim();
+                const family = familyInput.value.trim();
+                const village = villageInput.value.trim();
+                
+                if (!father && !family && !village) {
+                    $('#villageSearchResults').style.display = 'none';
+                    return;
+                }
+                
+                clearTimeout(villageSearchTimer);
+                villageSearchTimer = setTimeout(async () => {
+                    let results = [];
+                    
+                    // 1. البحث المحلي أولاً
+                    const localResults = searchPatientsLocalByVillage(father, family, village);
+                    if (localResults.length > 0) {
+                        results = localResults;
+                    }
+                    
+                    // 2. البحث في السحابة
+                    try {
+                        const snap = await get(ref(db, 'patients'));
+                        snap.forEach(child => {
+                            const p = child.val();
+                            const matchFather = !father || (p.father_name && p.father_name.includes(father));
+                            const matchFamily = !family || (p.family_name && p.family_name.includes(family));
+                            const matchVillage = !village || (p.village_name && p.village_name.includes(village));
+                            
+                            if (matchFather && matchFamily && matchVillage && (father || family || village)) {
+                                if (!results.find(r => r.id === child.key)) {
+                                    results.push({ id: child.key, ...p });
+                                }
+                            }
+                        });
+                    } catch (err) {
+                        console.warn('تعذر البحث في السحابة:', err.message);
+                    }
+
+                    const container = $('#villageSearchResults');
+                    if (results.length === 0) {
+                        container.innerHTML = '<div class="search-item" style="color:var(--text-sec);">لا توجد نتائج</div>';
+                    } else {
+                        container.innerHTML = results.map(p => `
+                            <div class="search-item" data-id="${p.id}">
+                                <b>${escapeHtml(p.name)}</b>
+                                <small style="color:var(--text-sec);">${escapeHtml(p.father_name || '')} - ${escapeHtml(p.family_name || '')} - ${escapeHtml(p.village_name || '')}</small>
+                            </div>
+                        `).join('');
+
+                        container.querySelectorAll('.search-item[data-id]').forEach(item => {
+                            item.addEventListener('click', () => {
+                                const patient = results.find(p => p.id === item.dataset.id);
+                                if (patient) showPatientHistory(patient);
+                            });
+                        });
+                    }
+                    container.style.display = 'block';
+                }, 400);
+            };
+            
+            fatherInput.addEventListener('input', performVillageSearch);
+            familyInput.addEventListener('input', performVillageSearch);
+            villageInput.addEventListener('input', performVillageSearch);
+        };
+
+        // ✅ عرض سجل المريض
+        const showPatientHistory = (patient) => {
+            const patientPrescriptions = state.allPrescriptions.filter(p => p.patient_id === patient.id);
+            
+            const container = $('#patientHistoryContainer');
+            
+            if (patientPrescriptions.length === 0) {
+                container.innerHTML = `
+                    <div style="background:#F5FAFC;border-radius:14px;padding:16px;margin-top:12px;">
+                        <b>${escapeHtml(patient.name)}</b>
+                        <p style="color:var(--text-sec);margin-top:4px;">لا توجد وصفات سابقة لهذا المريض</p>
+                    </div>`;
+                return;
+            }
+            
+            container.innerHTML = `
+                <div style="background:#F5FAFC;border-radius:14px;padding:16px;margin-top:12px;">
+                    <b>${escapeHtml(patient.name)}</b>
+                    <small style="color:var(--text-sec);display:block;">${escapeHtml(patient.phone || '')}</small>
+                    <div style="margin-top:12px;">
+                        <b>الوصفات السابقة (${patientPrescriptions.length}):</b>
+                        ${patientPrescriptions.map(p => {
+                            const doctor = state.doctorsList.find(d => d.id === p.doctor_id);
+                            const doctorName = doctor ? doctor.name : 'طبيب';
+                            const dateStr = p.created_at ? new Date(p.created_at).toLocaleDateString('ar-EG') : '';
+                            return `
+                                <div style="padding:8px;margin-top:6px;background:white;border-radius:8px;border:1px solid var(--border);">
+                                    <span>${dateStr} - د. ${escapeHtml(doctorName)}</span>
+                                    <span style="float:left;font-weight:700;color:${p.status === 'تم الصرف' ? 'var(--success)' : 'var(--warning)'};">${p.status}</span>
+                                </div>`;
+                        }).join('')}
+                    </div>
+                </div>`;
+            
+            // حفظ المريض في التخزين المحلي
+            savePatientToLocal(patient.id, patient);
+        };
+
+        // ✅ تبديل وضع البحث
+        const toggleSearchMode = (mode) => {
+            state.searchMode = mode;
+            const phoneSection = $('#phoneSearchSection');
+            const villageSection = $('#villageSearchSection');
+            const toggleToVillageBtn = $('#toggleToVillageBtn');
+            
+            if (mode === 'village') {
+                phoneSection.style.display = 'none';
+                villageSection.style.display = 'block';
+                toggleToVillageBtn.style.display = 'none';
+                $('#searchResults').style.display = 'none';
+                $('#patientSearchInput').value = '';
+            } else {
+                phoneSection.style.display = 'block';
+                villageSection.style.display = 'none';
+                toggleToVillageBtn.style.display = 'block';
+                $('#villageSearchResults').style.display = 'none';
+                $('#villageFatherName').value = '';
+                $('#villageFamilyName').value = '';
+                $('#villageNameInput').value = '';
+            }
+        };
+
+        // ============ تسجيل الخروج ============
         const logout = async () => {
             try {
                 showToast('👋 جاري تسجيل الخروج...');
@@ -1853,6 +2168,7 @@
             }
         };
 
+        // ============ تهيئة الأحداث ============
         const initEvents = () => {
             $$('.status-tab').forEach(tab => {
                 tab.addEventListener('click', () => {
@@ -1864,9 +2180,8 @@
                 });
             });
             
-            // ✅ الضغط على البطاقة أو الأزرار
+            // أحداث البطاقات
             $('#prescriptionsGrid').addEventListener('click', (e) => {
-                // ✅ الضغط على زر الصرف أو التفاصيل
                 const actionBtn = e.target.closest('[data-action]');
                 if (actionBtn) {
                     e.stopPropagation();
@@ -1874,16 +2189,13 @@
                     const prescription = state.allPrescriptions.find(p => p.id === id);
                     
                     if (actionBtn.dataset.action === 'dispense') {
-                        // فتح مودال الصرف للوصفات الجديدة
                         openDispenseModal(id);
                     } else {
-                        // ✅ فتح صفحة التفاصيل مع كل البيانات
                         openPrescriptionDetails(prescription);
                     }
                     return;
                 }
                 
-                // ✅ الضغط على البطاقة نفسها
                 const card = e.target.closest('.rx-card');
                 if (!card) return;
                 const id = card.dataset.id;
@@ -1891,10 +2203,8 @@
                 
                 if (prescription) {
                     if (prescription.status === 'لم تصرف بعد') {
-                        // الوصفات الجديدة: افتح مودال الصرف
                         openDispenseModal(id);
                     } else {
-                        // ✅ الوصفات المصروفة: افتح صفحة التفاصيل
                         openPrescriptionDetails(prescription);
                     }
                 }
@@ -1903,36 +2213,62 @@
             $('#confirmDispenseBtn').addEventListener('click', confirmDispense);
             $('#closeDispenseBtn').addEventListener('click', () => $('#dispenseModal').style.display = 'none');
             
+            // ✅ أحداث البحث عن مريض
             $('#searchPatientBtn').addEventListener('click', () => {
                 $('#searchModal').style.display = 'flex';
                 $('#patientSearchInput').value = '';
                 $('#searchResults').style.display = 'none';
+                $('#patientHistoryContainer').innerHTML = '';
+                toggleSearchMode('phone');
             });
             
-            $('#closeSearchBtn').addEventListener('click', () => $('#searchModal').style.display = 'none');
+            $('#closeSearchBtn').addEventListener('click', () => {
+                $('#searchModal').style.display = 'none';
+                $('#patientHistoryContainer').innerHTML = '';
+            });
             
             $('#patientSearchInput').addEventListener('input', () => {
-                clearTimeout(searchTimer);
-                searchTimer = setTimeout(() => searchPatients($('#patientSearchInput').value.trim()), 300);
+                searchPatientsByPhone($('#patientSearchInput').value.trim());
             });
+            
+            // ✅ زر التبديل إلى وضع القرية
+            $('#toggleToVillageBtn').addEventListener('click', () => toggleSearchMode('village'));
+            
+            // ✅ زر التبديل إلى وضع الهاتف
+            $('#togglePhoneModeBtn').addEventListener('click', () => toggleSearchMode('phone'));
+            
+            // ✅ تهيئة البحث بالقرية
+            setupVillageSearch();
             
             $('#logoutBtn').addEventListener('click', logout);
             
             window.addEventListener('click', (e) => {
                 if (e.target === $('#dispenseModal')) $('#dispenseModal').style.display = 'none';
-                if (e.target === $('#searchModal')) $('#searchModal').style.display = 'none';
+                if (e.target === $('#searchModal')) {
+                    $('#searchModal').style.display = 'none';
+                    $('#patientHistoryContainer').innerHTML = '';
+                }
             });
             
             document.addEventListener('click', (e) => {
                 if (!$('#patientSearchInput').contains(e.target) && !$('#searchResults').contains(e.target)) {
                     $('#searchResults').style.display = 'none';
                 }
+                if (!$('#villageFatherName').contains(e.target) && 
+                    !$('#villageFamilyName').contains(e.target) && 
+                    !$('#villageNameInput').contains(e.target) && 
+                    !$('#villageSearchResults').contains(e.target)) {
+                    $('#villageSearchResults').style.display = 'none';
+                }
             });
             
             document.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape') {
                     if ($('#dispenseModal').style.display === 'flex') $('#dispenseModal').style.display = 'none';
-                    if ($('#searchModal').style.display === 'flex') $('#searchModal').style.display = 'none';
+                    if ($('#searchModal').style.display === 'flex') {
+                        $('#searchModal').style.display = 'none';
+                        $('#patientHistoryContainer').innerHTML = '';
+                    }
                 }
             });
             
@@ -1941,6 +2277,7 @@
             window.addEventListener('beforeunload', () => { if (state.unsubscribePrescriptions) state.unsubscribePrescriptions(); });
         };
 
+        // ============ بدء التشغيل ============
         onAuthStateChanged(auth, async (user) => {
             if (!user) { clearLoginSessionOnly(); window.location.href = 'index.html'; return; }
             
@@ -1969,6 +2306,11 @@
             
             if (!state.currentUser) {
                 state.currentUser = { uid: user.uid };
+                
+                // إخفاء شاشة التحميل
+                $('#appLoader').style.display = 'none';
+                $('#mainContainer').style.display = 'block';
+                
                 const success = await loadPharmacistData(user.uid);
                 if (!success) { showToast('⚠️ تعذر تحميل بيانات الصيدلي', true); return; }
                 
@@ -1980,6 +2322,11 @@
                 loadPrescriptions();
             }
         });
+
+        console.log('🚀 لوحة الصيدلي - مع وظيفة البحث المتطابقة مع لوحة الممرض');
+        console.log('📂 المرضى يضافون في المسار العام patients بدون ربط بدكتور أو مجمع');
+        console.log('🔍 البحث برقم الهاتف أو بيانات القرية (اسم الأب - العائلة - القرية)');
+        console.log('🌳 وضع القرية: يخفي الهاتف والبحث ويظهر 3 خانات للبحث بالهوية البديلة');
     </script>
 </body>
 </html>
