@@ -53,6 +53,270 @@ class SessionDB {
     async delete(id) { if (!this.db) await this.open(); return new Promise((resolve, reject) => { const tx = this.db.transaction(this.storeName, 'readwrite'); tx.objectStore(this.storeName).delete(id); tx.oncomplete = resolve; tx.onerror = () => reject(tx.error); }); }
 }
 
+// ============================================================
+// ✅✅✅ قاعدة بيانات الأدوية المحلية - المتطورة ✅✅✅
+// ============================================================
+class LocalDrugsDB {
+    constructor() { 
+        this._dbName = null;
+    }
+    get dbName() {
+        if (!this._dbName) {
+            this._dbName = currentTenantId ? `ShifaDrugsDB_${currentTenantId}` : 'ShifaDrugsDB';
+        }
+        return this._dbName;
+    }
+    get storeName() { return 'localDrugs'; }
+    get db() { return this._db; }
+    set db(val) { this._db = val; }
+    
+    async open() { 
+        if (this.db) return; 
+        return new Promise((resolve, reject) => { 
+            const req = indexedDB.open(this.dbName, 2); 
+            req.onupgradeneeded = (e) => { 
+                const db = e.target.result; 
+                if (!db.objectStoreNames.contains(this.storeName)) {
+                    const store = db.createObjectStore(this.storeName, { keyPath: 'normalizedName' });
+                    store.createIndex('usageCount', 'usageCount', { unique: false });
+                    store.createIndex('lastUsed', 'lastUsed', { unique: false });
+                    store.createIndex('createdAt', 'createdAt', { unique: false });
+                }
+            }; 
+            req.onsuccess = (e) => { this.db = e.target.result; resolve(); }; 
+            req.onerror = (e) => reject(e.target.error); 
+        }); 
+    }
+    
+    /**
+     * تطبيع النص للبحث الذكي - يزيل التشكيل ويوحد الحروف المتشابهة
+     */
+    normalizeText(text) {
+        if (!text) return '';
+        return text
+            .toLowerCase()
+            .replace(/[أإآا]/g, 'ا')
+            .replace(/ة/g, 'ه')
+            .replace(/[ىي]/g, 'ي')
+            .replace(/[ؤئ]/g, 'ء')
+            .replace(/[ًٌٍَُِّْ]/g, '')
+            .replace(/[٠-٩]/g, d => String.fromCharCode(d.charCodeAt(0) - 1632 + 48))
+            .trim();
+    }
+    
+    /**
+     * إضافة دواء جديد أو تحديث عداد الاستخدام
+     */
+    async addOrUpdateDrug(drugName, form = 'tablet', strength = '') {
+        if (!this.db) await this.open();
+        
+        const normalized = this.normalizeText(drugName);
+        const tx = this.db.transaction(this.storeName, 'readwrite');
+        const store = tx.objectStore(this.storeName);
+        const req = store.get(normalized);
+        
+        return new Promise((resolve, reject) => {
+            req.onsuccess = () => {
+                let drug = req.result;
+                const now = new Date().toISOString();
+                
+                if (drug) {
+                    drug.usageCount = (drug.usageCount || 0) + 1;
+                    drug.lastUsed = now;
+                    if (form && !drug.forms.includes(form)) {
+                        drug.forms.push(form);
+                    }
+                } else {
+                    drug = {
+                        normalizedName: normalized,
+                        originalName: drugName,
+                        forms: form ? [form] : ['tablet'],
+                        strength: strength,
+                        usageCount: 1,
+                        hidden: false,
+                        createdAt: now,
+                        lastUsed: now,
+                        syncedToCloud: false
+                    };
+                }
+                
+                store.put(drug);
+                tx.oncomplete = () => resolve();
+                tx.onerror = () => reject(tx.error);
+            };
+            req.onerror = () => reject(req.error);
+        });
+    }
+    
+    /**
+     * البحث الذكي في قاعدة البيانات المحلية
+     * يدعم البحث الجزئي، لا يفرق بين الحروف المتشابهة، مع ترتيب أبجدي
+     */
+    async searchDrugs(searchTerm, limit = 10) {
+        if (!this.db) await this.open();
+        
+        const allDrugs = await this.getAllDrugs();
+        if (!searchTerm || searchTerm.trim() === '') {
+            return allDrugs.slice(0, limit);
+        }
+        
+        const normalizedTerm = this.normalizeText(searchTerm);
+        const searchLetters = normalizedTerm.split('');
+        
+        // تصفية الأدوية المطابقة
+        let results = allDrugs.filter(drug => {
+            if (drug.hidden) return false;
+            
+            const drugNormalized = drug.normalizedName;
+            
+            // البحث الذكي: كل حرف من حروف البحث موجود في اسم الدواء (بالترتيب)
+            let searchIndex = 0;
+            for (let i = 0; i < drugNormalized.length && searchIndex < searchLetters.length; i++) {
+                if (drugNormalized[i] === searchLetters[searchIndex]) {
+                    searchIndex++;
+                }
+            }
+            
+            return searchIndex === searchLetters.length;
+        });
+        
+        // الترتيب: أولاً الأكثر استخداماً، ثم الترتيب الأبجدي
+        results.sort((a, b) => {
+            // الأدوية التي تبدأ بنفس حروف البحث لها أولوية
+            const aStartsWith = a.normalizedName.startsWith(normalizedTerm) ? 1 : 0;
+            const bStartsWith = b.normalizedName.startsWith(normalizedTerm) ? 1 : 0;
+            
+            if (aStartsWith !== bStartsWith) {
+                return bStartsWith - aStartsWith;
+            }
+            
+            // ثم حسب عدد مرات الاستخدام
+            if (a.usageCount !== b.usageCount) {
+                return b.usageCount - a.usageCount;
+            }
+            
+            // ثم الترتيب الأبجدي
+            return a.normalizedName.localeCompare(b.normalizedName, 'ar');
+        });
+        
+        return results.slice(0, limit);
+    }
+    
+    /**
+     * جلب كل الأدوية مرتبة أبجدياً
+     */
+    async getAllDrugs() {
+        if (!this.db) await this.open();
+        
+        return new Promise((resolve, reject) => {
+            const tx = this.db.transaction(this.storeName, 'readonly');
+            const req = tx.objectStore(this.storeName).getAll();
+            req.onsuccess = () => {
+                const drugs = req.result || [];
+                // ترتيب أبجدي مع مراعاة الحرف الثاني إذا تشابه الأول
+                drugs.sort((a, b) => {
+                    return a.normalizedName.localeCompare(b.normalizedName, 'ar');
+                });
+                resolve(drugs);
+            };
+            req.onerror = () => reject(req.error);
+        });
+    }
+    
+    /**
+     * إخفاء دواء من الاقتراحات
+     */
+    async hideDrug(normalizedName) {
+        if (!this.db) await this.open();
+        
+        return new Promise((resolve) => {
+            const tx = this.db.transaction(this.storeName, 'readwrite');
+            const store = tx.objectStore(this.storeName);
+            const req = store.get(normalizedName);
+            req.onsuccess = () => {
+                let drug = req.result;
+                if (drug) {
+                    drug.hidden = true;
+                    store.put(drug);
+                }
+                resolve();
+            };
+            req.onerror = () => resolve();
+        });
+    }
+    
+    /**
+     * الحصول على الأدوية التي لم تتم مزامنتها بعد
+     */
+    async getUnsyncedDrugs() {
+        if (!this.db) await this.open();
+        
+        const allDrugs = await this.getAllDrugs();
+        return allDrugs.filter(d => !d.syncedToCloud);
+    }
+    
+    /**
+     * تحديث حالة المزامنة
+     */
+    async markAsSynced(normalizedNames) {
+        if (!this.db) await this.open();
+        
+        const tx = this.db.transaction(this.storeName, 'readwrite');
+        const store = tx.objectStore(this.storeName);
+        
+        for (const name of normalizedNames) {
+            const req = store.get(name);
+            req.onsuccess = () => {
+                if (req.result) {
+                    req.result.syncedToCloud = true;
+                    store.put(req.result);
+                }
+            };
+        }
+        
+        return new Promise(resolve => {
+            tx.oncomplete = resolve;
+        });
+    }
+    
+    /**
+     * استيراد أدوية من السحابة إلى المحلي
+     */
+    async importFromCloud(cloudDrugs) {
+        if (!this.db) await this.open();
+        
+        const tx = this.db.transaction(this.storeName, 'readwrite');
+        const store = tx.objectStore(this.storeName);
+        
+        for (const drug of cloudDrugs) {
+            const normalized = this.normalizeText(drug.name || drug.originalName || '');
+            if (!normalized) continue;
+            
+            const existingReq = store.get(normalized);
+            existingReq.onsuccess = () => {
+                const existing = existingReq.result;
+                if (!existing) {
+                    store.put({
+                        normalizedName: normalized,
+                        originalName: drug.name || drug.originalName,
+                        forms: drug.forms || ['tablet'],
+                        strength: drug.strength || '',
+                        usageCount: drug.usageCount || 0,
+                        hidden: false,
+                        createdAt: drug.createdAt || new Date().toISOString(),
+                        lastUsed: drug.lastUsed || null,
+                        syncedToCloud: true
+                    });
+                }
+            };
+        }
+        
+        return new Promise(resolve => {
+            tx.oncomplete = resolve;
+        });
+    }
+}
+
 class FavoriteDrugsDB {
     constructor() { 
         this._dbName = null;
@@ -111,13 +375,95 @@ class FavoriteDosesDB {
 }
 
 const sessionDB = new SessionDB();
+const localDrugsDB = new LocalDrugsDB();
 const favoritesDB = new FavoriteDrugsDB();
 const favoriteDosesDB = new FavoriteDosesDB();
+
+// مدير المزامنة بين المحلي والسحابي
+const syncManager = {
+    SYNC_INTERVAL: 24 * 60 * 60 * 1000, // 24 ساعة
+    
+    async initialize() {
+        await localDrugsDB.open();
+        await this.checkAndSync();
+        this.startPeriodicSync();
+    },
+    
+    async checkAndSync() {
+        const lastSync = localStorage.getItem(getTenantStorageKey('last_drugs_sync'));
+        const now = Date.now();
+        
+        if (!lastSync || (now - parseInt(lastSync)) > this.SYNC_INTERVAL) {
+            console.log('🔄 بدء مزامنة الأدوية...');
+            await this.syncDrugs();
+        }
+    },
+    
+    async syncDrugs() {
+        try {
+            // رفع الأدوية الجديدة من المحلي للسحابي
+            const unsyncedDrugs = await localDrugsDB.getUnsyncedDrugs();
+            
+            if (unsyncedDrugs.length > 0) {
+                const cloudDrugsRef = ref(db, `tenants/${currentTenantId}/drugs`);
+                const snap = await get(cloudDrugsRef);
+                let cloudDrugs = snap.exists() ? snap.val() : {};
+                
+                for (const drug of unsyncedDrugs) {
+                    const key = drug.normalizedName.replace(/[.#$/[\]]/g, '_');
+                    cloudDrugs[key] = {
+                        name: drug.originalName,
+                        normalizedName: drug.normalizedName,
+                        forms: drug.forms,
+                        strength: drug.strength,
+                        usageCount: drug.usageCount,
+                        createdAt: drug.createdAt,
+                        lastUsed: drug.lastUsed
+                    };
+                }
+                
+                await set(cloudDrugsRef, cloudDrugs);
+                await localDrugsDB.markAsSynced(unsyncedDrugs.map(d => d.normalizedName));
+                console.log(`✅ تم رفع ${unsyncedDrugs.length} دواء للسحابة`);
+            }
+            
+            // تنزيل الأدوية من السحابي للمحلي إذا كان المحلي فاضي
+            const localDrugs = await localDrugsDB.getAllDrugs();
+            
+            if (localDrugs.length === 0) {
+                const cloudSnap = await get(ref(db, `tenants/${currentTenantId}/drugs`));
+                
+                if (cloudSnap.exists()) {
+                    const cloudDrugs = Object.values(cloudSnap.val());
+                    await localDrugsDB.importFromCloud(cloudDrugs);
+                    console.log(`✅ تم تنزيل ${cloudDrugs.length} دواء من السحابة`);
+                }
+            }
+            
+            // تحديث وقت آخر مزامنة
+            localStorage.setItem(getTenantStorageKey('last_drugs_sync'), Date.now().toString());
+            
+        } catch (err) {
+            console.warn('⚠️ خطأ في مزامنة الأدوية:', err.message);
+        }
+    },
+    
+    startPeriodicSync() {
+        setInterval(() => {
+            this.syncDrugs();
+        }, this.SYNC_INTERVAL);
+    },
+    
+    async forceSync() {
+        console.log('🔄 مزامنة يدوية...');
+        await this.syncDrugs();
+    }
+};
 
 const state = {
     user: null, doctorData: null, appointments: [], currentAppointment: null,
     prescription: [], diagnosis: '', loadedTemplateId: null, loadedTemplateName: null,
-    activeSessionId: null, drugCache: [], globalDrugsCache: [], currentTab: 'current',
+    activeSessionId: null, currentTab: 'current',
     editingPrescription: null, editingRxId: null, editingPatientName: '',
     isEditingCompleted: false, editingCompletedRxId: null,
     previousRecordsCount: 0
@@ -131,16 +477,14 @@ const toast = (msg, err=false) => { const c = $('#toastContainer'); const t = do
 const getPatientName = (apt) => apt?.patient_name || apt?.patientName || 'غير معروف';
 const extractStrength = (text) => { const match = text.match(/(\d+(?:\.\d+)?\s*(?:gm|g|gram|mg|mcg|mcgm|IU|MU|ml|%|mcg\/ml|mg\/ml|mg\/5ml|mcg\/puff)(?:\/\d*\s*(?:ml|gm|g))?)/i); return match ? match[1] : ''; };
 
-// ✅ دالة مساعدة: ترجع تاريخ قبل N يوم من تاريخ معين
 const getDateDaysAgo = (days, fromDate = null) => {
     const d = fromDate ? new Date(fromDate) : new Date();
     d.setDate(d.getDate() - days);
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 };
 
-// ✅ دالة مساعدة: ترجع تاريخ الأيام الـ 15 الأخيرة (من اليوم - 14 إلى اليوم)
 const getLast15DaysRange = () => {
-    const startDate = getDateDaysAgo(14); // من 14 يوم فات (يعني 15 يوم شامل اليوم)
+    const startDate = getDateDaysAgo(14);
     const endDate = today();
     return { startDate, endDate };
 };
@@ -266,12 +610,6 @@ const doseManager = {
 // ✅✅✅ نظام المراقبة الذكي - نافذة منزلقة 15 يوم ✅✅✅
 // ============================================================
 const prescriptionTracker = {
-    /**
-     * تتبع وصفة دواء لدكتور معين
-     * - بيضيف وصفة جديدة لتاريخ اليوم
-     * - بيحافظ على آخر 15 يوم فقط (النافذة المنزلقة)
-     * - اليوم 16: يتمسح اليوم 1 تلقائياً
-     */
     async trackDrugPrescription(drugName, doctorId, doctorName) {
         if (!currentTenantId || !doctorId) return;
         
@@ -288,7 +626,6 @@ const prescriptionTracker = {
                 const data = snap.val();
                 let history = data.history || [];
                 
-                // ✅ 1. إضافة وصفة اليوم
                 const existingToday = history.find(h => h.date === todayDate);
                 if (existingToday) {
                     existingToday.count = (existingToday.count || 0) + 1;
@@ -299,17 +636,11 @@ const prescriptionTracker = {
                     });
                 }
                 
-                // ✅ 2. ترتيب التاريخ تصاعدياً
                 history.sort((a, b) => a.date.localeCompare(b.date));
                 
-                // ✅ 3. النافذة المنزلقة: نحتفظ بآخر 15 يوم فقط
-                // نحسب تاريخ البداية المسموح به (من 14 يوم فات لليوم = 15 يوم)
                 const cutoffDate = getDateDaysAgo(14);
-                
-                // ✅ نحتفظ فقط بالتواريخ الأحدث من cutoffDate
                 const filteredHistory = history.filter(h => h.date >= cutoffDate);
                 
-                // ✅ لو في تواريخ اتمسحت، نعرضها في اللوج
                 const removedCount = history.length - filteredHistory.length;
                 if (removedCount > 0) {
                     const removedDates = history
@@ -319,10 +650,8 @@ const prescriptionTracker = {
                     console.log(`🪟 نافذة منزلقة: تمت إزالة ${removedCount} أيام قديمة (${removedDates}) - ${drugName}`);
                 }
                 
-                // ✅ 4. حساب الإجمالي للنافذة الحالية
                 const totalCount15Days = filteredHistory.reduce((sum, h) => sum + (h.count || 0), 0);
                 
-                // ✅ 5. حفظ البيانات المحدثة
                 await set(drugRef, {
                     drug_name: drugName,
                     doctor_id: doctorId,
@@ -339,7 +668,6 @@ const prescriptionTracker = {
                 console.log(`📊 ${drugName}: ${totalCount15Days} وصفة في آخر 15 يوم (${cutoffDate} → ${todayDate})`);
                 
             } else {
-                // ✅ أول وصفة للدواء
                 const windowStart = getDateDaysAgo(14);
                 
                 await set(drugRef, {
@@ -363,10 +691,6 @@ const prescriptionTracker = {
         }
     },
     
-    /**
-     * جلب إحصائيات دواء معين لكل الدكاترة في المجمع
-     * مع إعادة حساب النافذة المنزلقة تلقائياً
-     */
     async getDrugStatsForAllDoctors(drugName) {
         if (!currentTenantId) return [];
         
@@ -385,7 +709,6 @@ const prescriptionTracker = {
                 
                 Object.entries(doctorData).forEach(([key, data]) => {
                     if (key === drugKey || (data.drug_name || '').toLowerCase() === drugName.toLowerCase()) {
-                        // ✅ إعادة حساب النافذة المنزلقة
                         const history = data.history || [];
                         const filteredHistory = history.filter(h => h.date >= cutoffDate);
                         const totalCount15Days = filteredHistory.reduce((sum, h) => sum + (h.count || 0), 0);
@@ -416,187 +739,44 @@ const prescriptionTracker = {
 };
 
 // ============================================================
-// ✅✅✅ drugManager مع ترتيب ذكي للاقتراحات ✅✅✅
+// ✅✅✅ drugManager - يستخدم قاعدة البيانات المحلية ✅✅✅
 // ============================================================
 const drugManager = {
-    _cachePromise: null,
-    
-    async loadCache() {
-        if (this._cachePromise) return this._cachePromise;
-        
-        this._cachePromise = (async () => {
-            try { 
-                const snap = await get(ref(db, `tenants/${currentTenantId}/drugs`));
-                if (snap.exists()) {
-                    state.globalDrugsCache = Object.values(snap.val());
-                } else {
-                    const globalSnap = await get(ref(db, 'drugs'));
-                    state.globalDrugsCache = globalSnap.exists() ? Object.values(globalSnap.val()) : [];
-                }
-            } catch(e) { 
-                state.globalDrugsCache = []; 
-            }
-            
-            try {
-                let localDrugs = [];
-                
-                if (window.__drugsDatabase && Array.isArray(window.__drugsDatabase)) {
-                    localDrugs = window.__drugsDatabase;
-                } else if (window.drugsDatabase && Array.isArray(window.drugsDatabase)) {
-                    localDrugs = window.drugsDatabase;
-                } else {
-                    try {
-                        const response = await fetch('./drugs-database.js');
-                        if (response.ok) {
-                            const text = await response.text();
-                            const regex = /"([^"]+)"/g;
-                            let match;
-                            while ((match = regex.exec(text)) !== null) {
-                                const name = match[1].trim();
-                                if (name.length >= 3 && 
-                                    !name.startsWith('//') && 
-                                    !name.startsWith('const') && 
-                                    !name.startsWith('export') &&
-                                    !name.startsWith('window') &&
-                                    !name.startsWith('&') &&
-                                    name !== 'drugsDatabase') {
-                                    localDrugs.push(name);
-                                }
-                            }
-                        }
-                    } catch(fetchErr) {
-                        console.warn('⚠️ تعذر تحميل ملف drugs-database.js:', fetchErr.message);
-                    }
-                }
-                
-                if (localDrugs.length > 0) {
-                    const seen = new Set(state.globalDrugsCache.map(d => (d.name || '').toLowerCase()));
-                    
-                    localDrugs.forEach(drugName => {
-                        if (drugName && !seen.has(drugName.toLowerCase())) {
-                            seen.add(drugName.toLowerCase());
-                            const strength = extractStrength(drugName);
-                            state.globalDrugsCache.push({
-                                id: `local_${state.globalDrugsCache.length}`,
-                                name: drugName,
-                                fullName: drugName,
-                                form: 'tablet',
-                                strength: strength,
-                                freq: 0
-                            });
-                        }
-                    });
-                    
-                    console.log(`✅ تم تحميل ${localDrugs.length} دواء من الملف المحلي`);
-                    console.log(`📦 إجمالي الأدوية في الذاكرة: ${state.globalDrugsCache.length}`);
-                }
-            } catch(err) {
-                console.warn('⚠️ خطأ في تحميل الأدوية المحلية:', err.message);
-            }
-            
-            state.drugCache = [...state.globalDrugsCache];
-        })();
-        
-        return this._cachePromise;
-    },
-    
     async getSuggestions(term, form = null) {
-        const termLower = term.toLowerCase().trim();
-        const suggestions = []; 
-        const seenNames = new Set();
+        const searchTerm = term.trim();
         
-        const localFavs = await favoritesDB.search(termLower, null, 8);
-        localFavs.forEach(d => { 
-            const key = `${(d.name || '').toLowerCase()}_${(d.form || '').toLowerCase()}_${(d.strength || '').toLowerCase()}`; 
-            if (!seenNames.has(key)) { 
-                seenNames.add(key); 
-                suggestions.push({ 
-                    name: d.fullName || `${d.name} ${d.strength || ''}`.trim(), 
-                    form: d.form || 'tablet', 
-                    strength: d.strength || '', 
-                    freq: d.usageCount || 0, 
-                    source: 'favorite', 
-                    originalName: d.name || '' 
-                }); 
-            } 
-        });
+        // البحث في قاعدة البيانات المحلية
+        const results = await localDrugsDB.searchDrugs(searchTerm, 10);
         
-        const remainingSlots = 10 - suggestions.length;
-        if (remainingSlots > 0) { 
-            let globalResults = state.globalDrugsCache.filter(d => { 
-                const name = (d.name || '').toLowerCase(); 
-                const fullName = (d.fullName || '').toLowerCase();
-                const strength = (d.strength || '').toLowerCase();
-                return name.includes(termLower) || 
-                       fullName.includes(termLower) ||
-                       strength.includes(termLower);
-            });
-            
-            globalResults.sort((a, b) => {
-                const aName = (a.name || a.fullName || '').toLowerCase();
-                const bName = (b.name || b.fullName || '').toLowerCase();
-                
-                const aStartsExact = aName.startsWith(termLower) ? 0 : 1;
-                const bStartsExact = bName.startsWith(termLower) ? 0 : 1;
-                
-                if (aStartsExact !== bStartsExact) {
-                    return aStartsExact - bStartsExact;
-                }
-                
-                if (aName.length !== bName.length) {
-                    return aName.length - bName.length;
-                }
-                
-                return aName.localeCompare(bName);
-            });
-            
-            const topResults = globalResults.slice(0, remainingSlots);
-            
-            for (const d of topResults) { 
-                const key = `${(d.name || '').toLowerCase()}_${(d.form || '').toLowerCase()}`; 
-                if (!seenNames.has(key)) { 
-                    seenNames.add(key); 
-                    suggestions.push({ 
-                        name: d.fullName || d.name || '', 
-                        form: d.form || 'tablet', 
-                        strength: d.strength || extractStrength(d.name || ''), 
-                        freq: d.freq || 0, 
-                        source: 'global', 
-                        originalName: d.name || '' 
-                    }); 
-                } 
-            }
-        }
-        
-        suggestions.sort((a, b) => {
-            const aName = (a.name || '').toLowerCase();
-            const bName = (b.name || '').toLowerCase();
-            
-            const aStarts = aName.startsWith(termLower) ? 0 : 1;
-            const bStarts = bName.startsWith(termLower) ? 0 : 1;
-            
-            if (aStarts !== bStarts) return aStarts - bStarts;
-            
-            if (a.source === 'favorite' && b.source !== 'favorite') return -1;
-            if (b.source === 'favorite' && a.source !== 'favorite') return 1;
-            
-            return aName.length - bName.length;
-        });
-        
-        return suggestions;
+        // تحويل النتائج للصيغة المطلوبة
+        return results.map(drug => ({
+            name: drug.originalName,
+            normalizedName: drug.normalizedName,
+            form: drug.forms[0] || 'tablet',
+            forms: drug.forms,
+            strength: drug.strength || extractStrength(drug.originalName),
+            freq: drug.usageCount || 0,
+            source: 'local',
+            originalName: drug.originalName
+        }));
     },
     
-    async recordUsage(fullDrugName, name, form, strength) { 
-        await favoritesDB.incrementAndSave(fullDrugName, name, form, strength); 
+    async recordUsage(fullDrugName, name, form, strength) {
+        // حفظ في قاعدة البيانات المحلية
+        await localDrugsDB.addOrUpdateDrug(fullDrugName, form, strength);
+        // حفظ في المفضلة القديمة للتوافق
+        await favoritesDB.incrementAndSave(fullDrugName, name, form, strength);
     },
     
-    async hideSuggestion(fullDrugName, name, form) { 
-        await favoritesDB.hideDrug(fullDrugName); 
-        toast(`تم تقليل ظهور "${fullDrugName}"`); 
+    async hideSuggestion(fullDrugName, name, form) {
+        const normalized = localDrugsDB.normalizeText(fullDrugName);
+        await localDrugsDB.hideDrug(normalized);
+        await favoritesDB.hideDrug(fullDrugName);
+        toast(`تم تقليل ظهور "${fullDrugName}"`);
     }
 };
 
-// ============ باقي الدوال بدون تغيير ============
+// ============ باقي الدوال ============
 
 async function saveSessionToDB() { 
     if (!state.currentAppointment) return; 
@@ -980,7 +1160,7 @@ function openSaveNewTemplateModal() {
 }
 
 // ============================================================
-// ✅✅✅ دالة فتح سجل المريض - عام لكل المجمعات ✅✅✅
+// ✅✅✅ دالة فتح سجل المريض - نفس المجمع فقط ✅✅✅
 // ============================================================
 async function openPatientFile() {
     const pid = state.currentAppointment?.patient_id || state.currentAppointment?.patientId;
@@ -992,72 +1172,51 @@ async function openPatientFile() {
     content.innerHTML = '<div style="text-align:center;padding:30px;"><div class="loader-circle"></div></div>';
     
     try {
+        // ✅ جلب بيانات المريض من نفس المجمع فقط
         const patientSnap = await get(ref(db, `tenants/${currentTenantId}/patients/${pid}`));
         const patient = patientSnap.exists() ? patientSnap.val() : {}; 
         const patientName = patient.name || 'غير معروف';
         
-        const tenantsSnap = await get(ref(db, 'tenants'));
-        const tenants = tenantsSnap.exists() ? Object.keys(tenantsSnap.val()) : [];
-        
+        // ✅ جلب وصفات المريض من نفس المجمع فقط
+        const prescriptionsSnap = await get(ref(db, `tenants/${currentTenantId}/prescriptions`));
         const patientRx = [];
-        const doctorsCache = {};
         
-        for (const tenantId of tenants) {
-            try {
-                const prescriptionsSnap = await get(ref(db, `tenants/${tenantId}/prescriptions`));
-                if (!prescriptionsSnap.exists()) continue;
-                
-                const rxPromises = [];
-                
-                prescriptionsSnap.forEach(child => {
-                    const rx = child.val();
-                    if (String(rx.patient_id) === String(pid)) {
-                        const isSameTenant = (tenantId === currentTenantId);
-                        
-                        rxPromises.push((async () => {
-                            const itemsSnap = await get(ref(db, `tenants/${tenantId}/prescription_items/${child.key}`));
-                            let items = [];
-                            if (itemsSnap.exists()) {
-                                items = Object.values(itemsSnap.val()).map(it => ({
-                                    drug: it.drug_name || it.drug_id || '',
-                                    form: it.form || 'tablet',
-                                    dose: it.dose || ''
-                                }));
-                            }
-                            
-                            let doctorDisplayName;
-                            if (isSameTenant) {
-                                doctorDisplayName = rx.doctor_name || 'طبيب';
-                                
-                                if (rx.doctor_id && (!rx.doctor_name || rx.doctor_name === 'طبيب')) {
-                                    if (!doctorsCache[rx.doctor_id]) {
-                                        try {
-                                            const docSnap = await get(ref(db, `tenants/${tenantId}/users/${rx.doctor_id}`));
-                                            doctorsCache[rx.doctor_id] = docSnap.exists() ? (docSnap.val().name || 'طبيب') : 'طبيب';
-                                        } catch(e) { doctorsCache[rx.doctor_id] = 'طبيب'; }
-                                    }
-                                    doctorDisplayName = doctorsCache[rx.doctor_id];
-                                }
-                            } else {
-                                doctorDisplayName = null;
-                            }
-                            
-                            patientRx.push({
-                                id: child.key,
-                                tenantId: tenantId,
-                                data: rx,
-                                items,
-                                isSameTenant,
-                                doctorDisplayName
-                            });
-                        })());
+        if (prescriptionsSnap.exists()) {
+            const doctorsCache = {};
+            
+            for (const [rxId, rx] of Object.entries(prescriptionsSnap.val())) {
+                if (String(rx.patient_id) === String(pid)) {
+                    let doctorDisplayName = rx.doctor_name || 'طبيب';
+                    
+                    // جلب اسم الدكتور الحقيقي إذا كان موجوداً
+                    if (rx.doctor_id && (!rx.doctor_name || rx.doctor_name === 'طبيب')) {
+                        if (!doctorsCache[rx.doctor_id]) {
+                            try {
+                                const docSnap = await get(ref(db, `tenants/${currentTenantId}/users/${rx.doctor_id}`));
+                                doctorsCache[rx.doctor_id] = docSnap.exists() ? (docSnap.val().name || 'طبيب') : 'طبيب';
+                            } catch(e) { doctorsCache[rx.doctor_id] = 'طبيب'; }
+                        }
+                        doctorDisplayName = doctorsCache[rx.doctor_id];
                     }
-                });
-                
-                await Promise.all(rxPromises);
-                
-            } catch(e) {
-                console.warn(`تعذر قراءة وصفات من المجمع ${tenantId}:`, e.message);
+                    
+                    // جلب أدوية الوصفة
+                    const itemsSnap = await get(ref(db, `tenants/${currentTenantId}/prescription_items/${rxId}`));
+                    let items = [];
+                    if (itemsSnap.exists()) {
+                        items = Object.values(itemsSnap.val()).map(it => ({
+                            drug: it.drug_name || it.drug_id || '',
+                            form: it.form || 'tablet',
+                            dose: it.dose || ''
+                        }));
+                    }
+                    
+                    patientRx.push({
+                        id: rxId,
+                        data: rx,
+                        items,
+                        doctorDisplayName
+                    });
+                }
             }
         }
         
@@ -1065,14 +1224,14 @@ async function openPatientFile() {
         const totalRx = patientRx.length;
         
         let html = `<div style="margin-bottom:20px;">
-            <h4>📁 ${esc(patientName)} - ${totalRx} وصفات (كل المجمعات)</h4>
+            <h4>📁 ${esc(patientName)} - ${totalRx} وصفات (${esc(state.user.tenantName || 'هذا المجمع')})</h4>
             <div style="font-size:0.75rem;color:var(--text-sec);">
-                🏥 السجل موحد من كل الفروع | 👨‍⚕️ اسم الدكتور يظهر فقط من نفس المجمع
+                🏥 السجل الطبي داخل المجمع | 👨‍⚕️ د. ${esc(state.user.name || 'طبيب')}
             </div>
         </div>`;
         
         if (patientRx.length === 0) { 
-            html += '<div style="text-align:center;padding:20px;color:var(--text-sec);">لا توجد وصفات مسجلة لهذا المريض</div>'; 
+            html += '<div style="text-align:center;padding:20px;color:var(--text-sec);">لا توجد وصفات مسجلة لهذا المريض في مجمعك</div>'; 
         } else {
             for (const r of patientRx) {
                 const rx = r.data;
@@ -1090,9 +1249,7 @@ async function openPatientFile() {
                         ? '<span class="prescription-status-badge status-partial">📦 جزئي</span>' 
                         : '<span class="prescription-status-badge status-pending">⏳ لم تصرف</span>';
                 
-                const doctorInfo = r.isSameTenant && r.doctorDisplayName
-                    ? `<span style="color:var(--accent);font-weight:600;">👨‍⚕️ د. ${esc(r.doctorDisplayName)}</span>`
-                    : `<span style="color:var(--text-sec);font-style:italic;">👨‍⚕️ مجمع آخر</span>`;
+                const doctorInfo = `<span style="color:var(--accent);font-weight:600;">👨‍⚕️ د. ${esc(r.doctorDisplayName)}</span>`;
                 
                 let drugsHtml = '';
                 if (r.items && r.items.length > 0) {
@@ -1109,7 +1266,7 @@ async function openPatientFile() {
                     : 'بدون تشخيص';
                 
                 html += `
-                    <div class="prescription-history-item" data-rx-id="${r.id}" data-tenant="${r.tenantId}">
+                    <div class="prescription-history-item" data-rx-id="${r.id}">
                         <div class="prescription-history-header">
                             <div style="flex:1;min-width:200px;">
                                 <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
@@ -1123,13 +1280,9 @@ async function openPatientFile() {
                                     ${diagnosisPreview}
                                 </div>
                             </div>
-                            ${r.isSameTenant ? `
-                            <button class="btn btn-info btn-sm restore-prescription-btn" data-rx-id="${r.id}" data-tenant="${r.tenantId}" style="white-space:nowrap;">
+                            <button class="btn btn-info btn-sm restore-prescription-btn" data-rx-id="${r.id}" style="white-space:nowrap;">
                                 <i class="fas fa-undo"></i> استرداد
                             </button>
-                            ` : `
-                            <span style="font-size:0.7rem;color:var(--text-sec);">🔒 للعرض فقط</span>
-                            `}
                         </div>
                         ${drugsHtml}
                     </div>
@@ -1143,13 +1296,6 @@ async function openPatientFile() {
             btn.addEventListener('click', async (e) => {
                 e.stopPropagation();
                 const rxId = btn.dataset.rxId;
-                const rxTenant = btn.dataset.tenant;
-                
-                if (rxTenant !== currentTenantId) {
-                    toast('لا يمكن استرداد وصفة من مجمع آخر', true);
-                    return;
-                }
-                
                 await restorePrescription(rxId);
             });
         });
@@ -1305,16 +1451,18 @@ async function finalizeSession(saveTemplate, templateName, templateAction) {
             await update(ref(db), updates); 
         }
         
+        // ✅ حفظ الوصفة باسم الدكتور واسم المجمع
         const prescriptionData = { 
             patient_id: apt.patient_id || apt.patientId || '', 
             patient_name: getPatientName(apt), 
             doctor_id: state.user.uid,
             doctor_name: state.user.name || 'طبيب',
+            tenant_id: currentTenantId,
+            tenant_name: state.user.tenantName || 'المجمع الطبي',
             diagnosis, 
             created_at: now, 
             status: 'لم تصرف بعد',
-            item_count: state.prescription.length,
-            tenantId: currentTenantId
+            item_count: state.prescription.length
         };
         
         const finalUpdates = {}; 
@@ -1431,6 +1579,7 @@ const setupEventListeners = () => {
         } 
     });
 
+    // ✅✅✅ البحث الذكي في الأدوية - يستخدم قاعدة البيانات المحلية ✅✅✅
     let searchTimer;
     $('#drugSearchInput').addEventListener('input', () => {
         const term = $('#drugSearchInput').value.trim();
@@ -1451,7 +1600,7 @@ const setupEventListeners = () => {
                     });
                 }
             } else {
-                dd.innerHTML = results.map(d => `<div class="suggestion-item" data-name="${esc(d.name)}" data-form="${d.form || 'tablet'}"><div class="suggestion-content">${esc(d.name)} <span class="usage-count">${d.freq||0}x</span></div><button class="hide-suggestion-btn" data-fullname="${esc(d.name)}" data-name="${esc(d.originalName||d.name)}" data-form="${d.form || 'tablet'}">×</button></div>`).join('');
+                dd.innerHTML = results.map(d => `<div class="suggestion-item" data-name="${esc(d.name)}" data-form="${d.forms[0] || 'tablet'}"><div class="suggestion-content">${esc(d.name)} <span class="usage-count">${d.freq||0}x</span></div><button class="hide-suggestion-btn" data-fullname="${esc(d.name)}" data-name="${esc(d.originalName||d.name)}" data-form="${d.forms[0] || 'tablet'}">×</button></div>`).join('');
                 dd.style.display = 'block';
                 dd.querySelectorAll('.suggestion-item').forEach(item => {
                     item.addEventListener('click', (e) => {
@@ -1621,7 +1770,14 @@ onAuthStateChanged(auth, async (user) => {
         sessionStorage.setItem('userRole', 'doctor'); 
         sessionStorage.setItem('userName', state.user.name||'');
         
-        await Promise.all([sessionDB.open(), favoritesDB.open(), favoriteDosesDB.open(), drugManager.loadCache()]);
+        // ✅ تهيئة قواعد البيانات المحلية والمزامنة
+        await Promise.all([
+            sessionDB.open(), 
+            favoritesDB.open(), 
+            favoriteDosesDB.open(), 
+            syncManager.initialize()
+        ]);
+        
         setupEventListeners();
         
         const q = query(ref(db, `tenants/${currentTenantId}/appointments`), orderByChild('doctor_id'), equalTo(user.uid));
@@ -1664,10 +1820,8 @@ onAuthStateChanged(auth, async (user) => {
 });
 
 console.log('🚀 لوحة الطبيب - نظام المجمعات الطبية المتعددة');
-console.log('🔍 البحث الذكي: ترتيب حسب بداية النص أولاً');
-console.log('💊 الشكل الصيدلي: يُحفظ في الروشتة فقط للصيدلي');
-console.log('⭐ المفضلات: تبحث بشكل ذكي مع كل حرف يُكتب');
-console.log('🔒 كل طبيب يشوف كشوفاته هو فقط في مجمعه');
-console.log('🪟 نظام مراقبة: نافذة منزلقة 15 يوم (اليوم 16 يتمسح اليوم 1 فقط)');
-console.log('🏥 سجل موحد: يظهر وصفات المريض من كل المجمعات مع إخفاء اسم الدكتور من المجمعات الأخرى');
+console.log('💊 البحث الذكي: قاعدة بيانات محلية مع ترتيب أبجدي');
+console.log('🔄 مزامنة: كل 24 ساعة بين المحلي والسحابي');
+console.log('🔍 بحث ذكي: لا يفرق بين الحروف المتشابهة (أ=ا، ة=ه)');
+console.log('🏥 سجل المريض: من نفس المجمع فقط مع اسم الدكتور واسم المجمع');
 console.log('💾 وضع الحفظ: يمسح جلسة الدخول فقط - يحتفظ ببيانات المجمع');
