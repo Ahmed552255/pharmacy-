@@ -22,6 +22,7 @@
             --text-sec: #5A7D8A;
             --danger: #E57373;
             --success: #26A69A;
+            --warning: #FFA726;
             --border: #E0E0E0;
             --shadow-sm: 0 4px 12px rgba(0,0,0,0.05);
             --shadow-md: 0 8px 24px rgba(0,0,0,0.08);
@@ -100,6 +101,33 @@
         
         .header-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
         
+        /* ✅ شريط العيادات */
+        .clinics-limit-bar {
+            background: var(--primary-light);
+            border-radius: var(--radius-xl);
+            padding: 6px 14px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+            border: 1px solid rgba(0, 174, 239, 0.3);
+        }
+        
+        .clinics-limit-bar.limit-reached {
+            background: #FFEBEE;
+            color: #C62828;
+            border-color: rgba(229, 115, 115, 0.4);
+        }
+        
+        .clinics-limit-bar.limit-warning {
+            background: #FFF8E1;
+            color: #E65100;
+            border-color: rgba(255, 167, 38, 0.4);
+        }
+        
         .search-wrapper {
             background: #F5FAFC;
             border-radius: var(--radius-xl);
@@ -146,11 +174,13 @@
         }
         
         .btn:active { opacity: 0.8; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .btn-primary { background: var(--primary); color: white; box-shadow: 0 3px 10px rgba(0, 174, 239, 0.2); }
         .btn-outline { background: var(--white); color: var(--ink); border: 1.5px solid var(--border); }
         .btn-icon { width: 42px; height: 42px; padding: 0; justify-content: center; border-radius: 50%; }
         .btn-danger { background: var(--danger); color: white; }
         .btn-success { background: var(--success); color: white; }
+        .btn-warning { background: var(--warning); color: white; }
         
         .stats-bar { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
         
@@ -198,6 +228,12 @@
         }
         
         .user-card:active { box-shadow: var(--shadow-md); }
+        
+        /* ✅ بطاقة مميزة للطبيب عند الاقتراب من الحد */
+        .user-card.doctor-near-limit {
+            border: 2px dashed var(--warning);
+            background: #FFFDF7;
+        }
         
         .card-status-dot {
             position: absolute;
@@ -291,6 +327,23 @@
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
+        }
+        
+        /* ✅ مؤشر القفل للتغيير */
+        .status-change-locked {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: #FFF8E1;
+            color: #E65100;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+        
+        .status-change-locked i {
+            font-size: 0.65rem;
         }
         
         .empty-state {
@@ -468,6 +521,66 @@
             font-size: 0.85rem;
         }
         
+        /* ✅ تنبيه الحد الأقصى للعيادات */
+        .clinic-limit-alert {
+            background: #FFEBEE;
+            border: 2px solid #E57373;
+            border-radius: var(--radius-sm);
+            padding: 14px 16px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            font-weight: 600;
+            color: #C62828;
+            font-size: 0.88rem;
+        }
+        
+        .clinic-limit-alert i {
+            font-size: 1.3rem;
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+        
+        .clinic-limit-warning {
+            background: #FFF8E1;
+            border: 2px solid #FFB74D;
+            border-radius: var(--radius-sm);
+            padding: 12px 14px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            font-weight: 600;
+            color: #E65100;
+            font-size: 0.85rem;
+        }
+        
+        .clinic-limit-warning i {
+            font-size: 1.2rem;
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+        
+        /* ✅ رسالة قفل تغيير الحالة */
+        .status-lock-message {
+            background: #FFF8E1;
+            border: 1px solid #FFB74D;
+            border-radius: var(--radius-sm);
+            padding: 10px 14px;
+            margin: 10px 0;
+            font-size: 0.82rem;
+            color: #E65100;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .status-lock-message i {
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+        
         .keyboard-scroll-spacer { height: 1px; width: 100%; pointer-events: none; opacity: 0; }
         
         .toast-container {
@@ -498,6 +611,7 @@
         }
         
         .toast.error { background: #C62828; }
+        .toast.warning { background: #E65100; }
         .toast.removing { animation: toastOut 0.3s ease forwards; }
         
         @keyframes toastIn {
@@ -568,6 +682,7 @@
             .modal-card { max-width: 100%; border-radius: var(--radius-md); }
             .btn { padding: 8px 14px; font-size: 0.8rem; }
             .modal-body { padding-bottom: 55vh; }
+            .clinics-limit-bar { font-size: 0.7rem; padding: 4px 10px; }
         }
         
         @media (max-width: 360px) {
@@ -608,6 +723,11 @@
                 </h2>
             </div>
             <div class="header-actions">
+                <!-- ✅ شريط عدد العيادات -->
+                <div class="clinics-limit-bar" id="clinicsLimitBar">
+                    <i class="fas fa-hospital"></i>
+                    <span id="clinicsLimitText">العيادات: --/--</span>
+                </div>
                 <div class="tenant-info" id="tenantInfo">
                     <i class="fas fa-hospital"></i>
                     <span id="tenantIdDisplay">مجمع طبي</span>
@@ -698,6 +818,12 @@
                     </div>
                 </div>
                 
+                <!-- ✅ رسالة قفل تغيير الحالة -->
+                <div class="status-lock-message" id="statusLockMessage" style="display:none;">
+                    <i class="fas fa-lock"></i>
+                    <span id="statusLockText"></span>
+                </div>
+                
                 <div style="display:grid; gap:10px; margin-bottom:18px;">
                     <div class="detail-row"><i class="fas fa-envelope"></i> <span id="detailEmail"></span></div>
                     <div class="detail-row"><i class="fas fa-phone"></i> <span id="detailPhone"></span></div>
@@ -713,6 +839,12 @@
                             <span id="passwordText">••••••••</span>
                             <i class="fas fa-copy" style="font-size:0.75rem;"></i>
                         </span>
+                    </div>
+                    <!-- ✅ عرض تاريخ آخر تغيير حالة -->
+                    <div class="detail-row" id="detailLastStatusChangeRow" style="display:none;">
+                        <i class="fas fa-history"></i>
+                        <span>آخر تغيير حالة:</span>
+                        <span id="detailLastStatusChange"></span>
                     </div>
                 </div>
                 
@@ -745,6 +877,12 @@
                 <button class="close-btn" id="closeFormBtn">&times;</button>
             </div>
             <div class="modal-body">
+                <!-- ✅ تنبيه الحد الأقصى للعيادات -->
+                <div class="clinic-limit-alert" id="clinicLimitAlert" style="display:none;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span id="clinicLimitAlertText"></span>
+                </div>
+                
                 <div class="form-group">
                     <label>الاسم الكامل *</label>
                     <input type="text" id="userName" placeholder="أدخل الاسم الكامل" required>
@@ -765,6 +903,11 @@
                         <option value="nurse">👩‍⚕️ ممرض/ة</option>
                         <option value="pharmacist">💊 صيدلي</option>
                     </select>
+                    <!-- ✅ رسالة تحذير عند اختيار طبيب -->
+                    <div class="clinic-limit-warning" id="doctorWarning" style="display:none;">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <span id="doctorWarningText"></span>
+                    </div>
                 </div>
                 <div class="form-group" id="assignDoctorsGroup" style="display:none;">
                     <label>الأطباء المسؤولون (يمكن اختيار أكثر من طبيب)</label>
@@ -803,7 +946,7 @@
         </div>
     </div>
 
-    <!-- ============ ✅ مودال إعدادات المجمع (جديد) ============ -->
+    <!-- ============ مودال إعدادات المجمع ============ -->
     <div id="settingsModal" class="modal">
         <div class="modal-card">
             <div class="modal-header">
@@ -867,7 +1010,7 @@
         const SIGN_UP_URL = `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${API_KEY}`;
         const DELETE_URL = `https://identitytoolkit.googleapis.com/v1/accounts:delete?key=${API_KEY}`;
 
-        // ============ ✅ مراكز المحافظات ============
+        // ============ مراكز المحافظات ============
         const GOVERNORATE_CITIES = {
             'المنيا': [
                 'المنيا', 'أبو قرقاص', 'العدوة', 'بني مزار', 'دير مواس', 
@@ -887,9 +1030,14 @@
             ]
         };
 
+        // ============ ✅ إعدادات الحدود والقفل ============
+        const STATUS_CHANGE_LOCK_DAYS = 20; // عدد أيام القفل لتغيير الحالة
+        const STATUS_CHANGE_LOCK_MS = STATUS_CHANGE_LOCK_DAYS * 24 * 60 * 60 * 1000; // بالميلي ثانية
+
         // ============ متغير المجمع الطبي (Tenant ID) ============
         let currentAdminId = null;
         let currentTenantId = null;
+        let maxClinicsAllowed = 0; // ✅ الحد الأقصى للعيادات المسموح بها
         
         // ============ مراجع Firebase ============
         let tenantUsersRef = null;
@@ -916,7 +1064,7 @@
         let unsubscribeLinks = null;
         let searchTimer = null;
         let isOnline = navigator.onLine;
-        let tenantSettings = null; // ✅ بيانات إعدادات المجمع
+        let tenantSettings = null;
 
         // ============ دوال مساعدة ============
         const $ = (sel) => document.querySelector(sel);
@@ -929,16 +1077,20 @@
             return div.innerHTML;
         };
 
-        const showToast = (msg, isError = false) => {
+        const showToast = (msg, isError = false, isWarning = false) => {
             const container = $('#toastContainer');
             const toast = document.createElement('div');
-            toast.className = `toast ${isError ? 'error' : ''}`;
-            toast.innerHTML = `<i class="fas ${isError ? 'fa-exclamation-circle' : 'fa-check-circle'}"></i> ${msg}`;
+            let toastClass = 'toast';
+            if (isError) toastClass += ' error';
+            if (isWarning) toastClass += ' warning';
+            toast.className = toastClass;
+            const icon = isError ? 'fa-exclamation-circle' : (isWarning ? 'fa-exclamation-triangle' : 'fa-check-circle');
+            toast.innerHTML = `<i class="fas ${icon}"></i> ${msg}`;
             container.appendChild(toast);
             setTimeout(() => {
                 toast.classList.add('removing');
                 setTimeout(() => toast.remove(), 300);
-            }, 2500);
+            }, 3000);
         };
 
         const getTenantStorageKey = (baseKey) => {
@@ -953,7 +1105,175 @@
             }
         };
 
-        // ============ ✅ دوال إعدادات المجمع ============
+        // ============ ✅ دوال عدد العيادات المسموح بها ============
+        
+        /**
+         * جلب الحد الأقصى لعدد العيادات المسموح بها من بيانات المجمع
+         */
+        const fetchMaxClinicsAllowed = async () => {
+            if (!currentTenantId) return 0;
+            try {
+                const tenantSnap = await get(ref(db, `tenants/${currentTenantId}`));
+                if (tenantSnap.exists()) {
+                    const tenantData = tenantSnap.val();
+                    maxClinicsAllowed = tenantData.clinicsCount || 0;
+                    return maxClinicsAllowed;
+                }
+                
+                // محاولة من بيانات المستخدم المسؤول
+                const adminSnap = await get(ref(db, `tenants/${currentTenantId}/users/${currentAdminId}`));
+                if (adminSnap.exists()) {
+                    const adminData = adminSnap.val();
+                    maxClinicsAllowed = adminData.clinicsCount || 0;
+                    return maxClinicsAllowed;
+                }
+                
+                // محاولة من المسار العام
+                const publicSnap = await get(ref(db, `users/${currentAdminId}`));
+                if (publicSnap.exists()) {
+                    const publicData = publicSnap.val();
+                    maxClinicsAllowed = publicData.clinicsCount || 0;
+                    return maxClinicsAllowed;
+                }
+                
+                return 0;
+            } catch (e) {
+                console.warn('تعذر جلب عدد العيادات المسموح بها:', e.message);
+                return 0;
+            }
+        };
+
+        /**
+         * ✅ حساب عدد الأطباء النشطين فقط (كل طبيب نشط = عيادة واحدة)
+         */
+        const countActiveDoctors = () => {
+            return allUsers.filter(u => u.role === 'doctor' && u.status === 'active').length;
+        };
+
+        /**
+         * ✅ حساب عدد الأطباء المحظورين
+         */
+        const countBlockedDoctors = () => {
+            return allUsers.filter(u => u.role === 'doctor' && u.status === 'blocked').length;
+        };
+
+        /**
+         * ✅ التحقق إذا كان يمكن إضافة طبيب جديد
+         */
+        const canAddNewDoctor = () => {
+            if (maxClinicsAllowed <= 0) return false;
+            const activeDoctorsCount = countActiveDoctors();
+            return activeDoctorsCount < maxClinicsAllowed;
+        };
+
+        /**
+         * ✅ الحصول على عدد العيادات المتبقية
+         */
+        const getRemainingClinicsSlots = () => {
+            if (maxClinicsAllowed <= 0) return 0;
+            const activeDoctorsCount = countActiveDoctors();
+            return Math.max(0, maxClinicsAllowed - activeDoctorsCount);
+        };
+
+        /**
+         * ✅ تحديث شريط العيادات في الواجهة
+         */
+        const updateClinicsLimitBar = () => {
+            const bar = $('#clinicsLimitBar');
+            const text = $('#clinicsLimitText');
+            if (!bar || !text) return;
+            
+            const activeCount = countActiveDoctors();
+            const remaining = getRemainingClinicsSlots();
+            const totalDoctors = allUsers.filter(u => u.role === 'doctor').length;
+            const blockedCount = countBlockedDoctors();
+            
+            // إزالة الكلاسات القديمة
+            bar.classList.remove('limit-reached', 'limit-warning');
+            
+            if (maxClinicsAllowed <= 0) {
+                text.textContent = `العيادات: ${activeCount} (غير محدد)`;
+                bar.classList.add('limit-warning');
+            } else if (remaining <= 0) {
+                text.textContent = `⚠️ العيادات: ${activeCount}/${maxClinicsAllowed} - الحد الأقصى`;
+                bar.classList.add('limit-reached');
+            } else if (remaining <= 2) {
+                text.textContent = `⚡ العيادات: ${activeCount}/${maxClinicsAllowed} (متبقي ${remaining})`;
+                bar.classList.add('limit-warning');
+            } else {
+                text.textContent = `العيادات: ${activeCount}/${maxClinicsAllowed} (متبقي ${remaining})`;
+            }
+            
+            bar.title = `الأطباء النشطين: ${activeCount} | المحظورين: ${blockedCount} | الإجمالي: ${totalDoctors} | الحد الأقصى: ${maxClinicsAllowed || 'غير محدد'}`;
+        };
+
+        /**
+         * ✅ التحقق من إمكانية تغيير الحالة (قفل 20 يوم)
+         * @returns {Object} { canChange: boolean, message: string, remainingDays: number }
+         */
+        const canChangeUserStatus = (user) => {
+            if (!user.lastStatusChange) {
+                // لم يسبق له تغيير الحالة، مسموح
+                return { canChange: true, message: '', remainingDays: 0 };
+            }
+            
+            const lastChangeDate = new Date(user.lastStatusChange);
+            const now = new Date();
+            const timeSinceLastChange = now.getTime() - lastChangeDate.getTime();
+            
+            if (timeSinceLastChange >= STATUS_CHANGE_LOCK_MS) {
+                // مرت 20 يوم، مسموح
+                return { canChange: true, message: '', remainingDays: 0 };
+            }
+            
+            // لم تمر 20 يوم، محظور
+            const remainingMs = STATUS_CHANGE_LOCK_MS - timeSinceLastChange;
+            const remainingDays = Math.ceil(remainingMs / (24 * 60 * 60 * 1000));
+            const lastChangeFormatted = lastChangeDate.toLocaleDateString('ar-EG', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            const unlockDate = new Date(lastChangeDate.getTime() + STATUS_CHANGE_LOCK_MS);
+            const unlockFormatted = unlockDate.toLocaleDateString('ar-EG', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            
+            return {
+                canChange: false,
+                message: `⏳ آخر تغيير للحالة كان في ${lastChangeFormatted}. يمكن تغيير الحالة مرة أخرى بعد ${unlockFormatted} (متبقي ${remainingDays} يوم)`,
+                remainingDays: remainingDays,
+                lastChangeDate: lastChangeFormatted,
+                unlockDate: unlockFormatted
+            };
+        };
+
+        /**
+         * ✅ تسجيل تاريخ تغيير الحالة
+         */
+        const recordStatusChange = async (userId, newStatus) => {
+            if (!currentTenantId || !userId) return;
+            const now = new Date().toISOString();
+            try {
+                await update(ref(db, `tenants/${currentTenantId}/users/${userId}`), {
+                    status: newStatus,
+                    lastStatusChange: now,
+                    statusChangeHistory: {
+                        [now]: {
+                            from: newStatus === 'active' ? 'blocked' : 'active',
+                            to: newStatus,
+                            changedBy: currentAdminId
+                        }
+                    }
+                });
+            } catch (e) {
+                console.error('خطأ في تسجيل تغيير الحالة:', e);
+            }
+        };
+
+        // ============ دوال إعدادات المجمع ============
         
         const loadTenantSettings = async () => {
             if (!currentTenantId) return null;
@@ -979,7 +1299,6 @@
         };
 
         const openSettingsModal = (isRequired = false) => {
-            // ملء البيانات الحالية لو موجودة
             if (tenantSettings) {
                 $('#tenantNameInput').value = tenantSettings.name || '';
                 if (tenantSettings.governorate) {
@@ -992,7 +1311,6 @@
                 $('#addressInput').value = tenantSettings.address || '';
             }
             
-            // لو الإعدادات مطلوبة (أول مرة)، منخليش الزر يقفل
             if (isRequired) {
                 $('#settingsModal').querySelector('.close-btn').style.display = 'none';
                 $('#settingsModal').dataset.required = 'true';
@@ -1070,11 +1388,9 @@
                 
                 await set(ref(db, `tenants/${currentTenantId}/settings`), settingsData);
                 
-                // تحديث اسم المجمع في واجهة المستخدم
                 tenantSettings = settingsData;
                 $('#tenantIdDisplay').textContent = name;
                 
-                // تحديث اسم المجمع في بيانات المستخدم الحالي
                 await update(ref(db, `tenants/${currentTenantId}/users/${currentAdminId}`), {
                     tenantName: name
                 });
@@ -1168,14 +1484,19 @@
         const updateStats = () => {
             const total = allUsers.length;
             const doctors = allUsers.filter(u => u.role === 'doctor').length;
+            const activeDoctors = countActiveDoctors();
             const nurses = allUsers.filter(u => u.role === 'nurse').length;
             const pharmacists = allUsers.filter(u => u.role === 'pharmacist').length;
             
             const el = (id) => document.getElementById(id);
             if (el('statTotal')) el('statTotal').textContent = total;
-            if (el('statDoctors')) el('statDoctors').textContent = doctors;
+            // ✅ عرض الأطباء النشطين / الإجمالي
+            if (el('statDoctors')) el('statDoctors').textContent = `${activeDoctors}/${doctors}`;
             if (el('statNurses')) el('statNurses').textContent = nurses;
             if (el('statPharmacists')) el('statPharmacists').textContent = pharmacists;
+            
+            // ✅ تحديث شريط العيادات
+            updateClinicsLimitBar();
         };
 
         const combineAndRender = () => {
@@ -1236,12 +1557,15 @@
             if (!container) return;
             container.innerHTML = '';
             
-            if (doctorsList.length === 0) {
-                container.innerHTML = '<div style="padding:10px; color:var(--text-sec);">لا يوجد أطباء مسجلين بعد</div>';
+            // ✅ عرض الأطباء النشطين فقط في القائمة
+            const activeDoctors = doctorsList.filter(d => d.status === 'active');
+            
+            if (activeDoctors.length === 0) {
+                container.innerHTML = '<div style="padding:10px; color:var(--text-sec);">لا يوجد أطباء نشطين مسجلين بعد</div>';
                 return;
             }
             
-            doctorsList.forEach(doc => {
+            activeDoctors.forEach(doc => {
                 const label = document.createElement('label');
                 label.dataset.doctorId = doc.id;
                 label.innerHTML = `
@@ -1291,6 +1615,8 @@
                 return;
             }
             
+            const remainingSlots = getRemainingClinicsSlots();
+            
             grid.innerHTML = filtered.map(user => {
                 const roleText = { doctor: 'طبيب', nurse: 'ممرض', pharmacist: 'صيدلي', admin: 'مدير' }[user.role] || user.role;
                 const roleClass = `role-${user.role}`;
@@ -1317,8 +1643,25 @@
                         : `<div class="assigned-doctors" style="color:#c62828;"><i class="fas fa-exclamation-triangle"></i> غير محدد</div>`;
                 }
                 
+                // ✅ التحقق من حالة القفل
+                let lockIndicator = '';
+                if (user.role === 'doctor') {
+                    const statusCheck = canChangeUserStatus(user);
+                    if (!statusCheck.canChange) {
+                        lockIndicator = `<div class="status-change-locked" title="${escapeHtml(statusCheck.message)}">
+                            <i class="fas fa-lock"></i> ${statusCheck.remainingDays} يوم
+                        </div>`;
+                    }
+                }
+                
+                // ✅ تمييز البطاقة عند الاقتراب من الحد
+                let cardClass = 'user-card';
+                if (user.role === 'doctor' && user.status === 'active' && maxClinicsAllowed > 0 && remainingSlots <= 2 && remainingSlots > 0) {
+                    cardClass += ' doctor-near-limit';
+                }
+                
                 return `
-                <div class="user-card" data-id="${user.id}">
+                <div class="${cardClass}" data-id="${user.id}">
                     <div class="card-status-dot ${statusDot}"></div>
                     <div class="card-avatar">
                         <div class="avatar-circle"><i class="fas ${avatarIcon}"></i></div>
@@ -1327,6 +1670,7 @@
                     <div style="text-align:center">
                         <span class="role-tag ${roleClass}">${roleText}</span>
                     </div>
+                    ${lockIndicator}
                     ${assignedInfo}
                     <div class="user-bio">
                         <i class="fas fa-pen"></i> ${escapeHtml((user.quickBlurb || '').substring(0, 50) || 'لا توجد لمحة')}
@@ -1380,6 +1724,52 @@
                 specialtyRow.style.display = 'none';
             }
             
+            // ✅ عرض معلومات قفل تغيير الحالة
+            const statusLockMessage = $('#statusLockMessage');
+            const statusLockText = $('#statusLockText');
+            const lastStatusChangeRow = $('#detailLastStatusChangeRow');
+            const lastStatusChangeEl = $('#detailLastStatusChange');
+            
+            if (user.role === 'doctor') {
+                const statusCheck = canChangeUserStatus(user);
+                if (!statusCheck.canChange) {
+                    statusLockMessage.style.display = 'flex';
+                    statusLockText.textContent = statusCheck.message;
+                    $('#blockModalBtn').disabled = true;
+                    $('#blockModalBtn').style.opacity = '0.5';
+                    $('#unblockModalBtn').disabled = true;
+                    $('#unblockModalBtn').style.opacity = '0.5';
+                } else {
+                    statusLockMessage.style.display = 'none';
+                    $('#blockModalBtn').disabled = (user.status === 'blocked');
+                    $('#unblockModalBtn').disabled = (user.status === 'active');
+                    $('#blockModalBtn').style.opacity = user.status === 'blocked' ? '0.5' : '1';
+                    $('#unblockModalBtn').style.opacity = user.status === 'active' ? '0.5' : '1';
+                }
+                
+                // ✅ عرض تاريخ آخر تغيير حالة
+                if (user.lastStatusChange) {
+                    lastStatusChangeRow.style.display = 'flex';
+                    const changeDate = new Date(user.lastStatusChange);
+                    lastStatusChangeEl.textContent = changeDate.toLocaleDateString('ar-EG', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                } else {
+                    lastStatusChangeRow.style.display = 'none';
+                }
+            } else {
+                statusLockMessage.style.display = 'none';
+                lastStatusChangeRow.style.display = 'none';
+                $('#blockModalBtn').disabled = (user.status === 'blocked');
+                $('#unblockModalBtn').disabled = (user.status === 'active');
+                $('#blockModalBtn').style.opacity = user.status === 'blocked' ? '0.5' : '1';
+                $('#unblockModalBtn').style.opacity = user.status === 'active' ? '0.5' : '1';
+            }
+            
             const assignedSection = $('#detailAssignedDoctorsSection');
             if (user.role === 'nurse') {
                 const linkedIds = user._linkedDoctorIds || [];
@@ -1403,6 +1793,11 @@
             $('#detailModal').style.display = 'none';
             currentViewId = null;
             currentUserPassword = null;
+            // إعادة تعيين الأزرار
+            $('#blockModalBtn').disabled = false;
+            $('#unblockModalBtn').disabled = false;
+            $('#blockModalBtn').style.opacity = '1';
+            $('#unblockModalBtn').style.opacity = '1';
         };
 
         const openAddModal = () => {
@@ -1424,6 +1819,17 @@
             
             $('#assignDoctorsGroup').style.display = 'none';
             $('#specialtyGroup').style.display = 'none';
+            
+            // ✅ إخفاء تنبيهات الحد الأقصى
+            $('#clinicLimitAlert').style.display = 'none';
+            $('#doctorWarning').style.display = 'none';
+            
+            // ✅ التحقق من إمكانية إضافة طبيب جديد
+            if (maxClinicsAllowed > 0 && !canAddNewDoctor()) {
+                $('#clinicLimitAlert').style.display = 'flex';
+                $('#clinicLimitAlertText').textContent = 
+                    `⚠️ تم الوصول للحد الأقصى للعيادات (${countActiveDoctors()}/${maxClinicsAllowed}). لا يمكن إضافة طبيب جديد. قم بحظر طبيب موجود أولاً ثم حاول مرة أخرى بعد 20 يوم.`;
+            }
             
             $$('#assignedDoctorsCheckboxGroup input[type=checkbox]').forEach(cb => {
                 cb.checked = false;
@@ -1456,6 +1862,10 @@
             $('#assignDoctorsGroup').style.display = role === 'nurse' ? 'block' : 'none';
             $('#specialtyGroup').style.display = role === 'doctor' ? 'block' : 'none';
             
+            // ✅ إخفاء تنبيهات الحد الأقصى في وضع التعديل
+            $('#clinicLimitAlert').style.display = 'none';
+            $('#doctorWarning').style.display = 'none';
+            
             if (role === 'nurse') {
                 const checkboxes = $$('#assignedDoctorsCheckboxGroup input[type=checkbox]');
                 const linkedIds = user._linkedDoctorIds || [];
@@ -1480,6 +1890,9 @@
         const closeFormModal = () => {
             $('#formModal').style.display = 'none';
             currentEditId = null;
+            // إخفاء التنبيهات
+            $('#clinicLimitAlert').style.display = 'none';
+            $('#doctorWarning').style.display = 'none';
         };
 
         // ============ الأحداث ============
@@ -1488,9 +1901,38 @@
             const role = e.target.value;
             $('#assignDoctorsGroup').style.display = role === 'nurse' ? 'block' : 'none';
             $('#specialtyGroup').style.display = role === 'doctor' ? 'block' : 'none';
+            
+            // ✅ إظهار تحذير عند اختيار طبيب والاقتراب من الحد الأقصى
+            const doctorWarning = $('#doctorWarning');
+            const doctorWarningText = $('#doctorWarningText');
+            
+            if (role === 'doctor' && !currentEditId) {
+                const remaining = getRemainingClinicsSlots();
+                const activeCount = countActiveDoctors();
+                
+                if (maxClinicsAllowed > 0) {
+                    if (remaining <= 0) {
+                        doctorWarning.style.display = 'flex';
+                        doctorWarningText.textContent = 
+                            `⚠️ لا يمكن إضافة طبيب جديد! الحد الأقصى للعيادات (${activeCount}/${maxClinicsAllowed}) تم الوصول إليه.`;
+                        $('#clinicLimitAlert').style.display = 'flex';
+                        $('#clinicLimitAlertText').textContent = doctorWarningText.textContent;
+                    } else if (remaining <= 2) {
+                        doctorWarning.style.display = 'flex';
+                        doctorWarningText.textContent = 
+                            `⚠️ تنبيه: متبقي ${remaining} عيادة فقط من أصل ${maxClinicsAllowed}.`;
+                    } else {
+                        doctorWarning.style.display = 'none';
+                    }
+                }
+            } else {
+                doctorWarning.style.display = 'none';
+                if (!currentEditId) {
+                    $('#clinicLimitAlert').style.display = 'none';
+                }
+            }
         });
 
-        // ✅ حدث تغيير المحافظة
         $('#governorateSelect').addEventListener('change', (e) => {
             const governorate = e.target.value;
             populateCities(governorate);
@@ -1536,6 +1978,29 @@
                 return;
             }
 
+            // ✅ التحقق من الحد الأقصى للعيادات عند إضافة طبيب جديد
+            if (!currentEditId && role === 'doctor') {
+                if (maxClinicsAllowed > 0 && !canAddNewDoctor()) {
+                    showToast(
+                        `⚠️ لا يمكن إضافة طبيب جديد. تم الوصول للحد الأقصى (${countActiveDoctors()}/${maxClinicsAllowed}). انتظر ${STATUS_CHANGE_LOCK_DAYS} يوم بعد حظر طبيب موجود.`,
+                        true
+                    );
+                    return;
+                }
+            }
+
+            // ✅ التحقق من تغيير حالة طبيب موجود (قفل 20 يوم)
+            if (currentEditId && role === 'doctor') {
+                const existingUser = allUsers.find(u => u.id === currentEditId);
+                if (existingUser && existingUser.status !== status) {
+                    const statusCheck = canChangeUserStatus(existingUser);
+                    if (!statusCheck.canChange) {
+                        showToast(statusCheck.message, true);
+                        return;
+                    }
+                }
+            }
+
             const userData = {
                 name,
                 email,
@@ -1560,6 +2025,12 @@
 
             try {
                 if (currentEditId) {
+                    // ✅ تسجيل تغيير الحالة إذا تغيرت
+                    const existingUser = allUsers.find(u => u.id === currentEditId);
+                    if (existingUser && existingUser.status !== status) {
+                        await recordStatusChange(currentEditId, status);
+                    }
+                    
                     await update(ref(db, `tenants/${currentTenantId}/users/${currentEditId}`), userData);
                     
                     if (role === 'nurse') {
@@ -1624,9 +2095,47 @@
             await set(linkRef, updates);
         };
 
+        // ============ ✅ تغيير حالة المستخدم مع التحقق من القفل ============
+        
         const toggleBlockUser = async (id, newStatus) => {
-            await update(ref(db, `tenants/${currentTenantId}/users/${id}`), { status: newStatus });
-            showToast(newStatus === 'blocked' ? '🔒 تم الحظر' : '🔓 تم إلغاء الحظر');
+            const user = allUsers.find(u => u.id === id);
+            if (!user) {
+                showToast('المستخدم غير موجود', true);
+                return;
+            }
+            
+            // ✅ التحقق من قفل تغيير الحالة للأطباء فقط
+            if (user.role === 'doctor') {
+                const statusCheck = canChangeUserStatus(user);
+                if (!statusCheck.canChange) {
+                    showToast(statusCheck.message, true);
+                    return;
+                }
+                
+                // ✅ التحقق من الحد الأقصى عند محاولة تنشيط طبيب
+                if (newStatus === 'active' && maxClinicsAllowed > 0) {
+                    const activeCount = countActiveDoctors();
+                    if (activeCount >= maxClinicsAllowed) {
+                        showToast(
+                            `⚠️ لا يمكن تنشيط هذا الطبيب. الحد الأقصى للعيادات (${activeCount}/${maxClinicsAllowed}) تم الوصول إليه.`,
+                            true
+                        );
+                        return;
+                    }
+                }
+            }
+            
+            // ✅ تسجيل تغيير الحالة
+            await recordStatusChange(id, newStatus);
+            
+            const actionText = newStatus === 'blocked' ? 'حظر' : 'إلغاء حظر';
+            const remainingAfterChange = newStatus === 'active' ? getRemainingClinicsSlots() - 1 : getRemainingClinicsSlots() + 1;
+            
+            showToast(
+                `🔒 تم ${actionText} المستخدم بنجاح. ${user.role === 'doctor' ? `(العيادات المتبقية: ${Math.max(0, remainingAfterChange)}/${maxClinicsAllowed || '∞'})` : ''}`,
+                false,
+                newStatus === 'blocked'
+            );
             closeDetailModal();
         };
 
@@ -1637,10 +2146,18 @@
                 return;
             }
 
+            // ✅ تحذير إضافي لحذف طبيب نشط
+            let extraWarning = '';
+            if (user.role === 'doctor' && user.status === 'active') {
+                const activeCount = countActiveDoctors();
+                extraWarning = `\n⚠️ تنبيه: هذا الطبيب نشط ويحتل عيادة (${activeCount}/${maxClinicsAllowed || '∞'}). سيتم تحرير العيادة بعد الحذف.`;
+            }
+
             const confirmed = confirm(
                 `⚠️ هل أنت متأكد من حذف المستخدم "${user.name || 'بدون اسم'}"؟\n\n` +
                 `البريد: ${user.email}\n` +
-                `الدور: ${user.role}\n\n` +
+                `الدور: ${user.role}\n` +
+                `الحالة: ${user.status === 'active' ? 'نشط' : 'محظور'}${extraWarning}\n\n` +
                 `سيتم حذف الحساب نهائياً من Authentication وقاعدة البيانات!`
             );
 
@@ -1672,6 +2189,9 @@
                     console.warn('لم يتم حذف حساب Authentication:', authError);
                 }
 
+                // ✅ تحديث شريط العيادات بعد الحذف
+                setTimeout(updateClinicsLimitBar, 500);
+                
                 showToast('🗑️ تم حذف المستخدم بنجاح');
                 closeDetailModal();
             } catch (err) {
@@ -1724,6 +2244,7 @@
                 currentAdminId = null;
                 currentTenantId = null;
                 tenantSettings = null;
+                maxClinicsAllowed = 0;
                 
                 await signOut(auth);
                 
@@ -1775,14 +2296,15 @@
                     tenantUsersRef = ref(db, `tenants/${currentTenantId}/users`);
                     tenantLinksRef = ref(db, `tenants/${currentTenantId}/links`);
                     
-                    // ✅ تحميل إعدادات المجمع
+                    // ✅ جلب الحد الأقصى للعيادات
+                    await fetchMaxClinicsAllowed();
+                    console.log(`✅ الحد الأقصى للعيادات: ${maxClinicsAllowed || 'غير محدد'}`);
+                    
                     await loadTenantSettings();
                     
-                    // ✅ عرض اسم المجمع
                     const tenantDisplay = tenantSettings?.name || adminData.tenantName || adminData.name || 'مجمع طبي';
                     $('#tenantIdDisplay').textContent = tenantDisplay;
                     
-                    // ✅ لو الإعدادات مش كاملة، افتح مودال الإعدادات إجباري
                     if (!hasCompleteSettings()) {
                         $('#authCheckLoader').style.display = 'none';
                         $('#mainContainer').style.display = 'block';
@@ -1812,6 +2334,7 @@
                                 tenantUsersRef = ref(db, `tenants/${currentTenantId}/users`);
                                 tenantLinksRef = ref(db, `tenants/${currentTenantId}/links`);
                                 
+                                await fetchMaxClinicsAllowed();
                                 $('#tenantIdDisplay').textContent = session.name || 'المجمع الطبي';
                                 $('#authCheckLoader').style.display = 'none';
                                 $('#mainContainer').style.display = 'block';
@@ -1843,12 +2366,10 @@
                 if (card) openDetailModal(card.dataset.id);
             });
 
-            // ✅ أزرار الإعدادات
             $('#settingsBtn').onclick = () => openSettingsModal(false);
             $('#saveSettingsBtn').onclick = saveTenantSettings;
             $('#closeSettingsBtn').onclick = closeSettingsModal;
             
-            // ✅ إغلاق مودال الإعدادات بالنقر خارجها (بس لو مش إجباري)
             window.addEventListener('click', (e) => {
                 if (e.target === $('#settingsModal') && $('#settingsModal').dataset.required !== 'true') {
                     $('#settingsModal').style.display = 'none';
@@ -1859,7 +2380,10 @@
             $('#refreshBtn').onclick = () => {
                 setSyncStatus('syncing');
                 showToast('🔄 جاري تحديث البيانات...');
-                setTimeout(() => setSyncStatus('synced'), 1500);
+                fetchMaxClinicsAllowed().then(() => {
+                    updateClinicsLimitBar();
+                    setSyncStatus('synced');
+                });
             };
             $('#logoutBtn').onclick = logout;
 
@@ -1872,6 +2396,14 @@
             $('#editModalBtn').onclick = () => {
                 const user = allUsers.find(u => u.id === currentViewId);
                 if (user) {
+                    // ✅ التحقق من قفل تغيير الحالة قبل فتح نافذة التعديل
+                    if (user.role === 'doctor') {
+                        const statusCheck = canChangeUserStatus(user);
+                        if (!statusCheck.canChange) {
+                            showToast(statusCheck.message, true);
+                            return;
+                        }
+                    }
                     closeDetailModal();
                     openEditModal(user);
                 }
@@ -1886,7 +2418,6 @@
                 if (e.key === 'Escape') {
                     if ($('#detailModal').style.display === 'flex') closeDetailModal();
                     if ($('#formModal').style.display === 'flex') closeFormModal();
-                    // إغلاق مودال الإعدادات بس لو مش إجباري
                     if ($('#settingsModal').style.display === 'flex' && $('#settingsModal').dataset.required !== 'true') {
                         $('#settingsModal').style.display = 'none';
                     }
@@ -1897,6 +2428,7 @@
                 isOnline = true;
                 setSyncStatus('syncing');
                 showToast('📡 تم استعادة الاتصال - جاري المزامنة');
+                fetchMaxClinicsAllowed().then(updateClinicsLimitBar);
                 if (unsubscribeUsers) {
                     unsubscribeUsers();
                     unsubscribeUsers = null;
@@ -1927,6 +2459,7 @@
         console.log('🚀 لوحة إدارة شفاء - نظام المجمعات الطبية المتعددة');
         console.log('💾 وضع الحفظ: يمسح جلسة الدخول فقط - يحتفظ ببيانات المجمع');
         console.log('⚙️ إعدادات المجمع: اسم، محافظة، مركز، عنوان تفصيلي');
+        console.log('🏥 نظام العيادات: حد أقصى للعيادات مع قفل تغيير الحالة 20 يوم');
     </script>
 </body>
 </html>
