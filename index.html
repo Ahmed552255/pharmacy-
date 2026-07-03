@@ -6,6 +6,9 @@
     <meta name="theme-color" content="#00AEEF">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="شفاء">
+    <link rel="apple-touch-icon" href="/icon-192.png">
+    <link rel="manifest" href="/manifest.json">
     <title>شفاء — تسجيل الدخول</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -201,6 +204,194 @@
         @keyframes dotBounce {
             0%, 80%, 100% { opacity: 0.3; transform: translateY(0); }
             40% { opacity: 1; transform: translateY(-6px); }
+        }
+        
+        /* ============ PWA Install Prompt ============ */
+        .install-prompt-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            padding: 1rem;
+        }
+        
+        .install-prompt-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .install-prompt-card {
+            background: white;
+            border-radius: 24px;
+            padding: 2rem 1.5rem;
+            max-width: 420px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+            animation: slideUp 0.4s ease-out;
+            position: relative;
+        }
+        
+        @keyframes slideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .install-prompt-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1.2rem;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border-radius: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 12px 30px rgba(0, 174, 239, 0.3);
+        }
+        
+        .install-prompt-icon svg {
+            width: 44px;
+            height: 44px;
+            color: white;
+        }
+        
+        .install-prompt-card h2 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--primary-dark);
+            margin-bottom: 0.5rem;
+        }
+        
+        .install-prompt-card p {
+            font-size: 0.95rem;
+            color: var(--text-sec);
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+        
+        .install-benefits {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            text-align: right;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .install-benefit-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+            color: var(--ink);
+            background: rgba(0, 174, 239, 0.05);
+            padding: 0.5rem 0.8rem;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+        
+        .install-benefit-item svg {
+            width: 18px;
+            height: 18px;
+            color: var(--success);
+            flex-shrink: 0;
+        }
+        
+        .install-actions {
+            display: flex;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+        }
+        
+        .btn-install {
+            flex: 1;
+            min-width: 140px;
+            padding: 0.85rem 1.2rem;
+            border: none;
+            border-radius: 16px;
+            font-size: 1rem;
+            font-weight: 700;
+            font-family: 'Cairo', sans-serif;
+            cursor: pointer;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            box-shadow: 0 6px 18px rgba(0, 174, 239, 0.25);
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .btn-install:active {
+            transform: scale(0.97);
+        }
+        
+        .btn-install-secondary {
+            flex: 1;
+            min-width: 140px;
+            padding: 0.85rem 1.2rem;
+            border: 2px solid rgba(0, 174, 239, 0.3);
+            border-radius: 16px;
+            font-size: 1rem;
+            font-weight: 700;
+            font-family: 'Cairo', sans-serif;
+            cursor: pointer;
+            background: white;
+            color: var(--primary-dark);
+            transition: all 0.2s;
+        }
+        
+        .btn-install-secondary:active {
+            background: rgba(0, 174, 239, 0.05);
+        }
+        
+        .install-platform-specific {
+            background: rgba(0, 128, 128, 0.05);
+            border-radius: 16px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            text-align: right;
+        }
+        
+        .install-platform-specific h4 {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .install-steps {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .install-steps li {
+            font-size: 0.82rem;
+            color: var(--ink);
+            padding: 0.4rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 500;
+        }
+        
+        .install-steps li::before {
+            content: '•';
+            color: var(--primary);
+            font-weight: bold;
+            font-size: 1.2rem;
         }
         
         /* ============ خلفية الصفحة ============ */
@@ -516,6 +707,9 @@
             .logo-icon { width: 48px; height: 48px; border-radius: 14px; }
             .logo-icon svg { width: 28px; height: 28px; }
             .toast { padding: 10px 18px; font-size: 0.85rem; border-radius: 24px; }
+            .install-prompt-card { padding: 1.5rem 1rem; }
+            .install-prompt-icon { width: 60px; height: 60px; border-radius: 16px; }
+            .install-prompt-icon svg { width: 32px; height: 32px; }
         }
 
         @media (max-width: 360px) {
@@ -558,6 +752,59 @@
                     <div class="splash-dot"></div>
                     <div class="splash-dot"></div>
                 </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- PWA Install Prompt -->
+    <div class="install-prompt-overlay" id="installPromptOverlay">
+        <div class="install-prompt-card">
+            <div class="install-prompt-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/>
+                    <path d="M12 8v4l3 3"/>
+                </svg>
+            </div>
+            <h2>تثبيت تطبيق شفاء</h2>
+            <p>ثبّت التطبيق على جهازك للوصول السريع وتجربة أفضل</p>
+            
+            <div class="install-benefits">
+                <div class="install-benefit-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    وصول سريع بنقرة واحدة
+                </div>
+                <div class="install-benefit-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    تجربة شاشة كاملة
+                </div>
+                <div class="install-benefit-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    إشعارات فورية
+                </div>
+            </div>
+            
+            <div class="install-platform-specific" id="platformInstructions">
+                <!-- سيتم ملؤه ديناميكياً حسب المنصة -->
+            </div>
+            
+            <div class="install-actions">
+                <button class="btn-install" id="btnInstallApp">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7 10 12 15 17 10"/>
+                        <line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                    تثبيت التطبيق
+                </button>
+                <button class="btn-install-secondary" id="btnDismissInstall">
+                    ربما لاحقاً
+                </button>
             </div>
         </div>
     </div>
@@ -653,6 +900,7 @@
 
         const ENCRYPTION_KEY = 'ShifaSecure2024!@#Key';
         const STORAGE_KEY = 'shifa_secure_session';
+        const INSTALL_DISMISSED_KEY = 'shifa_install_dismissed';
         
         const encryptData = (data) => {
             try {
@@ -691,8 +939,210 @@
         const loginError = $('loginError');
         const loginButton = $('loginButton');
         const loginBtnContent = $('loginBtnContent');
+        const installPromptOverlay = $('installPromptOverlay');
+        const platformInstructions = $('platformInstructions');
         const defaultBtnContent = loginBtnContent.innerHTML;
-
+        
+        // ============ PWA Install Logic ============
+        let deferredPrompt = null;
+        let installPromptShown = false;
+        
+        // Detect platform
+        const detectPlatform = () => {
+            const ua = navigator.userAgent || navigator.vendor || window.opera;
+            
+            // iOS detection
+            if (/iPad|iPhone|iPod/.test(ua) && !window.MSStream) {
+                if (/CriOS/.test(ua)) return 'ios-chrome';
+                if (/FxiOS/.test(ua)) return 'ios-firefox';
+                return 'ios-safari';
+            }
+            
+            // Android detection
+            if (/android/i.test(ua)) {
+                if (/Chrome/i.test(ua)) return 'android-chrome';
+                if (/Firefox/i.test(ua)) return 'android-firefox';
+                return 'android-other';
+            }
+            
+            // Desktop detection
+            if (/Macintosh/i.test(ua)) return 'macos';
+            if (/Windows/i.test(ua)) return 'windows';
+            if (/Linux/i.test(ua) && !/android/i.test(ua)) return 'linux';
+            
+            return 'other';
+        };
+        
+        // Check if already installed as PWA
+        const isPWAInstalled = () => {
+            return window.matchMedia('(display-mode: standalone)').matches ||
+                   window.matchMedia('(display-mode: fullscreen)').matches ||
+                   window.matchMedia('(display-mode: minimal-ui)').matches ||
+                   window.navigator.standalone === true;
+        };
+        
+        // Check if install was recently dismissed
+        const wasInstallDismissed = () => {
+            const dismissed = localStorage.getItem(INSTALL_DISMISSED_KEY);
+            if (!dismissed) return false;
+            const dismissedTime = parseInt(dismissed);
+            const now = Date.now();
+            // Show again after 7 days
+            return (now - dismissedTime) < (7 * 24 * 60 * 60 * 1000);
+        };
+        
+        // Get platform-specific instructions
+        const getPlatformInstructions = (platform) => {
+            const instructions = {
+                'ios-safari': {
+                    title: '📱 تثبيت على iPhone/iPad',
+                    steps: [
+                        'انقر على زر <strong>مشاركة</strong> (أيقونة المربع مع سهم للأعلى) في شريط Safari السفلي',
+                        'اختر <strong>إضافة إلى الشاشة الرئيسية</strong>',
+                        'انقر على <strong>إضافة</strong> في الزاوية العلوية'
+                    ]
+                },
+                'ios-chrome': {
+                    title: '📱 تثبيت على iPhone/iPad',
+                    steps: [
+                        'افتح هذا الرابط في متصفح <strong>Safari</strong>',
+                        'انقر على زر <strong>مشاركة</strong>',
+                        'اختر <strong>إضافة إلى الشاشة الرئيسية</strong>'
+                    ]
+                },
+                'android-chrome': {
+                    title: '📱 تثبيت على Android',
+                    steps: [
+                        'انقر على زر <strong>تثبيت التطبيق</strong> أدناه',
+                        'أو انقر على <strong>⋮ القائمة</strong> في Chrome ثم <strong>تثبيت التطبيق</strong>'
+                    ]
+                },
+                'windows': {
+                    title: '💻 تثبيت على Windows',
+                    steps: [
+                        'انقر على أيقونة <strong>الكمبيوتر مع سهم للأسفل</strong> في شريط عنوان المتصفح',
+                        'أو انقر على زر <strong>تثبيت التطبيق</strong> أدناه'
+                    ]
+                },
+                'macos': {
+                    title: '💻 تثبيت على Mac',
+                    steps: [
+                        'انقر على أيقونة <strong>التثبيت</strong> في شريط عنوان المتصفح',
+                        'أو استخدم زر <strong>تثبيت التطبيق</strong> أدناه'
+                    ]
+                },
+                'default': {
+                    title: '📲 تثبيت التطبيق',
+                    steps: [
+                        'ابحث عن أيقونة التثبيت في شريط عنوان المتصفح',
+                        'انقر على <strong>تثبيت</strong> أو <strong>إضافة إلى الشاشة الرئيسية</strong>'
+                    ]
+                }
+            };
+            
+            return instructions[platform] || instructions['default'];
+        };
+        
+        // Show install prompt
+        const showInstallPrompt = () => {
+            if (installPromptShown) return;
+            if (isPWAInstalled()) return;
+            
+            const platform = detectPlatform();
+            
+            // Don't show on unsupported browsers unless we have the beforeinstallprompt event
+            if (!deferredPrompt && platform.includes('firefox')) {
+                console.log('🔸 Firefox لا يدعم التثبيت التلقائي');
+                return;
+            }
+            
+            const instructions = getPlatformInstructions(platform);
+            
+            platformInstructions.innerHTML = `
+                <h4>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="16" x2="12" y2="12"/>
+                        <line x1="12" y1="8" x2="12.01" y2="8"/>
+                    </svg>
+                    ${instructions.title}
+                </h4>
+                <ol class="install-steps">
+                    ${instructions.steps.map(step => `<li>${step}</li>`).join('')}
+                </ol>
+            `;
+            
+            // Hide install button if not available
+            const btnInstall = $('btnInstallApp');
+            if (!deferredPrompt && (platform.includes('ios') || platform.includes('firefox'))) {
+                btnInstall.style.display = 'none';
+            } else {
+                btnInstall.style.display = 'flex';
+            }
+            
+            installPromptOverlay.classList.add('show');
+            installPromptShown = true;
+        };
+        
+        // Handle install button click
+        $('btnInstallApp').addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log(`🔹 تثبيت التطبيق: ${outcome}`);
+                deferredPrompt = null;
+                
+                if (outcome === 'accepted') {
+                    showToast('✅ تم تثبيت التطبيق بنجاح!', 'success');
+                }
+            } else {
+                // Fallback for browsers that don't support beforeinstallprompt
+                showToast('ℹ️ استخدم إعدادات المتصفح لتثبيت التطبيق', 'warning');
+            }
+            
+            installPromptOverlay.classList.remove('show');
+            localStorage.setItem(INSTALL_DISMISSED_KEY, Date.now().toString());
+        });
+        
+        // Handle dismiss
+        $('btnDismissInstall').addEventListener('click', () => {
+            installPromptOverlay.classList.remove('show');
+            localStorage.setItem(INSTALL_DISMISSED_KEY, Date.now().toString());
+        });
+        
+        // Listen for beforeinstallprompt event
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            console.log('🔸 beforeinstallprompt captured - يمكن تثبيت التطبيق');
+            
+            // Show prompt after splash screen
+            if (!isPWAInstalled() && !wasInstallDismissed()) {
+                setTimeout(() => {
+                    if (!installPromptShown && !splashScreen.classList.contains('hidden')) {
+                        // Wait for splash to hide first
+                        const observer = new MutationObserver(() => {
+                            if (splashScreen.classList.contains('hidden')) {
+                                observer.disconnect();
+                                setTimeout(showInstallPrompt, 500);
+                            }
+                        });
+                        observer.observe(splashScreen, { attributes: true, attributeFilter: ['class'] });
+                    } else if (!installPromptShown && splashScreen.classList.contains('hidden')) {
+                        setTimeout(showInstallPrompt, 500);
+                    }
+                }, 2000);
+            }
+        });
+        
+        // Check if app was successfully installed
+        window.addEventListener('appinstalled', () => {
+            console.log('✅ تم تثبيت تطبيق شفاء بنجاح');
+            deferredPrompt = null;
+            installPromptOverlay.classList.remove('show');
+            showToast('🎉 تم تثبيت شفاء على جهازك!', 'success');
+        });
+        
         // إدارة شاشة التحميل
         const updateSplash = (progress, text) => {
             if (splashProgressFill) splashProgressFill.style.width = `${progress}%`;
@@ -702,6 +1152,11 @@
         const hideSplash = () => {
             splashScreen.classList.add('hidden');
             setTimeout(() => glassCard.classList.add('visible'), 300);
+            
+            // Show install prompt after splash if applicable
+            if (!isPWAInstalled() && !wasInstallDismissed() && deferredPrompt) {
+                setTimeout(showInstallPrompt, 800);
+            }
         };
 
         // تبديل كلمة المرور
@@ -836,6 +1291,11 @@
         const init = () => {
             updateSplash(10, 'جاري تهيئة النظام...');
             
+            // Check PWA status early
+            if (isPWAInstalled()) {
+                console.log('📱 التطبيق مثبت كـ PWA - تجربة محسنة');
+            }
+            
             onAuthStateChanged(auth, async (user) => {
                 if (user) {
                     updateSplash(30, 'التحقق من الجلسة...');
@@ -870,11 +1330,16 @@
                 }
             });
             
-            setTimeout(() => { if (!glassCard.classList.contains('visible')) { updateSplash(100, 'جاهز'); hideSplash(); } }, 4000);
+            // Fallback: show install prompt after timeout if not shown
+            setTimeout(() => {
+                if (!installPromptShown && !isPWAInstalled() && !wasInstallDismissed() && deferredPrompt && splashScreen.classList.contains('hidden')) {
+                    showInstallPrompt();
+                }
+            }, 5000);
         };
 
         init();
-        console.log('🚀 شفاء - تسجيل الدخول | 🛡️ نظام الحظر مفعل');
+        console.log('🚀 شفاء - تسجيل الدخول | 🛡️ نظام الحظر مفعل | 📲 PWA Install Support');
     </script>
 </body>
 </html>
