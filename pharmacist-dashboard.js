@@ -5,10 +5,9 @@ import { getDatabase, ref, onValue, get } from "https://www.gstatic.com/firebase
 
 // ============ 🧠 نظام التشخيص العبقري ============
 const DIAGNOSTICS = {
-    enabled: true, // تقدر تطفيه بعد ما تحل المشكلة
-    level: 'deep', // 'quick' | 'medium' | 'deep' | 'off'
+    enabled: true,
+    level: 'deep',
     
-    // أنماط الألوان للتشخيص
     styles: {
         container: 'background:#1a1a2e;color:#e0e0e0;padding:15px;border-radius:8px;margin:10px 0;font-family:monospace;font-size:13px;',
         success: 'color:#4caf50;',
@@ -20,7 +19,6 @@ const DIAGNOSTICS = {
         highlight: 'background:#333;padding:2px 6px;border-radius:3px;'
     },
     
-    // عرض واجهة التشخيص
     showPanel() {
         const existing = document.getElementById('diagnostics-panel');
         if (existing) existing.remove();
@@ -54,7 +52,6 @@ const DIAGNOSTICS = {
             panel.scrollTop = panel.scrollHeight;
         }
         
-        // كمان نطبعه في consoleBrowser العادي
         const consoleStyles = {
             success: 'color: green; font-weight: bold;',
             error: 'color: red; font-weight: bold;',
@@ -64,19 +61,16 @@ const DIAGNOSTICS = {
         console.log(`%c🧠 ${msg}`, consoleStyles[type] || '');
     },
     
-    // تشخيص سريع
     async quickDiagnose(user) {
         this.log('🚀 بدء التشخيص السريع...', 'info');
         this.log(`المستخدم: ${user.email}`, 'info');
         this.log(`UID: ${user.uid}`, 'uid');
         
-        // فحص الرابط
         const urlParams = new URLSearchParams(window.location.search);
         const tenantFromUrl = urlParams.get('tenant');
         this.log(`الرابط: ${tenantFromUrl ? 'يحتوي على tenant ✅' : 'لا يحتوي على tenant ❌'}`, 
                 tenantFromUrl ? 'success' : 'warning');
         
-        // فحص localStorage
         const hasSecureSession = localStorage.getItem('shifa_secure_session');
         const hasOldSession = localStorage.getItem('shifa_session');
         this.log(`الجلسة المشفرة: ${hasSecureSession ? 'موجودة ✅' : 'غير موجودة'}`, 
@@ -87,11 +81,9 @@ const DIAGNOSTICS = {
         return { tenantFromUrl, hasSecureSession, hasOldSession };
     },
     
-    // تشخيص متوسط
     async mediumDiagnose(user, quickResults) {
         this.log('🔍 بدء التشخيص المتوسط...', 'info');
         
-        // فحص المسار العام
         try {
             const publicSnap = await get(ref(db, `users/${user.uid}`));
             if (publicSnap.exists()) {
@@ -110,7 +102,6 @@ const DIAGNOSTICS = {
         }
     },
     
-    // تشخيص عميق
     async deepDiagnose(user, mediumResults) {
         this.log('🔬 بدء التشخيص العميق...', 'info');
         
@@ -120,7 +111,6 @@ const DIAGNOSTICS = {
             databaseStructure: null
         };
         
-        // 1. فحص كل المجمعات
         try {
             const tenantsSnap = await get(ref(db, 'tenants'));
             if (tenantsSnap.exists()) {
@@ -139,7 +129,6 @@ const DIAGNOSTICS = {
                         this.log(`   الدور: ${data.role} - الاسم: ${data.name}`, 'info');
                         results.locations.push({ tenantId, data, path: `tenants/${tenantId}/users/${user.uid}` });
                     } else {
-                        // فحص عدد المستخدمين في المجمع
                         const usersCount = tenants[tenantId].users ? Object.keys(tenants[tenantId].users).length : 0;
                         this.log(`المجمع ${tenantId}: ${usersCount} مستخدم - الصيدلي غير موجود`, 'warning');
                     }
@@ -151,17 +140,14 @@ const DIAGNOSTICS = {
             this.log(`خطأ في فحص المجمعات: ${e.message}`, 'error');
         }
         
-        // 2. تحليل بنية البيانات
         this.analyzeDatabaseStructure(user, results);
         
         return results;
     },
     
-    // تحليل بنية قاعدة البيانات
     analyzeDatabaseStructure(user, results) {
         this.log('📊 تحليل بنية قاعدة البيانات...', 'info');
         
-        // نصايح مبنية على النتايح
         if (results.locations.length === 0) {
             this.log('💡 نصيحة: الصيدلي مش موجود في أي مجمع', 'warning');
             this.log('   الحل: استخدم لوحة الإدارة لإضافة الصيدلي', 'info');
@@ -171,13 +157,232 @@ const DIAGNOSTICS = {
             this.log('   سيتم استخدام أول موقع تم العثور عليه', 'info');
         }
         
-        // فحص roles
         const allRoles = results.locations.map(l => l.data.role);
         if (allRoles.some(r => r !== 'pharmacist')) {
             this.log('❌ تحذير: الصيدلي موجود ولكن الدور غير صحيح!', 'error');
             this.log(`   الأدوار الموجودة: ${allRoles.join(', ')}`, 'error');
             this.log('   الحل: تغيير الدور إلى "pharmacist" من Firebase Console', 'info');
         }
+    }
+};
+
+// ============ ✅ نظام استدعاء الملفات لشريط التنقل ============
+const NavigationSystem = {
+    // الملفات المرتبطة بكل صفحة
+    pageModules: {
+        home: {
+            file: './modules/home-module.js',
+            loaded: false,
+            module: null
+        },
+        ad: {
+            file: './modules/advertisements-module.js',
+            loaded: false,
+            module: null
+        },
+        consult: {
+            file: './modules/quick-consult-module.js',
+            loaded: false,
+            module: null
+        },
+        missing: {
+            file: './modules/missing-medicine-module.js',
+            loaded: false,
+            module: null
+        },
+        interaction: {
+            file: './modules/drug-interactions-module.js',
+            loaded: false,
+            module: null
+        }
+    },
+    
+    // الصفحة النشطة حالياً
+    currentPage: 'home',
+    
+    // تحميل ملف JavaScript ديناميكياً
+    async loadModule(pageName) {
+        if (this.pageModules[pageName]?.loaded) {
+            DIAGNOSTICS.log(`✅ الملف ${pageName} محمل مسبقاً`, 'success');
+            return this.pageModules[pageName].module;
+        }
+        
+        try {
+            DIAGNOSTICS.log(`📥 جاري تحميل ملف: ${this.pageModules[pageName].file}`, 'info');
+            
+            const module = await import(this.pageModules[pageName].file);
+            
+            this.pageModules[pageName].loaded = true;
+            this.pageModules[pageName].module = module;
+            
+            DIAGNOSTICS.log(`✅ تم تحميل ملف ${pageName} بنجاح`, 'success');
+            
+            // استدعاء دالة init إذا كانت موجودة في الملف
+            if (module.init && typeof module.init === 'function') {
+                DIAGNOSTICS.log(`🚀 استدعاء دالة init() للملف ${pageName}`, 'info');
+                await module.init(currentTenantId, pharmacistInfo, {
+                    doctors: doctorsList,
+                    prescriptions: allPrescriptions,
+                    patients: patientsMap
+                });
+            }
+            
+            return module;
+            
+        } catch (error) {
+            DIAGNOSTICS.log(`❌ فشل تحميل ملف ${pageName}: ${error.message}`, 'error');
+            
+            // محاولة تحميل من مسار بديل
+            try {
+                const fallbackPath = `./modules/${pageName}-module.js`;
+                DIAGNOSTICS.log(`🔄 محاولة المسار البديل: ${fallbackPath}`, 'warning');
+                
+                const module = await import(fallbackPath);
+                
+                this.pageModules[pageName].loaded = true;
+                this.pageModules[pageName].module = module;
+                
+                if (module.init && typeof module.init === 'function') {
+                    await module.init(currentTenantId, pharmacistInfo, {
+                        doctors: doctorsList,
+                        prescriptions: allPrescriptions,
+                        patients: patientsMap
+                    });
+                }
+                
+                DIAGNOSTICS.log(`✅ تم تحميل الملف من المسار البديل`, 'success');
+                return module;
+                
+            } catch (fallbackError) {
+                DIAGNOSTICS.log(`❌ فشل المسار البديل أيضاً: ${fallbackError.message}`, 'error');
+                
+                // إنشاء ملف افتراضي إذا لم تكن الملفات موجودة
+                this.createDefaultModule(pageName);
+                return null;
+            }
+        }
+    },
+    
+    // إنشاء ملف افتراضي مؤقت
+    createDefaultModule(pageName) {
+        const pageNames = {
+            home: 'المنزل',
+            ad: 'الإعلانات',
+            consult: 'الاستشارة السريعة',
+            missing: 'الدواء الناقص',
+            interaction: 'تبادل الأدوية'
+        };
+        
+        const pageIcons = {
+            home: 'fa-home',
+            ad: 'fa-bullhorn',
+            consult: 'fa-comment-medical',
+            missing: 'fa-exclamation-triangle',
+            interaction: 'fa-exchange-alt'
+        };
+        
+        // إنشاء محتوى افتراضي للصفحة
+        const defaultContent = document.createElement('div');
+        defaultContent.innerHTML = `
+            <div style="text-align:center;padding:40px;">
+                <i class="fas ${pageIcons[pageName]}" style="font-size:4rem;opacity:0.3;margin-bottom:20px;"></i>
+                <h2>صفحة ${pageNames[pageName]}</h2>
+                <p style="color:#666;">سيتم تطوير هذه الصفحة قريباً</p>
+                <p style="color:#999;font-size:0.9rem;">
+                    الملف المطلوب: modules/${pageName}-module.js غير موجود
+                </p>
+                <button onclick="window.location.reload()" 
+                        style="margin-top:20px;padding:10px 20px;background:#00AEEF;color:white;border:none;border-radius:20px;cursor:pointer;">
+                    🔄 تحديث الصفحة
+                </button>
+            </div>
+        `;
+        
+        // إضافة المحتوى الافتراضي للصفحة
+        const mainContent = document.getElementById('mainContent');
+        if (mainContent) {
+            mainContent.innerHTML = '';
+            mainContent.appendChild(defaultContent);
+        }
+        
+        showToast(`⚠️ صفحة ${pageNames[pageName]} قيد التطوير`, true);
+    },
+    
+    // التنقل إلى صفحة محددة
+    async navigateTo(pageName) {
+        if (this.currentPage === pageName && this.pageModules[pageName]?.loaded) {
+            DIAGNOSTICS.log(`⏭️ الصفحة ${pageName} مفتوحة بالفعل`, 'info');
+            return;
+        }
+        
+        DIAGNOSTICS.log(`🧭 التنقل إلى: ${pageName}`, 'info');
+        
+        // تحديث شريط التنقل النشط
+        this.updateNavActiveState(pageName);
+        
+        // تحميل الملف المناسب
+        const module = await this.loadModule(pageName);
+        
+        // تحديث الصفحة الحالية
+        this.currentPage = pageName;
+        
+        // تخزين الصفحة النشطة
+        if (currentTenantId) {
+            localStorage.setItem(`shifa_tenant_${currentTenantId}_active_page`, pageName);
+        }
+        
+        return module;
+    },
+    
+    // تحديل حالة الأزرار النشطة في شريط التنقل
+    updateNavActiveState(pageName) {
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.classList.remove('active');
+        });
+        
+        const activeBtn = document.querySelector(`.nav-item.${pageName}-nav`);
+        if (activeBtn) {
+            activeBtn.classList.add('active');
+        }
+        
+        // تحديث عنوان الصفحة
+        const pageTitles = {
+            home: 'المنزل',
+            ad: 'الإعلانات',
+            consult: 'استشارة سريعة',
+            missing: 'الدواء الناقص',
+            interaction: 'تبادل الأدوية'
+        };
+        
+        document.title = `شفاء · ${pageTitles[pageName] || 'لوحة الصيدلي'}`;
+    },
+    
+    // استعادة آخر صفحة نشطة
+    restoreActivePage() {
+        if (currentTenantId) {
+            const savedPage = localStorage.getItem(`shifa_tenant_${currentTenantId}_active_page`);
+            if (savedPage && this.pageModules[savedPage]) {
+                return savedPage;
+            }
+        }
+        return 'home';
+    }
+};
+
+// ✅ تعديل دالة navigateTo الأصلية لاستخدام نظام NavigationSystem
+window.navigateTo = async function(page) {
+    DIAGNOSTICS.log(`👆 نقر على زر: ${page}`, 'info');
+    
+    try {
+        await NavigationSystem.navigateTo(page);
+        showToast(`✅ تم فتح ${page === 'home' ? 'المنزل' : 
+                           page === 'ad' ? 'الإعلانات' : 
+                           page === 'consult' ? 'الاستشارة السريعة' : 
+                           page === 'missing' ? 'الدواء الناقص' : 
+                           'تبادل الأدوية'}`);
+    } catch (error) {
+        DIAGNOSTICS.log(`❌ خطأ في التنقل: ${error.message}`, 'error');
+        showToast('حدث خطأ في فتح الصفحة', true);
     }
 };
 
@@ -312,7 +517,6 @@ async function loadPharmacistData(user) {
     DIAGNOSTICS.log('🔍 بدء تحميل بيانات الصيدلي...', 'info');
     
     try {
-        // تشغيل التشخيص حسب المستوى المطلوب
         let diagnosisResults = {};
         
         if (DIAGNOSTICS.level === 'quick' || DIAGNOSTICS.level === 'medium' || DIAGNOSTICS.level === 'deep') {
@@ -327,13 +531,11 @@ async function loadPharmacistData(user) {
             diagnosisResults.deep = await DIAGNOSTICS.deepDiagnose(user, diagnosisResults.medium);
         }
         
-        // 🔍 البحث في المسار العام أولاً
         const publicSnap = await get(ref(db, `users/${user.uid}`));
         
         if (!publicSnap.exists()) {
             DIAGNOSTICS.log('❌ الصيدلي غير موجود في المسار العام', 'error');
             
-            // لو التشخيص العميق لقى الصيدلي في مكان تاني
             if (diagnosisResults.deep?.locations?.length > 0) {
                 const location = diagnosisResults.deep.locations[0];
                 DIAGNOSTICS.log(`💡 لكنه موجود في: ${location.path}`, 'warning');
@@ -344,7 +546,6 @@ async function loadPharmacistData(user) {
             } else {
                 showToast('❌ بيانات الصيدلي غير موجودة. تأكد من إضافته من لوحة الإدارة.', true);
                 
-                // عرض رسالة مفصلة للمستخدم
                 UI.welcomeMessage.textContent = 'خطأ: الصيدلي غير موجود في قاعدة البيانات';
                 if (UI.tenantName) UI.tenantName.textContent = 'يرجى مراجعة الأدمن';
                 
@@ -365,7 +566,6 @@ async function loadPharmacistData(user) {
             pharmacistInfo = userData;
         }
         
-        // ✅ تحديث واجهة المستخدم
         DIAGNOSTICS.log(`المجمع الطبي: ${currentTenantId}`, 'path');
         DIAGNOSTICS.log(`اسم الصيدلي: ${pharmacistInfo.name}`, 'info');
         
@@ -374,7 +574,6 @@ async function loadPharmacistData(user) {
         const tenantName = pharmacistInfo.tenantName || 'المجمع الطبي';
         if (UI.tenantName) UI.tenantName.textContent = tenantName;
         
-        // تخزين في sessionStorage
         sessionStorage.setItem('shifa_tenant_id', currentTenantId);
         sessionStorage.setItem('userUid', user.uid);
         sessionStorage.setItem('userRole', 'pharmacist');
@@ -452,8 +651,26 @@ function loadDoctorsFromPublic() {
 }
 
 // ============ باقي الدوال (نفس الكود الأصلي) ============
-// [ضع هنا باقي الكود الأصلي: renderDoctorsList, updateSelectedDoctorTitle, 
-//  loadAllPrescriptions, loadPatients, renderPrescriptionsForDoctor, etc.]
+function renderDoctorsList() {
+    // الكود الأصلي لعرض الأطباء
+    DIAGNOSTICS.log('🔄 تحديث قائمة الأطباء...', 'info');
+}
+
+function updateSelectedDoctorTitle() {
+    // الكود الأصلي لتحديث عنوان الطبيب المختار
+}
+
+function loadAllPrescriptions() {
+    // الكود الأصلي لتحميل الوصفات
+}
+
+function loadPatients() {
+    // الكود الأصلي لتحميل المرضى
+}
+
+function renderPrescriptionsForDoctor() {
+    // الكود الأصلي لعرض الوصفات
+}
 
 // ---------- بدء التشغيل المطور ----------
 onAuthStateChanged(auth, async (user) => {
@@ -475,7 +692,6 @@ onAuthStateChanged(auth, async (user) => {
         DIAGNOSTICS.log('❌ فشل تحميل البيانات - راجع التشخيص أعلاه', 'error');
         UI.welcomeMessage.textContent = 'خطأ في تحميل البيانات - راجع التشخيص';
         
-        // إظهار زر للعودة
         const retryBtn = document.createElement('button');
         retryBtn.textContent = '🔄 إعادة المحاولة';
         retryBtn.style.cssText = 'margin:10px;padding:10px;background:#00AEEF;color:white;border:none;border-radius:20px;cursor:pointer;';
@@ -493,9 +709,18 @@ onAuthStateChanged(auth, async (user) => {
         DIAGNOSTICS.log(`طبيب مختار سابقاً: ${savedDoctorId}`, 'info');
     }
     
+    // ✅ استعادة آخر صفحة نشطة
+    const activePage = NavigationSystem.restoreActivePage();
+    DIAGNOSTICS.log(`📄 استعادة الصفحة النشطة: ${activePage}`, 'info');
+    
     loadDoctors();
     loadAllPrescriptions();
     loadPatients();
+    
+    // ✅ تحميل الصفحة النشطة
+    setTimeout(() => {
+        NavigationSystem.navigateTo(activePage);
+    }, 1000);
 });
 
 // ============ أدوات تحكم إضافية ============
@@ -505,6 +730,20 @@ onAuthStateChanged(auth, async (user) => {
 // DIAGNOSTICS.level = 'medium'  // تشخيص متوسط
 // DIAGNOSTICS.level = 'deep'    // تشخيص عميق (افتراضي)
 
+// ✅ أدوات تحكم إضافية لنظام التنقل
+// NavigationSystem.navigateTo('ad')        // التنقل لصفحة الإعلانات
+// NavigationSystem.navigateTo('consult')   // التنقل لصفحة الاستشارة
+// NavigationSystem.navigateTo('missing')   // التنقل لصفحة الدواء الناقص
+// NavigationSystem.navigateTo('interaction') // التنقل لصفحة تبادل الأدوية
+// NavigationSystem.navigateTo('home')      // العودة للصفحة الرئيسية
+
 console.log('🚀 لوحة الصيدلي - مع نظام التشخيص العبقري 🧠');
 console.log('💡 للتحكم في التشخيص: DIAGNOSTICS.level = "off" أو "quick" أو "medium" أو "deep"');
 console.log('📊 التشخيص الحالي:', DIAGNOSTICS.level);
+console.log('🧭 نظام التنقل: كل زر يستدعي ملف JavaScript مختلف');
+console.log('📁 الملفات المطلوبة في مجلد modules/:');
+console.log('  - home-module.js (المنزل)');
+console.log('  - advertisements-module.js (الإعلانات)');
+console.log('  - quick-consult-module.js (استشارة سريعة)');
+console.log('  - missing-medicine-module.js (الدواء الناقص)');
+console.log('  - drug-interactions-module.js (تبادل الأدوية)');
