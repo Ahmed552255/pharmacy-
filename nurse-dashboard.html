@@ -713,6 +713,10 @@
             border: 1px solid var(--border);
         }
 
+        .date-booking-info.loading {
+            opacity: 0.7;
+        }
+
         /* ============ TOAST ============ */
         .toast-container {
             position: fixed;
@@ -1039,7 +1043,7 @@
                         <input type="date" id="apptDate" class="form-control" required>
                         <div id="dateBookingInfo" class="date-booking-info" style="display:none;">
                             <i class="fas fa-info-circle"></i> 
-                            <span id="dateBookingCount">عدد الحجوزات في هذا اليوم: 0</span>
+                            <span id="dateBookingCount">عدد الحجوزات في هذا التاريخ: جاري التحميل...</span>
                         </div>
                     </div>
                     
@@ -1094,6 +1098,7 @@
             selectedPatientId: null,
             unsubscribeBookings: null,
             idMode: 'phone',
+            allDoctorBookings: [] // ✅ جميع حجوزات الطبيب المختار بدون تصفية بالتاريخ
         };
 
         const $ = (sel) => document.querySelector(sel);
@@ -1265,10 +1270,10 @@
             }
         };
 
-        // ============ ✅ حساب عدد الحجوزات في تاريخ معين ============
+        // ============ ✅ حساب عدد الحجوزات في تاريخ معين (من جميع حجوزات الطبيب) ============
         const getBookingCountForDate = (date) => {
-            if (!state.allBookings) return 0;
-            return state.allBookings.filter(b => b.date === date).length;
+            if (!state.allDoctorBookings || !date) return 0;
+            return state.allDoctorBookings.filter(b => b.date === date).length;
         };
 
         // ============ ✅ تحديث عرض العدد في شريط التاريخ داخل المودال ============
@@ -1276,10 +1281,19 @@
             const dateVal = $('#apptDate').value;
             const infoDiv = $('#dateBookingInfo');
             const countSpan = $('#dateBookingCount');
+            
             if (dateVal && infoDiv && countSpan) {
-                const count = getBookingCountForDate(dateVal);
-                countSpan.textContent = `عدد الحجوزات في هذا اليوم: ${count}`;
+                // عرض "جاري التحميل..." مؤقتاً
+                countSpan.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> جاري التحميل...';
                 infoDiv.style.display = 'flex';
+                infoDiv.classList.add('loading');
+                
+                // حساب العدد من البيانات المتاحة حالياً
+                setTimeout(() => {
+                    const count = getBookingCountForDate(dateVal);
+                    countSpan.textContent = `عدد الحجوزات في هذا التاريخ: ${count}`;
+                    infoDiv.classList.remove('loading');
+                }, 100);
             } else if (infoDiv) {
                 infoDiv.style.display = 'none';
             }
@@ -1452,6 +1466,7 @@
                 state.selectedDoctorId = state.assignedDoctors[0].id;
                 highlightDoctorTab(state.selectedDoctorId);
                 loadBookings();
+                loadAllDoctorBookings(); // ✅ تحميل جميع حجوزات الطبيب
                 setSyncStatus(true);
                 return true;
             } catch (err) {
@@ -1485,6 +1500,7 @@
                     state.selectedDoctorId = btn.dataset.id;
                     highlightDoctorTab(state.selectedDoctorId);
                     loadBookings();
+                    loadAllDoctorBookings(); // ✅ إعادة تحميل جميع حجوزات الطبيب
                 });
             });
             updateDoctorTabsCount();
@@ -1500,21 +1516,61 @@
             ).join('');
         };
 
+        // ============ ✅ تحميل جميع حجوزات الطبيب المختار (بدون تصفية بالتاريخ) ============
+        const loadAllDoctorBookings = () => {
+            if (!state.selectedDoctorId || !currentTenantId) return;
+            
+            const bookingsRef = ref(db, `tenants/${currentTenantId}/appointments`);
+            
+            // استخدام get مرة واحدة لجلب جميع البيانات
+            get(bookingsRef).then((snap) => {
+                const bookings = [];
+                snap.forEach(child => {
+                    const apt = child.val();
+                    if (apt.doctor_id === state.selectedDoctorId) {
+                        bookings.push({ id: child.key, ...apt });
+                    }
+                });
+                state.allDoctorBookings = bookings;
+                // تحديث العداد إذا كان المودال مفتوحاً
+                updateDateBookingInfo();
+            }).catch((error) => {
+                console.warn('تعذر تحميل جميع حجوزات الطبيب:', error.message);
+                // استخدام البيانات المحلية كبديل
+                try {
+                    const key = getLocalBookingsKey();
+                    const cached = localStorage.getItem(key);
+                    if (cached) {
+                        const data = JSON.parse(cached);
+                        if (data.bookings) {
+                            state.allDoctorBookings = data.bookings.filter(b => b.doctor_id === state.selectedDoctorId);
+                            updateDateBookingInfo();
+                        }
+                    }
+                } catch (e) {}
+            });
+        };
+
         const loadBookings = () => {
             if (state.unsubscribeBookings) state.unsubscribeBookings();
             if (!state.selectedDoctorId || !currentTenantId) return;
             const bookingsRef = ref(db, `tenants/${currentTenantId}/appointments`);
             state.unsubscribeBookings = onValue(bookingsRef, (snap) => {
                 const bookings = [];
+                const allDoctorBookings = [];
                 snap.forEach(child => {
                     const apt = child.val();
-                    if (apt.doctor_id === state.selectedDoctorId && apt.date === state.currentDate) {
-                        bookings.push({ id: child.key, ...apt });
+                    if (apt.doctor_id === state.selectedDoctorId) {
+                        allDoctorBookings.push({ id: child.key, ...apt });
+                        if (apt.date === state.currentDate) {
+                            bookings.push({ id: child.key, ...apt });
+                        }
                     }
                 });
                 bookings.sort((a, b) => (a.patient_name || '').localeCompare(b.patient_name || ''));
                 state.allBookings = bookings;
-                saveBookingsToLocal(bookings);
+                state.allDoctorBookings = allDoctorBookings; // ✅ تحديث جميع حجوزات الطبيب
+                saveBookingsToLocal(allDoctorBookings); // ✅ حفظ جميع الحجوزات محلياً
                 setSyncStatus(true);
                 updateCounts();
                 renderTable();
@@ -1522,7 +1578,24 @@
                 updateDateBookingInfo();
             }, (error) => {
                 const localBookings = loadBookingsFromLocal(state.selectedDoctorId, state.currentDate);
-                if (localBookings) { state.allBookings = localBookings; updateCounts(); renderTable(); updateDoctorTabsCount(); updateDateBookingInfo(); }
+                if (localBookings) { 
+                    state.allBookings = localBookings; 
+                    updateCounts(); 
+                    renderTable(); 
+                    updateDoctorTabsCount(); 
+                }
+                // تحميل جميع الحجوزات من المحلي
+                try {
+                    const key = getLocalBookingsKey();
+                    const cached = localStorage.getItem(key);
+                    if (cached) {
+                        const data = JSON.parse(cached);
+                        if (data.bookings) {
+                            state.allDoctorBookings = data.bookings.filter(b => b.doctor_id === state.selectedDoctorId);
+                            updateDateBookingInfo();
+                        }
+                    }
+                } catch (e) {}
                 setSyncStatus(false);
             });
         };
@@ -1598,7 +1671,15 @@
             const lastDate = getLastUsedDate();
             $('#apptDate').value = lastDate || state.currentDate;
             toggleIdMode('phone');
-            updateDateBookingInfo();
+            
+            // ✅ تحميل جميع حجوزات الطبيب للتأكد من وجود بيانات حديثة
+            loadAllDoctorBookings();
+            
+            // تأخير بسيط للتأكد من تحميل البيانات قبل عرض العداد
+            setTimeout(() => {
+                updateDateBookingInfo();
+            }, 300);
+            
             $('#bookingModal').style.display = 'flex';
         };
 
@@ -1802,7 +1883,7 @@
             }
         });
 
-        // ============ مستمع حدث تغيير التاريخ في المودال ============
+        // ============ ✅ مستمع حدث تغيير التاريخ في المودال (يحدث العداد فوراً) ============
         $('#apptDate').addEventListener('change', () => {
             updateDateBookingInfo();
         });
@@ -1865,7 +1946,10 @@
         window.addEventListener('online', () => {
             setSyncStatus(true);
             showToast('📡 تم استعادة الاتصال - جاري المزامنة');
-            if (state.selectedDoctorId) loadBookings();
+            if (state.selectedDoctorId) {
+                loadBookings();
+                loadAllDoctorBookings();
+            }
         });
         window.addEventListener('offline', () => {
             setSyncStatus(false);
@@ -1906,7 +1990,7 @@
             }
         });
 
-        console.log('🚀 لوحة الممرض - بدون إشعارات - مع حفظ آخر تاريخ وعداد الحجوزات');
+        console.log('🚀 لوحة الممرض - بدون إشعارات - مع حفظ آخر تاريخ وعداد الحجوزات حسب التاريخ المختار');
     </script>
 </body>
 </html>
