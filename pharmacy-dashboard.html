@@ -64,7 +64,7 @@
             min-height: 100dvh;
             padding: 12px;
             padding-bottom: calc(12px + var(--safe-bottom));
-            padding-top: calc(12px + var(--safe-top));
+            padding-top: calc(12px + var(--safe-top) + 70px); /* ✅ إضافة مساحة للشريط العلوي */
             overflow-x: hidden;
             -webkit-backface-visibility: hidden;
             backface-visibility: hidden;
@@ -85,6 +85,116 @@
         .container { 
             max-width: 1400px; 
             margin: 0 auto; 
+        }
+
+        /* ============ ✅ شريط التنقل العلوي ============ */
+        .top-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
+            border-bottom: 1px solid var(--border);
+            box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+            padding: 6px 12px;
+            padding-top: calc(6px + var(--safe-top));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        .top-nav::-webkit-scrollbar {
+            display: none;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+            padding: 8px 12px;
+            border-radius: var(--radius-sm);
+            border: none;
+            background: transparent;
+            color: var(--text-sec);
+            font-family: 'Cairo', system-ui, sans-serif;
+            font-size: 0.7rem;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            flex-shrink: 0;
+            min-width: 56px;
+            min-height: 56px;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            position: relative;
+        }
+
+        .nav-item i {
+            font-size: 1.25rem;
+            transition: transform 0.2s ease;
+        }
+
+        .nav-item span {
+            line-height: 1.2;
+        }
+
+        .nav-item:active {
+            transform: scale(0.92);
+            background: rgba(0,174,239,0.08);
+        }
+
+        .nav-item.active {
+            color: var(--primary);
+            background: var(--primary-light);
+            font-weight: 700;
+        }
+
+        .nav-item.active::after {
+            content: '';
+            position: absolute;
+            bottom: 2px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 3px;
+            background: var(--primary);
+            border-radius: 3px;
+        }
+
+        .nav-item.home-nav {
+            color: var(--primary-dark);
+        }
+
+        .nav-item.home-nav i {
+            color: var(--primary);
+        }
+
+        .nav-item.ad-nav i {
+            color: #FF6F00;
+        }
+
+        .nav-item.consult-nav i {
+            color: #7B1FA2;
+        }
+
+        .nav-item.missing-nav i {
+            color: #C62828;
+        }
+
+        .nav-item.interaction-nav i {
+            color: #00695C;
         }
 
         /* ============ شاشة التحميل ============ */
@@ -137,8 +247,8 @@
             flex-wrap: wrap;
             gap: 10px;
             position: sticky;
-            top: 6px;
-            z-index: 100;
+            top: 74px; /* ✅ تعديل ليكون أسفل الشريط العلوي */
+            z-index: 99;
         }
 
         .logo { 
@@ -1174,11 +1284,32 @@
 
         @media (max-width: 768px) {
             html { font-size: 15px; }
-            body { padding: 8px; padding-bottom: calc(8px + var(--safe-bottom)); }
+            body { 
+                padding: 8px; 
+                padding-bottom: calc(8px + var(--safe-bottom)); 
+                padding-top: calc(8px + var(--safe-top) + 66px); /* ✅ تعديل للموبايل */
+            }
+            
+            .top-nav {
+                padding: 4px 8px;
+                padding-top: calc(4px + var(--safe-top));
+                gap: 2px;
+            }
+            
+            .nav-item {
+                padding: 6px 8px;
+                font-size: 0.62rem;
+                min-width: 44px;
+                min-height: 48px;
+            }
+            
+            .nav-item i {
+                font-size: 1.1rem;
+            }
             
             .app-header { 
                 padding: 10px 14px 14px; 
-                top: 4px; 
+                top: 62px; /* ✅ تعديل للموبايل */
                 border-radius: var(--radius-md); 
                 gap: 10px;
                 flex-direction: column;
@@ -1251,8 +1382,35 @@
 
         @media (max-width: 400px) {
             html { font-size: 14px; }
-            body { padding: 6px; padding-bottom: calc(6px + var(--safe-bottom)); }
-            .app-header { padding: 8px 10px 12px; top: 3px; border-radius: 20px; }
+            body { 
+                padding: 6px; 
+                padding-bottom: calc(6px + var(--safe-bottom)); 
+                padding-top: calc(6px + var(--safe-top) + 60px);
+            }
+            
+            .top-nav {
+                padding: 2px 4px;
+                padding-top: calc(2px + var(--safe-top));
+                gap: 0;
+            }
+            
+            .nav-item {
+                padding: 4px 6px;
+                font-size: 0.58rem;
+                min-width: 38px;
+                min-height: 44px;
+            }
+            
+            .nav-item i {
+                font-size: 1rem;
+            }
+            
+            .app-header { 
+                padding: 8px 10px 12px; 
+                top: 56px;
+                border-radius: 20px; 
+            }
+            
             .logo h2 { font-size: 1.1rem; }
             .btn { padding: 10px 10px; font-size: 0.78rem; min-height: 44px; border-radius: 22px; }
             .status-tabs { flex-direction: column; gap: 4px; }
@@ -1290,6 +1448,30 @@
     </style>
 </head>
 <body>
+
+    <!-- ✅ شريط التنقل العلوي -->
+    <nav class="top-nav">
+        <button class="nav-item home-nav active" title="المنزل" onclick="navigateTo('home')">
+            <i class="fas fa-home"></i>
+            <span>المنزل</span>
+        </button>
+        <button class="nav-item ad-nav" title="الإعلان" onclick="navigateTo('ad')">
+            <i class="fas fa-bullhorn"></i>
+            <span>الإعلان</span>
+        </button>
+        <button class="nav-item consult-nav" title="استشارة سريعة" onclick="navigateTo('consult')">
+            <i class="fas fa-comment-medical"></i>
+            <span>استشارة</span>
+        </button>
+        <button class="nav-item missing-nav" title="الدواء الناقص" onclick="navigateTo('missing')">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span>ناقص</span>
+        </button>
+        <button class="nav-item interaction-nav" title="تبادل الأدوية" onclick="navigateTo('interaction')">
+            <i class="fas fa-exchange-alt"></i>
+            <span>تبادل</span>
+        </button>
+    </nav>
 
     <div class="toast-container" id="toastContainer"></div>
 
@@ -1457,6 +1639,38 @@
     <!-- ✅ منطقة الطباعة المخفية -->
     <div id="printArea" style="display:none;"></div>
 
+    <!-- ✅ دالة التنقل لشريط الأيقونات العلوي -->
+    <script>
+        function navigateTo(page) {
+            // تحديث الكلاس النشط
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            
+            // يمكنك تخصيص الروابط حسب الحاجة
+            const pages = {
+                'home': 'pharmacist-dashboard.html',
+                'ad': 'advertisements.html',
+                'consult': 'quick-consult.html',
+                'missing': 'missing-medicine.html',
+                'interaction': 'drug-interactions.html'
+            };
+            
+            // إضافة كلاس نشط للزر المناسب
+            const activeBtn = document.querySelector(`.nav-item.${page}-nav`) || document.querySelector('.nav-item.home-nav');
+            if (activeBtn) activeBtn.classList.add('active');
+            
+            // التنقل للصفحة المطلوبة
+            if (pages[page] && page !== 'home') {
+                window.location.href = pages[page];
+            }
+        }
+        
+        // تعيين المنزل كنشط افتراضياً
+        document.addEventListener('DOMContentLoaded', () => {
+            const homeBtn = document.querySelector('.nav-item.home-nav');
+            if (homeBtn) homeBtn.classList.add('active');
+        });
+    </script>
+
     <script type="module">
         import { firebaseConfig } from './firebase-config.js';
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
@@ -1491,8 +1705,8 @@
             currentTab: 'لم تصرف بعد',
             unsubscribePrescriptions: null,
             searchMode: 'phone',
-            currentViewPrescription: null, // ✅ لتخزين الوصفة الحالية للطباعة
-            currentViewItems: [], // ✅ لتخزين الأدوية الحالية للطباعة
+            currentViewPrescription: null,
+            currentViewItems: [],
         };
 
         const $ = (sel) => document.querySelector(sel);
@@ -1802,7 +2016,6 @@
                 </div>
             `;
             
-            // طباعة
             setTimeout(() => {
                 window.print();
                 printArea.innerHTML = '';
@@ -1950,7 +2163,6 @@
                         </div>`;
                 }
                 
-                // ✅ أزرار البطاقة حسب الحالة
                 let cardButtons = '';
                 if (isPending) {
                     cardButtons = `
@@ -2138,12 +2350,10 @@
                         </div>
                     `).join('');
 
-                    // ✅ الضغط على اسم المريض يفتح صفحة prescription-details.html
                     container.querySelectorAll('.search-item[data-id]').forEach(item => {
                         item.addEventListener('click', () => {
                             const patient = results.find(p => p.id === item.dataset.id);
                             if (patient) {
-                                // ✅ البحث عن أحدث وصفة للمريض وفتحها
                                 const patientPrescriptions = state.allPrescriptions.filter(p => p.patient_id === patient.id);
                                 if (patientPrescriptions.length > 0) {
                                     const latestPrescription = patientPrescriptions.sort((a, b) => 
@@ -2210,7 +2420,6 @@
                             </div>
                         `).join('');
 
-                        // ✅ الضغط على اسم المريض يفتح صفحة prescription-details.html
                         container.querySelectorAll('.search-item[data-id]').forEach(item => {
                             item.addEventListener('click', () => {
                                 const patient = results.find(p => p.id === item.dataset.id);
@@ -2288,7 +2497,6 @@
                 });
             });
             
-            // أحداث البطاقات
             $('#prescriptionsGrid').addEventListener('click', (e) => {
                 const actionBtn = e.target.closest('[data-action]');
                 if (actionBtn) {
@@ -2320,10 +2528,8 @@
                 }
             });
             
-            // ✅ زر تأكيد الصرف
             $('#confirmDispenseBtn').addEventListener('click', confirmDispense);
             
-            // ✅ زر طباعة الروشتة من مودال الصرف
             $('#printDispenseBtn').addEventListener('click', () => {
                 if (state.currentViewPrescription) {
                     printPrescription(state.currentViewPrescription, state.currentViewItems);
@@ -2335,7 +2541,6 @@
                 document.body.style.overflow = '';
             });
             
-            // ✅ أزرار مودال عرض الأدوية
             $('#closeViewMedsBtn').addEventListener('click', closeViewMedsModal);
             
             $('#printViewMedsBtn').addEventListener('click', () => {
@@ -2350,7 +2555,6 @@
                 }
             });
             
-            // أحداث البحث عن مريض
             $('#searchPatientBtn').addEventListener('click', () => {
                 $('#searchModal').style.display = 'flex';
                 $('#patientSearchInput').value = '';
@@ -2475,6 +2679,7 @@
         console.log('🖨️ زر طباعة الروشتة في مودال الصرف ومودال عرض الأدوية');
         console.log('💊 زر عرض الأدوية للوصفات المصروفة');
         console.log('📂 المرضى يضافون في المسار العام patients');
+        console.log('📱 شريط تنقل علوي: المنزل | الإعلان | استشارة | ناقص | تبادل');
     </script>
 </body>
 </html>
