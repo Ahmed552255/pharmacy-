@@ -87,107 +87,6 @@
             margin: 0 auto; 
         }
 
-        /* ============ ✅ شريط التنقل العلوي ============ */
-        .top-nav-bar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: rgba(255,255,255,0.95);
-            backdrop-filter: blur(16px) saturate(180%);
-            -webkit-backdrop-filter: blur(16px) saturate(180%);
-            border-radius: var(--radius-lg);
-            padding: 6px 10px;
-            margin-bottom: 14px;
-            border: 1px solid rgba(255,255,255,0.9);
-            box-shadow: var(--shadow-sm);
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-            scrollbar-width: none;
-            -ms-overflow-style: none;
-            gap: 4px;
-            flex-shrink: 0;
-        }
-
-        .top-nav-bar::-webkit-scrollbar { 
-            display: none; 
-        }
-
-        .nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 4px;
-            padding: 8px 14px;
-            border-radius: var(--radius-md);
-            cursor: pointer;
-            transition: all 0.2s ease;
-            text-decoration: none;
-            color: var(--text-sec);
-            font-size: 0.72rem;
-            font-weight: 600;
-            white-space: nowrap;
-            flex-shrink: 0;
-            min-width: 60px;
-            border: 2px solid transparent;
-            touch-action: manipulation;
-            user-select: none;
-            -webkit-user-select: none;
-        }
-
-        .nav-item i {
-            font-size: 1.2rem;
-            transition: all 0.2s ease;
-        }
-
-        .nav-item:active {
-            transform: scale(0.93);
-            background: rgba(0,174,239,0.08);
-        }
-
-        .nav-item.active {
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            color: white;
-            border-color: var(--primary);
-            box-shadow: 0 4px 14px rgba(0,174,239,0.25);
-            font-weight: 700;
-        }
-
-        .nav-item.active i {
-            color: white;
-        }
-
-        .nav-item.home-nav {
-            background: var(--primary-light);
-            color: var(--primary-dark);
-            border-color: var(--primary-light);
-            font-weight: 700;
-        }
-
-        .nav-item.announcement-nav {
-            background: #FFF8E1;
-            color: #F57C00;
-            border-color: #FFE0B2;
-        }
-
-        .nav-item.quick-consult-nav {
-            background: #E8F5E9;
-            color: #2E7D32;
-            border-color: #C8E6C9;
-        }
-
-        .nav-item.missing-med-nav {
-            background: #FCE4EC;
-            color: #C62828;
-            border-color: #F8BBD0;
-        }
-
-        .nav-item.drug-interaction-nav {
-            background: #EDE7F6;
-            color: #4527A0;
-            border-color: #D1C4E9;
-        }
-
         /* ============ شاشة التحميل ============ */
         #appLoader {
             position: fixed;
@@ -337,7 +236,7 @@
             border-radius: var(--radius-sm); 
         }
 
-        /* زر الطباعة */
+        /* ✅ زر الطباعة */
         .btn-print {
             background: linear-gradient(135deg, #607D8B, #455A64);
             color: white;
@@ -352,7 +251,7 @@
             transform: scale(0.96);
         }
 
-        /* زر عرض الأدوية */
+        /* ✅ زر عرض الأدوية */
         .btn-view-meds {
             background: linear-gradient(135deg, #7E57C2, #5E35B1);
             color: white;
@@ -780,7 +679,7 @@
             background: #5C6BC0;
         }
 
-        /* مجموعة أزرار البطاقة */
+        /* ✅ مجموعة أزرار البطاقة */
         .rx-card-buttons-group {
             display: flex;
             gap: 6px;
@@ -963,7 +862,7 @@
             aspect-ratio: 1;
         }
 
-        /* ============ البحث عن مريض ============ */
+        /* ============ ✅ البحث عن مريض ============ */
         .search-box { 
             position: relative; 
         }
@@ -1041,7 +940,7 @@
             transform: scale(0.96);
         }
 
-        /* ============ مودال عرض الأدوية ============ */
+        /* ============ ✅ مودال عرض الأدوية ============ */
         .meds-view-modal .modal-card {
             max-width: 650px;
         }
@@ -1271,39 +1170,12 @@
                 font-size: 0.82rem;
                 min-height: 42px;
             }
-
-            .nav-item {
-                padding: 6px 10px;
-                font-size: 0.68rem;
-                min-width: 50px;
-            }
-
-            .nav-item i {
-                font-size: 1.1rem;
-            }
         }
 
         @media (max-width: 768px) {
             html { font-size: 15px; }
             body { padding: 8px; padding-bottom: calc(8px + var(--safe-bottom)); }
             
-            .top-nav-bar {
-                padding: 4px 6px;
-                gap: 2px;
-                border-radius: var(--radius-md);
-            }
-
-            .nav-item {
-                padding: 6px 8px;
-                font-size: 0.65rem;
-                min-width: 48px;
-                border-radius: var(--radius-sm);
-            }
-
-            .nav-item i {
-                font-size: 1rem;
-            }
-
             .app-header { 
                 padding: 10px 14px 14px; 
                 top: 4px; 
@@ -1380,24 +1252,6 @@
         @media (max-width: 400px) {
             html { font-size: 14px; }
             body { padding: 6px; padding-bottom: calc(6px + var(--safe-bottom)); }
-            
-            .top-nav-bar {
-                padding: 3px 4px;
-                gap: 1px;
-                border-radius: 18px;
-            }
-
-            .nav-item {
-                padding: 5px 6px;
-                font-size: 0.6rem;
-                min-width: 42px;
-                border-radius: 14px;
-            }
-
-            .nav-item i {
-                font-size: 0.95rem;
-            }
-
             .app-header { padding: 8px 10px 12px; top: 3px; border-radius: 20px; }
             .logo h2 { font-size: 1.1rem; }
             .btn { padding: 10px 10px; font-size: 0.78rem; min-height: 44px; border-radius: 22px; }
@@ -1445,31 +1299,6 @@
     </div>
 
     <div class="container" id="mainContainer" style="display:none;">
-
-        <!-- ✅ شريط التنقل العلوي -->
-        <nav class="top-nav-bar">
-            <a class="nav-item home-nav active" href="#" title="المنزل">
-                <i class="fas fa-home"></i>
-                <span>المنزل</span>
-            </a>
-            <a class="nav-item announcement-nav" href="#" title="الإعلان">
-                <i class="fas fa-bullhorn"></i>
-                <span>الإعلان</span>
-            </a>
-            <a class="nav-item quick-consult-nav" href="#" title="استشارة سريعة">
-                <i class="fas fa-comment-medical"></i>
-                <span>استشارة سريعة</span>
-            </a>
-            <a class="nav-item missing-med-nav" href="#" title="الدواء الناقص">
-                <i class="fas fa-exclamation-triangle"></i>
-                <span>الدواء الناقص</span>
-            </a>
-            <a class="nav-item drug-interaction-nav" href="#" title="تبادل الأدوية">
-                <i class="fas fa-exchange-alt"></i>
-                <span>تبادل الأدوية</span>
-            </a>
-        </nav>
-
         <header class="app-header">
             <div class="logo">
                 <h2><i class="fas fa-heartbeat"></i> شفاء · الصيدلي <span class="sync-dot on" id="syncDot" title="حالة المزامنة"></span></h2>
@@ -1551,7 +1380,7 @@
         </div>
     </div>
 
-    <!-- مودال عرض الأدوية -->
+    <!-- ✅ مودال عرض الأدوية -->
     <div id="viewMedsModal" class="modal meds-view-modal">
         <div class="modal-card">
             <div class="modal-header">
@@ -1625,11 +1454,1027 @@
         </div>
     </div>
 
-    <!-- منطقة الطباعة المخفية -->
+    <!-- ✅ منطقة الطباعة المخفية -->
     <div id="printArea" style="display:none;"></div>
 
-    <!-- ✅ استدعاء ملف الجافا سكريبت -->
-    <script type="module" src="pharmacist-dashboard.js"></script>
+    <script type="module">
+        import { firebaseConfig } from './firebase-config.js';
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getDatabase, ref, onValue, get, update } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+
+        const STORAGE_PREFIX = 'shifa_tenant_';
+        
+        const LOGIN_STORAGE_KEYS = [
+            'shifa_session',
+            'shifa_remember',
+            'shifa_last_login',
+            'shifa_secure_session'
+        ];
+        
+        let currentTenantId = null;
+        
+        const getTenantStorageKey = (baseKey) => {
+            return currentTenantId ? `${STORAGE_PREFIX}${currentTenantId}_${baseKey}` : baseKey;
+        };
+
+        const state = {
+            currentUser: null,
+            pharmacistData: null,
+            doctorsList: [],
+            selectedDoctorId: null,
+            allPrescriptions: [],
+            currentTab: 'لم تصرف بعد',
+            unsubscribePrescriptions: null,
+            searchMode: 'phone',
+            currentViewPrescription: null, // ✅ لتخزين الوصفة الحالية للطباعة
+            currentViewItems: [], // ✅ لتخزين الأدوية الحالية للطباعة
+        };
+
+        const $ = (sel) => document.querySelector(sel);
+        const $$ = (sel) => document.querySelectorAll(sel);
+
+        const getToday = () => {
+            const d = new Date();
+            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        };
+
+        const escapeHtml = (str) => {
+            if (!str) return '';
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        };
+
+        const showToast = (msg, isError = false) => {
+            const container = $('#toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${isError ? 'err' : ''}`;
+            toast.innerHTML = `<i class="fas ${isError ? 'fa-exclamation-circle' : 'fa-check-circle'}"></i> ${msg}`;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.classList.add('removing');
+                setTimeout(() => toast.remove(), 300);
+            }, 2500);
+        };
+
+        const setSyncStatus = (online) => {
+            const dot = $('#syncDot');
+            if (dot) {
+                dot.className = `sync-dot ${online ? 'on' : 'off'}`;
+                dot.title = online ? 'متصل بالسحابة' : 'غير متصل';
+            }
+        };
+
+        const clearLoginSessionOnly = () => {
+            try {
+                LOGIN_STORAGE_KEYS.forEach(key => localStorage.removeItem(key));
+                const sessionKeysToRemove = [];
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key && (key.startsWith('shifa_session') || key.startsWith('shifa_secure'))) {
+                        sessionKeysToRemove.push(key);
+                    }
+                }
+                sessionKeysToRemove.forEach(key => localStorage.removeItem(key));
+                sessionStorage.clear();
+            } catch (e) {}
+        };
+
+        // ============ التخزين المحلي للمرضى ============
+        const getLocalPatientsKey = () => getTenantStorageKey('pharmacist_patients');
+        
+        const savePatientToLocal = (patientId, patientData) => {
+            if (!currentTenantId) return;
+            try {
+                const key = getLocalPatientsKey();
+                const cached = JSON.parse(localStorage.getItem(key) || '{}');
+                if (!cached.patients) cached.patients = {};
+                cached.patients[patientId] = { ...patientData, _cachedAt: Date.now() };
+                localStorage.setItem(key, JSON.stringify(cached));
+            } catch (e) {}
+        };
+
+        const searchPatientsLocal = (phone) => {
+            if (!currentTenantId) return [];
+            try {
+                const key = getLocalPatientsKey();
+                const cached = localStorage.getItem(key);
+                if (!cached) return [];
+                const data = JSON.parse(cached);
+                if (!data.patients) return [];
+                const now = Date.now();
+                const expiryMs = 50 * 24 * 60 * 60 * 1000;
+                const t = phone.trim();
+                return Object.entries(data.patients)
+                    .filter(([id, p]) => (now - p._cachedAt) < expiryMs && p.phone && p.phone.includes(t))
+                    .map(([id, p]) => ({ id, ...p }));
+            } catch (e) { return []; }
+        };
+
+        const searchPatientsLocalByVillage = (fatherName, familyName, villageName) => {
+            if (!currentTenantId) return [];
+            try {
+                const key = getLocalPatientsKey();
+                const cached = localStorage.getItem(key);
+                if (!cached) return [];
+                const data = JSON.parse(cached);
+                if (!data.patients) return [];
+                const now = Date.now();
+                const expiryMs = 50 * 24 * 60 * 60 * 1000;
+                return Object.entries(data.patients)
+                    .filter(([id, p]) => {
+                        const isFresh = (now - p._cachedAt) < expiryMs;
+                        const matchFather = !fatherName || (p.father_name && p.father_name.includes(fatherName));
+                        const matchFamily = !familyName || (p.family_name && p.family_name.includes(familyName));
+                        const matchVillage = !villageName || (p.village_name && p.village_name.includes(villageName));
+                        return isFresh && matchFather && matchFamily && matchVillage;
+                    })
+                    .map(([id, p]) => ({ id, ...p }));
+            } catch (e) { return []; }
+        };
+
+        // ============ تحميل بيانات الصيدلي ============
+        const loadPharmacistData = async (uid) => {
+            try {
+                const tenantsSnap = await get(ref(db, 'tenants'));
+                if (tenantsSnap.exists()) {
+                    const tenants = tenantsSnap.val();
+                    for (const tenantId of Object.keys(tenants)) {
+                        const userSnap = await get(ref(db, `tenants/${tenantId}/users/${uid}`));
+                        if (userSnap.exists()) {
+                            const userData = userSnap.val();
+                            if (userData.role === 'pharmacist') {
+                                currentTenantId = tenantId;
+                                state.pharmacistData = { id: uid, ...userData };
+                                const tenantName = tenants[tenantId]?.name || tenants[tenantId]?.tenantName || 'المجمع الطبي';
+                                state.pharmacistData.tenantName = tenantName;
+                                $('#welcomeMsg').textContent = `أهلاً، ${state.pharmacistData.name || 'صيدلي'}`;
+                                $('#tenantName').textContent = tenantName;
+                                return true;
+                            }
+                        }
+                    }
+                }
+                const oldSnap = await get(ref(db, `users/${uid}`));
+                if (oldSnap.exists() && oldSnap.val().role === 'pharmacist') {
+                    currentTenantId = uid;
+                    state.pharmacistData = { id: uid, ...oldSnap.val() };
+                    $('#welcomeMsg').textContent = `أهلاً، ${state.pharmacistData.name || 'صيدلي'}`;
+                    return true;
+                }
+                showToast('هذا الحساب ليس حساب صيدلي', true);
+                return false;
+            } catch (err) {
+                showToast('خطأ في تحميل البيانات', true);
+                return false;
+            }
+        };
+
+        const loadDoctors = () => {
+            if (!currentTenantId) return;
+            const usersRef = ref(db, `tenants/${currentTenantId}/users`);
+            onValue(usersRef, (snap) => {
+                const doctors = [];
+                snap.forEach(child => {
+                    const user = child.val();
+                    if (user.role === 'doctor') doctors.push({ id: child.key, ...user });
+                });
+                state.doctorsList = doctors;
+                if (state.selectedDoctorId && !doctors.find(d => d.id === state.selectedDoctorId)) {
+                    state.selectedDoctorId = null;
+                    localStorage.removeItem(getTenantStorageKey('selected_doctor'));
+                }
+                renderDoctorsStrip();
+                updateCounts();
+                renderCards();
+            }, (error) => { setSyncStatus(false); });
+        };
+
+        const loadPrescriptions = () => {
+            if (!currentTenantId) return;
+            if (state.unsubscribePrescriptions) state.unsubscribePrescriptions();
+            const presRef = ref(db, `tenants/${currentTenantId}/prescriptions`);
+            state.unsubscribePrescriptions = onValue(presRef, (snap) => {
+                const prescriptions = [];
+                snap.forEach(child => {
+                    prescriptions.push({ id: child.key, ...child.val() });
+                });
+                state.allPrescriptions = prescriptions;
+                setSyncStatus(true);
+                updateCounts();
+                renderCards();
+                renderDoctorsStrip();
+            }, (error) => { setSyncStatus(false); });
+        };
+
+        const renderDoctorsStrip = () => {
+            const container = $('#doctorStripContainer');
+            if (state.doctorsList.length === 0) {
+                container.innerHTML = '<div style="padding:10px;color:var(--text-sec);text-align:center;width:100%;">لا يوجد أطباء مسجلين</div>';
+                return;
+            }
+            container.innerHTML = state.doctorsList.map(doc => {
+                const pendingCount = state.allPrescriptions.filter(p => p.doctor_id === doc.id && p.status === 'لم تصرف بعد').length;
+                return `
+                    <div class="doctor-pill ${state.selectedDoctorId === doc.id ? 'active' : ''}" data-id="${doc.id}">
+                        <div class="pill-avatar"><i class="fas fa-user-md"></i></div>
+                        <span>د. ${escapeHtml(doc.name || '---')}</span>
+                        ${pendingCount > 0 ? `<span class="pill-badge">${pendingCount}</span>` : ''}
+                    </div>`;
+            }).join('');
+            container.querySelectorAll('.doctor-pill').forEach(pill => {
+                pill.addEventListener('click', () => {
+                    state.selectedDoctorId = pill.dataset.id;
+                    localStorage.setItem(getTenantStorageKey('selected_doctor'), state.selectedDoctorId);
+                    renderDoctorsStrip();
+                    updateCounts();
+                    renderCards();
+                    pill.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                });
+            });
+        };
+
+        const updateCounts = () => {
+            let pendingCount = 0, dispensedCount = 0;
+            const filtered = state.selectedDoctorId 
+                ? state.allPrescriptions.filter(p => p.doctor_id === state.selectedDoctorId)
+                : state.allPrescriptions;
+            filtered.forEach(p => {
+                if (p.status === 'لم تصرف بعد') pendingCount++;
+                else if ((p.status === 'تم الصرف' || p.status === 'صرفت جزئياً') && p.dispensed_at && p.dispensed_at.startsWith(getToday())) {
+                    dispensedCount++;
+                }
+            });
+            $('#countPending').textContent = pendingCount;
+            $('#countDispensed').textContent = dispensedCount;
+        };
+
+        const openPrescriptionDetails = (prescription) => {
+            if (!prescription) return;
+            const doctor = state.doctorsList.find(d => d.id === prescription.doctor_id);
+            const doctorName = doctor ? doctor.name : '';
+            const params = new URLSearchParams();
+            params.set('id', prescription.id);
+            params.set('tenant', currentTenantId || '');
+            if (prescription.patient_id) params.set('patientId', prescription.patient_id);
+            if (prescription.patient_name) params.set('patientName', prescription.patient_name);
+            if (prescription.doctor_id) params.set('doctorId', prescription.doctor_id);
+            if (doctorName) params.set('doctorName', doctorName);
+            window.location.href = `prescription-details.html?${params.toString()}`;
+        };
+
+        // ============ ✅ دالة طباعة الروشتة ============
+        const printPrescription = async (prescription, items) => {
+            const doctor = state.doctorsList.find(d => d.id === prescription.doctor_id);
+            const doctorName = doctor ? doctor.name : 'طبيب';
+            const patientName = prescription.patient_name || 'مريض';
+            const patientAge = prescription.age || '';
+            const tenantName = state.pharmacistData?.tenantName || 'المجمع الطبي';
+            const diagnosis = prescription.diagnosis || '';
+            
+            const formLabels = { 'tablet': 'أقراص', 'syrup': 'شراب', 'injection': 'حقن', 'suppository': 'لبوس', 'drops': 'نقط' };
+            
+            const printArea = $('#printArea');
+            printArea.innerHTML = `
+                <div style="font-family:'Cairo',sans-serif;direction:rtl;max-width:800px;margin:0 auto;">
+                    <div class="print-header">
+                        <h2>🩺 روشتة طبية</h2>
+                        <div class="clinic-name">${escapeHtml(tenantName)}</div>
+                    </div>
+                    
+                    <div class="print-patient-info">
+                        <div class="info-line">
+                            <span class="info-label">👤 اسم المريض:</span>
+                            <span class="info-value">${escapeHtml(patientName)}</span>
+                        </div>
+                        ${patientAge ? `
+                        <div class="info-line">
+                            <span class="info-label">🎂 العمر:</span>
+                            <span class="info-value">${escapeHtml(patientAge)} سنة</span>
+                        </div>` : ''}
+                        <div class="info-line">
+                            <span class="info-label">👨‍⚕️ الطبيب:</span>
+                            <span class="info-value">د. ${escapeHtml(doctorName)}</span>
+                        </div>
+                        ${diagnosis ? `
+                        <div class="info-line">
+                            <span class="info-label">📋 التشخيص:</span>
+                            <span class="info-value">${escapeHtml(diagnosis)}</span>
+                        </div>` : ''}
+                        <div class="info-line">
+                            <span class="info-label">📅 التاريخ:</span>
+                            <span class="info-value">${new Date().toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                        </div>
+                    </div>
+                    
+                    ${items.length > 0 ? `
+                    <table class="print-meds-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>الدواء</th>
+                                <th>الشكل</th>
+                                <th>الجرعة</th>
+                                <th>الاستخدام</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${items.map((item, i) => `
+                            <tr>
+                                <td>${i + 1}</td>
+                                <td><b>${escapeHtml(item.drug_name || '---')}</b></td>
+                                <td>${formLabels[item.form] || item.form || '---'}</td>
+                                <td>${escapeHtml(item.dose || '---')}</td>
+                                <td>${escapeHtml(item.usage || item.directions || 'حسب الإرشادات')}</td>
+                            </tr>`).join('')}
+                        </tbody>
+                    </table>` : '<p style="text-align:center;color:#999;">لا توجد أدوية مسجلة</p>'}
+                    
+                    <div class="print-footer">
+                        <p>تم الصرف بواسطة: ${escapeHtml(state.pharmacistData?.name || 'صيدلي')}</p>
+                        <p>${escapeHtml(tenantName)} © ${new Date().getFullYear()}</p>
+                    </div>
+                </div>
+            `;
+            
+            // طباعة
+            setTimeout(() => {
+                window.print();
+                printArea.innerHTML = '';
+            }, 300);
+        };
+
+        // ============ ✅ فتح مودال عرض الأدوية ============
+        const openViewMedsModal = async (prescription) => {
+            state.currentViewPrescription = prescription;
+            
+            let items = [];
+            try {
+                const itemsSnap = await get(ref(db, `tenants/${currentTenantId}/prescription_items/${prescription.id}`));
+                if (itemsSnap.exists()) items = Object.values(itemsSnap.val());
+            } catch (e) {}
+            
+            state.currentViewItems = items;
+            
+            const doctor = state.doctorsList.find(d => d.id === prescription.doctor_id);
+            const doctorName = doctor ? doctor.name : 'طبيب';
+            const patientName = prescription.patient_name || 'مريض';
+            const patientAge = prescription.age || '';
+            const tenantName = state.pharmacistData?.tenantName || 'المجمع الطبي';
+            const diagnosis = prescription.diagnosis || '';
+            
+            $('#viewMedsHeaderInfo').innerHTML = `
+                <div class="info-row">
+                    <span class="info-label">👤 المريض:</span>
+                    <span class="info-value">${escapeHtml(patientName)}</span>
+                </div>
+                ${patientAge ? `
+                <div class="info-row">
+                    <span class="info-label">🎂 العمر:</span>
+                    <span class="info-value">${escapeHtml(patientAge)} سنة</span>
+                </div>` : ''}
+                <div class="info-row">
+                    <span class="info-label">👨‍⚕️ الطبيب:</span>
+                    <span class="info-value">د. ${escapeHtml(doctorName)}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">🏥 المجمع:</span>
+                    <span class="info-value">${escapeHtml(tenantName)}</span>
+                </div>
+                ${diagnosis ? `
+                <div class="info-row">
+                    <span class="info-label">📋 التشخيص:</span>
+                    <span class="info-value">${escapeHtml(diagnosis)}</span>
+                </div>` : ''}
+            `;
+            
+            const formLabels = { 'tablet': '💊 أقراص', 'syrup': '🥄 شراب', 'injection': '💉 حقن', 'suppository': '🧴 لبوس', 'drops': '💧 نقط' };
+            
+            $('#viewMedsItemsList').innerHTML = items.length === 0 
+                ? '<div style="color:var(--text-sec);text-align:center;padding:20px;">لا توجد أدوية مسجلة في هذه الوصفة</div>'
+                : items.map((item, i) => `
+                    <div class="meds-item">
+                        <div class="med-number">${i + 1}</div>
+                        <div class="med-info">
+                            <div class="med-name">${escapeHtml(item.drug_name || 'دواء')}</div>
+                            <div class="med-details">${formLabels[item.form] || item.form || ''} - ${escapeHtml(item.dose || '')}</div>
+                            ${item.usage || item.directions ? `<div class="med-usage">📝 ${escapeHtml(item.usage || item.directions)}</div>` : ''}
+                        </div>
+                    </div>
+                `).join('');
+            
+            $('#viewMedsModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        };
+
+        const closeViewMedsModal = () => {
+            $('#viewMedsModal').style.display = 'none';
+            document.body.style.overflow = '';
+        };
+
+        // ============ عرض البطاقات ============
+        const renderCards = () => {
+            const grid = $('#prescriptionsGrid');
+            
+            if (!state.selectedDoctorId) {
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-hand-point-up"></i>
+                        <h3>اختر طبيباً من القائمة أعلاه</h3>
+                        <p>ستظهر الوصفات الطبية هنا</p>
+                    </div>`;
+                return;
+            }
+            
+            let filtered = state.allPrescriptions.filter(p => p.doctor_id === state.selectedDoctorId);
+            
+            if (state.currentTab === 'لم تصرف بعد') {
+                filtered = filtered.filter(p => p.status === 'لم تصرف بعد');
+            } else {
+                filtered = filtered.filter(
+                    p => (p.status === 'تم الصرف' || p.status === 'صرفت جزئياً') &&
+                    p.dispensed_at && p.dispensed_at.startsWith(getToday())
+                );
+            }
+            
+            filtered.sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''));
+            
+            if (filtered.length === 0) {
+                const msg = state.currentTab === 'لم تصرف بعد' ? 'لا توجد وصفات جديدة' : 'لا توجد وصفات مصروفة اليوم';
+                const icon = state.currentTab === 'لم تصرف بعد' ? 'fa-clock' : 'fa-check-circle';
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas ${icon}"></i>
+                        <h3>${msg}</h3>
+                        <p>${state.currentTab === 'لم تصرف بعد' ? 'كل الوصفات تم صرفها ✓' : 'لم يتم صرف أي وصفة اليوم'}</p>
+                    </div>`;
+                return;
+            }
+            
+            grid.innerHTML = filtered.map(p => {
+                const doctor = state.doctorsList.find(d => d.id === p.doctor_id);
+                const doctorName = doctor ? doctor.name : 'طبيب';
+                const patientName = p.patient_name || 'مريض';
+                const itemCount = p.item_count || 0;
+                const diagnosis = p.diagnosis || '';
+                const patientPhone = p.phone || '';
+                const patientAge = p.age || '';
+                const dateStr = p.created_at ? new Date(p.created_at).toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' }) : '';
+                const timeStr = p.created_at ? new Date(p.created_at).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }) : '';
+                
+                const isPending = p.status === 'لم تصرف بعد';
+                const isDispensed = p.status === 'تم الصرف';
+                const isPartial = p.status === 'صرفت جزئياً';
+                
+                const cardClass = isPending ? 'pending-card' : isDispensed ? 'dispensed-card' : 'partial-card';
+                const avatarClass = isPending ? 'avatar-pending' : isDispensed ? 'avatar-dispensed' : 'avatar-partial';
+                const dotClass = isPending ? 'dot-pending' : isDispensed ? 'dot-dispensed' : 'dot-partial';
+                
+                const statusText = isPending ? '⏳ جديد' : isDispensed ? '✅ تم الصرف' : '📦 جزئي';
+                const statusBg = isPending ? '#FFF3E0' : isDispensed ? '#E8F5E9' : '#E3F2FD';
+                const statusColor = isPending ? '#E65100' : isDispensed ? '#2E7D32' : '#1565C0';
+                
+                let extraInfo = '';
+                if (!isPending) {
+                    const pharmacistName = p.pharmacist_name || '';
+                    const dispensedDate = p.dispensed_at ? new Date(p.dispensed_at).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }) : '';
+                    extraInfo = `
+                        <div class="rx-card-info-row">
+                            <i class="fas fa-user-check"></i>
+                            <span>صرف: <strong>${escapeHtml(pharmacistName)}</strong> - ${dispensedDate}</span>
+                        </div>`;
+                }
+                
+                // ✅ أزرار البطاقة حسب الحالة
+                let cardButtons = '';
+                if (isPending) {
+                    cardButtons = `
+                        <button class="rx-card-action-btn" data-action="dispense" data-id="${p.id}">
+                            <i class="fas fa-check"></i> صرف
+                        </button>`;
+                } else {
+                    cardButtons = `
+                        <div class="rx-card-buttons-group">
+                            <button class="rx-card-action-btn view-meds-btn" data-action="view-meds" data-id="${p.id}">
+                                <i class="fas fa-pills"></i> عرض الأدوية
+                            </button>
+                            <button class="rx-card-action-btn details-btn" data-action="details" data-id="${p.id}">
+                                <i class="fas fa-external-link-alt"></i> تفاصيل
+                            </button>
+                        </div>`;
+                }
+                
+                return `
+                <div class="rx-card ${cardClass}" data-id="${p.id}">
+                    <div class="rx-card-header">
+                        <div class="rx-card-avatar ${avatarClass}">
+                            ${escapeHtml(patientName.charAt(0))}
+                        </div>
+                        <div class="rx-card-patient-info">
+                            <div class="rx-card-patient-name">${escapeHtml(patientName)}</div>
+                            <div class="rx-card-doctor-name">
+                                <i class="fas fa-user-md"></i> د. ${escapeHtml(doctorName)}
+                            </div>
+                        </div>
+                        <div class="rx-card-status-dot ${dotClass}" title="${statusText}"></div>
+                    </div>
+                    
+                    <div class="rx-card-body">
+                        ${patientAge ? `
+                        <div class="rx-card-info-row">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span>العمر: <strong>${escapeHtml(patientAge)} سنة</strong></span>
+                        </div>` : ''}
+                        
+                        ${patientPhone ? `
+                        <div class="rx-card-info-row">
+                            <i class="fas fa-phone"></i>
+                            <span>${escapeHtml(patientPhone)}</span>
+                        </div>` : ''}
+                        
+                        ${extraInfo}
+                        
+                        ${diagnosis ? `
+                        <div class="rx-card-diagnosis">
+                            <i class="fas fa-notes-medical"></i> ${escapeHtml(diagnosis)}
+                        </div>` : ''}
+                    </div>
+                    
+                    <div class="rx-card-footer">
+                        <div class="rx-card-date">
+                            <i class="far fa-clock"></i> ${dateStr} · ${timeStr}
+                        </div>
+                        
+                        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                            <span style="background:${statusBg};color:${statusColor};padding:3px 10px;border-radius:20px;font-size:0.72rem;font-weight:700;">
+                                ${statusText}
+                            </span>
+                            
+                            <span class="rx-card-items-count">
+                                <i class="fas fa-pills"></i> ${itemCount} أصناف
+                            </span>
+                            
+                            ${cardButtons}
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+        };
+
+        // ============ فتح مودال الصرف ============
+        const openDispenseModal = async (prescription) => {
+            if (!prescription || prescription.status !== 'لم تصرف بعد') return;
+            
+            state.currentViewPrescription = prescription;
+            
+            let items = [];
+            try {
+                const itemsSnap = await get(ref(db, `tenants/${currentTenantId}/prescription_items/${prescription.id}`));
+                if (itemsSnap.exists()) items = Object.values(itemsSnap.val());
+            } catch (e) {}
+            
+            state.currentViewItems = items;
+            
+            const doctor = state.doctorsList.find(d => d.id === prescription.doctor_id);
+            const doctorName = doctor ? doctor.name : 'طبيب';
+            
+            $('#dispensePatientInfo').innerHTML = `
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+                    <div style="width:44px;height:44px;background:var(--primary-light);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.1rem;color:var(--primary-dark);">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div>
+                        <b>${escapeHtml(prescription.patient_name || 'مريض')}</b>
+                        <div style="font-size:0.78rem;color:var(--text-sec);">د. ${escapeHtml(doctorName)}</div>
+                    </div>
+                </div>`;
+            
+            const formLabels = { 'tablet': '💊 أقراص', 'syrup': '🥄 شراب', 'injection': '💉 حقن', 'suppository': '🧴 لبوس', 'drops': '💧 نقط' };
+            $('#dispenseItemsList').innerHTML = items.length === 0 
+                ? '<div style="color:var(--text-sec);">لا توجد عناصر في الوصفة</div>'
+                : items.map(item => `
+                    <div class="rx-detail-item">
+                        <div class="drug-icon">${formLabels[item.form]?.split(' ')[0] || '💊'}</div>
+                        <div style="flex:1;">
+                            <b>${escapeHtml(item.drug_name || 'دواء')}</b>
+                            <div style="font-size:0.75rem;color:var(--text-sec);">${escapeHtml(item.dose || '')}</div>
+                        </div>
+                    </div>`).join('');
+            
+            $('#dispenseModal').dataset.prescriptionId = prescription.id;
+            $('#dispenseStatus').value = 'تم الصرف';
+            $('#dispenseNotes').value = '';
+            $('#dispenseModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        };
+
+        const confirmDispense = async () => {
+            const prescriptionId = $('#dispenseModal').dataset.prescriptionId;
+            if (!prescriptionId) return;
+            
+            const status = $('#dispenseStatus').value;
+            const notes = $('#dispenseNotes').value.trim();
+            const now = new Date().toISOString();
+            
+            try {
+                const updates = {};
+                updates[`tenants/${currentTenantId}/prescriptions/${prescriptionId}/status`] = status;
+                updates[`tenants/${currentTenantId}/prescriptions/${prescriptionId}/dispensed_at`] = now;
+                updates[`tenants/${currentTenantId}/prescriptions/${prescriptionId}/pharmacist_id`] = state.currentUser.uid;
+                updates[`tenants/${currentTenantId}/prescriptions/${prescriptionId}/pharmacist_name`] = state.pharmacistData.name || 'صيدلي';
+                if (notes) updates[`tenants/${currentTenantId}/prescriptions/${prescriptionId}/pharmacist_notes`] = notes;
+                
+                await update(ref(db), updates);
+                $('#dispenseModal').style.display = 'none';
+                document.body.style.overflow = '';
+                showToast('✅ تم صرف الوصفة بنجاح');
+            } catch (err) {
+                showToast('❌ خطأ في صرف الوصفة', true);
+            }
+        };
+
+        // ============ ✅ وظيفة البحث عن مريض ============
+        let searchTimer;
+        let villageSearchTimer;
+        
+        const searchPatientsByPhone = async (phone) => {
+            if (!phone || phone.length < 1) {
+                $('#searchResults').style.display = 'none';
+                return;
+            }
+            
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(async () => {
+                let results = [];
+                
+                const localResults = searchPatientsLocal(phone);
+                if (localResults.length > 0) results = localResults;
+                
+                try {
+                    const snap = await get(ref(db, 'patients'));
+                    snap.forEach(child => {
+                        const p = child.val();
+                        if (p.phone && p.phone.includes(phone)) {
+                            if (!results.find(r => r.id === child.key)) {
+                                results.push({ id: child.key, ...p });
+                            }
+                        }
+                    });
+                } catch (err) {}
+
+                const container = $('#searchResults');
+                if (results.length === 0) {
+                    container.innerHTML = '<div class="search-item" style="color:var(--text-sec);">لا توجد نتائج</div>';
+                } else {
+                    container.innerHTML = results.map(p => `
+                        <div class="search-item" data-id="${p.id}" style="cursor:pointer;">
+                            <b>${escapeHtml(p.name)}</b>
+                            <small style="color:var(--text-sec);margin-right:auto;">${escapeHtml(p.phone || '')}</small>
+                        </div>
+                    `).join('');
+
+                    // ✅ الضغط على اسم المريض يفتح صفحة prescription-details.html
+                    container.querySelectorAll('.search-item[data-id]').forEach(item => {
+                        item.addEventListener('click', () => {
+                            const patient = results.find(p => p.id === item.dataset.id);
+                            if (patient) {
+                                // ✅ البحث عن أحدث وصفة للمريض وفتحها
+                                const patientPrescriptions = state.allPrescriptions.filter(p => p.patient_id === patient.id);
+                                if (patientPrescriptions.length > 0) {
+                                    const latestPrescription = patientPrescriptions.sort((a, b) => 
+                                        (b.created_at || '').localeCompare(a.created_at || '')
+                                    )[0];
+                                    openPrescriptionDetails(latestPrescription);
+                                } else {
+                                    showToast('لا توجد وصفات سابقة لهذا المريض', true);
+                                }
+                            }
+                        });
+                    });
+                }
+                container.style.display = 'block';
+            }, 250);
+        };
+
+        const setupVillageSearch = () => {
+            const fatherInput = $('#villageFatherName');
+            const familyInput = $('#villageFamilyName');
+            const villageInput = $('#villageNameInput');
+            
+            const performVillageSearch = () => {
+                const father = fatherInput.value.trim();
+                const family = familyInput.value.trim();
+                const village = villageInput.value.trim();
+                
+                if (!father && !family && !village) {
+                    $('#villageSearchResults').style.display = 'none';
+                    return;
+                }
+                
+                clearTimeout(villageSearchTimer);
+                villageSearchTimer = setTimeout(async () => {
+                    let results = [];
+                    
+                    const localResults = searchPatientsLocalByVillage(father, family, village);
+                    if (localResults.length > 0) results = localResults;
+                    
+                    try {
+                        const snap = await get(ref(db, 'patients'));
+                        snap.forEach(child => {
+                            const p = child.val();
+                            const matchFather = !father || (p.father_name && p.father_name.includes(father));
+                            const matchFamily = !family || (p.family_name && p.family_name.includes(family));
+                            const matchVillage = !village || (p.village_name && p.village_name.includes(village));
+                            
+                            if (matchFather && matchFamily && matchVillage && (father || family || village)) {
+                                if (!results.find(r => r.id === child.key)) {
+                                    results.push({ id: child.key, ...p });
+                                }
+                            }
+                        });
+                    } catch (err) {}
+
+                    const container = $('#villageSearchResults');
+                    if (results.length === 0) {
+                        container.innerHTML = '<div class="search-item" style="color:var(--text-sec);">لا توجد نتائج</div>';
+                    } else {
+                        container.innerHTML = results.map(p => `
+                            <div class="search-item" data-id="${p.id}" style="cursor:pointer;">
+                                <b>${escapeHtml(p.name)}</b>
+                                <small style="color:var(--text-sec);">${escapeHtml(p.father_name || '')} - ${escapeHtml(p.family_name || '')} - ${escapeHtml(p.village_name || '')}</small>
+                            </div>
+                        `).join('');
+
+                        // ✅ الضغط على اسم المريض يفتح صفحة prescription-details.html
+                        container.querySelectorAll('.search-item[data-id]').forEach(item => {
+                            item.addEventListener('click', () => {
+                                const patient = results.find(p => p.id === item.dataset.id);
+                                if (patient) {
+                                    const patientPrescriptions = state.allPrescriptions.filter(p => p.patient_id === patient.id);
+                                    if (patientPrescriptions.length > 0) {
+                                        const latestPrescription = patientPrescriptions.sort((a, b) => 
+                                            (b.created_at || '').localeCompare(a.created_at || '')
+                                        )[0];
+                                        openPrescriptionDetails(latestPrescription);
+                                    } else {
+                                        showToast('لا توجد وصفات سابقة لهذا المريض', true);
+                                    }
+                                }
+                            });
+                        });
+                    }
+                    container.style.display = 'block';
+                }, 400);
+            };
+            
+            fatherInput.addEventListener('input', performVillageSearch);
+            familyInput.addEventListener('input', performVillageSearch);
+            villageInput.addEventListener('input', performVillageSearch);
+        };
+
+        const toggleSearchMode = (mode) => {
+            state.searchMode = mode;
+            const phoneSection = $('#phoneSearchSection');
+            const villageSection = $('#villageSearchSection');
+            const toggleToVillageBtn = $('#toggleToVillageBtn');
+            
+            if (mode === 'village') {
+                phoneSection.style.display = 'none';
+                villageSection.style.display = 'block';
+                toggleToVillageBtn.style.display = 'none';
+                $('#searchResults').style.display = 'none';
+                $('#patientSearchInput').value = '';
+            } else {
+                phoneSection.style.display = 'block';
+                villageSection.style.display = 'none';
+                toggleToVillageBtn.style.display = 'block';
+                $('#villageSearchResults').style.display = 'none';
+                $('#villageFatherName').value = '';
+                $('#villageFamilyName').value = '';
+                $('#villageNameInput').value = '';
+            }
+        };
+
+        const logout = async () => {
+            try {
+                showToast('👋 جاري تسجيل الخروج...');
+                if (state.unsubscribePrescriptions) { state.unsubscribePrescriptions(); state.unsubscribePrescriptions = null; }
+                clearLoginSessionOnly();
+                state.currentUser = null;
+                state.pharmacistData = null;
+                state.doctorsList = [];
+                state.allPrescriptions = [];
+                await signOut(auth);
+                window.location.href = 'index.html';
+            } catch (error) {
+                clearLoginSessionOnly();
+                window.location.href = 'index.html';
+            }
+        };
+
+        const initEvents = () => {
+            $$('.status-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    $$('.status-tab').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    state.currentTab = tab.dataset.tab;
+                    updateCounts();
+                    renderCards();
+                });
+            });
+            
+            // أحداث البطاقات
+            $('#prescriptionsGrid').addEventListener('click', (e) => {
+                const actionBtn = e.target.closest('[data-action]');
+                if (actionBtn) {
+                    e.stopPropagation();
+                    const id = actionBtn.dataset.id;
+                    const prescription = state.allPrescriptions.find(p => p.id === id);
+                    
+                    if (actionBtn.dataset.action === 'dispense') {
+                        openDispenseModal(prescription);
+                    } else if (actionBtn.dataset.action === 'view-meds') {
+                        openViewMedsModal(prescription);
+                    } else if (actionBtn.dataset.action === 'details') {
+                        openPrescriptionDetails(prescription);
+                    }
+                    return;
+                }
+                
+                const card = e.target.closest('.rx-card');
+                if (!card) return;
+                const id = card.dataset.id;
+                const prescription = state.allPrescriptions.find(p => p.id === id);
+                
+                if (prescription) {
+                    if (prescription.status === 'لم تصرف بعد') {
+                        openDispenseModal(prescription);
+                    } else {
+                        openViewMedsModal(prescription);
+                    }
+                }
+            });
+            
+            // ✅ زر تأكيد الصرف
+            $('#confirmDispenseBtn').addEventListener('click', confirmDispense);
+            
+            // ✅ زر طباعة الروشتة من مودال الصرف
+            $('#printDispenseBtn').addEventListener('click', () => {
+                if (state.currentViewPrescription) {
+                    printPrescription(state.currentViewPrescription, state.currentViewItems);
+                }
+            });
+            
+            $('#closeDispenseBtn').addEventListener('click', () => {
+                $('#dispenseModal').style.display = 'none';
+                document.body.style.overflow = '';
+            });
+            
+            // ✅ أزرار مودال عرض الأدوية
+            $('#closeViewMedsBtn').addEventListener('click', closeViewMedsModal);
+            
+            $('#printViewMedsBtn').addEventListener('click', () => {
+                if (state.currentViewPrescription) {
+                    printPrescription(state.currentViewPrescription, state.currentViewItems);
+                }
+            });
+            
+            $('#gotoDetailsFromMedsBtn').addEventListener('click', () => {
+                if (state.currentViewPrescription) {
+                    openPrescriptionDetails(state.currentViewPrescription);
+                }
+            });
+            
+            // أحداث البحث عن مريض
+            $('#searchPatientBtn').addEventListener('click', () => {
+                $('#searchModal').style.display = 'flex';
+                $('#patientSearchInput').value = '';
+                $('#searchResults').style.display = 'none';
+                $('#patientHistoryContainer').innerHTML = '';
+                toggleSearchMode('phone');
+                document.body.style.overflow = 'hidden';
+            });
+            
+            $('#closeSearchBtn').addEventListener('click', () => {
+                $('#searchModal').style.display = 'none';
+                $('#patientHistoryContainer').innerHTML = '';
+                document.body.style.overflow = '';
+            });
+            
+            $('#patientSearchInput').addEventListener('input', () => {
+                searchPatientsByPhone($('#patientSearchInput').value.trim());
+            });
+            
+            $('#toggleToVillageBtn').addEventListener('click', () => toggleSearchMode('village'));
+            $('#togglePhoneModeBtn').addEventListener('click', () => toggleSearchMode('phone'));
+            
+            setupVillageSearch();
+            
+            $('#logoutBtn').addEventListener('click', logout);
+            
+            window.addEventListener('click', (e) => {
+                if (e.target === $('#dispenseModal')) {
+                    $('#dispenseModal').style.display = 'none';
+                    document.body.style.overflow = '';
+                }
+                if (e.target === $('#searchModal')) {
+                    $('#searchModal').style.display = 'none';
+                    $('#patientHistoryContainer').innerHTML = '';
+                    document.body.style.overflow = '';
+                }
+                if (e.target === $('#viewMedsModal')) {
+                    closeViewMedsModal();
+                }
+            });
+            
+            document.addEventListener('click', (e) => {
+                if (!$('#patientSearchInput').contains(e.target) && !$('#searchResults').contains(e.target)) {
+                    $('#searchResults').style.display = 'none';
+                }
+                if (!$('#villageFatherName').contains(e.target) && 
+                    !$('#villageFamilyName').contains(e.target) && 
+                    !$('#villageNameInput').contains(e.target) && 
+                    !$('#villageSearchResults').contains(e.target)) {
+                    $('#villageSearchResults').style.display = 'none';
+                }
+            });
+            
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    if ($('#dispenseModal').style.display === 'flex') {
+                        $('#dispenseModal').style.display = 'none';
+                        document.body.style.overflow = '';
+                    }
+                    if ($('#searchModal').style.display === 'flex') {
+                        $('#searchModal').style.display = 'none';
+                        $('#patientHistoryContainer').innerHTML = '';
+                        document.body.style.overflow = '';
+                    }
+                    if ($('#viewMedsModal').style.display === 'flex') {
+                        closeViewMedsModal();
+                    }
+                }
+            });
+            
+            window.addEventListener('online', () => { setSyncStatus(true); showToast('📡 تم استعادة الاتصال'); });
+            window.addEventListener('offline', () => { setSyncStatus(false); showToast('⚠️ انقطع الاتصال', true); });
+            window.addEventListener('beforeunload', () => { if (state.unsubscribePrescriptions) state.unsubscribePrescriptions(); });
+        };
+
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) { clearLoginSessionOnly(); window.location.href = 'index.html'; return; }
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            const tenantFromUrl = urlParams.get('tenant');
+            
+            if (tenantFromUrl) {
+                currentTenantId = tenantFromUrl;
+            } else {
+                try {
+                    const encrypted = localStorage.getItem('shifa_secure_session');
+                    if (encrypted) {
+                        const decoded = atob(encrypted);
+                        const match = decoded.match(/"tenantId":"([^"]+)"/);
+                        if (match) currentTenantId = match[1];
+                    }
+                } catch (e) {}
+                if (!currentTenantId) {
+                    const oldSession = localStorage.getItem('shifa_session');
+                    currentTenantId = oldSession ? (JSON.parse(oldSession).tenantId || user.uid) : user.uid;
+                }
+            }
+            
+            sessionStorage.setItem('userUid', user.uid);
+            sessionStorage.setItem('userRole', 'pharmacist');
+            
+            if (!state.currentUser) {
+                state.currentUser = { uid: user.uid };
+                
+                $('#appLoader').style.display = 'none';
+                $('#mainContainer').style.display = 'block';
+                
+                const success = await loadPharmacistData(user.uid);
+                if (!success) { showToast('⚠️ تعذر تحميل بيانات الصيدلي', true); return; }
+                
+                const savedDoctor = localStorage.getItem(getTenantStorageKey('selected_doctor'));
+                if (savedDoctor) state.selectedDoctorId = savedDoctor;
+                
+                initEvents();
+                loadDoctors();
+                loadPrescriptions();
+            }
+        });
+
+        console.log('🚀 لوحة الصيدلي - مع وظيفة البحث وطباعة الروشتة');
+        console.log('🔍 الضغط على اسم المريض في نتائج البحث يفتح صفحة prescription-details.html');
+        console.log('🖨️ زر طباعة الروشتة في مودال الصرف ومودال عرض الأدوية');
+        console.log('💊 زر عرض الأدوية للوصفات المصروفة');
+        console.log('📂 المرضى يضافون في المسار العام patients');
+    </script>
 </body>
 </html>
